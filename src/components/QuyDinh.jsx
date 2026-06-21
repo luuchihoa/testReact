@@ -1,0 +1,56 @@
+import React from "react";
+
+export default function QuyDinh() {
+  const sections = [
+    {
+      heading: "1. Mục đích sử dụng",
+      body: "Nền tảng này được Ban Giáo Lý Giáo xứ An Ngãi xây dựng nhằm hỗ trợ việc học hỏi, ôn tập giáo lý cho các em thiếu nhi và huynh trưởng trong xứ đoàn. Mọi nội dung chỉ phục vụ mục đích giáo dục đức tin, không sử dụng cho mục đích thương mại.",
+    },
+    {
+      heading: "2. Tài khoản người dùng",
+      body: "Mỗi tài khoản được cấp cho một cá nhân cụ thể (giáo lý viên hoặc học viên). Người dùng có trách nhiệm bảo mật mật khẩu và không chia sẻ tài khoản cho người khác sử dụng.",
+    },
+    {
+      heading: "3. Quy tắc làm bài kiểm tra",
+      body: "Các bài trắc nghiệm và tự luận trên hệ thống được tạo ngẫu nhiên từ ngân hàng câu hỏi. Học viên cam kết tự làm bài, không tra cứu đáp án hay nhờ người khác làm thay trong thời gian tính giờ.",
+    },
+    {
+      heading: "4. Nội dung và bản quyền",
+      body: "Hình ảnh, văn bản và tài liệu giáo lý trên trang thuộc quyền sử dụng của Ban Giáo Lý Gx. An Ngãi hoặc được trích dẫn với mục đích phi lợi nhuận. Vui lòng không sao chép, phát tán lại dưới danh nghĩa cá nhân hoặc tổ chức khác.",
+    },
+    {
+      heading: "5. Thay đổi quy định",
+      body: "Ban Giáo Lý có thể cập nhật quy định sử dụng theo thời gian để phù hợp với nhu cầu thực tế. Mọi thay đổi quan trọng sẽ được thông báo trên trang chủ.",
+    },
+    {
+      heading: "6. Liên hệ",
+      body: "Nếu có thắc mắc về quy định sử dụng, vui lòng liên hệ qua email htdcanngai@gmail.com hoặc trang Liên hệ trên website.",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased">
+      <div className="max-w-3xl mx-auto px-6 pt-16 pb-20 md:pt-24">
+        <header className="mb-10 border-b border-stone-200/70 pb-8">
+          <h1 className="font-serif font-black text-3xl md:text-4xl tracking-tight text-stone-900 mb-3">
+            Quy định sử dụng
+          </h1>
+          <p className="text-xs font-medium text-stone-400">Cập nhật lần cuối: tháng 6/2026</p>
+        </header>
+
+        <div className="space-y-8">
+          {sections.map((s) => (
+            <section key={s.heading}>
+              <h2 className="font-serif font-bold text-lg md:text-xl text-stone-900 mb-2">
+                {s.heading}
+              </h2>
+              <p className="text-sm md:text-[15px] text-stone-600 leading-relaxed">
+                {s.body}
+              </p>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
