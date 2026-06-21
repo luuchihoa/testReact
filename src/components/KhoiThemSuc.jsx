@@ -42,7 +42,7 @@ export default function KhoiThemSuc() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 md:px-6 py-14 antialiased selection:bg-amber-100">
+    <div className="mx-auto max-w-4xl px-4 md:px-6 py-14 antialiased selection:bg-amber-100">
       
       {/* SHADCN SECTION HEADER */}
       <div className="space-y-2 pb-6 border-b border-stone-200/60 mb-10">

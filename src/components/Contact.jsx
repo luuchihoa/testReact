@@ -21,7 +21,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 md:px-6 py-12 antialiased">
+    <div className="mx-auto max-w-4xl px-4 md:px-6 py-12 antialiased">
       {/* Tiêu đề chuẩn phong cách tối giản */}
       <div className="space-y-1 pb-6 border-b border-stone-200/60 mb-8">
         <h3 className="text-xl font-bold tracking-tight text-stone-900 md:text-2xl uppercase font-serif">
