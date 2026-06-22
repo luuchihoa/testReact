@@ -9,7 +9,7 @@ const Sections = [
     path: "/khối-kinh-thánh",
     title: "Khối Kinh Thánh",
     desc: "Khám phá chân lý và tình yêu thương qua từng trang sách Thánh để củng cố nền tảng đức tin.",
-    img: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc",
+    img: "/images/kinhthanh.avif",
     icon: BookOpen,
     badge: "Nền tảng",
     numeral: "I",
@@ -19,7 +19,7 @@ const Sections = [
     path: "/khối-phụng-vụ",
     title: "Khối Phụng Vụ",
     desc: "Tìm hiểu sâu sắc về các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ giáo hội.",
-    img: "https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV",
+    img: "/images/phungvu.avif",
     icon: Sparkles,
     badge: "Tâm linh",
     numeral: "II",
@@ -29,7 +29,7 @@ const Sections = [
     path: "/khối-thêm-sức",
     title: "Khối Thêm Sức",
     desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.",
-    img: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ",
+    img: "/images/themsuc.avif",
     icon: Flame,
     badge: "Trưởng thành",
     numeral: "III",
@@ -39,7 +39,7 @@ const Sections = [
     path: "/tài-liệu",
     title: "Tài Liệu Ôn Tập",
     desc: "Hệ thống hóa toàn bộ kiến thức giáo lý thông qua kho đề thi trực quan và đáp án chi tiết.",
-    img: "https://lh3.googleusercontent.com/d/1HD_Lv9paf30NMvMzcaS9P-82Ih_g-vXp",
+    img: "/images/tailieu.avif",
     icon: GraduationCap,
     badge: "Kho tư liệu",
     numeral: "IV",
@@ -184,6 +184,7 @@ export default function Home() {
                           alt={section.title}
                           width="320"
                           height="320"
+                          loading="lazy"
                           className="max-h-full max-w-full object-contain filter mix-blend-multiply drop-shadow-[0_4px_12px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
                       </div>

@@ -68,6 +68,9 @@ export default function App() {
   const [isLogin, setIsLogin] = useState(false);
   const location = useLocation();
 
+  // Thêm kiểm tra xem có phải là mobile không (chạy ngay trong component)
+  const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
   const toggleModal = () => setTurnOnModal(true);
   const handleClose = () => setTurnOnModal(false);
 
@@ -99,8 +102,8 @@ export default function App() {
         <ScrollToTop />
 
         {/* AnimatePresence #1 — CHỈ cho route transitions */}
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
+        <AnimatePresence mode="wait" initial={!isMobile}>
+          <Routes location={location} key={isMobile ? undefined : location.pathname}>
             {/* Layout có Header + Footer */}
             <Route
               element={
