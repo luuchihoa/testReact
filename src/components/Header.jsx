@@ -149,7 +149,7 @@ export default function Header({ toggleModal, isLogin }) {
           {/* Avatar / Image Container */}
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50 to-white shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-orange-300 group-hover:shadow-md">
             <img
-              src="https://lh3.googleusercontent.com/d/14MSGiNkSjngdtQ2LNXpeYZ9rbGciOgBG"
+              src="/images/logo_htdc.avif"
               alt="Logo Ban Giáo Lý Giáo xứ An Ngãi"
               className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:rotate-6"
             />
@@ -239,7 +239,7 @@ export default function Header({ toggleModal, isLogin }) {
               >
                 <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-stone-100 border border-stone-200 shadow-sm">
                   <img
-                    src={localStorage.avatar || "https://lh3.googleusercontent.com/d/1oiEnPzSGOiliggoiteJR4N2lfjdw4lLE"}
+                    src={localStorage.avatar || "https://images.weserv.nl/?url=https://lh3.googleusercontent.com/d/1oiEnPzSGOiliggoiteJR4N2lfjdw4lLE&output=avif"}
                     alt="Profile"
                     className="h-full w-full object-cover"
                   />

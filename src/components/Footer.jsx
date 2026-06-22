@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
 import { motion } from "framer-motion"; // 1. Import motion
 
+
 const RESOURCE_LINKS = [
   { label: "Khối Kinh Thánh", path: "/khối-kinh-thánh" },
   { label: "Khối Phụng Vụ", path: "/khối-phụng-vụ" },
@@ -77,7 +78,7 @@ export default function Footer() {
             <div className="flex items-center gap-3 select-none">
               <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-orange-200/50 bg-orange-50 shadow-sm">
                 <img
-                  src="https://lh3.googleusercontent.com/d/14MSGiNkSjngdtQ2LNXpeYZ9rbGciOgBG"
+                  src="/images/logo_htdc.avif"
                   alt="Giáo xứ An Ngãi"
                   className="h-full w-full object-cover"
                 />

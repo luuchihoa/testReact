@@ -11,7 +11,7 @@ const classes = [
     duration: "9 tháng (Chủ Nhật)",
     status: "Đang chiêu sinh",
     desc: "Tìm hiểu về Chúa Thánh Thần, 7 hồng ân và bước đầu học cách nhận biết, lắng nghe tiếng Ngài trong đời sống nhỏ tuổi hằng ngày.",
-    image: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ"
+    image: "/images/themsuc.avif",
   },
   {
     id: "ts-2",
@@ -21,7 +21,7 @@ const classes = [
     duration: "9 tháng (Chủ Nhật)",
     status: "Đang diễn ra",
     desc: "Đào sâu ý nghĩa Bí tích Thêm Sức, dọn mình sốt sắng đón nhận Ấn tín đức tin và chuẩn bị hành trang trưởng thành để làm chứng cho Chúa.",
-    image: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ"
+    image: "/images/themsuc.avif",
   }
 ];
 

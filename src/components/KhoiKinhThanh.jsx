@@ -10,7 +10,7 @@ const classes = [
     duration: "9 tháng (Chủ Nhật)",
     status: "Đang chiêu sinh",
     desc: "Học hỏi về Lịch sử Cứu Độ, các Tổ phụ và bước đầu làm quen với phương pháp suy niệm Lời Chúa (Lectio Divina).",
-    image: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc"
+    image: "/images/kinhthanh.avif"
   },
   {
     id: "kt-2",
@@ -20,7 +20,7 @@ const classes = [
     duration: "9 tháng (Chủ Nhật)",
     status: "Đang diễn ra",
     desc: "Đi sâu vào cuộc đời Đức Kitô qua Tin Mừng Nhất Lãm, hiểu rõ các dụ ngôn và học cách áp dụng Tin Mừng vào môi trường học đường.",
-    image: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc"
+    image: "/images/kinhthanh.avif"
   },
   {
     id: "kt-3",
@@ -30,7 +30,7 @@ const classes = [
     duration: "9 tháng (Chủ Nhật)",
     status: "Sắp khai giảng",
     desc: "Khám phá sách Công vụ Tông đồ, các Thư của Thánh Phaolô và chuẩn bị hành trang bước vào đời sống Kitô hữu trưởng thành.",
-    image: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc"
+    image: "/images/kinhthanh.avif"
   }
 ];
 

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+
 // Dữ liệu Phụng Vụ được chuẩn hóa cấu trúc hoàn toàn theo Khối Thêm Sức
 const quizPhungVuList = [
   {
@@ -12,7 +13,7 @@ const quizPhungVuList = [
     duration: "15 phút (Trắc nghiệm)",
     status: "Đang mở",
     desc: "Củng cố nhanh các kiến thức nền tảng về Năm Phụng Vụ và các sắc màu phụng vụ cơ bản. Giúp các em chuẩn bị tốt cho bài kiểm tra ngắn trên lớp.",
-    img: "https://lh3.googleusercontent.com/d/1PkARU0YQtJrXhd5yYt9te5QjSC8BAQ8W",
+    img: "/images/15phut.avif",
   },
   {
     slug: "ôn-tập-1-tiết-học-kỳ-1",
@@ -22,7 +23,7 @@ const quizPhungVuList = [
     duration: "45 phút (Tổng hợp)",
     status: "Đang mở",
     desc: "Hệ thống hóa kiến thức trọng tâm về Thánh lễ và các biểu tượng Phụng vụ giáo hội. Đề thi tích hợp bộ câu hỏi tình huống thực tế trực quan.",
-    img: "https://lh3.googleusercontent.com/d/1LthPX942d4dtm7iuhi4PrmP92Q7qlkkn",
+    img: "/images/1tiet.avif",
   },
   {
     slug: "ôn-tập-cuối-học-kỳ-1",
@@ -32,7 +33,7 @@ const quizPhungVuList = [
     duration: "60 phút (Đề tổng kết)",
     status: "Đang mở",
     desc: "Tổng kết toàn bộ hành trình học hỏi Phụng vụ nửa đầu năm học. Kho dữ liệu câu hỏi phong phú giúp các em tự tin đạt kết quả cao trong kỳ thi chính thức.",
-    img: "https://lh3.googleusercontent.com/d/1v5bau8oqor2sNxq56ysdy0ZNjN1AzPUa",
+    img: "/images/hocky.avif",
   },
   {
     slug: "ôn-tập-15-phút-học-kỳ-2",
@@ -42,7 +43,7 @@ const quizPhungVuList = [
     duration: "15 phút (Trắc nghiệm)",
     status: "Sắp mở",
     desc: "Ôn tập nhanh các bài học đầu học kỳ II, tập trung vào các nghi thức trong Tuần Thánh và Tam Nhật Vượt Qua đầy linh thiêng.",
-    img: "https://lh3.googleusercontent.com/d/1PkARU0YQtJrXhd5yYt9te5QjSC8BAQ8W",
+    img: "/images/15phut.avif",
   },
   {
     slug: "ôn-tập-1-tiết-học-kỳ-2",
@@ -52,7 +53,7 @@ const quizPhungVuList = [
     duration: "45 phút (Tổng hợp)",
     status: "Sắp mở",
     desc: "Trắc nghiệm chuyên sâu về đời sống cầu nguyện và các Bí tích Tháp nhập. Giúp học sinh nắm vững lý thuyết và áp dụng vào đời sống sống đạo.",
-    img: "https://lh3.googleusercontent.com/d/1LthPX942d4dtm7iuhi4PrmP92Q7qlkkn",
+    img: "/images/1tiet.avif",
   },
   {
     slug: "ôn-tập-cuối-học-kỳ-2",
@@ -62,7 +63,7 @@ const quizPhungVuList = [
     duration: "60 phút (Đề tổng kết)",
     status: "Sắp mở",
     desc: "Bài lượng giá cuối cùng khép lại năm học Phụng vụ. Đánh giá toàn diện năng lực hiểu biết tôn giáo để sẵn sàng bước sang các khối học cao hơn.",
-    img: "https://lh3.googleusercontent.com/d/1v5bau8oqor2sNxq56ysdy0ZNjN1AzPUa",
+    img: "/images/hocky.avif",
   },
   {
     slug: "đố-vui-giáo-lý",
@@ -72,7 +73,7 @@ const quizPhungVuList = [
     duration: "Không giới hạn thời gian",
     status: "Hot",
     desc: "Vượt qua các thử thách đố vui cân não từ dễ đến khó để nhận điểm thưởng thi đua, vừa giải trí vừa tích lũy thêm nhiều câu chuyện Phụng vụ lý thú.",
-    img: "https://lh3.googleusercontent.com/d/150c62w3okLZfosR8Uf01YeX4QT8GPgpG",
+    img: "/images/dovui.avif",
   },
 ];
 
@@ -135,7 +136,10 @@ export default function KhoiPhungVu() {
                 <div className="w-20 h-20 sm:w-full sm:h-auto sm:aspect-video shrink-0 bg-stone-100 overflow-hidden rounded-xl sm:rounded-none relative">
                   <img 
                     src={item.img} 
-                    alt={item.title} 
+                    alt={item.title}
+                    width="320"
+                    height="320"
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
                   />
                   

@@ -182,6 +182,8 @@ export default function Home() {
                         <img
                           src={section.img}
                           alt={section.title}
+                          width="320"
+                          height="320"
                           className="max-h-full max-w-full object-contain filter mix-blend-multiply drop-shadow-[0_4px_12px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
                       </div>
