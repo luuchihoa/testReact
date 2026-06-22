@@ -144,24 +144,24 @@ export default function Header({ toggleModal, isLogin }) {
         <button
           type="button"
           onClick={() => navigate("/")}
-          className="flex items-center gap-3 select-none rounded-full group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+          className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors duration-200 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
         >
-          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-orange-200/50 bg-orange-50 shadow-sm transition-transform duration-300 group-hover:scale-105">
+          {/* Avatar / Image Container */}
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50 to-white shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-orange-300 group-hover:shadow-md">
             <img
               src="https://lh3.googleusercontent.com/d/14MSGiNkSjngdtQ2LNXpeYZ9rbGciOgBG"
-              alt="Giáo xứ An Ngãi"
-              className="h-full w-full object-cover"
+              alt="Logo Ban Giáo Lý Giáo xứ An Ngãi"
+              className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:rotate-6"
             />
           </div>
-          <div className="flex flex-col items-start leading-tight">
-            <span className="text-sm font-bold tracking-tight text-stone-900 md:text-base">
+
+          {/* Text Area */}
+          <div className="flex flex-col items-start text-left">
+            <span className="text-sm font-extrabold tracking-tight text-stone-800 transition-colors duration-200 group-hover:text-orange-600 md:text-base">
               BAN GIÁO LÝ
-              <span className="hidden md:inline font-medium text-stone-400"> | </span>
-              <span className="hidden md:inline font-semibold text-stone-600">GX. AN NGÃI</span>
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
-              <span className="md:hidden">HTDC - XỨ ĐOÀN MẸ MÂN CÔI</span>
-              <span className="hidden md:inline">HÙNG TÂM DŨNG CHÍ</span>
+            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-stone-400 font-mono subpixel-antialiased md:text-[10px]">
+              HTDC • XỨ ĐOÀN MẸ MÂN CÔI
             </span>
           </div>
         </button>
@@ -169,7 +169,7 @@ export default function Header({ toggleModal, isLogin }) {
         {/* Navigation Control — Desktop */}
         <nav
           aria-label="Điều hướng chính"
-          className="hidden lg:flex items-center relative rounded-full bg-stone-100/80 p-0.5 border border-stone-200/20 shadow-inner"
+          className="hidden md:flex items-center relative rounded-full bg-stone-100/80 p-0.5 border border-stone-200/20 shadow-inner"
         >
           {NAV_ITEMS.map((item) => {
             if (item.type === "dropdown") {
@@ -258,7 +258,7 @@ export default function Header({ toggleModal, isLogin }) {
             aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav-panel"
-            className="lg:hidden flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-stone-200/60 bg-stone-50 text-stone-700 hover:bg-stone-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            className="md:hidden flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-stone-200/60 bg-stone-50 text-stone-700 hover:bg-stone-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
           >
             <AnimatePresence mode="wait" initial={false}>
               {mobileOpen ? (
@@ -300,7 +300,7 @@ export default function Header({ toggleModal, isLogin }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setMobileOpen(false)}
-              className="lg:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-[1px] z-40"
+              className="md:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-[1px] z-40"
             />
             {/* Panel */}
             <motion.div
@@ -309,7 +309,7 @@ export default function Header({ toggleModal, isLogin }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-              className="lg:hidden absolute left-0 right-0 top-full z-50 px-4 pb-4 max-h-[calc(100vh-5rem)] overflow-y-auto"
+              className="md:hidden absolute left-0 right-0 top-full z-50 px-4 pb-4 max-h-[calc(100vh-5rem)] overflow-y-auto"
             >
               <nav
                 aria-label="Điều hướng (mobile)"

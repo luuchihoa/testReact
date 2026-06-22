@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, FileText, PenLine } from "lucide-react";
-import { useLenis } from "lenis/react"; // 1. Import hook của Lenis
+import { useLenis } from "lenis/react";
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const API_URL = "https://script.google.com/macros/s/AKfycbzum9kVRG0GCqzTUNLls1WVyUt9fzpGRWZ3Rn7gWaueCNOeBOszVckEF_P9-2645gWm/exec";
@@ -23,6 +23,35 @@ const CAT_CLASS_MAP = {
   "15p_hk2":  "text-emerald-700 bg-emerald-50 border border-emerald-200/60",
   "1tiet_hk2":"text-violet-700 bg-violet-50 border border-violet-200/60",
   "hk2":      "text-rose-700 bg-rose-50 border border-rose-200/60",
+};
+
+/* ─── Framer Motion Page Variants ───────────────────────────── */
+// Hiệu ứng cho toàn bộ khung trang khi load vào
+const pageVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+  }
+};
+
+// Hiệu ứng Stagger nạp danh sách tuần tự
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
 };
 
 /* ─── Cache helpers ─────────────────────────────────────────── */
@@ -161,7 +190,8 @@ const DocItem = memo(({ doc, isOpen, content, loadingDocId, typeFilter, onToggle
   const isLoadingThis = loadingDocId === doc.id;
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200/70 overflow-hidden shadow-sm">
+    // Biến thẻ bọc ngoài của DocItem thành motion.div nhận itemVariants từ danh sách cha
+    <motion.div variants={itemVariants} className="bg-white rounded-2xl border border-stone-200/70 overflow-hidden shadow-sm">
       {/* Header */}
       <button
         type="button"
@@ -215,7 +245,7 @@ const DocItem = memo(({ doc, isOpen, content, loadingDocId, typeFilter, onToggle
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 });
 
@@ -231,7 +261,7 @@ const TaiLieu = () => {
   const [searchQuery,  setSearchQuery]  = useState("");
   const [typeFilter,   setTypeFilter]   = useState("all");
 
-  const lenis = useLenis(); // 2. Khởi tạo lenis hook để bắt sự kiện cuộn trang
+  const lenis = useLenis();
 
   /* ── Load danh sách tài liệu ── */
   const loadDocuments = useCallback(async (cat) => {
@@ -274,13 +304,10 @@ const TaiLieu = () => {
 
   /* ── Toggle mở/đóng, fetch content lần đầu ── */
   const handleToggle = useCallback(async (docId) => {
-    const isOpening = !openIds.includes(docId);
-    
     setOpenIds(prev =>
       prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
     );
 
-    // Kích hoạt thông báo cho Lenis tính toán lại layout khi hộp mở ra/đóng lại để tránh khựng cuộn
     setTimeout(() => {
       lenis?.resize();
     }, 250);
@@ -293,7 +320,6 @@ const TaiLieu = () => {
       const json = await res.json();
       setContentMap(prev => ({ ...prev, [docId]: json }));
       
-      // Tiếp tục báo cho Lenis đo đạc lại khi câu hỏi tải xong hoàn toàn
       setTimeout(() => lenis?.resize(), 50);
     } catch {
       setContentMap(prev => ({ ...prev, [docId]: { error: "Lỗi tải nội dung" } }));
@@ -328,7 +354,6 @@ const TaiLieu = () => {
     setSearchQuery("");
     setTypeFilter("all");
     
-    // 3. Đưa màn hình lướt nhẹ lên trên đầu trang để nạp danh sách mới mượt mà
     lenis?.scrollTo(0, { duration: 0.8 });
   }, [lenis]);
 
@@ -349,8 +374,13 @@ const TaiLieu = () => {
   const isOtherActive = OTHER_CATS.some(o => o.cat === active) && !CAT_BUTTONS.some(c => c.cat === active);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5]">
-      {/* Khai báo style ẩn thanh cuộn thô thiển của các mục ngang trên Mobile */}
+    // Thay đổi div bọc ngoài cùng thành motion.div để tạo hiệu ứng chuyển cảnh mượt mà khi đổi route vào trang
+    <motion.div 
+      initial="initial"
+      animate="animate"
+      variants={pageVariants}
+      className="min-h-screen bg-[#faf8f5]"
+    >
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -454,21 +484,30 @@ const TaiLieu = () => {
         {/* ── List ── */}
         {isLoading && <div className="px-5"><Loading /></div>}
 
-        {!isLoading && filteredItems.length > 0 && (
-          <div className="space-y-3 pb-20 px-5">
-            {filteredItems.map(doc => (
-              <DocItem
-                key={doc.id}
-                doc={doc}
-                isOpen={openIds.includes(doc.id)}
-                content={contentMap[doc.id]}
-                loadingDocId={loadingDocId}
-                typeFilter={typeFilter}
-                onToggle={handleToggle}
-              />
-            ))}
-          </div>
-        )}
+        {/* Chèn AnimatePresence bọc khối danh sách nạp động để xử lý hiệu ứng Stagger mượt mà khi đổi danh mục */}
+        <AnimatePresence mode="wait">
+          {!isLoading && filteredItems.length > 0 && (
+            <motion.div 
+              key={active} // key này ép React mount lại khối danh sách để kích hoạt animation trượt đều mắt khi đổi bộ đề
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-3 pb-20 px-5"
+            >
+              {filteredItems.map(doc => (
+                <DocItem
+                  key={doc.id}
+                  doc={doc}
+                  isOpen={openIds.includes(doc.id)}
+                  content={contentMap[doc.id]}
+                  loadingDocId={loadingDocId}
+                  typeFilter={typeFilter}
+                  onToggle={handleToggle}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Empty ── */}
         {!isLoading && (isEmpty || filteredItems.length === 0) && (
@@ -492,7 +531,7 @@ const TaiLieu = () => {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
