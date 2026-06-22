@@ -113,7 +113,7 @@ export default function Home() {
             Bắt đầu học hỏi
           </button>
           <Link
-            to="/gioi-thieu"
+            to="/giới-thiệu"
             className="inline-flex items-center justify-center rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 h-11 px-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 ease-out"
           >
             Tìm hiểu thêm

@@ -18,7 +18,8 @@ import TestQuiz from "./components/TestQuiz.jsx";
 import Footer from "./components/Footer.jsx";
 import BaoMat from "./components/BaoMat.jsx";
 import QuyDinh from "./components/QuyDinh.jsx";
-import GioiThieu from "./components/GioiThieu1.jsx";
+import GioiThieu from "./components/GioiThieu.jsx";
+import TuyenSinh from "./components/TuyenSinh.jsx";
 import LichSinhHoat from "./components/LichSinhHoat.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
 
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
               <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
               <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
+              <Route path="tuyển-sinh" element={<TuyenSinh />} />
               <Route path="tài-liệu" element={<TaiLieu />} />
               <Route path="liên-hệ" element={<Contact />} />
               <Route path="cài-đặt" element={<Setting />} />

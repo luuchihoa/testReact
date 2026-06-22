@@ -11,7 +11,14 @@ const KHOI_ITEMS = [
 
 const NAV_ITEMS = [
   { path: "/", label: "Trang chủ" },
+  { path: "/tuyển-sinh", label: "Tuyển sinh" },
+  { path: "/giới-thiệu", label: "Giới thiệu" },
+];
+
+const NAV__MOBILE_ITEMS = [
+  { path: "/", label: "Trang chủ" },
   { type: "dropdown", label: "Khối học", items: KHOI_ITEMS },
+  { path: "/tuyển-sinh", label: "Tuyển sinh" },
   { path: "/tài-liệu", label: "Tài liệu" },
   { path: "/lịch-sinh-hoạt", label: "Lịch sinh hoạt" },
   { path: "/giới-thiệu", label: "Giới thiệu" },
@@ -308,8 +315,8 @@ export default function Header({ toggleModal, isLogin }) {
                 aria-label="Điều hướng (mobile)"
                 className="overflow-hidden rounded-2xl border border-stone-200/60 bg-white shadow-lg"
               >
-                {NAV_ITEMS.map((item, i) => {
-                  const isLast = i === NAV_ITEMS.length - 1;
+                {NAV__MOBILE_ITEMS.map((item, i) => {
+                  const isLast = i === NAV__MOBILE_ITEMS.length - 1;
 
                   if (item.type === "dropdown") {
                     const isActive = isItemActive(item, location.pathname);
