@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, FileText, PenLine } from "lucide-react";
+import { useLenis } from "lenis/react"; // 1. Import hook của Lenis
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const API_URL = "https://script.google.com/macros/s/AKfycbzum9kVRG0GCqzTUNLls1WVyUt9fzpGRWZ3Rn7gWaueCNOeBOszVckEF_P9-2645gWm/exec";
@@ -15,7 +16,6 @@ const MAP_CATEGORY = {
   "hk2":      "Thi HK",
 };
 
-// Đồng bộ theo bảng màu amber/stone — mỗi loại bộ đề một sắc thái ấm khác nhau
 const CAT_CLASS_MAP = {
   "15p_hk1":  "text-emerald-700 bg-emerald-50 border border-emerald-200/60",
   "1tiet_hk1":"text-violet-700 bg-violet-50 border border-violet-200/60",
@@ -231,6 +231,8 @@ const TaiLieu = () => {
   const [searchQuery,  setSearchQuery]  = useState("");
   const [typeFilter,   setTypeFilter]   = useState("all");
 
+  const lenis = useLenis(); // 2. Khởi tạo lenis hook để bắt sự kiện cuộn trang
+
   /* ── Load danh sách tài liệu ── */
   const loadDocuments = useCallback(async (cat) => {
     setIsLoading(true);
@@ -272,9 +274,16 @@ const TaiLieu = () => {
 
   /* ── Toggle mở/đóng, fetch content lần đầu ── */
   const handleToggle = useCallback(async (docId) => {
+    const isOpening = !openIds.includes(docId);
+    
     setOpenIds(prev =>
       prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
     );
+
+    // Kích hoạt thông báo cho Lenis tính toán lại layout khi hộp mở ra/đóng lại để tránh khựng cuộn
+    setTimeout(() => {
+      lenis?.resize();
+    }, 250);
 
     if (contentMap[docId]) return;
 
@@ -283,12 +292,15 @@ const TaiLieu = () => {
       const res  = await fetch(`${API_URL}?path=DOC_QUESTIONS&docId=${docId}`);
       const json = await res.json();
       setContentMap(prev => ({ ...prev, [docId]: json }));
+      
+      // Tiếp tục báo cho Lenis đo đạc lại khi câu hỏi tải xong hoàn toàn
+      setTimeout(() => lenis?.resize(), 50);
     } catch {
       setContentMap(prev => ({ ...prev, [docId]: { error: "Lỗi tải nội dung" } }));
     } finally {
       setLoadingDocId(null);
     }
-  }, [contentMap]);
+  }, [contentMap, openIds, lenis]);
 
   /* ── Search ── */
   const filteredItems = useMemo(() => {
@@ -315,7 +327,10 @@ const TaiLieu = () => {
     setActive(cat);
     setSearchQuery("");
     setTypeFilter("all");
-  }, []);
+    
+    // 3. Đưa màn hình lướt nhẹ lên trên đầu trang để nạp danh sách mới mượt mà
+    lenis?.scrollTo(0, { duration: 0.8 });
+  }, [lenis]);
 
   const CAT_BUTTONS = [
     { cat: "all",     label: "Tất cả" },
@@ -335,6 +350,12 @@ const TaiLieu = () => {
 
   return (
     <div className="min-h-screen bg-[#faf8f5]">
+      {/* Khai báo style ẩn thanh cuộn thô thiển của các mục ngang trên Mobile */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       <div className="flex flex-col max-w-4xl mx-auto">
         {/* ── Sticky header ── */}
         <div className="sticky top-0 px-5 z-30 backdrop-blur-md pt-6 pb-0 border-b mb-4 bg-[#faf8f5]/90 border-stone-200/60">

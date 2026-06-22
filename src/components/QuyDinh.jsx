@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function QuyDinh() {
   const sections = [
@@ -28,29 +29,52 @@ export default function QuyDinh() {
     },
   ];
 
+  // Khung hiệu ứng trượt mượt đồng bộ với trang Bảo Mật
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased">
-      <div className="max-w-3xl mx-auto px-6 pt-16 pb-20 md:pt-24">
-        <header className="mb-10 border-b border-stone-200/70 pb-8">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-3xl mx-auto px-6 pt-16 pb-20 md:pt-24"
+      >
+        <motion.header variants={itemVariants} className="mb-10 border-b border-stone-200/70 pb-8">
           <h1 className="font-serif font-black text-3xl md:text-4xl tracking-tight text-stone-900 mb-3">
             Quy định sử dụng
           </h1>
           <p className="text-xs font-medium text-stone-400">Cập nhật lần cuối: tháng 6/2026</p>
-        </header>
+        </motion.header>
 
         <div className="space-y-8">
           {sections.map((s) => (
-            <section key={s.heading}>
+            <motion.section key={s.heading} variants={itemVariants}>
               <h2 className="font-serif font-bold text-lg md:text-xl text-stone-900 mb-2">
                 {s.heading}
               </h2>
               <p className="text-sm md:text-[15px] text-stone-600 leading-relaxed">
                 {s.body}
               </p>
-            </section>
+            </motion.section>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

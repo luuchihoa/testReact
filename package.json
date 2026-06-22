@@ -12,8 +12,10 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@iconify/react": "^6.0.2",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.27.1",
+    "framer-motion": "^12.40.0",
+    "lenis": "^1.3.23",
     "lucide-react": "^1.21.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

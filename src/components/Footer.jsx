@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
+import { motion } from "framer-motion"; // 1. Import motion
 
 const RESOURCE_LINKS = [
   { label: "Khối Kinh Thánh", path: "/khối-kinh-thánh" },
@@ -54,7 +55,6 @@ export default function Footer() {
     }
 
     setSubscribing(true);
-    // UI-only for now — no backend wired up yet.
     await new Promise((resolve) => setTimeout(resolve, 700));
     showToast("Đăng ký nhận tin thành công", "success");
     setEmail("");
@@ -62,7 +62,13 @@ export default function Footer() {
   };
 
   return (
-    <footer className="mt-auto border-t border-stone-200/50 bg-stone-50/50 pt-12 pb-24 md:pb-12 antialiased">
+    // 2. Chuyển đổi footer thành motion.footer với hiệu ứng fade-in khi xuất hiện
+    <motion.footer 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      className="mt-auto border-t border-stone-200/50 bg-stone-50/50 pt-12 pb-24 md:pb-12 antialiased"
+    >
       <div className="mx-auto max-w-5xl px-6">
         {/* Lưới chính */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
@@ -101,7 +107,6 @@ export default function Footer() {
               >
                 <FacebookIcon />
               </a>
-              {/* Instagram chưa có link thật — ẩn cho tới khi có, tránh trỏ nhầm về trang chủ */}
               <a
                 href="#"
                 onClick={(e) => {
@@ -213,6 +218,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

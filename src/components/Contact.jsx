@@ -2,50 +2,51 @@ import React from "react";
 import { motion } from "framer-motion";
 
 export default function Contact() {
-  // Cấu hình Chuyển động (Animation Variants) trực tiếp
+  // Cấu hình Chuyển động đồng nhất, nhẹ nhàng
   const containerVariants = {
     initial: { opacity: 0 },
     animate: {
       opacity: 1,
-      transition: { staggerChildren: 0.06 }
+      transition: { staggerChildren: 0.06, delayChildren: 0.1 }
     }
   };
 
   const itemVariants = {
-    initial: { opacity: 0, y: 10 },
+    initial: { opacity: 0, y: 15 },
     animate: { 
       opacity: 1, 
       y: 0, 
-      transition: { type: "spring", stiffness: 300, damping: 26 } 
+      transition: { type: "spring", stiffness: 260, damping: 24 } 
     }
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 md:px-6 py-12 antialiased">
-      {/* Tiêu đề chuẩn phong cách tối giản */}
-      <div className="space-y-1 pb-6 border-b border-stone-200/60 mb-8">
+    // Đưa motion.div lên bọc ngoài cùng để tiêu đề cũng được hưởng hiệu ứng trượt tuần tự
+    <motion.div 
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-4xl px-4 md:px-6 py-12 antialiased"
+    >
+      {/* Biến phần tiêu đề thành motion.div với itemVariants */}
+      <motion.div variants={itemVariants} className="space-y-1 pb-6 border-b border-stone-200/60 mb-8">
         <h3 className="text-xl font-bold tracking-tight text-stone-900 md:text-2xl uppercase font-serif">
           Thông tin liên hệ
         </h3>
         <p className="text-sm text-stone-500">
           Mọi thắc mắc hoặc đóng góp ý kiến, xin vui lòng liên hệ với Ban Giáo Lý qua các kênh dưới đây.
         </p>
-      </div>
+      </motion.div>
 
       {/* Danh sách thẻ liên hệ */}
-      <motion.div 
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
-        className="grid grid-cols-1 gap-4"
-      >
-        {/* 1. Mạng xã hội Facebook - Chuyển sang dạng thẻ Liên kết hoàn chỉnh */}
+      <div className="grid grid-cols-1 gap-4">
+        {/* 1. Mạng xã hội Facebook */}
         <motion.a 
           href="https://www.facebook.com/profile.php?id=61558564791118" 
           target="_blank" 
           rel="noreferrer"
           variants={itemVariants}
-          whileHover={{ y: -2 }}
+          whileHover={{ y: -3 }}
           className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-stone-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:border-amber-500/50 transition-all duration-300 ease-out group cursor-pointer select-none"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-800 border border-amber-100/70 group-hover:bg-amber-800 group-hover:text-white transition-colors duration-300">
@@ -62,11 +63,11 @@ export default function Contact() {
           </div>
         </motion.a>
 
-        {/* 2. Thư điện tử Email - Chuyển sang dạng link hành vi hệ thống mailto */}
+        {/* 2. Thư điện tử Email */}
         <motion.a 
           href="mailto:htdcanngai@gmail.com"
           variants={itemVariants}
-          whileHover={{ y: -2 }}
+          whileHover={{ y: -3 }}
           className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-stone-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:border-amber-500/50 transition-all duration-300 ease-out group cursor-pointer select-none"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-800 border border-amber-100/70 group-hover:bg-amber-800 group-hover:text-white transition-colors duration-300">
@@ -83,11 +84,11 @@ export default function Contact() {
           </div>
         </motion.a>
 
-        {/* 3. Số điện thoại - Chuyển sang dạng link kích hoạt cuộc gọi tel */}
+        {/* 3. Số điện thoại */}
         <motion.a 
           href="tel:0905143643"
           variants={itemVariants}
-          whileHover={{ y: -2 }}
+          whileHover={{ y: -3 }}
           className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-stone-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:border-amber-500/50 transition-all duration-300 ease-out group cursor-pointer select-none"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-800 border border-amber-100/70 group-hover:bg-amber-800 group-hover:text-white transition-colors duration-300">
@@ -102,7 +103,7 @@ export default function Contact() {
             </span>
           </div>
         </motion.a>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }

@@ -18,8 +18,6 @@ const NAV_ITEMS = [
   { path: "/liên-hệ", label: "Liên hệ" },
 ];
 
-// A nav entry is "active" if it's the exact path, or — for the dropdown — if
-// the current route matches one of its children.
 function isItemActive(item, pathname) {
   if (item.type === "dropdown") {
     return item.items.some((sub) => sub.path === pathname);
@@ -27,11 +25,11 @@ function isItemActive(item, pathname) {
   return item.path === pathname;
 }
 
-function DesktopDropdown({ item, isActive, openKey, setOpenKey, navigate }) {
+// 1. Nhận thêm prop currentPath từ cha truyền xuống
+function DesktopDropdown({ item, isActive, openKey, setOpenKey, navigate, currentPath }) {
   const isOpen = openKey === item.label;
   const wrapperRef = useRef(null);
 
-  // Đóng khi click ra ngoài
   useEffect(() => {
     if (!isOpen) return;
     const handleClick = (e) => {
@@ -77,7 +75,8 @@ function DesktopDropdown({ item, isActive, openKey, setOpenKey, navigate }) {
           >
             {item.items.map((sub, i) => {
               const SubIcon = sub.icon;
-              const subActive = sub.path === window.location.pathname;
+              // 2. Sửa lỗi logic: Dùng currentPath lấy từ hook đồng bộ thay vì window.location.pathname
+              const subActive = sub.path === currentPath;
               return (
                 <button
                   key={sub.path}
@@ -110,14 +109,12 @@ export default function Header({ toggleModal, isLogin }) {
   const [mobileKhoiOpen, setMobileKhoiOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState(null);
 
-  // Đóng menu mobile + dropdown mỗi khi đổi route
   useEffect(() => {
     setMobileOpen(false);
     setMobileKhoiOpen(false);
     setOpenDesktopDropdown(null);
   }, [location.pathname]);
 
-  // Khoá scroll nền khi menu mobile đang mở
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
@@ -136,7 +133,7 @@ export default function Header({ toggleModal, isLogin }) {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        {/* Apple Style Logo Area */}
+        {/* Logo Area */}
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -162,7 +159,7 @@ export default function Header({ toggleModal, isLogin }) {
           </div>
         </button>
 
-        {/* Apple Style Segmented Control (Navigation) — Desktop */}
+        {/* Navigation Control — Desktop */}
         <nav
           aria-label="Điều hướng chính"
           className="hidden lg:flex items-center relative rounded-full bg-stone-100/80 p-0.5 border border-stone-200/20 shadow-inner"
@@ -177,6 +174,7 @@ export default function Header({ toggleModal, isLogin }) {
                   openKey={openDesktopDropdown}
                   setOpenKey={setOpenDesktopDropdown}
                   navigate={navigate}
+                  currentPath={location.pathname} // 3. Truyền thêm path hiện tại xuống component con
                 />
               );
             }
@@ -246,7 +244,7 @@ export default function Header({ toggleModal, isLogin }) {
             )}
           </AnimatePresence>
 
-          {/* Hamburger — chỉ hiện khi <nav> desktop bị ẩn (dưới lg, vì nav giờ dài hơn) */}
+          {/* Hamburger Menu Mobile Toggle */}
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
@@ -284,7 +282,7 @@ export default function Header({ toggleModal, isLogin }) {
         </div>
       </div>
 
-      {/* ─── MOBILE NAV PANEL ─── */}
+      {/* MOBILE NAV PANEL */}
       <AnimatePresence>
         {mobileOpen && (
           <>

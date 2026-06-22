@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Sparkles, Flame, GraduationCap, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLenis } from "lenis/react";
 
 const Sections = [
   {
@@ -57,6 +58,7 @@ const containerVariants = {
 };
 
 export default function Home() {
+  const lenis = useLenis();
   return (
     <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased selection:bg-amber-700 selection:text-white overflow-x-hidden">
       {/* ================= HERO ================= */}
@@ -104,12 +106,12 @@ export default function Home() {
         </motion.p>
 
         <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4">
-          <a
-            href="#main-content"
+          <button
+            onClick={() => lenis?.scrollTo("#main-content", { duration: 1.2 })}
             className="inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-amber-800 text-white hover:bg-amber-900 h-11 px-6 shadow-md shadow-amber-900/10 transition-all duration-300 hover:-translate-y-0.5 ease-out"
           >
             Bắt đầu học hỏi
-          </a>
+          </button>
           <Link
             to="/gioi-thieu"
             className="inline-flex items-center justify-center rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 h-11 px-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 ease-out"
