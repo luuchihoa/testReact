@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { BookOpen, Sparkles, Flame, ArrowRight, ChevronDown, GraduationCap, Heart, CheckCircle, Check } from "lucide-react";
 import { useToast } from "./ui/ToastContext.jsx";
-import { useLenis } from "lenis/react";
+// 🔥 ĐÃ XOÁ: import { useLenis } từ đây
 
 /* ─── Design tokens ── */
 const GOLD = "#D4AF37";
@@ -61,7 +61,7 @@ const FAQS = [
   },
 ];
 
-function FaqItem({ item, index, lenis }) {
+function FaqItem({ item, index }) { // 🔥 ĐÃ XOÁ: prop lenis
   const [open, setOpen] = useState(false);
   return (
     <motion.div
@@ -75,7 +75,7 @@ function FaqItem({ item, index, lenis }) {
         type="button"
         onClick={() => {
           setOpen((v) => !v);
-          setTimeout(() => lenis?.resize(), 360);
+          // 🔥 ĐÃ XOÁ: lenis?.resize() không cần thiết nữa
         }}
         className="w-full flex justify-between items-center p-5 sm:p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-2xl"
       >
@@ -156,7 +156,6 @@ const KHOI_OPTIONS = [
   "Thêm Sức",
 ];
 
-// Màu khớp hoàn toàn với các input trong RegisterSection (dark theme)
 const FIELD_BASE = "w-full bg-slate-800/60 border rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none transition-all";
 const fieldClass = (err) =>
   `${FIELD_BASE} ${err
@@ -167,20 +166,18 @@ const fieldClass = (err) =>
 const LABEL_CLASS = "block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2";
 const ERR_CLASS   = "mt-1.5 text-xs text-rose-400 flex items-center gap-1";
 
-/* ─── KhoiDropdown ─── (dark theme, flip-up, keyboard nav, max-height scroll) */
+/* ─── KhoiDropdown ─── */
 function KhoiDropdown({ value, onChange, error, disabled }) {
   const [open, setOpen]         = useState(false);
-  const [openUp, setOpenUp]     = useState(false); // true = list mở lên trên (flip)
+  const [openUp, setOpenUp]     = useState(false); 
   const rootRef   = useRef(null);
   const listRef   = useRef(null);
   const focusIdxRef = useRef(-1);
 
-  // Tính toán flip: nếu không đủ chỗ phía dưới thì mở lên trên
   const calcFlip = useCallback(() => {
     if (!rootRef.current) return;
     const rect = rootRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
-    // list cao tối đa 240px + 8px offset
     setOpenUp(spaceBelow < 260);
   }, []);
 
@@ -195,7 +192,6 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
     focusIdxRef.current = -1;
   }, []);
 
-  // Đóng khi click ra ngoài
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -205,17 +201,12 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open, closeList]);
 
-  // Chặn Lenis chiếm sự kiện wheel/touchmove khi listbox đang mở.
-  // Phải dùng native addEventListener (không phải React synthetic) với
-  // { passive: false } thì mới gọi được stopPropagation/preventDefault.
   useEffect(() => {
     if (!open || !listRef.current) return;
     const el = listRef.current;
 
     const onWheel = (e) => {
-      // Luôn chặn Lenis nhận event này
       e.stopPropagation();
-      // Chỉ preventDefault ở biên để tránh trang scroll khi list đã hết chỗ cuộn
       const { scrollTop, scrollHeight, clientHeight } = el;
       const atTop    = scrollTop === 0 && e.deltaY < 0;
       const atBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
@@ -223,7 +214,6 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
     };
 
     const onTouchMove = (e) => {
-      // Lenis cũng bắt touchmove — chặn luôn, để browser tự xử lý scroll native
       e.stopPropagation();
     };
 
@@ -269,17 +259,12 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
   };
 
   const selected = KHOI_OPTIONS.find((k) => k === value);
-
-  // List position classes tuỳ flip direction
-  const listPositionClass = openUp
-    ? "bottom-[calc(100%+6px)] top-auto"
-    : "top-[calc(100%+6px)] bottom-auto";
+  const listPositionClass = openUp ? "bottom-[calc(100%+6px)] top-auto" : "top-[calc(100%+6px)] bottom-auto";
 
   return (
     <div>
       <label className={LABEL_CLASS}>Khối đăng ký</label>
       <div className="relative" ref={rootRef}>
-        {/* Trigger button — màu dark khớp với FIELD_BASE */}
         <button
           type="button"
           onClick={() => !disabled && (open ? closeList() : openList())}
@@ -308,7 +293,6 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
           />
         </button>
 
-        {/* Listbox — dark theme, max-height + scroll, flip-up hỗ trợ mobile */}
         <AnimatePresence>
           {open && (
             <motion.ul
@@ -323,7 +307,7 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
                 "absolute left-0 right-0 z-50",
                 "bg-slate-900 border border-slate-700 rounded-xl",
                 "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
-                "overflow-y-auto",          // scroll nếu list dài hơn max-height
+                "overflow-y-auto",
                 "overscroll-contain",
                 listPositionClass,
               ].join(" ")}
@@ -369,7 +353,7 @@ export default function TuyenSinh() {
   const { scrollY } = useScroll();
   const heroRef = useRef(null);
   const [heroHeight, setHeroHeight] = useState(700);
-  const lenis = useLenis();
+  // 🔥 ĐÃ XOÁ: const lenis = useLenis();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -443,9 +427,12 @@ export default function TuyenSinh() {
               custom={0.3}
               className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto"
             >
+              {/* TỐI ƯU CÚ PHÁP NATIVE SMOOTH SCROLL */}
               <button
                 type="button"
-                onClick={() => lenis?.scrollTo("#dang-ky", { duration: 1.4 })}
+                onClick={() => {
+                  document.getElementById("dang-ky")?.scrollIntoView({ behavior: "smooth" });
+                }}
                 className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-slate-900 rounded-full overflow-hidden hover:scale-105 transition-transform duration-300 shadow-lg shadow-slate-900/20 cursor-pointer"
               >
                 <span>Đăng ký học ngay</span>
@@ -585,19 +572,19 @@ export default function TuyenSinh() {
         </motion.h2>
         <div className="space-y-3">
           {FAQS.map((item, i) => (
-            <FaqItem key={i} item={item} index={i} lenis={lenis} />
+            <FaqItem key={i} item={item} index={i} /> // 🔥 ĐÃ XOÁ: lenis={lenis}
           ))}
         </div>
       </section>
 
       {/* ══════ ĐĂNG KÝ ══════ */}
-      <RegisterSection showToast={showToast} lenis={lenis} />
+      <RegisterSection showToast={showToast} /> {/* 🔥 ĐÃ XOÁ: lenis={lenis} */}
     </div>
   );
 }
 
 /* ─── RegisterSection ─── */
-function RegisterSection({ showToast, lenis }) {
+function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
   const INIT = { hoTen: "", namSinh: "", sdt: "", giaoXom: "", khoi: "" };
   const [form,    setForm]    = useState(INIT);
   const [errors,  setErrors]  = useState({});
@@ -629,14 +616,14 @@ function RegisterSection({ showToast, lenis }) {
     setLoading(false);
     setDone(true);
     showToast("✅ Đăng ký thành công! Chúng tôi sẽ liên hệ sớm.", "success", 5000);
-    setTimeout(() => lenis?.resize(), 50);
+    // 🔥 ĐÃ XOÁ: lenis?.resize()
   };
 
   const handleReset = () => {
     setForm(INIT);
     setErrors({});
     setDone(false);
-    setTimeout(() => lenis?.resize(), 50);
+    // 🔥 ĐÃ XOÁ: lenis?.resize()
   };
 
   return (
@@ -715,10 +702,6 @@ function RegisterSection({ showToast, lenis }) {
               noValidate
               className="space-y-4 sm:space-y-5"
             >
-              {/*
-                FIX #4: grid-cols-1 trên mobile, grid-cols-2 từ sm trở lên
-                Tránh 2 cột trên màn 320px quá chật
-              */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL_CLASS}>Tên Thánh & Tên Gọi</label>
@@ -752,22 +735,23 @@ function RegisterSection({ showToast, lenis }) {
                 <div>
                   <label className={LABEL_CLASS}>Số điện thoại phụ huynh</label>
                   <input
-                    type="tel"
+                    type="text"
+                    inputMode="tel"
                     value={form.sdt}
                     onChange={set("sdt")}
-                    placeholder="090..."
+                    placeholder="0905123456"
                     className={fieldClass(errors.sdt)}
                     disabled={loading}
                   />
                   {errors.sdt && <p className={ERR_CLASS}>⚠ {errors.sdt}</p>}
                 </div>
                 <div>
-                  <label className={LABEL_CLASS}>Giáo xóm</label>
+                  <label className={LABEL_CLASS}>Giáo xóm / Giáo họ</label>
                   <input
                     type="text"
                     value={form.giaoXom}
                     onChange={set("giaoXom")}
-                    placeholder="Xóm 1, Xóm 2..."
+                    placeholder="Giáo xóm Phaolô"
                     className={fieldClass(errors.giaoXom)}
                     disabled={loading}
                   />
@@ -777,50 +761,18 @@ function RegisterSection({ showToast, lenis }) {
 
               <KhoiDropdown
                 value={form.khoi}
-                onChange={set("khoi")}
+                onChange={(e) => setForm((p) => ({ ...p, khoi: e.target.value }))}
                 error={errors.khoi}
                 disabled={loading}
               />
 
-              <div>
-                <label className={LABEL_CLASS}>
-                  Ghi chú thêm{" "}
-                  <span className="normal-case text-slate-600">(không bắt buộc)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Bé có hoàn cảnh đặc biệt, yêu cầu riêng..."
-                  className={`${FIELD_BASE} border-slate-700 focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/60 resize-none`}
-                  disabled={loading}
-                />
-              </div>
-
-              <motion.button
+              <button
                 type="submit"
                 disabled={loading}
-                whileTap={!loading ? { scale: 0.98 } : {}}
-                className="w-full flex items-center justify-center gap-2.5 font-bold text-sm uppercase tracking-wide py-4 rounded-xl transition-all duration-200 shadow-lg mt-1 disabled:opacity-70 cursor-pointer"
-                style={{ background: loading ? "#b8940f" : GOLD, color: "#0F172A" }}
+                className="w-full relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-slate-950 bg-amber-400 rounded-xl overflow-hidden hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-lg shadow-amber-400/10 mt-2"
               >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
-                    Đang gửi hồ sơ…
-                  </>
-                ) : (
-                  <>
-                    <Heart className="w-4 h-4" />
-                    Gửi hồ sơ đăng ký
-                  </>
-                )}
-              </motion.button>
-
-              <p className="text-center text-xs text-slate-600 leading-relaxed">
-                Thông tin chỉ dùng để xếp lớp, không chia sẻ cho bên thứ ba.
-              </p>
+                {loading ? "Đang xử lý..." : "Gửi thông tin đăng ký"}
+              </button>
             </motion.form>
           )}
         </AnimatePresence>

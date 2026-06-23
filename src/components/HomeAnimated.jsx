@@ -1,51 +1,8 @@
+// HomeAnimated.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Sparkles, Flame, GraduationCap, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-// 🔥 ĐÃ XOÁ: import { useLenis } từ đây
-
-const Sections = [
-  {
-    path: "/khối-kinh-thánh",
-    title: "Khối Kinh Thánh",
-    desc: "Khám phá chân lý và tình yêu thương qua từng trang sách Thánh để củng cố nền tảng đức tin.",
-    img: "/images/kinhthanh.avif",
-    icon: BookOpen,
-    badge: "Nền tảng",
-    numeral: "I",
-    gridClass: "md:col-span-2",
-  },
-  {
-    path: "/khối-phụng-vụ",
-    title: "Khối Phụng Vụ",
-    desc: "Tìm hiểu sâu sắc về các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ giáo hội.",
-    img: "/images/phungvu.avif",
-    icon: Sparkles,
-    badge: "Tâm linh",
-    numeral: "II",
-    gridClass: "md:col-span-1",
-  },
-  {
-    path: "/khối-thêm-sức",
-    title: "Khối Thêm Sức",
-    desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.",
-    img: "/images/themsuc.avif",
-    icon: Flame,
-    badge: "Trưởng thành",
-    numeral: "III",
-    gridClass: "md:col-span-1",
-  },
-  {
-    path: "/tài-liệu",
-    title: "Tài Liệu Ôn Tập",
-    desc: "Hệ thống hóa toàn bộ kiến thức giáo lý thông qua kho đề thi trực quan và đáp án chi tiết.",
-    img: "/images/tailieu.avif",
-    icon: GraduationCap,
-    badge: "Kho tư liệu",
-    numeral: "IV",
-    gridClass: "md:col-span-2",
-  },
-];
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -57,12 +14,10 @@ const containerVariants = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
 };
 
-export default function Home() {
-  // 🔥 ĐÃ XOÁ: const lenis = useLenis();
-
+export default function HomeAnimated({ Sections }) {
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased selection:bg-amber-700 selection:text-white overflow-x-hidden">
-      {/* ================= HERO ================= */}
+    <>
+      {/* ================= HERO (ANIMATED) ================= */}
       <motion.header
         initial="hidden"
         animate="visible"
@@ -105,7 +60,6 @@ export default function Home() {
         </motion.p>
 
         <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4">
-          {/* TỐI ƯU CÚ PHÁP CUỘN MƯỢT TỰ NHIÊN */}
           <button
             onClick={() => {
               document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" });
@@ -123,7 +77,7 @@ export default function Home() {
         </motion.div>
       </motion.header>
 
-      {/* ================= BENTO GRID ================= */}
+      {/* ================= BENTO GRID (ANIMATED) ================= */}
       <main id="main-content" className="max-w-5xl mx-auto px-6 scroll-mt-12 pb-16">
         <motion.div
           initial="hidden"
@@ -195,6 +149,6 @@ export default function Home() {
           })}
         </motion.div>
       </main>
-    </div>
+    </>
   );
 }

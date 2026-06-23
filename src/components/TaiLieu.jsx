@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, FileText, PenLine } from "lucide-react";
-import { useLenis } from "lenis/react";
+// 🔥 ĐÃ XOÁ: import { useLenis } từ đây
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const API_URL = "https://script.google.com/macros/s/AKfycbzum9kVRG0GCqzTUNLls1WVyUt9fzpGRWZ3Rn7gWaueCNOeBOszVckEF_P9-2645gWm/exec";
@@ -26,7 +26,6 @@ const CAT_CLASS_MAP = {
 };
 
 /* ─── Framer Motion Page Variants ───────────────────────────── */
-// Hiệu ứng cho toàn bộ khung trang khi load vào
 const pageVariants = {
   initial: { opacity: 0, y: 15 },
   animate: { 
@@ -36,7 +35,6 @@ const pageVariants = {
   }
 };
 
-// Hiệu ứng Stagger nạp danh sách tuần tự
 const listVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -190,7 +188,6 @@ const DocItem = memo(({ doc, isOpen, content, loadingDocId, typeFilter, onToggle
   const isLoadingThis = loadingDocId === doc.id;
 
   return (
-    // Biến thẻ bọc ngoài của DocItem thành motion.div nhận itemVariants từ danh sách cha
     <motion.div variants={itemVariants} className="bg-white rounded-2xl border border-stone-200/70 overflow-hidden shadow-sm">
       {/* Header */}
       <button
@@ -261,7 +258,7 @@ const TaiLieu = () => {
   const [searchQuery,  setSearchQuery]  = useState("");
   const [typeFilter,   setTypeFilter]   = useState("all");
 
-  const lenis = useLenis();
+  // 🔥 ĐÃ XOÁ: const lenis = useLenis();
 
   /* ── Load danh sách tài liệu ── */
   const loadDocuments = useCallback(async (cat) => {
@@ -308,9 +305,7 @@ const TaiLieu = () => {
       prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
     );
 
-    setTimeout(() => {
-      lenis?.resize();
-    }, 250);
+    // 🔥 ĐÃ XOÁ: Đoạn setTimeout liên quan đến lenis?.resize()
 
     if (contentMap[docId]) return;
 
@@ -320,13 +315,13 @@ const TaiLieu = () => {
       const json = await res.json();
       setContentMap(prev => ({ ...prev, [docId]: json }));
       
-      setTimeout(() => lenis?.resize(), 50);
+      // 🔥 ĐÃ XOÁ: setTimeout(() => lenis?.resize(), 50);
     } catch {
       setContentMap(prev => ({ ...prev, [docId]: { error: "Lỗi tải nội dung" } }));
     } finally {
       setLoadingDocId(null);
     }
-  }, [contentMap, openIds, lenis]);
+  }, [contentMap]);
 
   /* ── Search ── */
   const filteredItems = useMemo(() => {
@@ -354,8 +349,9 @@ const TaiLieu = () => {
     setSearchQuery("");
     setTypeFilter("all");
     
-    lenis?.scrollTo(0, { duration: 0.8 });
-  }, [lenis]);
+    // TỐI ƯU CÚ PHÁP NATIVE SMOOTH SCROLL TRÊN TRÌNH DUYỆT
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const CAT_BUTTONS = [
     { cat: "all",     label: "Tất cả" },
@@ -374,7 +370,6 @@ const TaiLieu = () => {
   const isOtherActive = OTHER_CATS.some(o => o.cat === active) && !CAT_BUTTONS.some(c => c.cat === active);
 
   return (
-    // Thay đổi div bọc ngoài cùng thành motion.div để tạo hiệu ứng chuyển cảnh mượt mà khi đổi route vào trang
     <motion.div 
       initial="initial"
       animate="animate"
@@ -484,11 +479,10 @@ const TaiLieu = () => {
         {/* ── List ── */}
         {isLoading && <div className="px-5"><Loading /></div>}
 
-        {/* Chèn AnimatePresence bọc khối danh sách nạp động để xử lý hiệu ứng Stagger mượt mà khi đổi danh mục */}
         <AnimatePresence mode="wait">
           {!isLoading && filteredItems.length > 0 && (
             <motion.div 
-              key={active} // key này ép React mount lại khối danh sách để kích hoạt animation trượt đều mắt khi đổi bộ đề
+              key={active} 
               variants={listVariants}
               initial="hidden"
               animate="visible"

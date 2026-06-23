@@ -2,7 +2,17 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
 import { Routes, Route, useLocation, Outlet } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { ReactLenis } from "lenis/react"; // 1. Import Lenis
+
+// TỐI ƯU CỐT LÕI: Chuyển ReactLenis sang dạng lazy load để desktop cần mới tải, mobile bỏ qua hoàn toàn
+const ReactLenisLazy = lazy(() => 
+  import("lenis/react").then(mod => {
+    // Tạo một hàm bọc nhỏ để gán thực thể lenis vào window khi nó hoạt động
+    const WrappedComponent = (props) => {
+      return <mod.ReactLenis {...props} ref={(inst) => { if (inst) window.lenis = inst.lenis; }} />;
+    };
+    return { default: WrappedComponent };
+  })
+);
 
 // ─── Luôn tải ngay (Critical Path) ──────────────────────────────
 import Header from "./components/Header.jsx";
@@ -40,7 +50,6 @@ const GioiThieu     = lazyWithRetry(() => import("./components/GioiThieu.jsx"));
 const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
 
-// ─── Fallback Loader Giao diện khi đang tải trang con ──────────────
 function PageLoader() {
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center justify-center bg-[#faf8f5]/50 backdrop-blur-sm">
@@ -68,13 +77,11 @@ export default function App() {
   const [isLogin, setIsLogin] = useState(false);
   const location = useLocation();
 
-  // Thêm kiểm tra xem có phải là mobile không (chạy ngay trong component)
   const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
   const toggleModal = () => setTurnOnModal(true);
   const handleClose = () => setTurnOnModal(false);
 
-  // Khởi tạo kiểm tra dữ liệu cũ từ máy người dùng
   useEffect(() => {
     const username = localStorage.getItem("username");
     if (username) setIsLogin(true);
@@ -85,7 +92,6 @@ export default function App() {
     }
   }, []);
 
-  // Hàm thay đổi Font Size kết hợp tự động cập nhật LocalStorage
   const handleFontSizeChange = (size) => {
     if (fontSizeMap[size]) {
       setFontSize(size);
@@ -93,76 +99,88 @@ export default function App() {
     }
   };
 
+  // Hàm render nội dung chính của ứng dụng
+  const renderAppContent = () => (
+    <>
+      <ScrollToTop />
+      <AnimatePresence mode="wait" initial={true}>
+        <Routes location={location} key={isMobile ? undefined : location.pathname}>
+          <Route
+            element={
+              <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
+                <Header toggleModal={toggleModal} isLogin={isLogin} />
+                <main className="w-full flex-grow pb-16">
+                  <Suspense fallback={<PageLoader />}>
+                    <Outlet context={{ fontSize, setFontSize: handleFontSizeChange }} />
+                  </Suspense>
+                </main>
+                <Footer />
+              </div>
+            }
+          >
+            <Route index element={<Home />} />
+            <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
+            <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
+            <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
+            <Route path="tuyển-sinh" element={<TuyenSinh />} />
+            <Route path="tài-liệu" element={<TaiLieu />} />
+            <Route path="liên-hệ" element={<Contact />} />
+            <Route path="cài-đặt" element={<Setting />} />
+            <Route path="bảo-mật" element={<BaoMat />} />
+            <Route path="quy-định" element={<QuyDinh />} />
+            <Route path="giới-thiệu" element={<GioiThieu />} />
+            <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
+          </Route>
+
+          <Route 
+            path="/:khoi/:type" 
+            element={
+              <div className={`${fontSizeMap[fontSize]} min-h-screen bg-stone-50 antialiased`}>
+                <Suspense fallback={<PageLoader />}>
+                  <TestQuiz />
+                </Suspense>
+              </div>
+            } 
+          />
+        </Routes>
+      </AnimatePresence>
+
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {!isLogin && turnOnModal && (
+            <ModalLogin key="modal-login" handleClose={handleClose} setIsLogin={setIsLogin} />
+          )}
+          {isLogin && turnOnModal && (
+            <ModalUser key="modal-user" setIsLogin={setIsLogin} handleClose={handleClose} />
+          )}
+        </AnimatePresence>
+      </Suspense>
+    </>
+  );
+
   return (
     <ToastProvider>
-      {/* 2. Bọc toàn bộ ứng dụng bằng ReactLenis với thuộc tính root */}
-      <ReactLenis root options={{ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) }}>
-        
-        {/* ScrollToTop nằm trong Router, ngoài Routes */}
-        <ScrollToTop />
-
-        {/* AnimatePresence #1 — CHỈ cho route transitions */}
-        <AnimatePresence mode="wait" initial={!isMobile}>
-          <Routes location={location} key={isMobile ? undefined : location.pathname}>
-            {/* Layout có Header + Footer */}
-            <Route
-              element={
-                <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
-                  <Header toggleModal={toggleModal} isLogin={isLogin} />
-                  <main className="w-full flex-grow pb-16">
-                    <Suspense fallback={<PageLoader />}>
-                      {/* Truyền hàm bọc mới xuống Outlet */}
-                      <Outlet context={{ fontSize, setFontSize: handleFontSizeChange }} />
-                    </Suspense>
-                  </main>
-                  <Footer />
-                </div>
-              }
-            >
-              {/* Trang chủ chạy trực tiếp */}
-              <Route index element={<Home />} />
-              
-              {/* Các route con chạy qua lazy load */}
-              <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
-              <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
-              <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
-              <Route path="tuyển-sinh" element={<TuyenSinh />} />
-              <Route path="tài-liệu" element={<TaiLieu />} />
-              <Route path="liên-hệ" element={<Contact />} />
-              <Route path="cài-đặt" element={<Setting />} />
-              <Route path="bảo-mật" element={<BaoMat />} />
-              <Route path="quy-định" element={<QuyDinh />} />
-              <Route path="giới-thiệu" element={<GioiThieu />} />
-              <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
-            </Route>
-
-            {/* Quiz KHÔNG có Header / Footer — Vẫn được áp dụng kích thước font chữ */}
-            <Route 
-              path="/:khoi/:type" 
-              element={
-                <div className={`${fontSizeMap[fontSize]} min-h-screen bg-stone-50 antialiased`}>
-                  <Suspense fallback={<PageLoader />}>
-                    <TestQuiz />
-                  </Suspense>
-                </div>
-              } 
-            />
-          </Routes>
-        </AnimatePresence>
-
-        {/* AnimatePresence #2 — RIÊNG cho modal, độc lập với route transitions */}
-        <Suspense fallback={null}>
-          <AnimatePresence>
-            {!isLogin && turnOnModal && (
-              <ModalLogin key="modal-login" handleClose={handleClose} setIsLogin={setIsLogin} />
-            )}
-            {isLogin && turnOnModal && (
-              <ModalUser key="modal-user" setIsLogin={setIsLogin} handleClose={handleClose} />
-            )}
-          </AnimatePresence>
+      {/* TỐI ƯU ĐIỂM MOBILE: 
+        Nếu là thiết bị di động (isMobile = true), chạy thẳng nội dung thuần, loại bỏ Lenis JS.
+        Nếu là Desktop, kích hoạt ReactLenisLazy để có cuộn mượt.
+      */}
+      {isMobile ? (
+        renderAppContent()
+      ) : (
+        <Suspense fallback={renderAppContent()}>
+          <ReactLenisLazy 
+            root 
+            options={{ 
+              duration: 1.2, 
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+              smoothTouch: false, 
+              touchMultiplier: 1.5 
+            }}
+          >
+            {renderAppContent()}
+          </ReactLenisLazy>
         </Suspense>
-        
-      </ReactLenis>
+      )}
     </ToastProvider>
   );
 }
