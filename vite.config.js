@@ -30,21 +30,29 @@ export default defineConfig({
 
   build: {
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 600, // Tăng nhẹ giới hạn để tránh cảnh báo thừa
     rollupOptions: {
       output: {
-        // Tách riêng các thư viện nặng ra khỏi logic trang chủ của bạn
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Gom tất cả các animation framework nặng (nếu có) ra 1 tệp riêng để tải sau
+            // 1. Gom các animation framework cốt lõi (Tải sau)
             if (id.includes('gsap') || id.includes('lenis')) {
               return 'vendor-animation';
             }
-            // Gom các gói cốt lõi
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
+            
+            // 2. Gom React + tất cả các thư viện phụ thuộc trực tiếp vào lõi React (Đảm bảo không lệch context)
+            if (
+              id.includes('react') || 
+              id.includes('react-dom') || 
+              id.includes('react-router') || 
+              id.includes('lucide-react') || 
+              id.includes('framer-motion')
+            ) {
+              return 'vendor-react-core';
             }
-            return 'vendor-others';
+            
+            // 3. Các thư viện tiện ích độc lập khác (nếu có)
+            return 'vendor-utils';
           }
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
