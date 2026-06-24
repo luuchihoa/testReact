@@ -162,10 +162,8 @@ const STATS = [
 const KHOI_OPTIONS = [
   "Chiên Con (Mầm non – Lớp 2)",
   "Rước Lễ Lần Đầu (Lớp 3 – 4)",
-  "Thiếu Nhi (Lớp 5 – 7)",
-  "Thiếu (Lớp 8 – 9)",
-  "Nghĩa (Lớp 10 – 12)",
-  "Thêm Sức",
+  "Thêm Sức (Lớp 5 – 6)",
+  "Phụng Vụ (Lớp 7)",
 ];
 const FIELD_BASE = "w-full bg-slate-800/60 border rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none transition-all";
 const fieldClass = (err) =>
@@ -639,7 +637,7 @@ function RegisterSection({ showToast, lenis }) {
     await new Promise((r) => setTimeout(r, 1200));
     setLoading(false);
     setDone(true);
-    showToast("✅ Đăng ký thành công! Chúng tôi sẽ liên hệ sớm.", "success", 5000);
+    showToast("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm.", "success", 5000);
     setTimeout(() => lenis?.resize(), 50);
   };
 
