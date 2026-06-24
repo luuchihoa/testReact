@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, GraduationCap } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 /* ─── Hook phát hiện Mobile ──────────────────────────────────── */
 function useIsMobile() {
@@ -18,10 +18,10 @@ function useIsMobile() {
 
 /* ─── Variants (Đồng bộ với TuyenSinh) ────────────────────────── */
 const fadeUp = {
-  hidden: (c) => ({ opacity: 0, y: c?.m ? 16 : 32 }),
+  hidden: (c) => ({ opacity: 0, y: c?.m ? 10 : 32 }),
   visible: (c) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: c?.d || 0 },
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: c?.m ? 0 : (c?.d || 0) },
   }),
 };
 
@@ -32,52 +32,62 @@ const stagger = {
 
 export default function HomeAnimated({ Sections }) {
   const isMobile = useIsMobile();
+  const heroRef = useRef(null);
   const animConfig = { m: isMobile };
 
+  // 1. Kỹ thuật Parallax: Hero sẽ mờ dần và di chuyển nhẹ khi cuộn
+  const { scrollY } = useScroll();
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroY = useTransform(scrollY, [0, 400], [0, -50]);
+
   return (
-    <>
-      {/* ================= HERO (ANIMATED) ================= */}
+    <div className="bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden">
+      {/* Noise overlay - Tăng độ mượt cho đồ họa */}
+      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03]"
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+
+      {/* ================= HERO ================= */}
       <motion.header
+        ref={heroRef}
         initial="hidden"
         animate="visible"
-        variants={stagger}
-        className="max-w-5xl mx-auto px-6 pt-16 pb-12 md:pt-28 md:pb-20 text-center relative overflow-hidden"
+        style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
+        variants={{ visible: { transition: { staggerChildren: isMobile ? 0.03 : 0.08 } } }}
+        className="max-w-5xl mx-auto px-6 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative overflow-hidden"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-200/15 blur-[120px] rounded-full -z-10 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-200/20 blur-[120px] rounded-full -z-10" />
         
-        <motion.div
-          variants={fadeUp} custom={{ ...animConfig, d: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold bg-amber-50 border border-amber-200/60 text-amber-800 rounded-full mb-6 shadow-sm will-change-transform"
+        <motion.div variants={fadeUp} custom={{ ...animConfig, d: 0 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 shadow-sm mb-6"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          Ban Giáo Lý An Ngãi
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+          </span>
+          <span className="text-xs font-semibold text-stone-600 tracking-wide uppercase">Ban Giáo Lý An Ngãi</span>
         </motion.div>
 
-        <motion.h1
-          variants={fadeUp} custom={{ ...animConfig, d: 0.1 }}
-          className="text-3xl md:text-6xl font-serif font-black tracking-tight text-stone-900 mb-6 max-w-3xl mx-auto leading-[1.15] will-change-transform"
+        <motion.h1 variants={fadeUp} custom={{ ...animConfig, d: 0.1 }}
+          className="text-4xl md:text-7xl font-serif font-black tracking-tight text-stone-900 mb-6 max-w-3xl mx-auto leading-[1.1]"
         >
           Nuôi dưỡng đức tin<br />
-          <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">Khơi nguồn tri thức vững vàng</span>
+          <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent italic">Khơi nguồn tri thức vững vàng</span>
         </motion.h1>
 
-        <motion.p
-          variants={fadeUp} custom={{ ...animConfig, d: 0.2 }}
-          className="max-w-xl mx-auto text-sm md:text-base text-stone-500 italic font-medium leading-relaxed mb-8 border-l-2 border-amber-400/40 px-4 will-change-transform"
+        <motion.p variants={fadeUp} custom={{ ...animConfig, d: 0.2 }}
+          className="max-w-xl mx-auto text-base md:text-lg text-stone-500 italic font-medium leading-relaxed mb-10 border-l-2 border-amber-400/40 px-4"
         >
           "Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường cho con đi."
         </motion.p>
 
-        <motion.div variants={fadeUp} custom={{ ...animConfig, d: 0.3 }} className="flex items-center justify-center gap-4">
-          <button
-            onClick={() => document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })}
-            className="inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-amber-800 text-white hover:bg-amber-900 h-11 px-6 shadow-md shadow-amber-900/10 transition-all duration-300 hover:-translate-y-0.5"
+        <motion.div variants={fadeUp} custom={{ ...animConfig, d: 0.3 }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button onClick={() => document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })}
+            className="w-full sm:w-auto inline-flex items-center justify-center rounded-full text-sm font-bold bg-stone-900 text-white h-14 px-8 shadow-lg hover:scale-105 transition-transform"
           >
             Bắt đầu học hỏi
           </button>
-          <Link
-            to="/giới-thiệu"
-            className="inline-flex items-center justify-center rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 h-11 px-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5"
+          <Link to="/giới-thiệu"
+            className="w-full sm:w-auto inline-flex items-center justify-center rounded-full text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 h-14 px-8 transition-all"
           >
             Tìm hiểu thêm
           </Link>
@@ -90,7 +100,7 @@ export default function HomeAnimated({ Sections }) {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: isMobile ? "-20px" : "-100px" }}
-          variants={stagger}
+          variants={{ visible: { transition: { staggerChildren: isMobile ? 0.04 : 0.1 } } }}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           {Sections.map((section, idx) => {
@@ -137,6 +147,6 @@ export default function HomeAnimated({ Sections }) {
           })}
         </motion.div>
       </main>
-    </>
+    </div>
   );
 }
