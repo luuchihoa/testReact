@@ -1,3 +1,4 @@
+// TuyenSinh.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
@@ -91,7 +92,7 @@ function FaqItem({ item, index, lenis }) {
       viewport={{ once: true, margin: isMobile ? "-40px" : "0px" }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
       style={{ willChange: "transform" }}
-      className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-slate-300 transition-colors"
+      className={`bg-white border border-slate-200 rounded-2xl overflow-hidden ${!isMobile ? "hover:border-slate-300" : ""} transition-colors`}
     >
       <button
         type="button"
@@ -175,6 +176,7 @@ const ERR_CLASS   = "mt-1.5 text-xs text-rose-400 flex items-center gap-1";
 
 /* ─── KhoiDropdown — portal + rAF-throttled scroll ───────────── */
 function KhoiDropdown({ value, onChange, error, disabled }) {
+  const isMobile    = useIsMobile();
   const [open, setOpen]     = useState(false);
   const [rect, setRect]     = useState(null);
   const [openUp, setOpenUp] = useState(false);
@@ -308,7 +310,7 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
               ? "border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/60"
               : open
               ? "border-amber-400/60 ring-1 ring-amber-400/60"
-              : "border-slate-700 hover:border-slate-600",
+              : `border-slate-700 ${!isMobile ? "hover:border-slate-600" : ""}`,
           ].join(" ")}
         >
           <span className={value ? "text-white" : "text-slate-500"}>
@@ -350,7 +352,7 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
                       i !== KHOI_OPTIONS.length - 1 ? "border-b border-slate-800" : "",
                       isSelected
                         ? "bg-amber-500/15 text-amber-300"
-                        : "text-slate-300 hover:bg-slate-800 focus-visible:bg-slate-800",
+                        : `text-slate-300 ${!isMobile ? "hover:bg-slate-800" : ""} focus-visible:bg-slate-800`,
                     ].join(" ")}
                   >
                     <span>{k}</span>
@@ -401,7 +403,7 @@ export default function TuyenSinh() {
       />
 
       {/* ══════ HERO ══════ */}
-      <section ref={heroRef} className="relative pt-20 pb-20 sm:pt-32 sm:pb-32 lg:pt-48 lg:pb-40 overflow-hidden">
+      <section ref={heroRef} className="relative pt-20 pb-20 sm:pt-32 sm:pb-32 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-tr from-amber-100/40 via-blue-50/40 to-transparent rounded-[100%] blur-[100px] -z-10" />
 
         <motion.div
@@ -409,17 +411,17 @@ export default function TuyenSinh() {
           className="max-w-5xl mx-auto px-5 sm:px-6 text-center relative z-10"
         >
           <motion.div variants={stagger} initial="hidden" animate="visible"
-            className="flex flex-col items-center gap-5 sm:gap-6"
+            className="flex flex-col items-center gap-6 sm:gap-8"
           >
             <motion.div variants={fadeUp} custom={{ d: 0, m: isMobile }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm hover:border-amber-300/60 transition-colors cursor-default"
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm ${!isMobile ? "hover:border-amber-300/60" : ""} transition-colors cursor-default`}
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
               <span className="text-xs font-semibold text-slate-600 tracking-wide uppercase">
-                Tuyển sinh niên khóa 2025 – 2026
+                Tuyển sinh niên khóa {new Date().getFullYear()} – {(new Date().getFullYear()) + 1}
               </span>
             </motion.div>
 
@@ -452,14 +454,14 @@ export default function TuyenSinh() {
                     document.getElementById("dang-ky")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-slate-900 rounded-full overflow-hidden hover:scale-105 transition-transform duration-300 shadow-lg shadow-slate-900/20 cursor-pointer"
+                className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-slate-900 rounded-full overflow-hidden ${!isMobile ? "hover:scale-105" : ""} transition-transform duration-300 shadow-lg shadow-slate-900/20 cursor-pointer`}
               >
                 <span>Đăng ký học ngay</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
               <Link
                 to="/tài-liệu"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-slate-300 transition-all"
+                className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-full ${!isMobile ? "hover:bg-slate-50 hover:border-slate-300" : ""} transition-all`}
               >
                 <GraduationCap className="w-4 h-4 text-slate-400" />
                 Xem tài liệu ôn tập
@@ -556,7 +558,7 @@ export default function TuyenSinh() {
                   // Giữ whileHover cho Desktop, bỏ trên Mobile
                   whileHover={isMobile ? {} : { y: -8 }}
                   style={{ willChange: "transform" }}
-                  className="group relative p-7 sm:p-8 rounded-3xl bg-white border border-slate-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden"
+                  className={`group relative p-7 sm:p-8 rounded-3xl bg-white border border-slate-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] ${!isMobile ? "hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]" : ""} transition-all duration-500 overflow-hidden`}
                 >
                   <div className={`absolute top-0 right-0 w-32 h-32 ${prog.bg} rounded-bl-[80px] -z-0 transition-transform duration-500 group-hover:scale-150`} />
                   <div className="relative z-10">
@@ -704,7 +706,7 @@ function RegisterSection({ showToast, lenis }) {
                 để xác nhận và xếp lớp phù hợp cho bé.
               </p>
               <button type="button" onClick={handleReset}
-                className="px-6 py-3 rounded-full text-sm font-semibold border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                className={`px-6 py-3 rounded-full text-sm font-semibold border border-slate-700 text-slate-300 ${!isMobile ? "hover:bg-slate-800" : ""} transition-colors cursor-pointer`}
               >
                 Đăng ký thêm học viên khác
               </button>

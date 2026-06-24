@@ -205,7 +205,7 @@ export default function Footer() {
               HTDC Xứ đoàn Mẹ Mân Côi - Giáo Xứ An Ngãi
             </p>
             <p className="text-[10px] text-stone-400/80 font-medium">
-              © 2026 Giáo xứ An Ngãi. Design by HTDC Xứ đoàn Mẹ Mân Côi.
+              © {new Date().getFullYear()} Giáo xứ An Ngãi. Design by HTDC Xứ đoàn Mẹ Mân Côi.
             </p>
           </div>
 

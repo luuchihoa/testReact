@@ -39,9 +39,12 @@ const ModalLogin   = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
 const ModalUser    = lazyWithRetry(() => import("./components/ModalUser.jsx"));
 const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
-const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh.jsx"));
-const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu.jsx"));
+const KhoiChienCon = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
+const KhoiRuocLe = lazyWithRetry(() => import("./components/KhoiRuocLe.jsx"));
 const KhoiThemSuc   = lazyWithRetry(() => import("./components/KhoiThemSuc.jsx"));
+const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu.jsx"));
+const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh.jsx"));
+const KhoiVaoDoi   = lazyWithRetry(() => import("./components/KhoiVaoDoi.jsx"));
 const TaiLieu       = lazyWithRetry(() => import("./components/TaiLieu.jsx"));
 const TestQuiz      = lazyWithRetry(() => import("./components/TestQuiz.jsx"));
 const BaoMat        = lazyWithRetry(() => import("./components/BaoMat.jsx"));
@@ -119,17 +122,20 @@ export default function App() {
             }
           >
             <Route index element={<Home />} />
-            <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
-            <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
-            <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
             <Route path="tuyển-sinh" element={<TuyenSinh />} />
+            <Route path="giới-thiệu" element={<GioiThieu />} />
+            <Route path="khối-chiên-con" element={<KhoiChienCon />} />
+            <Route path="khối-rước-lễ" element={<KhoiRuocLe />} />
+            <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
+            <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
+            <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
+            <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
             <Route path="tài-liệu" element={<TaiLieu />} />
+            <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
             <Route path="liên-hệ" element={<Contact />} />
             <Route path="cài-đặt" element={<Setting />} />
             <Route path="bảo-mật" element={<BaoMat />} />
             <Route path="quy-định" element={<QuyDinh />} />
-            <Route path="giới-thiệu" element={<GioiThieu />} />
-            <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
           </Route>
 
           <Route 

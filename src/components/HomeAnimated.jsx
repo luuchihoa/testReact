@@ -16,7 +16,7 @@ function useIsMobile() {
   return isMobile;
 }
 
-/* ─── Variants ────────────────────────── */
+/* ─── Variants (Đồng bộ với TuyenSinh) ────────────────────────── */
 const fadeUp = {
   hidden: (c) => ({ opacity: 0, y: c?.m ? 8 : 32 }),  // 16 → 8
   visible: (c) => ({
@@ -59,62 +59,144 @@ export default function HomeAnimated({ Sections }) {
            style={{ backgroundImage: `url("data:image/svg+xml,...")` }} />
 
       {/* ── HERO ── */}
-      <motion.header
+      <section
         ref={heroRef}
-        style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
-        className="max-w-5xl mx-auto px-6 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative overflow-hidden"
+        className="relative pt-24 pb-24 sm:pt-36 sm:pb-36 lg:pt-52 lg:pb-44 overflow-hidden"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-200/20 blur-[120px] rounded-full -z-10" />
+        {/* Ambient glow — tinh tế hơn, 2 nguồn sáng */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent rounded-[100%] blur-[120px] -z-10" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent blur-[100px] -z-10" />
 
-        {/* ↓ Thêm initial + animate ở đây — đây là key fix chính */}
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col items-center gap-5 sm:gap-6"
+          style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
+          className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10"
         >
-          <motion.div variants={fadeUp} custom={{ d: 0, m: isMobile }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 shadow-sm hover:border-amber-300/60 transition-colors cursor-default"
+          <motion.div
+            variants={stagger}
+            custom={isMobile}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col items-center gap-6 sm:gap-8"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-            </span>
-            <span className="text-xs font-semibold text-stone-600 tracking-wide uppercase">Ban Giáo Lý An Ngãi</span>
-          </motion.div>
 
-          <motion.h1 variants={fadeUp} custom={{ d: 0.1, m: isMobile }}
-            className="text-4xl md:text-7xl font-serif font-black tracking-tight text-stone-900 max-w-3xl mx-auto leading-[1.1]"
-          >
-            Nuôi dưỡng đức tin<br />
-            <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent italic">
-              Khơi nguồn tri thức vững vàng
-            </span>
-          </motion.h1>
+            {/* Badge — dùng DM Mono cho cảm giác precision */}
+            <motion.div variants={fadeUp} custom={{ d: 0, m: isMobile }}>
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-amber-400/60 shadow-sm hover:border-amber-400/60 transition-colors cursor-default">
+                <span className="relative flex h-2 w-2 flex-shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-800 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600" />
+                </span>
+                <span
+                  className="text-[11px] font-medium text-stone-500 tracking-[0.15em] uppercase"
+                  style={{ fontFamily: "'DM Mono', monospace" }}
+                >
+                  Ban Giáo Lý · An Ngãi · 2025
+                </span>
+              </div>
+            </motion.div>
 
-          <motion.p variants={fadeUp} custom={{ d: 0.2, m: isMobile }}
-            className="max-w-xl mx-auto text-base md:text-lg text-stone-500 italic font-medium leading-relaxed border-l-2 border-amber-400/40 px-4"
-          >
-            "Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường cho con đi."
-          </motion.p>
-
-          <motion.div variants={fadeUp} custom={{ d: 0.3, m: isMobile }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto"
-          >
-            <button
-              onClick={() => document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })}
-              className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-stone-900 rounded-full hover:scale-105 transition-transform duration-300 shadow-lg shadow-stone-900/20 cursor-pointer"
+            {/* H1 — Cormorant Garamond, cấu trúc 3 dòng có chủ đích */}
+            <motion.h1
+              variants={fadeUp}
+              custom={{ d: 0.1, m: isMobile }}
+              className="w-full"
+              style={{ fontFamily: "'Cormorant', Georgia, serif" }}
             >
-              Bắt đầu học hỏi
-            </button>
-            <Link to="/giới-thiệu"
-              className="w-full sm:w-auto inline-flex items-center justify-center rounded-full text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 h-14 px-8 transition-all"
+              {/* Dòng 1 — trái, italic mỏng, màu muted */}
+              <span
+                className="block text-left text-2xl sm:text-3xl lg:text-[2.6rem] font-light italic text-stone-400 leading-snug tracking-wide pl-1 mb-1"
+              >
+                Ươm mầm
+              </span>
+
+              {/* Dòng 2 — center, cực lớn, weight 600, chữ số vàng inline */}
+              <span
+                className="block text-center leading-[0.92]"
+              >
+                <span className="text-[4.2rem] sm:text-[6.5rem] lg:text-[9rem] font-semibold text-stone-900 tracking-tight">
+                  Đức Tin
+                </span>
+              </span>
+
+              {/* Dòng 3 — phải, size vừa, italic amber */}
+              <span
+                className="block text-right text-2xl sm:text-4xl lg:text-[3.2rem] text-amber-800 font-medium italic leading-snug tracking-wide pr-1 mt-2"
+                // style={{ color: "#B8842A" }}
+              >
+                & Tri Thức
+              </span>
+            </motion.h1>
+
+            {/* Divider tinh tế */}
+            <motion.div
+              variants={fadeUp}
+              custom={{ d: 0.18, m: isMobile }}
+              className="flex items-center gap-4 w-full max-w-xs"
             >
-              Tìm hiểu thêm
-            </Link>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-300/50" />
+              <div className="w-1 h-1 rounded-full bg-amber-400/60" />
+              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-300/50" />
+            </motion.div>
+
+            {/* Quote Kinh Thánh — DM Sans light italic */}
+            <motion.blockquote
+              variants={fadeUp}
+              custom={{ d: 0.22, m: isMobile }}
+              className="max-w-lg mx-auto"
+            >
+              <p
+                className="text-lg sm:text-xl font-light italic text-stone-600 leading-relaxed mb-2"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                "Tôi là ánh sáng đến thế gian, để bất cứ ai tin vào tôi
+                thì không ở lại trong bóng tối."
+              </p>
+              <cite
+                className="not-italic text-xs tracking-[0.12em] text-stone-400 uppercase"
+                style={{ fontFamily: "'DM Mono', monospace" }}
+              >
+                Ga 12, 46
+              </cite>
+            </motion.blockquote>
+
+            {/* CTAs */}
+            <motion.div
+              variants={fadeUp}
+              custom={{ d: 0.3, m: isMobile }}
+              className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto pt-2"
+            >
+              {/* Primary — amber solid, chữ DM Sans bold */}
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden hover:scale-[1.03] transition-transform duration-300 cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, #92400e 0%, #78350f 100%)",
+                  boxShadow: "0 8px 32px rgba(120,53,15,0.35), inset 0 1px 0 rgba(255,255,255,0.1)",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                <span className="text-sm font-semibold text-white tracking-wide">
+                  Bắt đầu học hỏi
+                </span>
+                <ArrowRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform duration-200" />
+              </button>
+
+              {/* Secondary — outline tinh tế */}
+              <Link
+                to="/giới-thiệu"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-sm font-medium text-stone-600 bg-white/70 backdrop-blur-sm border border-stone-200 rounded-full hover:bg-white hover:border-stone-300 hover:text-stone-800 transition-all"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                Tìm hiểu thêm
+              </Link>
+            </motion.div>
+
           </motion.div>
         </motion.div>
-      </motion.header>
+      </section>
 
       {/* ── BENTO GRID ── */}
       <main id="main-content" className="max-w-5xl mx-auto px-6 pb-16">
