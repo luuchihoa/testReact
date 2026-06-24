@@ -1,17 +1,29 @@
-// HomeAnimated.tsx
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Phát hiện thiết bị di động để cấu hình động quỹ đạo hoạt họa
+const isMobileDevice = typeof window !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
 const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  hidden: { 
+    opacity: 0, 
+    y: isMobileDevice ? 8 : 24 // Giảm biên độ di chuyển từ 30 xuống 8px trên mobile để giảm tải tính toán pixel
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: isMobileDevice ? 0.35 : 0.5, // Giảm thời gian để UI phản hồi giòn giã hơn trên điện thoại
+      ease: "easeOut" 
+    } 
+  },
 };
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+  visible: { opacity: 1, transition: { staggerChildren: isMobileDevice ? 0.06 : 0.12 } }, // Thắt ngắn so le trên di động
 };
 
 export default function HomeAnimated({ Sections }) {
@@ -21,10 +33,13 @@ export default function HomeAnimated({ Sections }) {
       <motion.header
         initial="hidden"
         animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+        variants={{ visible: { transition: { staggerChildren: isMobileDevice ? 0.05 : 0.08 } } }}
         className="max-w-5xl mx-auto px-6 pt-16 pb-12 md:pt-28 md:pb-20 text-center relative overflow-hidden"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-200/20 blur-[120px] rounded-full -z-10" />
+        {/* Tối ưu hóa Overdraw của GPU bằng cách giảm sắc độ mờ mờ hậu cảnh */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-200/15 blur-[120px] rounded-full -z-10 pointer-events-none" />
+        
+        {/* SVG background giữ nguyên vì dung lượng rất nhẹ */}
         <div
           className="absolute inset-0 -z-10 opacity-[0.025] pointer-events-none"
           style={{
@@ -35,7 +50,7 @@ export default function HomeAnimated({ Sections }) {
 
         <motion.div
           variants={fadeInUp}
-          className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold bg-amber-50 border border-amber-200/60 text-amber-800 rounded-full mb-6 shadow-sm"
+          className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold bg-amber-50 border border-amber-200/60 text-amber-800 rounded-full mb-6 shadow-sm transform-gpu"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           Ban Giáo Lý An Ngãi
@@ -43,7 +58,7 @@ export default function HomeAnimated({ Sections }) {
 
         <motion.h1
           variants={fadeInUp}
-          className="text-3xl md:text-6xl font-serif font-black tracking-tight text-stone-900 mb-6 max-w-3xl mx-auto leading-[1.15]"
+          className="text-3xl md:text-6xl font-serif font-black tracking-tight text-stone-900 mb-6 max-w-3xl mx-auto leading-[1.15] transform-gpu"
         >
           Nuôi dưỡng đức tin
           <br />
@@ -54,12 +69,12 @@ export default function HomeAnimated({ Sections }) {
 
         <motion.p
           variants={fadeInUp}
-          className="max-w-xl mx-auto text-sm md:text-base text-stone-500 italic font-medium leading-relaxed mb-8 border-l-2 border-amber-400/40 px-4"
+          className="max-w-xl mx-auto text-sm md:text-base text-stone-500 italic font-medium leading-relaxed mb-8 border-l-2 border-amber-400/40 px-4 transform-gpu"
         >
           "Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường cho con đi."
         </motion.p>
 
-        <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4">
+        <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4 transform-gpu">
           <button
             onClick={() => {
               document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" });
@@ -82,7 +97,8 @@ export default function HomeAnimated({ Sections }) {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          // Nới lỏng margin và hạ amount xuống 0.1 để kích hoạt mượt mà khi cuộn chạm nhẹ
+          viewport={{ once: true, margin: "-40px", amount: 0.1 }}
           variants={containerVariants}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
@@ -92,9 +108,10 @@ export default function HomeAnimated({ Sections }) {
               <motion.div
                 key={section.path}
                 variants={fadeInUp}
-                whileHover={{ y: -6, scale: 1.01 }}
+                // ⚡ KHÓA HOVER TRÊN MOBILE: Chỉ cho phép chạy hiệu ứng nhấc thẻ lò xo khi ở trên Desktop
+                whileHover={isMobileDevice ? {} : { y: -6, scale: 1.01 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className={section.gridClass}
+                className={`${section.gridClass} transform-gpu will-change-transform`}
               >
                 <Link to={section.path} className="group block h-full">
                   <div className="relative h-full bg-white border border-stone-200/80 rounded-2xl transition-all duration-300 ease-out hover:shadow-xl hover:shadow-amber-900/[0.04] hover:border-amber-400 overflow-hidden flex flex-col sm:flex-row">
@@ -131,6 +148,7 @@ export default function HomeAnimated({ Sections }) {
                     </div>
 
                     <div className="relative w-full sm:w-[35%] p-6 pt-0 sm:pt-6 sm:pl-0 flex items-center justify-center flex-shrink-0 z-10">
+                      {/* Thao tác đổ bóng mượt shadow-inner giữ nguyên, không sử dụng backdrop-blur nên an toàn cho iOS */}
                       <div className="relative flex items-center justify-center aspect-square w-full max-w-[140px] sm:max-w-full rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100/50 p-3 overflow-hidden shadow-inner">
                         <img
                           src={section.img}

@@ -1,51 +1,71 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { BookOpen, Sparkles, Flame, ArrowRight, ChevronDown, GraduationCap, Heart, CheckCircle, Check } from "lucide-react";
 import { useToast } from "./ui/ToastContext.jsx";
-// 🔥 ĐÃ XOÁ: import { useLenis } từ đây
+import { useLenis } from "lenis/react";
 
-/* ─── Design tokens ── */
 const GOLD = "#D4AF37";
 
-/* ─── Framer Motion variants ── */
+/* ─── Hook phát hiện Mobile ──────────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    // Media query cho màn hình nhỏ hơn 768px (Mobile)
+    const mql = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mql.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+/* ─── Variants — Hỗ trợ truyền biến để đổi y tuỳ thiết bị ─── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
-  visible: (delay = 0) => ({
+  hidden: (c) => ({ opacity: 0, y: c?.m ? 16 : 32 }),
+  visible: (c) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay },
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: c?.d || 0 },
   }),
 };
-
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
-/* ─── Animated counter ── */
+/* ─── Counter — rAF thay setInterval ─────────────────────────── */
 function Counter({ target, suffix = "" }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const isMobile = useIsMobile();
+  const ref      = useRef(null);
+  // Desktop: -80px, Mobile nới lỏng xuống -40px để hiện sớm hơn
+  const inView   = useInView(ref, { once: true, margin: isMobile ? "-40px" : "-80px" });
   const [count, setCount] = useState(0);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     if (!inView) return;
-    let start = 0;
-    const duration = 1800;
-    const step = 16;
-    const increment = target / (duration / step);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(start));
-    }, step);
-    return () => clearInterval(timer);
+    const duration = 1800;       
+    const startTime = performance.now();
+
+    const tick = (now) => {
+      const elapsed  = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick);
+      else setCount(target);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
   }, [inView, target]);
 
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
-/* ─── FAQ Accordion ── */
+/* ─── FAQ ─────────────────────────────────────────────────────── */
 const FAQS = [
   {
     q: "Con tôi chưa biết đọc có học được không?",
@@ -61,21 +81,23 @@ const FAQS = [
   },
 ];
 
-function FaqItem({ item, index }) { // 🔥 ĐÃ XOÁ: prop lenis
+function FaqItem({ item, index, lenis }) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: isMobile ? 16 : 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: isMobile ? "-40px" : "0px" }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      style={{ willChange: "transform" }}
       className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-slate-300 transition-colors"
     >
       <button
         type="button"
         onClick={() => {
           setOpen((v) => !v);
-          // 🔥 ĐÃ XOÁ: lenis?.resize() không cần thiết nữa
+          setTimeout(() => lenis?.resize(), 360);
         }}
         className="w-full flex justify-between items-center p-5 sm:p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-2xl"
       >
@@ -105,37 +127,27 @@ function FaqItem({ item, index }) { // 🔥 ĐÃ XOÁ: prop lenis
   );
 }
 
-/* ─── Programs & Stats ── */
+/* ─── Programs & Stats ─────────────────────────────────────────── */
 const PROGRAMS = [
   {
-    icon: BookOpen,
-    title: "Khối Kinh Thánh",
+    icon: BookOpen, title: "Khối Kinh Thánh",
     desc: "Giai đoạn nền tảng giúp các em làm quen với Lời Chúa, xây dựng đức tin trên Kinh Thánh.",
     path: "/khối-kinh-thánh",
     bg: "bg-blue-50 group-hover:bg-blue-100",
-    iconColor: "text-blue-600",
-    linkColor: "hover:text-blue-600",
-    featured: false,
+    iconColor: "text-blue-600", linkColor: "hover:text-blue-600", featured: false,
   },
   {
-    icon: Sparkles,
-    title: "Khối Phụng Vụ",
+    icon: Sparkles, title: "Khối Phụng Vụ",
     desc: "Tìm hiểu sâu các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ.",
     path: "/khối-phụng-vụ",
-    bg: "",
-    iconColor: "text-amber-400",
-    linkColor: "hover:text-amber-400",
-    featured: true,
+    bg: "", iconColor: "text-amber-400", linkColor: "hover:text-amber-400", featured: true,
   },
   {
-    icon: Flame,
-    title: "Khối Thêm Sức",
+    icon: Flame, title: "Khối Thêm Sức",
     desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.",
     path: "/khối-thêm-sức",
     bg: "bg-rose-50 group-hover:bg-rose-100",
-    iconColor: "text-rose-600",
-    linkColor: "hover:text-rose-600",
-    featured: false,
+    iconColor: "text-rose-600", linkColor: "hover:text-rose-600", featured: false,
   },
 ];
 
@@ -146,7 +158,7 @@ const STATS = [
   { target: 100, suffix: "%", label: "Yêu thương" },
 ];
 
-/* ─── RegisterSection constants ── */
+/* ─── Form constants ────────────────────────────────────────────── */
 const KHOI_OPTIONS = [
   "Chiên Con (Mầm non – Lớp 2)",
   "Rước Lễ Lần Đầu (Lớp 3 – 4)",
@@ -155,37 +167,36 @@ const KHOI_OPTIONS = [
   "Nghĩa (Lớp 10 – 12)",
   "Thêm Sức",
 ];
-
 const FIELD_BASE = "w-full bg-slate-800/60 border rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none transition-all";
 const fieldClass = (err) =>
   `${FIELD_BASE} ${err
     ? "border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/60"
-    : "border-slate-700 focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/60"
-  }`;
-
+    : "border-slate-700 focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/60"}`;
 const LABEL_CLASS = "block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2";
 const ERR_CLASS   = "mt-1.5 text-xs text-rose-400 flex items-center gap-1";
 
-/* ─── KhoiDropdown ─── */
+/* ─── KhoiDropdown — portal + rAF-throttled scroll ───────────── */
 function KhoiDropdown({ value, onChange, error, disabled }) {
-  const [open, setOpen]         = useState(false);
-  const [openUp, setOpenUp]     = useState(false); 
-  const rootRef   = useRef(null);
-  const listRef   = useRef(null);
+  const [open, setOpen]     = useState(false);
+  const [rect, setRect]     = useState(null);
+  const [openUp, setOpenUp] = useState(false);
+  const triggerRef  = useRef(null);
+  const listRef     = useRef(null);
+  const rafRef      = useRef(null);
   const focusIdxRef = useRef(-1);
 
-  const calcFlip = useCallback(() => {
-    if (!rootRef.current) return;
-    const rect = rootRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    setOpenUp(spaceBelow < 260);
+  const measureTrigger = useCallback(() => {
+    if (!triggerRef.current) return;
+    const r = triggerRef.current.getBoundingClientRect();
+    setOpenUp(window.innerHeight - r.bottom < 260);
+    setRect(r);
   }, []);
 
   const openList = useCallback(() => {
-    calcFlip();
+    measureTrigger();
     setOpen(true);
     focusIdxRef.current = KHOI_OPTIONS.findIndex((k) => k === value);
-  }, [calcFlip, value]);
+  }, [measureTrigger, value]);
 
   const closeList = useCallback(() => {
     setOpen(false);
@@ -194,8 +205,25 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
 
   useEffect(() => {
     if (!open) return;
+    const onScroll = () => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        measureTrigger();
+        rafRef.current = null;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    };
+  }, [open, measureTrigger]);
+
+  useEffect(() => {
+    if (!open) return;
     const handler = (e) => {
-      if (!rootRef.current?.contains(e.target)) closeList();
+      if (!triggerRef.current?.contains(e.target) && !listRef.current?.contains(e.target))
+        closeList();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -204,19 +232,13 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
   useEffect(() => {
     if (!open || !listRef.current) return;
     const el = listRef.current;
-
     const onWheel = (e) => {
       e.stopPropagation();
       const { scrollTop, scrollHeight, clientHeight } = el;
-      const atTop    = scrollTop === 0 && e.deltaY < 0;
-      const atBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
-      if (atTop || atBottom) e.preventDefault();
+      if ((scrollTop === 0 && e.deltaY < 0) || (scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0))
+        e.preventDefault();
     };
-
-    const onTouchMove = (e) => {
-      e.stopPropagation();
-    };
-
+    const onTouchMove = (e) => e.stopPropagation();
     el.addEventListener("wheel",     onWheel,     { passive: false });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => {
@@ -245,27 +267,34 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
   };
 
   const handleOptionKey = (e, idx) => {
-    if (e.key === "ArrowDown")  { e.preventDefault(); focusItem(idx + 1); }
-    if (e.key === "ArrowUp")    { e.preventDefault(); focusItem(idx - 1); }
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelect(KHOI_OPTIONS[idx]); }
-    if (e.key === "Escape")     { closeList(); rootRef.current?.querySelector("button")?.focus(); }
-    if (e.key === "Tab")        closeList();
+    if (e.key === "ArrowDown")               { e.preventDefault(); focusItem(idx + 1); }
+    if (e.key === "ArrowUp")                 { e.preventDefault(); focusItem(idx - 1); }
+    if (e.key === "Enter" || e.key === " ")  { e.preventDefault(); handleSelect(KHOI_OPTIONS[idx]); }
+    if (e.key === "Escape") { closeList(); triggerRef.current?.focus(); }
+    if (e.key === "Tab") closeList();
   };
 
   const handleSelect = (k) => {
     onChange({ target: { value: k } });
     closeList();
-    rootRef.current?.querySelector("button")?.focus();
+    triggerRef.current?.focus();
   };
 
-  const selected = KHOI_OPTIONS.find((k) => k === value);
-  const listPositionClass = openUp ? "bottom-[calc(100%+6px)] top-auto" : "top-[calc(100%+6px)] bottom-auto";
+  const portalStyle = rect ? {
+    position: "fixed",
+    width: rect.width,
+    left: rect.left,
+    ...(openUp ? { bottom: window.innerHeight - rect.top + 6 } : { top: rect.bottom + 6 }),
+    zIndex: 9999,
+    maxHeight: "240px",
+  } : { display: "none" };
 
   return (
     <div>
       <label className={LABEL_CLASS}>Khối đăng ký</label>
-      <div className="relative" ref={rootRef}>
+      <div className="relative">
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => !disabled && (open ? closeList() : openList())}
           onKeyDown={handleTriggerKey}
@@ -276,8 +305,7 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
           className={[
             "w-full flex items-center justify-between gap-2 text-left",
             "px-4 py-3 rounded-xl border text-sm transition-all focus:outline-none",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            "bg-slate-800/60 text-white",
+            "disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800/60 text-white",
             error
               ? "border-rose-500 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/60"
               : open
@@ -285,16 +313,14 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
               : "border-slate-700 hover:border-slate-600",
           ].join(" ")}
         >
-          <span className={selected ? "text-white" : "text-slate-500"}>
-            {selected ?? "Chọn khối phù hợp với bé"}
+          <span className={value ? "text-white" : "text-slate-500"}>
+            {value || "Chọn khối phù hợp với bé"}
           </span>
-          <ChevronDown
-            className={`w-4 h-4 flex-shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          />
+          <ChevronDown className={`w-4 h-4 flex-shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
 
-        <AnimatePresence>
-          {open && (
+        {open && rect && createPortal(
+          <AnimatePresence>
             <motion.ul
               ref={listRef}
               role="listbox"
@@ -303,19 +329,14 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: openUp ? 6 : -6, scale: 0.98 }}
               transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
-              className={[
-                "absolute left-0 right-0 z-50",
-                "bg-slate-900 border border-slate-700 rounded-xl",
-                "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
-                "overflow-y-auto",
-                "overscroll-contain",
-                listPositionClass,
-              ].join(" ")}
-              style={{ maxHeight: "240px" }}
+              style={{
+                ...portalStyle,
+                willChange: "transform, opacity",
+              }}
+              className="bg-slate-900 border border-slate-700 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-y-auto overscroll-contain"
             >
               {KHOI_OPTIONS.map((k, i) => {
                 const isSelected = k === value;
-                const isLast = i === KHOI_OPTIONS.length - 1;
                 return (
                   <li
                     key={k}
@@ -328,7 +349,7 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
                       "flex items-center justify-between px-4 py-3",
                       "text-sm cursor-pointer select-none outline-none",
                       "transition-colors duration-100",
-                      !isLast ? "border-b border-slate-800" : "",
+                      i !== KHOI_OPTIONS.length - 1 ? "border-b border-slate-800" : "",
                       isSelected
                         ? "bg-amber-500/15 text-amber-300"
                         : "text-slate-300 hover:bg-slate-800 focus-visible:bg-slate-800",
@@ -340,21 +361,25 @@ function KhoiDropdown({ value, onChange, error, disabled }) {
                 );
               })}
             </motion.ul>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>,
+          document.body
+        )}
       </div>
       {error && <p className={ERR_CLASS}>⚠ {error}</p>}
     </div>
   );
 }
 
-/* ─── Main page ── */
+/* ═══════════════════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════════════════ */
 export default function TuyenSinh() {
+  const isMobile    = useIsMobile();
   const { scrollY } = useScroll();
-  const heroRef = useRef(null);
-  const [heroHeight, setHeroHeight] = useState(700);
-  // 🔥 ĐÃ XOÁ: const lenis = useLenis();
+  const heroRef     = useRef(null);
+  const lenis       = useLenis();
   const { showToast } = useToast();
+  const [heroHeight, setHeroHeight] = useState(700);
 
   useEffect(() => {
     if (heroRef.current) setHeroHeight(heroRef.current.offsetHeight);
@@ -365,11 +390,15 @@ export default function TuyenSinh() {
 
   return (
     <div className="bg-[#F8FAFC] text-slate-800 antialiased overflow-x-hidden selection:bg-amber-300 selection:text-slate-900">
+
+      {/* Noise overlay */}
       <div
         aria-hidden="true"
         className="fixed inset-0 pointer-events-none z-50 opacity-[0.03]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          willChange: "transform",
+          contain: "strict",
         }}
       />
 
@@ -378,18 +407,13 @@ export default function TuyenSinh() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-tr from-amber-100/40 via-blue-50/40 to-transparent rounded-[100%] blur-[100px] -z-10" />
 
         <motion.div
-          style={{ opacity: heroOpacity, y: heroY }}
+          style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
           className="max-w-5xl mx-auto px-5 sm:px-6 text-center relative z-10"
         >
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate="visible"
+          <motion.div variants={stagger} initial="hidden" animate="visible"
             className="flex flex-col items-center gap-5 sm:gap-6"
           >
-            <motion.div
-              variants={fadeUp}
-              custom={0}
+            <motion.div variants={fadeUp} custom={{ d: 0, m: isMobile }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm hover:border-amber-300/60 transition-colors cursor-default"
             >
               <span className="relative flex h-2 w-2">
@@ -401,37 +425,34 @@ export default function TuyenSinh() {
               </span>
             </motion.div>
 
-            <motion.h1
-              variants={fadeUp}
-              custom={0.1}
+            <motion.h1 variants={fadeUp} custom={{ d: 0.1, m: isMobile }}
               className="text-4xl sm:text-6xl lg:text-8xl font-serif font-medium text-slate-900 tracking-tight leading-[1.08]"
             >
               Hành trình<br />
               <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-600 to-slate-900">
                 Đức Tin
-              </span>{" "}
-              & Tình Yêu
+              </span>{" "}& Tình Yêu
             </motion.h1>
 
-            <motion.p
-              variants={fadeUp}
-              custom={0.2}
+            <motion.p variants={fadeUp} custom={{ d: 0.2, m: isMobile }}
               className="text-base sm:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-light"
             >
               Nơi ươm mầm những tâm hồn trẻ thơ trong ánh sáng Tin Mừng, giúp các em trưởng thành
               về nhân bản và vững mạnh trong đời sống tâm linh.
             </motion.p>
 
-            <motion.div
-              variants={fadeUp}
-              custom={0.3}
+            <motion.div variants={fadeUp} custom={{ d: 0.3, m: isMobile }}
               className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto"
             >
-              {/* TỐI ƯU CÚ PHÁP NATIVE SMOOTH SCROLL */}
               <button
                 type="button"
+                /* Fallback Native Scroll API nếu Lenis chưa load */
                 onClick={() => {
-                  document.getElementById("dang-ky")?.scrollIntoView({ behavior: "smooth" });
+                  if (lenis) {
+                    lenis.scrollTo("#dang-ky", { duration: 1.4 });
+                  } else {
+                    document.getElementById("dang-ky")?.scrollIntoView({ behavior: "smooth" });
+                  }
                 }}
                 className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-slate-900 rounded-full overflow-hidden hover:scale-105 transition-transform duration-300 shadow-lg shadow-slate-900/20 cursor-pointer"
               >
@@ -454,12 +475,12 @@ export default function TuyenSinh() {
       <section className="py-10 sm:py-12 border-y border-slate-100 bg-white/60 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           {STATS.map((s) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 16 }}
+            <motion.div key={s.label}
+              initial={{ opacity: 0, y: isMobile ? 16 : 32 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform" }}
             >
               <p className="text-3xl sm:text-4xl font-serif font-bold text-slate-900 mb-1 tabular-nums">
                 <Counter target={s.target} suffix={s.suffix} />
@@ -474,10 +495,11 @@ export default function TuyenSinh() {
       <section id="chuong-trinh" className="py-20 sm:py-32 bg-slate-50/60">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: isMobile ? 16 : 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform" }}
             className="flex flex-col md:flex-row justify-between items-end mb-12 sm:mb-16 gap-6"
           >
             <div className="max-w-xl">
@@ -497,44 +519,45 @@ export default function TuyenSinh() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
             {PROGRAMS.map((prog, i) => {
               const Icon = prog.icon;
-              if (prog.featured) {
-                return (
-                  <motion.div
-                    key={prog.title}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ y: -8 }}
-                    className="group relative p-7 sm:p-8 rounded-3xl bg-slate-900 text-white shadow-xl overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950" />
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[80px] transition-transform duration-500 group-hover:scale-150" />
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center mb-7 sm:mb-8 group-hover:scale-110 transition-transform duration-300">
-                        <Icon className={`w-7 h-7 ${prog.iconColor}`} />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3 font-serif">{prog.title}</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed mb-6">{prog.desc}</p>
-                      <Link
-                        to={prog.path}
-                        className={`inline-flex items-center gap-1.5 text-sm font-semibold text-white ${prog.linkColor} transition-colors`}
-                      >
-                        Tìm hiểu thêm
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                );
-              }
-              return (
-                <motion.div
-                  key={prog.title}
-                  initial={{ opacity: 0, y: 40 }}
+              
+              if (prog.featured) return (
+                <motion.div key={prog.title}
+                  initial={{ opacity: 0, y: isMobile ? 16 : 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
                   transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  whileHover={{ y: -8 }}
+                  // Giữ whileHover cho Desktop, bỏ trên Mobile
+                  whileHover={isMobile ? {} : { y: -8 }}
+                  style={{ willChange: "transform" }}
+                  className="group relative p-7 sm:p-8 rounded-3xl bg-slate-900 text-white shadow-xl overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[80px] transition-transform duration-500 group-hover:scale-150" />
+                  <div className="relative z-10">
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center mb-7 sm:mb-8 group-hover:scale-110 transition-transform duration-300">
+                      <Icon className={`w-7 h-7 ${prog.iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3 font-serif">{prog.title}</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed mb-6">{prog.desc}</p>
+                    <Link to={prog.path}
+                      className={`inline-flex items-center gap-1.5 text-sm font-semibold text-white ${prog.linkColor} transition-colors`}
+                    >
+                      Tìm hiểu thêm
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+
+              return (
+                <motion.div key={prog.title}
+                  initial={{ opacity: 0, y: isMobile ? 16 : 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
+                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  // Giữ whileHover cho Desktop, bỏ trên Mobile
+                  whileHover={isMobile ? {} : { y: -8 }}
+                  style={{ willChange: "transform" }}
                   className="group relative p-7 sm:p-8 rounded-3xl bg-white border border-slate-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden"
                 >
                   <div className={`absolute top-0 right-0 w-32 h-32 ${prog.bg} rounded-bl-[80px] -z-0 transition-transform duration-500 group-hover:scale-150`} />
@@ -544,8 +567,7 @@ export default function TuyenSinh() {
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-3 font-serif">{prog.title}</h3>
                     <p className="text-slate-500 text-sm leading-relaxed mb-6">{prog.desc}</p>
-                    <Link
-                      to={prog.path}
+                    <Link to={prog.path}
                       className={`inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 ${prog.linkColor} transition-colors`}
                     >
                       Tìm hiểu thêm
@@ -562,29 +584,31 @@ export default function TuyenSinh() {
       {/* ══════ FAQ ══════ */}
       <section className="py-20 sm:py-32 max-w-3xl mx-auto px-5 sm:px-6">
         <motion.h2
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: isMobile ? 16 : 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: "transform" }}
           className="text-2xl sm:text-3xl font-serif text-center text-slate-900 mb-10 sm:mb-12"
         >
           Thắc mắc thường gặp
         </motion.h2>
         <div className="space-y-3">
           {FAQS.map((item, i) => (
-            <FaqItem key={i} item={item} index={i} /> // 🔥 ĐÃ XOÁ: lenis={lenis}
+            <FaqItem key={i} item={item} index={i} lenis={lenis} />
           ))}
         </div>
       </section>
 
       {/* ══════ ĐĂNG KÝ ══════ */}
-      <RegisterSection showToast={showToast} /> {/* 🔥 ĐÃ XOÁ: lenis={lenis} */}
+      <RegisterSection showToast={showToast} lenis={lenis} />
     </div>
   );
 }
 
-/* ─── RegisterSection ─── */
-function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
+/* ─── RegisterSection ───────────────────────────────────────────── */
+function RegisterSection({ showToast, lenis }) {
+  const isMobile = useIsMobile();
   const INIT = { hoTen: "", namSinh: "", sdt: "", giaoXom: "", khoi: "" };
   const [form,    setForm]    = useState(INIT);
   const [errors,  setErrors]  = useState({});
@@ -595,14 +619,14 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
 
   const validate = () => {
     const e = {};
-    if (!form.hoTen.trim())        e.hoTen   = "Vui lòng nhập họ tên.";
+    if (!form.hoTen.trim()) e.hoTen = "Vui lòng nhập họ tên.";
     const year = parseInt(form.namSinh);
     if (!form.namSinh || isNaN(year) || year < 1990 || year > 2024)
       e.namSinh = "Năm sinh không hợp lệ (1990–2024).";
     if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(form.sdt.replace(/\s/g, "")))
-      e.sdt     = "Số điện thoại không hợp lệ.";
-    if (!form.giaoXom.trim())      e.giaoXom = "Vui lòng nhập giáo xóm.";
-    if (!form.khoi)                e.khoi    = "Vui lòng chọn khối đăng ký.";
+      e.sdt = "Số điện thoại không hợp lệ.";
+    if (!form.giaoXom.trim()) e.giaoXom = "Vui lòng nhập giáo xóm.";
+    if (!form.khoi) e.khoi = "Vui lòng chọn khối đăng ký.";
     return e;
   };
 
@@ -616,28 +640,26 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
     setLoading(false);
     setDone(true);
     showToast("✅ Đăng ký thành công! Chúng tôi sẽ liên hệ sớm.", "success", 5000);
-    // 🔥 ĐÃ XOÁ: lenis?.resize()
+    setTimeout(() => lenis?.resize(), 50);
   };
 
   const handleReset = () => {
-    setForm(INIT);
-    setErrors({});
-    setDone(false);
-    // 🔥 ĐÃ XOÁ: lenis?.resize()
+    setForm(INIT); setErrors({}); setDone(false);
+    setTimeout(() => lenis?.resize(), 50);
   };
 
   return (
     <section
       id="dang-ky"
-      className="py-20 sm:py-32 relative overflow-hidden"
+      /* scroll-mt-12 để tránh bị che bởi thanh điều hướng khi scroll tới form */
+      className="py-20 sm:py-32 relative overflow-hidden scroll-mt-12"
       style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none"
+      {/* grain */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          opacity: 0.035,
+          opacity: 0.035, willChange: "transform", contain: "strict",
         }}
       />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-amber-500/20 blur-[130px] rounded-full pointer-events-none" />
@@ -645,10 +667,11 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
 
       <div className="max-w-xl mx-auto px-5 sm:px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: isMobile ? 16 : 24 }} 
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: isMobile ? "-40px" : "-80px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: "transform" }}
           className="text-center mb-10 sm:mb-12"
         >
           <Heart className="w-10 h-10 mx-auto mb-4" style={{ color: GOLD }} />
@@ -660,17 +683,16 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
 
         <AnimatePresence mode="wait">
           {done ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
+            <motion.div key="success"
+              initial={{ opacity: 0, scale: 0.94, y: isMobile ? 16 : 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform, opacity" }}
               className="text-center py-8"
             >
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
+                initial={{ scale: 0 }} animate={{ scale: 1 }}
                 transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 20 }}
                 className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
                 style={{ background: `${GOLD}20`, border: `2px solid ${GOLD}` }}
@@ -683,50 +705,34 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
                 <span className="text-white font-semibold">{form.sdt}</span>{" "}
                 để xác nhận và xếp lớp phù hợp cho bé.
               </p>
-              <button
-                type="button"
-                onClick={handleReset}
+              <button type="button" onClick={handleReset}
                 className="px-6 py-3 rounded-full text-sm font-semibold border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Đăng ký thêm học viên khác
               </button>
             </motion.div>
           ) : (
-            <motion.form
-              key="form"
-              initial={{ opacity: 0, y: 24 }}
+            <motion.form key="form"
+              initial={{ opacity: 0, y: isMobile ? 16 : 24 }} 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              onSubmit={handleSubmit}
-              noValidate
-              className="space-y-4 sm:space-y-5"
+              style={{ willChange: "transform, opacity" }}
+              onSubmit={handleSubmit} noValidate className="space-y-4 sm:space-y-5"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL_CLASS}>Tên Thánh & Tên Gọi</label>
-                  <input
-                    type="text"
-                    value={form.hoTen}
-                    onChange={set("hoTen")}
-                    placeholder="Maria Nguyễn Thị A"
-                    className={fieldClass(errors.hoTen)}
-                    disabled={loading}
-                  />
+                  <input type="text" value={form.hoTen} onChange={set("hoTen")}
+                    placeholder="Maria Nguyễn Thị A" className={fieldClass(errors.hoTen)} disabled={loading} />
                   {errors.hoTen && <p className={ERR_CLASS}>⚠ {errors.hoTen}</p>}
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Năm sinh</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={form.namSinh}
-                    onChange={set("namSinh")}
-                    placeholder="2015"
-                    className={fieldClass(errors.namSinh)}
-                    disabled={loading}
-                  />
+                  {/* pattern="[0-9]*" và inputMode="numeric" để tối ưu phím số trên Mobile */}
+                  <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={4}
+                    value={form.namSinh} onChange={set("namSinh")}
+                    placeholder="2015" className={fieldClass(errors.namSinh)} disabled={loading} />
                   {errors.namSinh && <p className={ERR_CLASS}>⚠ {errors.namSinh}</p>}
                 </div>
               </div>
@@ -734,45 +740,50 @@ function RegisterSection({ showToast }) { // 🔥 ĐÃ XOÁ: prop lenis
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL_CLASS}>Số điện thoại phụ huynh</label>
-                  <input
-                    type="text"
-                    inputMode="tel"
-                    value={form.sdt}
-                    onChange={set("sdt")}
-                    placeholder="0905123456"
-                    className={fieldClass(errors.sdt)}
-                    disabled={loading}
-                  />
+                  <input type="tel" inputMode="numeric" pattern="[0-9]*" value={form.sdt} onChange={set("sdt")}
+                    placeholder="090..." className={fieldClass(errors.sdt)} disabled={loading} />
                   {errors.sdt && <p className={ERR_CLASS}>⚠ {errors.sdt}</p>}
                 </div>
                 <div>
-                  <label className={LABEL_CLASS}>Giáo xóm / Giáo họ</label>
-                  <input
-                    type="text"
-                    value={form.giaoXom}
-                    onChange={set("giaoXom")}
-                    placeholder="Giáo xóm Phaolô"
-                    className={fieldClass(errors.giaoXom)}
-                    disabled={loading}
-                  />
+                  <label className={LABEL_CLASS}>Giáo xóm</label>
+                  <input type="text" value={form.giaoXom} onChange={set("giaoXom")}
+                    placeholder="Xóm 1, Xóm 2..." className={fieldClass(errors.giaoXom)} disabled={loading} />
                   {errors.giaoXom && <p className={ERR_CLASS}>⚠ {errors.giaoXom}</p>}
                 </div>
               </div>
 
-              <KhoiDropdown
-                value={form.khoi}
-                onChange={(e) => setForm((p) => ({ ...p, khoi: e.target.value }))}
-                error={errors.khoi}
-                disabled={loading}
-              />
+              <KhoiDropdown value={form.khoi} onChange={set("khoi")} error={errors.khoi} disabled={loading} />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-slate-950 bg-amber-400 rounded-xl overflow-hidden hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-lg shadow-amber-400/10 mt-2"
+              <div>
+                <label className={LABEL_CLASS}>
+                  Ghi chú thêm <span className="normal-case text-slate-600">(không bắt buộc)</span>
+                </label>
+                <textarea rows={3} placeholder="Bé có hoàn cảnh đặc biệt, yêu cầu riêng..."
+                  className={`${FIELD_BASE} border-slate-700 focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/60 resize-none`}
+                  disabled={loading} />
+              </div>
+
+              <motion.button type="submit" disabled={loading}
+                whileTap={!loading ? { scale: 0.98 } : {}}
+                className="w-full flex items-center justify-center gap-2.5 font-bold text-sm uppercase tracking-wide py-4 rounded-xl transition-all duration-200 shadow-lg mt-1 disabled:opacity-70 cursor-pointer"
+                style={{ background: loading ? "#b8940f" : GOLD, color: "#0F172A", willChange: "transform" }}
               >
-                {loading ? "Đang xử lý..." : "Gửi thông tin đăng ký"}
-              </button>
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Đang gửi hồ sơ…
+                  </>
+                ) : (
+                  <><Heart className="w-4 h-4" /> Gửi hồ sơ đăng ký</>
+                )}
+              </motion.button>
+
+              <p className="text-center text-xs text-slate-600 leading-relaxed">
+                Thông tin chỉ dùng để xếp lớp, không chia sẻ cho bên thứ ba.
+              </p>
             </motion.form>
           )}
         </AnimatePresence>
