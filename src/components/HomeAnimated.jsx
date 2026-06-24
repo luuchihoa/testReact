@@ -16,19 +16,25 @@ function useIsMobile() {
   return isMobile;
 }
 
-/* ─── Variants (Đồng bộ với TuyenSinh) ────────────────────────── */
+/* ─── Variants ────────────────────────── */
 const fadeUp = {
-  hidden: (c) => ({ opacity: 0, y: c?.m ? 16 : 32 }),
+  hidden: (c) => ({ opacity: 0, y: c?.m ? 8 : 32 }),  // 16 → 8
   visible: (c) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: c?.d || 0 },
+    transition: {
+      duration: c?.m ? 0.5 : 0.8,  // mobile nhanh hơn
+      ease: [0.16, 1, 0.3, 1],
+      delay: c?.m ? (c?.d || 0) * 0.6 : (c?.d || 0),  // delay ngắn hơn trên mobile
+    },
   }),
 };
 
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.15 } },
+  visible: (m) => ({
+    transition: { staggerChildren: m ? 0.08 : 0.15 }  // 0.15 → 0.08 trên mobile
+  }),
 };
 
 export default function HomeAnimated({ Sections }) {
