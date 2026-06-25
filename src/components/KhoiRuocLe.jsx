@@ -1,28 +1,45 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Star, BookOpen, MessageSquare, ShieldCheck,
   Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sparkles,
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useLenis } from "lenis/react";
 
 /* ── Design tokens ── */
-const ACCENT   = "#c8961e";   // vàng thánh — phù hợp với chủ đề Thánh Thể
+const ACCENT   = "#c8961e";
 const ACCENT_L = "#fdf8ec";
 
-/* ── Framer Motion ── */
-const fadeUp = {
-  hidden:  { opacity: 0, y: 28 },
-  visible: (d = 0) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: d },
-  }),
-};
-const stagger = {
-  hidden:  {},
-  visible: { transition: { staggerChildren: 0.12 } },
-};
+/* ─── Hook phát hiện Mobile ──────────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mql.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+/* ─── Hook tạo motion config theo thiết bị ───────────────────── */
+function useMotionConfig() {
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
+  const reduced = prefersReducedMotion || isMobile;
+
+  return {
+    isMobile,
+    reduced,
+    yOffset:      reduced ? 8 : 28,
+    duration:     (base = 0.7) => reduced ? base * 0.6 : base,
+    stagger:      reduced ? 0.06 : 0.12,
+    delay:        (base = 0) => reduced ? base * 0.5 : base,
+    heroParallax: isMobile ? [0, 0] : [0, -80],
+  };
+}
 
 /* ── Dữ liệu ── */
 const OVERVIEW = [
@@ -34,38 +51,32 @@ const OVERVIEW = [
 
 const JOURNEY = [
   {
-    step: "01",
-    title: "Tôi là ai?",
+    step: "01", title: "Tôi là ai?",
     desc: "Khám phá bản thân là con cái Thiên Chúa, hiểu về ân sủng Bí tích Rửa Tội đã lãnh nhận.",
     color: "border-l-amber-300",
   },
   {
-    step: "02",
-    title: "Chúa Giêsu là ai?",
+    step: "02", title: "Chúa Giêsu là ai?",
     desc: "Đi sâu vào cuộc đời Chúa Giêsu qua Tin Mừng — Ngài là ai, Ngài dạy gì và tại sao Ngài yêu tôi.",
     color: "border-l-yellow-400",
   },
   {
-    step: "03",
-    title: "Bí tích Hoà Giải",
+    step: "03", title: "Bí tích Hoà Giải",
     desc: "Hiểu ý nghĩa xưng tội: tha thứ, chữa lành và bắt đầu lại. Chuẩn bị xưng tội lần đầu.",
     color: "border-l-green-300",
   },
   {
-    step: "04",
-    title: "Thánh Thể — Chúa đến với tôi",
+    step: "04", title: "Thánh Thể — Chúa đến với tôi",
     desc: "Tìm hiểu Bí tích Thánh Thể: Chúa Giêsu thực sự hiện diện trong Bánh và Rượu như thế nào.",
     color: "border-l-amber-400",
   },
   {
-    step: "05",
-    title: "Ngày trọng đại",
+    step: "05", title: "Ngày trọng đại",
     desc: "Chuẩn bị tâm hồn và nghi lễ cho Ngày Rước Lễ Lần Đầu — kỷ niệm thiêng liêng nhất tuổi thơ.",
     color: "border-l-rose-300",
   },
   {
-    step: "06",
-    title: "Sống Thánh Thể mỗi ngày",
+    step: "06", title: "Sống Thánh Thể mỗi ngày",
     desc: "Sau ngày đặc biệt đó, tiếp tục sống tình yêu Thánh Thể trong gia đình, trường học và xã hội.",
     color: "border-l-sky-300",
   },
@@ -98,8 +109,43 @@ const HIGHLIGHTS = [
 export default function KhoiRuocLe() {
   const heroRef = useRef(null);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, -80]);
+  const mc = useMotionConfig();
+
+  const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
+
+  /* ── Variants được tính theo mc ── */
+  const fadeUp = {
+    hidden: { opacity: 0, y: mc.yOffset },
+    visible: (delay = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: mc.duration(0.7),
+        ease: [0.16, 1, 0.3, 1],
+        delay: mc.delay(delay),
+      },
+    }),
+  };
+
+  const staggerContainer = {
+    hidden: {},
+    visible: { transition: { staggerChildren: mc.stagger } },
+  };
+
+  /* ── viewport helper ── */
+  const vp = { once: true, margin: mc.isMobile ? "0px" : "-60px 0px" };
+
+  /* ── scrollTo với fallback native ── */
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+    if (lenis) {
+      lenis.scrollTo(target, { duration: mc.isMobile ? 0.8 : 1.2 });
+    } else {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-amber-200 selection:text-amber-900">
@@ -110,14 +156,21 @@ export default function KhoiRuocLe() {
         className="relative overflow-hidden pt-16 pb-20 md:pt-28 md:pb-32"
         style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 60%)` }}
       >
-        <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-amber-200/25 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-yellow-100/30 blur-[100px] rounded-full -z-10" />
+        {/* Ambient blobs — ẩn trên mobile để tiết kiệm GPU */}
+        {!mc.isMobile && (
+          <>
+            <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-amber-200/25 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
+            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-yellow-100/30 blur-[100px] rounded-full -z-10" />
+          </>
+        )}
 
         <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
+
+          {/* Back link */}
           <motion.div
-            initial={{ opacity: 0, x: -16 }}
+            initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: mc.duration(0.5) }}
           >
             <Link
               to="/"
@@ -128,8 +181,9 @@ export default function KhoiRuocLe() {
             </Link>
           </motion.div>
 
+          {/* Hero content */}
           <motion.div
-            variants={stagger}
+            variants={staggerContainer}
             initial="hidden"
             animate="visible"
             className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16"
@@ -178,8 +232,8 @@ export default function KhoiRuocLe() {
                 className="flex flex-col sm:flex-row gap-3"
               >
                 <button
-                  onClick={() => lenis?.scrollTo("#hanh-trinh", { duration: 1.2 })}
-                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                  onClick={() => scrollToSection("hanh-trinh")}
+                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
                 >
                   Xem hành trình
@@ -187,7 +241,7 @@ export default function KhoiRuocLe() {
                 </button>
                 <Link
                   to="/tuyển-sinh"
-                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                 >
                   Đăng ký
                 </Link>
@@ -204,6 +258,7 @@ export default function KhoiRuocLe() {
                   src="https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV"
                   alt="Rước Lễ Lần Đầu"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
+                  loading={mc.isMobile ? "lazy" : "eager"}
                 />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
@@ -226,10 +281,10 @@ export default function KhoiRuocLe() {
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
                 className="flex flex-col gap-2"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${ACCENT}18` }}>
@@ -246,10 +301,10 @@ export default function KhoiRuocLe() {
       {/* ══ HÀNH TRÌNH 6 BƯỚC ══ */}
       <section id="hanh-trinh" className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: mc.yOffset }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          viewport={vp}
+          transition={{ duration: mc.duration(0.7) }}
           className="mb-12"
         >
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
@@ -268,10 +323,11 @@ export default function KhoiRuocLe() {
           {JOURNEY.map((step, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: mc.yOffset }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
+              viewport={vp}
+              transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
+              whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
               className={`bg-white rounded-2xl border border-stone-100 border-l-4 ${step.color} p-5 shadow-sm hover:shadow-md transition-shadow`}
             >
               <p className="text-3xl font-serif font-black text-stone-100 mb-3 leading-none">{step.step}</p>
@@ -289,10 +345,10 @@ export default function KhoiRuocLe() {
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: mc.yOffset }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            viewport={vp}
+            transition={{ duration: mc.duration(0.7) }}
             className="mb-12"
           >
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
@@ -309,10 +365,11 @@ export default function KhoiRuocLe() {
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: mc.yOffset }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  viewport={vp}
+                  transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
+                  whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
                   className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${ACCENT}15` }}>
@@ -330,12 +387,20 @@ export default function KhoiRuocLe() {
       {/* ══ CTA ══ */}
       <section className="py-20 max-w-2xl mx-auto px-5 sm:px-6 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: mc.yOffset }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          viewport={vp}
+          transition={{ duration: mc.duration(0.7) }}
         >
-          <Star className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
+          <motion.div
+            animate={mc.reduced ? {} : {
+              scale: [1, 1.12, 1],
+              transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
+            }}
+          >
+            <Star className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
+          </motion.div>
+
           <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">
             Chuẩn bị cho ngày đặc biệt
           </h2>
@@ -346,7 +411,7 @@ export default function KhoiRuocLe() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/tuyển-sinh"
-              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
               style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
             >
               Đăng ký ngay
@@ -354,7 +419,7 @@ export default function KhoiRuocLe() {
             </Link>
             <Link
               to="/liên-hệ"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
             >
               Liên hệ hỏi thêm
             </Link>

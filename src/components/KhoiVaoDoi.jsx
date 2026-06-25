@@ -1,29 +1,46 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Globe, Compass, Users, MessageSquare,
   Lightbulb, Heart, Clock, CalendarDays,
   ArrowRight, ChevronLeft, ShieldCheck,
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useLenis } from "lenis/react";
 
 /* ── Design tokens ── */
-const ACCENT   = "#2563a8";   // xanh dương trưởng thành — sứ mạng, chứng nhân
+const ACCENT   = "#2563a8";
 const ACCENT_L = "#eef4fb";
 
-/* ── Framer Motion ── */
-const fadeUp = {
-  hidden:  { opacity: 0, y: 28 },
-  visible: (d = 0) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: d },
-  }),
-};
-const stagger = {
-  hidden:  {},
-  visible: { transition: { staggerChildren: 0.12 } },
-};
+/* ─── Hook phát hiện Mobile ──────────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mql.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+/* ─── Hook tạo motion config theo thiết bị ───────────────────── */
+function useMotionConfig() {
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
+  const reduced = prefersReducedMotion || isMobile;
+
+  return {
+    isMobile,
+    reduced,
+    yOffset:      reduced ? 8 : 28,
+    duration:     (base = 0.7) => reduced ? base * 0.6 : base,
+    stagger:      reduced ? 0.06 : 0.12,
+    delay:        (base = 0) => reduced ? base * 0.5 : base,
+    heroParallax: isMobile ? [0, 0] : [0, -80],
+  };
+}
 
 /* ── Dữ liệu ── */
 const OVERVIEW = [
@@ -113,8 +130,43 @@ const QUOTES = [
 export default function KhoiVaoDoi() {
   const heroRef = useRef(null);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, -80]);
+  const mc = useMotionConfig();
+
+  const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
+
+  /* ── Variants được tính theo mc ── */
+  const fadeUp = {
+    hidden: { opacity: 0, y: mc.yOffset },
+    visible: (delay = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: mc.duration(0.7),
+        ease: [0.16, 1, 0.3, 1],
+        delay: mc.delay(delay),
+      },
+    }),
+  };
+
+  const staggerContainer = {
+    hidden: {},
+    visible: { transition: { staggerChildren: mc.stagger } },
+  };
+
+  /* ── viewport helper ── */
+  const vp = { once: true, margin: mc.isMobile ? "0px" : "-60px 0px" };
+
+  /* ── scrollTo với fallback native ── */
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+    if (lenis) {
+      lenis.scrollTo(target, { duration: mc.isMobile ? 0.8 : 1.2 });
+    } else {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-blue-200 selection:text-blue-900">
@@ -125,14 +177,21 @@ export default function KhoiVaoDoi() {
         className="relative overflow-hidden pt-16 pb-20 md:pt-28 md:pb-32"
         style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 60%)` }}
       >
-        <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-blue-200/20 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-sky-100/30 blur-[100px] rounded-full -z-10" />
+        {/* Ambient blobs — ẩn trên mobile để tiết kiệm GPU */}
+        {!mc.isMobile && (
+          <>
+            <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-blue-200/20 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
+            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-sky-100/30 blur-[100px] rounded-full -z-10" />
+          </>
+        )}
 
         <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
+
+          {/* Back link */}
           <motion.div
-            initial={{ opacity: 0, x: -16 }}
+            initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: mc.duration(0.5) }}
           >
             <Link
               to="/"
@@ -143,8 +202,9 @@ export default function KhoiVaoDoi() {
             </Link>
           </motion.div>
 
+          {/* Hero content */}
           <motion.div
-            variants={stagger}
+            variants={staggerContainer}
             initial="hidden"
             animate="visible"
             className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16"
@@ -192,8 +252,8 @@ export default function KhoiVaoDoi() {
                 className="flex flex-col sm:flex-row gap-3"
               >
                 <button
-                  onClick={() => lenis?.scrollTo("#noi-dung", { duration: 1.2 })}
-                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                  onClick={() => scrollToSection("noi-dung")}
+                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
                 >
                   Xem nội dung
@@ -201,7 +261,7 @@ export default function KhoiVaoDoi() {
                 </button>
                 <Link
                   to="/tuyển-sinh"
-                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                 >
                   Tham gia nhóm
                 </Link>
@@ -218,6 +278,7 @@ export default function KhoiVaoDoi() {
                   src="https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ"
                   alt="Khối Vào Đời"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
+                  loading={mc.isMobile ? "lazy" : "eager"}
                 />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <Compass className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
@@ -240,10 +301,10 @@ export default function KhoiVaoDoi() {
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
                 className="flex flex-col gap-2"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${ACCENT}15` }}>
@@ -260,10 +321,10 @@ export default function KhoiVaoDoi() {
       {/* ══ 3 TRỤ CỘT NỘI DUNG ══ */}
       <section id="noi-dung" className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: mc.yOffset }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          viewport={vp}
+          transition={{ duration: mc.duration(0.7) }}
           className="mb-12"
         >
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
@@ -284,10 +345,11 @@ export default function KhoiVaoDoi() {
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.1) }}
+                whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
                 className={`rounded-2xl border p-6 ${pillar.color}`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${pillar.iconBg}`}>
@@ -318,10 +380,10 @@ export default function KhoiVaoDoi() {
             {QUOTES.map((q, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.15) }}
                 className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 p-6"
               >
                 <p className="text-white/90 text-sm font-medium leading-relaxed italic mb-3">
@@ -337,10 +399,10 @@ export default function KhoiVaoDoi() {
       {/* ══ ĐIỂM NỔI BẬT ══ */}
       <section className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: mc.yOffset }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          viewport={vp}
+          transition={{ duration: mc.duration(0.7) }}
           className="mb-12"
         >
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
@@ -357,10 +419,11 @@ export default function KhoiVaoDoi() {
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
+                whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
                 className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${ACCENT}12` }}>
@@ -381,12 +444,20 @@ export default function KhoiVaoDoi() {
       >
         <div className="max-w-2xl mx-auto px-5 sm:px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: mc.yOffset }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            viewport={vp}
+            transition={{ duration: mc.duration(0.7) }}
           >
-            <Globe className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
+            <motion.div
+              animate={mc.reduced ? {} : {
+                scale: [1, 1.12, 1],
+                transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
+              }}
+            >
+              <Globe className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
+            </motion.div>
+
             <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">
               Sẵn sàng bước ra?
             </h2>
@@ -397,7 +468,7 @@ export default function KhoiVaoDoi() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/tuyển-sinh"
-                className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                 style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
               >
                 Tham gia ngay
@@ -405,7 +476,7 @@ export default function KhoiVaoDoi() {
               </Link>
               <Link
                 to="/liên-hệ"
-                className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
               >
                 Liên hệ hỏi thêm
               </Link>

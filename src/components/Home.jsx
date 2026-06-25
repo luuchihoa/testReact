@@ -16,7 +16,7 @@ const Sections = [
     path: "/khối-chiên-con",
     title: "Khối Chiên Con",
     desc: "Gieo hạt giống đức tin vào tâm hồn trẻ thơ qua những câu chuyện Kinh Thánh sinh động, bài hát và hoạt động yêu thương.",
-    img: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc",
+    img: "/images/chiencon.avif",
     icon: Heart,
     badge: "Mầm non",
     numeral: "I",
@@ -25,9 +25,9 @@ const Sections = [
   },
   {
     path: "/khối-rước-lễ",
-    title: "Rước Lễ Lần Đầu",
+    title: "Khối Rước Lễ Lần Đầu",
     desc: "Chuẩn bị tâm hồn đón nhận Chúa Giêsu trong Bí tích Thánh Thể lần đầu tiên — hành trình thiêng liêng nhất của tuổi thơ.",
-    img: "https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV",
+    img: "/images/ruocle.avif",
     icon: Star,
     badge: "Bí tích",
     numeral: "II",
@@ -39,7 +39,7 @@ const Sections = [
     path: "/khối-thêm-sức",
     title: "Khối Thêm Sức",
     desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.",
-    img: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ",
+    img: "/images/themsuc.avif",
     icon: Flame,
     badge: "Trưởng thành",
     numeral: "III",
@@ -50,7 +50,7 @@ const Sections = [
     path: "/khối-phụng-vụ",
     title: "Khối Phụng Vụ",
     desc: "Tìm hiểu sâu sắc về các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ giáo hội.",
-    img: "https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV",
+    img: "/images/phungvu.avif",
     icon: Sparkles,
     badge: "Tâm linh",
     numeral: "IV",
@@ -61,7 +61,7 @@ const Sections = [
     path: "/khối-kinh-thánh",
     title: "Khối Kinh Thánh",
     desc: "Khám phá chân lý và tình yêu thương qua từng trang sách Thánh để củng cố nền tảng đức tin.",
-    img: "https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc",
+    img: "/images/kinhthanh.avif",
     icon: BookOpen,
     badge: "Nền tảng",
     numeral: "V",
@@ -73,7 +73,7 @@ const Sections = [
     path: "/khối-vào-đời",
     title: "Khối Vào Đời",
     desc: "Trang bị hành trang đức tin vững chắc, giúp các bạn trẻ sống chứng nhân giữa lòng xã hội và mang Tin Mừng đến mọi nơi.",
-    img: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ",
+    img: "/images/vaodoi.avif",
     icon: Globe,
     badge: "Vào đời",
     numeral: "VI",
@@ -84,7 +84,7 @@ const Sections = [
     path: "/tài-liệu",
     title: "Tài Liệu Ôn Tập",
     desc: "Hệ thống hóa toàn bộ kiến thức giáo lý thông qua kho đề thi trực quan và đáp án chi tiết.",
-    img: "https://lh3.googleusercontent.com/d/1HD_Lv9paf30NMvMzcaS9P-82Ih_g-vXp",
+    img: "/images/tailieu.avif",
     icon: GraduationCap,
     badge: "Kho tư liệu",
     numeral: "VII",
@@ -398,9 +398,7 @@ export default function Home() {
             <motion.div
               key={section.path}
               variants={fadeUp}
-              whileHover={isMobile ? {} : { y: -6, scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className={section.gridClass}
+              className={`${section.gridClass} transition-all duration-300 ease-out ${!isMobile ? "hover:-translate-y-1.5 hover:scale-[1.01]" : ""}`}
             >
               {section.isWide
                 ? <WideCard section={section} isMobile={isMobile}/>

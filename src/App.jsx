@@ -3,10 +3,8 @@ import { ToastProvider } from "./components/ui/ToastContext.jsx";
 import { Routes, Route, useLocation, Outlet } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
-// TỐI ƯU CỐT LÕI: Chuyển ReactLenis sang dạng lazy load để desktop cần mới tải, mobile bỏ qua hoàn toàn
 const ReactLenisLazy = lazy(() => 
   import("lenis/react").then(mod => {
-    // Tạo một hàm bọc nhỏ để gán thực thể lenis vào window khi nó hoạt động
     const WrappedComponent = (props) => {
       return <mod.ReactLenis {...props} ref={(inst) => { if (inst) window.lenis = inst.lenis; }} />;
     };
@@ -14,13 +12,11 @@ const ReactLenisLazy = lazy(() =>
   })
 );
 
-// ─── Luôn tải ngay (Critical Path) ──────────────────────────────
 import Header from "./components/Header.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
 
-// ─── Hàm bọc Lazy Load tự động reload khi bị lỗi bộ nhớ đệm (Chunk Error) ───
 const lazyWithRetry = (componentImport) =>
   lazy(() =>
     componentImport().catch((error) => {
@@ -34,17 +30,16 @@ const lazyWithRetry = (componentImport) =>
     })
   );
 
-// ─── Lazy load các trang con để tối ưu tốc độ tải trang đầu ──────────
-const ModalLogin   = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
-const ModalUser    = lazyWithRetry(() => import("./components/ModalUser.jsx"));
+const ModalLogin    = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
+const ModalUser     = lazyWithRetry(() => import("./components/ModalUser.jsx"));
 const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
-const KhoiChienCon = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
-const KhoiRuocLe = lazyWithRetry(() => import("./components/KhoiRuocLe.jsx"));
+const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
+const KhoiRuocLe    = lazyWithRetry(() => import("./components/KhoiRuocLe.jsx"));
 const KhoiThemSuc   = lazyWithRetry(() => import("./components/KhoiThemSuc.jsx"));
 const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu.jsx"));
 const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh.jsx"));
-const KhoiVaoDoi   = lazyWithRetry(() => import("./components/KhoiVaoDoi.jsx"));
+const KhoiVaoDoi    = lazyWithRetry(() => import("./components/KhoiVaoDoi.jsx"));
 const TaiLieu       = lazyWithRetry(() => import("./components/TaiLieu.jsx"));
 const TestQuiz      = lazyWithRetry(() => import("./components/TestQuiz.jsx"));
 const BaoMat        = lazyWithRetry(() => import("./components/BaoMat.jsx"));
@@ -74,11 +69,22 @@ const fontSizeMap = {
   xl: "text-xl",
 };
 
+const AppLayout = ({ fontSize, toggleModal, isLogin }) => (
+  <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
+    <Header toggleModal={toggleModal} isLogin={isLogin} />
+    <main className="w-full flex-grow pb-16">
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </main>
+    <Footer />
+  </div>
+);
+
 export default function App() {
   const [fontSize, setFontSize] = useState("base");
   const [turnOnModal, setTurnOnModal] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
-  const location = useLocation();
 
   const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
@@ -102,54 +108,38 @@ export default function App() {
     }
   };
 
-  // Hàm render nội dung chính của ứng dụng
   const renderAppContent = () => (
     <>
       <ScrollToTop />
-      <AnimatePresence mode="wait" initial={true}>
-        <Routes location={location} key={isMobile ? undefined : location.pathname}>
-          <Route
-            element={
-              <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
-                <Header toggleModal={toggleModal} isLogin={isLogin} />
-                <main className="w-full flex-grow pb-16">
-                  <Suspense fallback={<PageLoader />}>
-                    <Outlet context={{ fontSize, setFontSize: handleFontSizeChange }} />
-                  </Suspense>
-                </main>
-                <Footer />
-              </div>
-            }
-          >
-            <Route index element={<Home />} />
-            <Route path="tuyển-sinh" element={<TuyenSinh />} />
-            <Route path="giới-thiệu" element={<GioiThieu />} />
-            <Route path="khối-chiên-con" element={<KhoiChienCon />} />
-            <Route path="khối-rước-lễ" element={<KhoiRuocLe />} />
-            <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
-            <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
-            <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
-            <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
-            <Route path="tài-liệu" element={<TaiLieu />} />
-            <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
-            <Route path="liên-hệ" element={<Contact />} />
-            <Route path="cài-đặt" element={<Setting />} />
-            <Route path="bảo-mật" element={<BaoMat />} />
-            <Route path="quy-định" element={<QuyDinh />} />
-          </Route>
-
-          <Route 
-            path="/:khoi/:type" 
-            element={
-              <div className={`${fontSizeMap[fontSize]} min-h-screen bg-stone-50 antialiased`}>
-                <Suspense fallback={<PageLoader />}>
-                  <TestQuiz />
-                </Suspense>
-              </div>
-            } 
-          />
-        </Routes>
-      </AnimatePresence>
+      <Routes>
+        <Route element={<AppLayout fontSize={fontSize} toggleModal={toggleModal} isLogin={isLogin} />}>
+          <Route index element={<Home />} />
+          <Route path="tuyển-sinh" element={<TuyenSinh />} />
+          <Route path="giới-thiệu" element={<GioiThieu />} />
+          <Route path="khối-chiên-con" element={<KhoiChienCon />} />
+          <Route path="khối-rước-lễ" element={<KhoiRuocLe />} />
+          <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
+          <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
+          <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
+          <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
+          <Route path="tài-liệu" element={<TaiLieu />} />
+          <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
+          <Route path="liên-hệ" element={<Contact />} />
+          <Route path="cài-đặt" element={<Setting />} />
+          <Route path="bảo-mật" element={<BaoMat />} />
+          <Route path="quy-định" element={<QuyDinh />} />
+        </Route>
+        <Route
+          path="/:khoi/:type"
+          element={
+            <div className={`${fontSizeMap[fontSize]} min-h-screen bg-stone-50 antialiased`}>
+              <Suspense fallback={<PageLoader />}>
+                <TestQuiz />
+              </Suspense>
+            </div>
+          }
+        />
+      </Routes>
 
       <Suspense fallback={null}>
         <AnimatePresence>
@@ -166,21 +156,17 @@ export default function App() {
 
   return (
     <ToastProvider>
-      {/* TỐI ƯU ĐIỂM MOBILE: 
-        Nếu là thiết bị di động (isMobile = true), chạy thẳng nội dung thuần, loại bỏ Lenis JS.
-        Nếu là Desktop, kích hoạt ReactLenisLazy để có cuộn mượt.
-      */}
       {isMobile ? (
         renderAppContent()
       ) : (
         <Suspense fallback={renderAppContent()}>
-          <ReactLenisLazy 
-            root 
-            options={{ 
-              duration: 1.2, 
-              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
-              smoothTouch: false, 
-              touchMultiplier: 1.5 
+          <ReactLenisLazy
+            root
+            options={{
+              duration: 1.2,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+              smoothTouch: false,
+              touchMultiplier: 1.5,
             }}
           >
             {renderAppContent()}
