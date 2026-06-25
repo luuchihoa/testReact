@@ -262,7 +262,7 @@ export default function Home() {
           willChange: "transform",
           contain: "strict",
         }}
-      />
+      />exit
       {/* ── HERO ── */}
       <section
         ref={heroRef}
