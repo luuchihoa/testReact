@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Globe, Compass, Users, MessageSquare, Lightbulb, Heart, Clock, CalendarDays, ArrowRight, ChevronLeft, ShieldCheck } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useLenis } from "lenis/react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
 
@@ -9,9 +9,9 @@ const ACCENT   = "#7c3a1e";
 const ACCENT_L = "#fdf6ee";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Từ 18 tuổi trở lên" },
-  { icon: Clock,        label: "Thời lượng", value: "90 phút / buổi" },
-  { icon: CalendarDays, label: "Lịch học",   value: "Thứ Bảy tối / Chủ Nhật" },
+  { icon: Users,        label: "Độ tuổi",    value: "Từ 16 tuổi trở lên" },
+  { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
+  { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật sau Thánh lễ" },
   { icon: ShieldCheck,  label: "Yêu cầu",    value: "Đã lãnh các Bí tích khai tâm" },
 ];
 
@@ -42,8 +42,104 @@ const HIGHLIGHTS = [
 
 const QUOTES = [
   { text: "Anh em hãy ra đi và làm cho muôn dân trở thành môn đệ.", src: "Mt 28,19" },
-  { text: "Niềm vui Tin Mừng tràn ngập tâm hồn và cuộc sống của tất cả những ai gặp gỡ Chúa Giêsu.", src: "ĐGH Phanxicô — Evangelii Gaudium" },
+  { text: "Anh em là muối cho đời, là ánh sáng cho trần gian.", src: "Mt 5,13-14" },
+  { text: "Đừng để ai coi thường anh vì anh còn trẻ.", src: "1 Tm 4,12" },
+  { text: "Hãy tìm kiếm Nước Thiên Chúa trước, còn tất cả các thứ khác sẽ được thêm vào.", src: "Mt 6,33" },
+  { text: "Người trẻ ơi, Ta nói với anh: hãy trỗi dậy!", src: "Lc 7,14" },
+  { text: "Đức tin không có việc làm là đức tin chết.", src: "Gc 2,17" },
+  { text: "Hãy canh tân tâm trí anh em để nhận ra đâu là ý Thiên Chúa.", src: "Rm 12,2" },
+  
+  // --- CÁC CÂU BỔ SUNG MỚI CHUYÊN CHO KHỐI VÀO ĐỜI ---
+  
+  // Về học tập, công việc và sự khôn ngoan giữa đời
+  { text: "Bất cứ làm việc gì, hãy làm tận tâm như làm cho Chúa, chứ không phải cho người phàm.", src: "Cl 3,23" },
+  { text: "Anh em phải khôn ngoan như rắn và đơn sơ như bồ câu.", src: "Mt 10,16" },
+  { text: "Ai trung tín trong việc rất nhỏ, thì cũng trung tín trong việc lớn.", src: "Lc 16,10" },
+  { text: "Hãy ký thác đường đời cho Chúa, tin tưởng vào Người, Người sẽ ra tay.", src: "Tv 37,5" },
+
+  // // Về sức mạnh tinh thần và sự can đảm của người trẻ
+  { text: "Hãy can đảm và mạnh mẽ! Đừng sợ hãi, vì Đức Chúa, Thiên Chúa của bạn, ở với bạn bất cứ nơi nào bạn đi.", src: "Gsh 1,9" },
+  { text: "Tôi có thể làm được mọi sự nhờ Đấng ban sức mạnh cho tôi.", src: "Pl 4,13" },
+  { text: "Ơn của Thầy đã đủ cho con, vì sức mạnh của Thầy được biểu lộ trọn vẹn trong sự yếu đuối.", src: "2 Co 12,9" },
+
+  // Về tình yêu, lối sống và chứng nhân Tin Mừng
+  { text: "Đừng để cho sự ác thắng được mình, nhưng hãy lấy thiện mà thắng ác.", src: "Rm 12,21" },
+  { text: "Người ta cứ dấu này mà nhận biết các con là môn đệ Thầy: là các con có lòng yêu thương nhau.", src: "Ga 13,35" },
+  { text: "Chính Thầy là con đường, là sự thật và là sự sống.", src: "Ga 14,6" },
+
+  // Trích dẫn truyền cảm hứng từ Đức Thánh Cha dành cho người trẻ (Christus Vivit)
+  { text: "Người trẻ thân mến, đừng nhìn cuộc sống từ trên ban công. Hãy dấn thân vào nơi mà các thách đố đang gọi mời.", src: "ĐTC Phanxicô" },
+  { text: "Các con là 'hiện tại' của Thiên Chúa, chứ không phải chỉ là một tương lai xa vời.", src: "Tông huấn Christus Vivit" },
+  { text: "Đừng sống mòn, hãy sống hết mình! Hãy mở cửa lòng ra với Chúa và với tha nhân.", src: "ĐTC Phanxicô" }
 ];
+
+function QuoteSlider({ quotes }) {
+  const [cur, setCur] = useState(0);
+  const [dir, setDir] = useState(1);
+  const timerRef = useRef(null);
+
+  const resetTimer = useCallback(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setDir(1);
+      setCur((p) => (p + 1) % quotes.length);
+    }, 5000);
+  }, [quotes.length]);
+
+  useEffect(() => {
+    resetTimer();
+    return () => clearInterval(timerRef.current);
+  }, [resetTimer]);
+
+  const variants = {
+    enter: (d) => ({ x: d > 0 ? "50%" : "-50%", opacity: 0 }),
+    center: { x: "0%", opacity: 1 },
+    exit: (d) => ({ x: d > 0 ? "-50%" : "50%", opacity: 0 }),
+  };
+
+  if (!quotes || quotes.length === 0) return null;
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 relative">
+      <div className="invisible pointer-events-none select-none aria-hidden relative w-full" style={{ visibility: 'hidden' }}>
+        <div className="p-5 flex flex-col border border-transparent">
+          <p className="text-sm font-medium leading-relaxed italic">"{quotes[0].text}"</p>
+          <p className="text-[11px] font-bold pt-2 mt-2">({quotes[0].src})</p>
+        </div>
+        {quotes.slice(1).map((q, idx) => (
+          <div key={idx} className="absolute inset-0 p-5 flex flex-col border border-transparent">
+            <p className="text-sm font-medium leading-relaxed italic">"{q.text}"</p>
+            <p className="text-[11px] font-bold pt-2 mt-2">({q.src})</p>
+          </div>
+        ))}
+      </div>
+      <div className="absolute inset-0 overflow-hidden px-4 sm:px-6">
+        <AnimatePresence initial={false} custom={dir} mode="wait">
+          <motion.div
+            key={cur}
+            custom={dir}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 32 },
+              opacity: { duration: 0.2 },
+            }}
+            className="w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 p-5 flex flex-col justify-center touch-pan-y"
+          >
+            <p className="text-white/90 text-sm font-medium leading-relaxed italic select-none">
+              "{quotes[cur].text}"
+            </p>
+            <p className="text-right text-white/45 text-[11px] font-bold tracking-wide mt-2 select-none">
+              ({quotes[cur].src})
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 export default function KhoiVaoDoi() {
   const heroRef = useRef(null);
@@ -118,13 +214,13 @@ export default function KhoiVaoDoi() {
             <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
               <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
                 style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fde8d0)` }}>
-                <img src="https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ" alt="Khối Vào Đời"
+                <img src="/images/khoivaodoi.avif" alt="Khối Vào Đời"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
                   loading={mc.isMobile ? "lazy" : "eager"} />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <Compass className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                   <div>
-                    <p className="text-[11px] font-bold text-stone-900">Từ 18 tuổi</p>
+                    <p className="text-[11px] font-bold text-stone-900">Từ 16 tuổi</p>
                     <p className="text-[10px] text-stone-500">Thanh niên trưởng thành</p>
                   </div>
                 </div>
@@ -178,18 +274,9 @@ export default function KhoiVaoDoi() {
         </div>
       </section>
 
-      {/* QUOTE BANNER */}
+      {/* QUOTE BANNER — auto slide */}
       <section className="py-14" style={{ background: `linear-gradient(135deg, #1c0a05 0%, ${ACCENT} 100%)` }}>
-        <div className="max-w-4xl mx-auto px-5 sm:px-6 grid sm:grid-cols-2 gap-5">
-          {QUOTES.map((q, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={vp} transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.15) }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 p-6">
-              <p className="text-white/90 text-sm font-medium leading-relaxed italic mb-3">"{q.text}"</p>
-              <p className="text-white/50 text-xs font-bold tracking-wide">— {q.src}</p>
-            </motion.div>
-          ))}
-        </div>
+        <QuoteSlider quotes={QUOTES} mc={mc} />
       </section>
 
       <section className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6">

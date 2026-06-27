@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
@@ -6,17 +6,17 @@ import {
   LogIn, LogOut, ChevronDown,
   BookOpen, Sparkles, Flame, Heart, Globe, Users,
   CalendarDays, FileText, Phone, Settings, ShieldCheck,
-  ScrollText, User, Home, GraduationCap, Calendar,
+  ScrollText, User, Home, GraduationCap, Info
 } from "lucide-react";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
-  { path: "/khối-chiên-con",   label: "Chiên Con",   sub: "Mầm non – Lớp 2", icon: Heart,    accent: "#db2777", bg: "bg-pink-50",   ring: "ring-pink-200"   },
-  { path: "/khối-rước-lễ",    label: "Rước Lễ",     sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#65a30d", bg: "bg-lime-50",   ring: "ring-lime-200"   },
-  { path: "/khối-thêm-sức",   label: "Thêm Sức",    sub: "Lớp 5 – 6",       icon: Flame,    accent: "#ca8a04", bg: "bg-yellow-50", ring: "ring-yellow-200" },
-  { path: "/khối-phụng-vụ",   label: "Phụng Vụ",    sub: "Lớp 7 – 9",       icon: Sparkles, accent: "#ea580c", bg: "bg-orange-50", ring: "ring-orange-200" },
-  { path: "/khối-kinh-thánh", label: "Kinh Thánh",  sub: "Lớp 10 – 12",     icon: BookOpen, accent: "#dc2626", bg: "bg-red-50",    ring: "ring-red-200"    },
-  { path: "/khối-vào-đời",    label: "Vào Đời",     sub: "Từ 18 tuổi",      icon: Globe,    accent: "#7c3a1e", bg: "bg-amber-50",  ring: "ring-amber-200"  },
+  { path: "/khối-chiên-con",   label: "Chiên Con",  sub: "Mầm non – Lớp 2", icon: Heart,    accent: "#db2777", bg: "bg-pink-50",   ring: "ring-pink-200"   },
+  { path: "/khối-rước-lễ",    label: "Rước Lễ",    sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#65a30d", bg: "bg-lime-50",   ring: "ring-lime-200"   },
+  { path: "/khối-thêm-sức",   label: "Thêm Sức",   sub: "Lớp 5 – 6",       icon: Flame,    accent: "#ca8a04", bg: "bg-yellow-50", ring: "ring-yellow-200" },
+  { path: "/khối-phụng-vụ",   label: "Phụng Vụ",   sub: "Lớp 7",       icon: Sparkles, accent: "#ea580c", bg: "bg-orange-50", ring: "ring-orange-200" },
+  { path: "/khối-kinh-thánh", label: "Kinh Thánh", sub: "Lớp 8 – 9",     icon: BookOpen, accent: "#dc2626", bg: "bg-red-50",    ring: "ring-red-200"    },
+  { path: "/khối-vào-đời",    label: "Vào Đời",    sub: "Lớp 10 – 11",      icon: Globe,    accent: "#7c3a1e", bg: "bg-amber-50",  ring: "ring-amber-200"  },
 ];
 
 const COMMUNITY_ITEMS = [
@@ -38,11 +38,11 @@ const ACCOUNT_ITEMS = [
 ];
 
 const TAB_ITEMS = [
-  { path: "/",                label: "Trang chủ", icon: Home         },
-  { type: "dropdown", label: "Khối học",   icon: GraduationCap, items: KHOI_ITEMS },
-  { path: "/tài-liệu",        label: "Tài liệu",  icon: FileText     },
-  { path: "/lịch-sinh-hoạt",  label: "Lịch",      icon: Calendar     },
-  { path: "/liên-hệ",         label: "Liên hệ",   icon: Phone        },
+  { path: "/",               label: "Trang chủ",    icon: Home         },
+  { type: "dropdown",        label: "Khối học",     icon: GraduationCap, items: KHOI_ITEMS },
+  { path: "/tài-liệu",       label: "Tài liệu",     icon: FileText     },
+  { path: "/giới-thiệu",     label: "Giới thiệu",   icon: Info     },
+  { path: "/liên-hệ",        label: "Liên hệ",      icon: Phone        },
 ];
 
 function isItemActive(item, pathname) {
@@ -53,11 +53,39 @@ function isItemActive(item, pathname) {
 /* ═══ HOOKS ═══════════════════════════════════════════════════════ */
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
-    const fn = (e) => { if (!ref.current || ref.current.contains(e.target)) return; handler(); };
+    const fn = (e) => {
+      if (!ref.current || ref.current.contains(e.target)) return;
+      handler();
+    };
     document.addEventListener("mousedown", fn);
     document.addEventListener("touchstart", fn);
-    return () => { document.removeEventListener("mousedown", fn); document.removeEventListener("touchstart", fn); };
+    return () => {
+      document.removeEventListener("mousedown", fn);
+      document.removeEventListener("touchstart", fn);
+    };
   }, [ref, handler]);
+}
+
+/* ═══ DESKTOP: Account trigger button ════════════════════════════ */
+function AccountTriggerButton({ isLogin, avatar, username, isOpen, onToggle, onLogin }) {
+  if (!isLogin) return (
+    <button type="button" onClick={onLogin}
+      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-stone-900 px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-stone-800 active:bg-stone-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">
+      <LogIn className="w-3.5 h-3.5" />Đăng nhập
+    </button>
+  );
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={isOpen}
+      className={`flex items-center gap-2 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 pl-0.5 pr-3 py-0.5 ${
+        isOpen ? "border-stone-300 bg-stone-100 shadow-inner" : "border-stone-200/60 bg-stone-50 hover:bg-stone-100"
+      }`}>
+      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-stone-200">
+        <img src={avatar || "/images/avatarDefault"} alt="Avatar" className="h-full w-full object-cover" />
+      </div>
+      <span className="text-xs font-semibold text-stone-700 max-w-[90px] truncate">{username || "Tài khoản"}</span>
+      <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+    </button>
+  );
 }
 
 /* ═══ MEGA MENU: Khối học ════════════════════════════════════════ */
@@ -80,9 +108,7 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
               const Icon     = khoi.icon;
               const isActive = currentPath === khoi.path;
               return (
-                <button
-                  key={khoi.path}
-                  type="button"
+                <button key={khoi.path} type="button"
                   onClick={() => { navigate(khoi.path); onClose(); }}
                   className={`flex items-center gap-3 px-4 py-3.5 text-left bg-white hover:bg-stone-50 transition-colors focus-visible:outline-none focus-visible:bg-stone-50 group ${isActive ? "bg-stone-50" : ""}`}
                 >
@@ -120,9 +146,7 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
             const Icon     = item.icon;
             const isActive = currentPath === item.path;
             return (
-              <button
-                key={item.path}
-                type="button"
+              <button key={item.path} type="button"
                 onClick={() => { navigate(item.path); onClose(); }}
                 className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:bg-stone-50 ${i !== COMMUNITY_ITEMS.length - 1 ? "border-b border-stone-100" : ""} ${isActive ? "bg-orange-50/60 text-orange-600" : "text-stone-700 hover:bg-stone-50"}`}
               >
@@ -140,9 +164,7 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
   );
 }
 
-/* ═══ DROPDOWN: Account (CHỈ render khi đã đăng nhập) ═══════════
-   Khi chưa đăng nhập, trigger button gọi toggleModal trực tiếp —
-   không render dropdown "Chưa đăng nhập" vô nghĩa.              */
+/* ═══ DROPDOWN: Account (chỉ render khi đã đăng nhập) ═══════════ */
 function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, username, onLogout, onOpenModal }) {
   return (
     <AnimatePresence>
@@ -154,7 +176,6 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
           transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
           className="absolute right-0 top-full mt-3 w-56 rounded-2xl border border-stone-200/60 bg-white shadow-lg z-50 overflow-hidden"
         >
-          {/* User info */}
           <div className="px-4 py-3 border-b border-stone-100 bg-stone-50/60">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
@@ -167,25 +188,19 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
             </div>
           </div>
 
-          {/* Hồ sơ — mở ModalUser */}
-          <button
-            type="button"
+          <button type="button"
             onClick={() => { onOpenModal(); onClose(); }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 hover:bg-stone-50 border-b border-stone-100 transition-colors focus-visible:outline-none"
-          >
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 hover:bg-stone-50 border-b border-stone-100 transition-colors focus-visible:outline-none">
             <User className="w-4 h-4 flex-shrink-0 text-stone-400" />
             Hồ sơ của tôi
           </button>
 
-          {/* Các trang tài khoản */}
           <div className="py-1">
-            {ACCOUNT_ITEMS.map((item, i) => {
+            {ACCOUNT_ITEMS.map((item) => {
               const Icon     = item.icon;
               const isActive = currentPath === item.path;
               return (
-                <button
-                  key={item.path}
-                  type="button"
+                <button key={item.path} type="button"
                   onClick={() => { navigate(item.path); onClose(); }}
                   className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:bg-stone-50 ${isActive ? "text-orange-600 bg-orange-50/60" : "text-stone-700 hover:bg-stone-50"}`}
                 >
@@ -196,15 +211,11 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
             })}
           </div>
 
-          {/* Đăng xuất */}
           <div className="border-t border-stone-100">
-            <button
-              type="button"
+            <button type="button"
               onClick={() => { onLogout(); onClose(); }}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none"
-            >
-              <LogOut className="w-4 h-4" />
-              Đăng xuất
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none">
+              <LogOut className="w-4 h-4" />Đăng xuất
             </button>
           </div>
         </motion.div>
@@ -235,18 +246,16 @@ function KhoiSheet({ open, onClose, navigate }) {
               <div className="w-10 h-1 rounded-full bg-stone-200" />
             </div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2 px-5">Chọn khối học</p>
-            <div className="grid grid-cols-2 gap-px bg-stone-100 px-0">
+            <div className="grid grid-cols-2 gap-px bg-stone-100">
               {KHOI_ITEMS.map((k) => {
                 const Icon = k.icon;
                 return (
-                  <button
-                    key={k.path}
-                    type="button"
+                  <button key={k.path} type="button"
                     onClick={() => { navigate(k.path); onClose(); }}
                     className="flex items-center gap-3 px-4 py-4 bg-white hover:bg-stone-50 active:bg-stone-100 transition-colors text-left"
                   >
                     <div className={`w-9 h-9 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-4.5 h-4.5" style={{ color: k.accent }} />
+                      <Icon className="w-4 h-4" style={{ color: k.accent }} />
                     </div>
                     <div>
                       <p className="text-[14px] font-semibold text-stone-800 leading-snug">{k.label}</p>
@@ -264,13 +273,100 @@ function KhoiSheet({ open, onClose, navigate }) {
   );
 }
 
+/* ═══ MOBILE: Account bottom sheet ═══════════════════════════════ */
+function AccountSheet({ open, onClose, navigate, location, avatar, username, onOpenModal, onLogout }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-[2px]"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-3xl overflow-hidden shadow-2xl"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-stone-200" />
+            </div>
+
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-stone-100">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-200 flex-shrink-0">
+                <img src={avatar || "/images/avatarDefault"} className="w-full h-full object-cover" alt="" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-stone-900 truncate">{username || "Thành viên"}</p>
+                <p className="text-xs text-stone-400">Đã đăng nhập</p>
+              </div>
+            </div>
+
+            <button type="button"
+              onClick={() => { onOpenModal(); onClose(); }}
+              className="flex w-full items-center gap-3 px-5 py-4 text-left border-b border-stone-100 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+            >
+              <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-stone-800">Hồ sơ của tôi</p>
+                <p className="text-xs text-stone-400">Xem và chỉnh sửa thông tin</p>
+              </div>
+            </button>
+
+            <div className="py-1">
+              {ACCOUNT_ITEMS.map((item) => {
+                const Icon     = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <button key={item.path} type="button"
+                    onClick={() => { navigate(item.path); onClose(); }}
+                    className={`flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-stone-100 ${isActive ? "text-orange-600" : "text-stone-700 hover:bg-stone-50"}`}
+                  >
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-orange-500" : "text-stone-400"}`} />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="px-5 pb-2 pt-1 border-t border-stone-100">
+              <button type="button"
+                onClick={() => { onLogout(); onClose(); }}
+                className="flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 text-red-600 text-sm font-semibold active:bg-red-100 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />Đăng xuất
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 /* ═══ MOBILE: Bottom tab bar ═════════════════════════════════════ */
-function BottomTabBar({ location, navigate, isLogin, onLoginPress, onProfilePress }) {
-  const [khoiSheetOpen, setKhoiSheetOpen] = useState(false);
+function BottomTabBar({ location, navigate, isLogin, onLoginPress, onLogout, avatar, username }) {
+  const [khoiSheetOpen,    setKhoiSheetOpen]    = useState(false);
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
 
   return (
     <>
       <KhoiSheet open={khoiSheetOpen} onClose={() => setKhoiSheetOpen(false)} navigate={navigate} />
+      <AccountSheet
+        open={accountSheetOpen}
+        onClose={() => setAccountSheetOpen(false)}
+        navigate={navigate}
+        location={location}
+        avatar={avatar}
+        username={username}
+        onOpenModal={onLoginPress}
+        onLogout={onLogout}
+      />
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-stone-200/60"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -314,20 +410,20 @@ function BottomTabBar({ location, navigate, isLogin, onLoginPress, onProfilePres
 
           {/* User tab */}
           <button type="button"
-            onClick={isLogin ? onProfilePress : onLoginPress}
+            onClick={isLogin ? () => setAccountSheetOpen(true) : onLoginPress}
             className="flex-1 flex flex-col items-center justify-center gap-1 pt-2.5 pb-2 text-stone-400 transition-colors"
           >
             <div className="w-6 h-6 flex items-center justify-center">
               {isLogin ? (
                 <div className="w-6 h-6 rounded-full overflow-hidden border-2 border-orange-400/60">
-                  <img src={localStorage.getItem("avatar") || "/images/avatarDefault"} className="w-full h-full object-cover" alt="" />
+                  <img src={avatar || "/images/avatarDefault"} className="w-full h-full object-cover" alt="" />
                 </div>
               ) : (
                 <LogIn className="w-5 h-5" />
               )}
             </div>
             <span className="text-[10px] font-semibold">
-              {isLogin ? (localStorage.getItem("username") || "Tôi").split(" ").pop() : "Đăng nhập"}
+              {isLogin ? (username || "Tôi").split(" ").pop() : "Đăng nhập"}
             </span>
           </button>
         </div>
@@ -342,7 +438,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const navigate  = useNavigate();
   const location  = useLocation();
 
-  const [openMenu, setOpenMenu] = useState(null); // "khoi" | "community" | "account" | null
+  const [openMenu, setOpenMenu] = useState(null);
   const [avatar,   setAvatar]   = useState(() => localStorage.getItem("avatar")   || "");
   const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
 
@@ -367,53 +463,32 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   /* Đóng tất cả khi đổi route */
   useEffect(() => { setOpenMenu(null); }, [location.pathname]);
 
-  /* Click outside đóng dropdown */
-  useOnClickOutside(khoiRef,      () => openMenu === "khoi"      && setOpenMenu(null));
-  useOnClickOutside(communityRef, () => openMenu === "community" && setOpenMenu(null));
-  useOnClickOutside(accountRef,   () => openMenu === "account"   && setOpenMenu(null));
+  /* Reset khi resize từ mobile về desktop */
+  useEffect(() => {
+    const onResize = () => setOpenMenu(null);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  /* Click outside đóng dropdown — stable callbacks */
+  const closeKhoi      = useCallback(() => setOpenMenu((prev) => prev === "khoi"      ? null : prev), []);
+  const closeCommunity = useCallback(() => setOpenMenu((prev) => prev === "community" ? null : prev), []);
+  const closeAccount   = useCallback(() => setOpenMenu((prev) => prev === "account"   ? null : prev), []);
+
+  useOnClickOutside(khoiRef,      closeKhoi);
+  useOnClickOutside(communityRef, closeCommunity);
+  useOnClickOutside(accountRef,   closeAccount);
 
   const toggle = (key) => setOpenMenu((prev) => (prev === key ? null : key));
 
   const handleLogout = () => {
-    ["sessionKey","role","username","user","avatar","studentData"].forEach((k) => localStorage.removeItem(k));
+    ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
     setIsLogin(false);
     handleClose?.();
     showToast("Đã đăng xuất", "success");
   };
 
-  const isKhoiActive      = KHOI_ITEMS.some((k) => k.path === location.pathname);
-  const isCommunityActive = COMMUNITY_ITEMS.some((c) => c.path === location.pathname);
-
-  /* ── Trigger button desktop: kiểu dáng tuỳ thuộc isLogin ── */
-  const AccountTrigger = isLogin ? (
-    /* Đã đăng nhập → avatar pill, click mở dropdown */
-    <button
-      type="button"
-      onClick={() => toggle("account")}
-      aria-expanded={openMenu === "account"}
-      className={`flex items-center gap-2 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 pl-0.5 pr-3 py-0.5 ${
-        openMenu === "account"
-          ? "border-stone-300 bg-stone-100 shadow-inner"
-          : "border-stone-200/60 bg-stone-50 hover:bg-stone-100"
-      }`}
-    >
-      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-stone-200">
-        <img src={avatar || "/images/avatarDefault"} alt="Avatar" className="h-full w-full object-cover" />
-      </div>
-      <span className="text-xs font-semibold text-stone-700 max-w-[90px] truncate">{username || "Tài khoản"}</span>
-      <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform duration-200 ${openMenu === "account" ? "rotate-180" : ""}`} />
-    </button>
-  ) : (
-    /* Chưa đăng nhập → nút đơn, click thẳng mở modal login */
-    <button
-      type="button"
-      onClick={toggleModal}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-stone-900 px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-stone-800 active:bg-stone-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-    >
-      <LogIn className="w-3.5 h-3.5" />
-      Đăng nhập
-    </button>
-  );
+  const isKhoiActive = KHOI_ITEMS.some((k) => k.path === location.pathname);
 
   return (
     <>
@@ -467,7 +542,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
             {/* Cộng đoàn */}
             <div ref={communityRef} className="relative">
               <button type="button" onClick={() => toggle("community")} aria-expanded={openMenu === "community"}
-                className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${isCommunityActive || openMenu === "community" ? "text-stone-900 bg-stone-100" : "text-stone-500 hover:text-stone-800 hover:bg-stone-50"}`}
+                className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${openMenu === "community" ? "text-stone-900 bg-stone-100" : "text-stone-500 hover:text-stone-800 hover:bg-stone-50"}`}
               >
                 Cộng đoàn
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
@@ -478,10 +553,15 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Account — desktop only */}
             <div ref={accountRef} className="relative hidden md:block">
-              {AccountTrigger}
-              {/* Dropdown CHỈ render khi isLogin — khi !isLogin trigger đã gọi modal trực tiếp */}
+              <AccountTriggerButton
+                isLogin={isLogin}
+                avatar={avatar}
+                username={username}
+                isOpen={openMenu === "account"}
+                onToggle={() => toggle("account")}
+                onLogin={toggleModal}
+              />
               {isLogin && (
                 <AccountDropdown
                   isOpen={openMenu === "account"}
@@ -505,7 +585,9 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
         navigate={navigate}
         isLogin={isLogin}
         onLoginPress={toggleModal}
-        onProfilePress={toggleModal}
+        onLogout={handleLogout}
+        avatar={avatar}
+        username={username}
       />
     </>
   );

@@ -359,7 +359,7 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
       ))}
 
       {/* Username (read-only) + logout */}
-      <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
+      {/* <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
         <div className="flex items-center gap-3.5 min-w-0">
           <span className="text-xl flex-shrink-0">🆔</span>
           <div className="min-w-0">
@@ -374,7 +374,7 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
         >
           Đăng xuất
         </motion.button>
-      </div>
+      </div> */}
 
       {/* Password (read-only) + change */}
       <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
@@ -888,17 +888,17 @@ export default function ModalUser({ setIsLogin, handleClose }) {
     localStorage.setItem("user", JSON.stringify(data));
     localStorage.setItem("avatar", data.avatar);
   };
-  
-  useEffect(() => {
-    if (window.lenis) window.lenis.stop();
 
-    // Chặn wheel event không cho Lenis bắt
+  useEffect(() => {
+    const lenis = window.lenis;
+    if (lenis) lenis.stop();
+
     const blockScroll = (e) => e.stopPropagation();
     window.addEventListener("wheel", blockScroll, { capture: true });
     window.addEventListener("touchmove", blockScroll, { capture: true, passive: false });
 
     return () => {
-      if (window.lenis) window.lenis.start();
+      if (lenis && typeof lenis.start === "function") lenis.start();
       window.removeEventListener("wheel", blockScroll, { capture: true });
       window.removeEventListener("touchmove", blockScroll, { capture: true });
     };
