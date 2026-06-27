@@ -1,20 +1,12 @@
 import React, { useRef } from "react";
 import { Link } from "react-router-dom";
-import {
-  BookOpen, Scroll, Map, Users,
-  Clock, CalendarDays, ArrowRight, ChevronLeft, Layers,
-} from "lucide-react";
+import { BookOpen, Scroll, Map, Users, Clock, CalendarDays, ArrowRight, ChevronLeft, Layers } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLenis } from "lenis/react";
+import { useMotionConfig } from "../hooks/useMotionConfig.js";
 
-const ACCENT   = "#166534";
-const ACCENT_L = "#f0fdf4";
-
-const fadeUp = {
-  hidden:  { opacity: 0, y: 28 },
-  visible: (d = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: d } }),
-};
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.12 } } };
+const ACCENT   = "#dc2626";
+const ACCENT_L = "#fef2f2";
 
 const OVERVIEW = [
   { icon: Users,        label: "Độ tuổi",    value: "Lớp 3 – 5 (8–11 tuổi)" },
@@ -25,57 +17,64 @@ const OVERVIEW = [
 
 const TESTAMENT = [
   {
-    name: "Cựu Ước",
-    color: "bg-amber-50 border-amber-200",
-    nameColor: "text-amber-800",
+    name: "Cựu Ước", color: "bg-amber-50 border-amber-200", nameColor: "text-amber-800",
     books: [
-      { group: "Ngũ Thư", items: ["Sáng Thế — Thiên Chúa tạo dựng", "Xuất Hành — Môi-sê và dân Chúa", "Lề Luật — Mười Điều Răn"] },
-      { group: "Lịch Sử", items: ["Giu-se và các anh em", "Đa-vít — vua theo lòng Chúa", "Sa-lô-môn và Đền Thờ"] },
-      { group: "Ngôn Sứ", items: ["I-sai-a — lời hứa Đấng Mê-si-a", "Giê-rê-mi-a — ngôn sứ trong đau khổ", "Ê-dê-ki-en — thị kiến"] },
+      { group: "Ngũ Thư",  items: ["Sáng Thế — Thiên Chúa tạo dựng", "Xuất Hành — Môi-sê và dân Chúa", "Lề Luật — Mười Điều Răn"] },
+      { group: "Lịch Sử",  items: ["Giu-se và các anh em", "Đa-vít — vua theo lòng Chúa", "Sa-lô-môn và Đền Thờ"] },
+      { group: "Ngôn Sứ",  items: ["I-sai-a — lời hứa Đấng Mê-si-a", "Giê-rê-mi-a — ngôn sứ trong đau khổ", "Ê-dê-ki-en — thị kiến"] },
     ],
   },
   {
-    name: "Tân Ước",
-    color: "bg-green-50 border-green-200",
-    nameColor: "text-green-800",
+    name: "Tân Ước", color: "bg-red-50 border-red-200", nameColor: "text-red-800",
     books: [
-      { group: "Tin Mừng", items: ["Mát-thêu — Chúa Giêsu là Mê-si-a", "Mác-cô — Tin Mừng hành động", "Lu-ca — lòng thương xót", "Gio-an — Ngôi Lời nhập thể"] },
-      { group: "Tông Đồ Công Vụ", items: ["Chúa Thánh Thần hiện xuống", "Phao-lô truyền giáo", "Giáo Hội sơ khai"] },
-      { group: "Thư & Khải Huyền", items: ["Thư Phao-lô — sống đức tin", "Thư Gio-an — tình yêu", "Khải Huyền — hy vọng sau cùng"] },
+      { group: "Tin Mừng",            items: ["Mát-thêu — Chúa Giêsu là Mê-si-a", "Mác-cô — Tin Mừng hành động", "Lu-ca — lòng thương xót", "Gio-an — Ngôi Lời nhập thể"] },
+      { group: "Tông Đồ Công Vụ",     items: ["Chúa Thánh Thần hiện xuống", "Phao-lô truyền giáo", "Giáo Hội sơ khai"] },
+      { group: "Thư & Khải Huyền",    items: ["Thư Phao-lô — sống đức tin", "Thư Gio-an — tình yêu", "Khải Huyền — hy vọng sau cùng"] },
     ],
   },
 ];
 
 const METHODS = [
-  { icon: Map,     title: "Bản đồ Kinh Thánh",    desc: "Học qua bản đồ địa lý Thánh Kinh — các em nhìn thấy hành trình của dân Chúa bằng mắt." },
-  { icon: Scroll,  title: "Kể chuyện sáng tạo",   desc: "Đóng vai, vẽ tranh hoặc viết tiếp câu chuyện Kinh Thánh từ góc nhìn của một nhân vật." },
+  { icon: Map,     title: "Bản đồ Kinh Thánh",     desc: "Học qua bản đồ địa lý Thánh Kinh — các em nhìn thấy hành trình của dân Chúa bằng mắt." },
+  { icon: Scroll,  title: "Kể chuyện sáng tạo",    desc: "Đóng vai, vẽ tranh hoặc viết tiếp câu chuyện Kinh Thánh từ góc nhìn của một nhân vật." },
   { icon: Layers,  title: "Kinh Thánh & cuộc sống", desc: "Mỗi câu chuyện gắn với 1 tình huống thực tế — giúp các em áp dụng Lời Chúa vào đời thường." },
-  { icon: BookOpen,"title": "Memorize verse",      desc: "Học thuộc lòng một câu Kinh Thánh mỗi buổi — tạo kho tàng Lời Chúa trong trí nhớ suốt đời." },
+  { icon: BookOpen, title: "Memorize verse",        desc: "Học thuộc lòng một câu Kinh Thánh mỗi buổi — tạo kho tàng Lời Chúa trong trí nhớ suốt đời." },
 ];
 
 export default function KhoiKinhThanh() {
   const heroRef = useRef(null);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, -80]);
+  const mc = useMotionConfig();
+  const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
 
-  return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-green-200 selection:text-green-900">
+  const fadeUp = {
+    hidden: { opacity: 0, y: mc.yOffset },
+    visible: (d = 0) => ({ opacity: 1, y: 0, transition: { duration: mc.duration(0.8), ease: [0.16, 1, 0.3, 1], delay: mc.delay(d) } }),
+  };
+  const staggerContainer = { hidden: {}, visible: { transition: { staggerChildren: mc.stagger } } };
+  const vp = mc.vp();
 
-      {/* HERO */}
+  return (
+    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-red-200 selection:text-red-900">
+
       <section ref={heroRef} className="relative overflow-hidden pt-16 pb-20 md:pt-28 md:pb-32"
         style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 60%)` }}>
-        <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-green-200/20 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-emerald-100/20 blur-[100px] rounded-full -z-10" />
+        {!mc.isMobile && (
+          <>
+            <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-red-200/20 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
+            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-rose-100/20 blur-[100px] rounded-full -z-10" />
+          </>
+        )}
 
         <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
-          <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: mc.duration(0.5) }}>
             <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-800 mb-8 transition-colors">
               <ChevronLeft className="w-4 h-4" />Trang chủ
             </Link>
           </motion.div>
 
-          <motion.div variants={stagger} initial="hidden" animate="visible" className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16">
+          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16">
             <div className="flex-1">
               <motion.div variants={fadeUp} custom={0}>
                 <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-5"
@@ -83,28 +82,30 @@ export default function KhoiKinhThanh() {
                   <BookOpen className="w-3.5 h-3.5" />Khối Kinh Thánh
                 </span>
               </motion.div>
-              <motion.h1 variants={fadeUp} custom={0.05}
-                className="text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5">
+              <motion.h1 variants={fadeUp} custom={0.05} className="text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5">
                 Lời Chúa —<br />
-                <span className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, #14532d)` }}>
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, #7f1d1d)` }}>
                   nền tảng đức tin
                 </span>
               </motion.h1>
-              <motion.p variants={fadeUp} custom={0.1}
-                className="text-base md:text-lg text-stone-500 leading-relaxed max-w-lg mb-8">
-                Kinh Thánh không chỉ là một cuốn sách cổ — đó là thư tình Thiên Chúa
-                gửi cho con người qua mọi thời đại. Khối Kinh Thánh dẫn các em vào
-                hành trình khám phá 73 quyển sách thiêng liêng đầy sống động.
+              <motion.p variants={fadeUp} custom={0.1} className="text-base md:text-lg text-stone-500 leading-relaxed max-w-lg mb-8">
+                Kinh Thánh không chỉ là một cuốn sách cổ — đó là thư tình Thiên Chúa gửi cho
+                con người qua mọi thời đại. Khối Kinh Thánh dẫn các em vào hành trình khám phá
+                73 quyển sách thiêng liêng đầy sống động.
               </motion.p>
               <motion.div variants={fadeUp} custom={0.15} className="flex flex-col sm:flex-row gap-3">
-                <button onClick={() => lenis?.scrollTo("#noi-dung", { duration: 1.2 })}
-                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                <button
+                  onClick={() => {
+                    const t = document.getElementById("noi-dung");
+                    if (!t) return;
+                    lenis ? lenis.scrollTo(t, { duration: mc.isMobile ? 0.8 : 1.2 }) : t.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                   Xem nội dung<ArrowRight className="w-4 h-4" />
                 </button>
                 <Link to="/tuyển-sinh"
-                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
                   Đăng ký
                 </Link>
               </motion.div>
@@ -112,9 +113,10 @@ export default function KhoiKinhThanh() {
 
             <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
               <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
-                style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #dcfce7)` }}>
+                style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fee2e2)` }}>
                 <img src="https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc" alt="Khối Kinh Thánh"
-                  className="w-full h-full object-contain p-8 mix-blend-multiply" />
+                  className="w-full h-full object-contain p-8 mix-blend-multiply"
+                  loading={mc.isMobile ? "lazy" : "eager"} />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                   <div>
@@ -128,12 +130,11 @@ export default function KhoiKinhThanh() {
         </motion.div>
       </section>
 
-      {/* TỔNG QUAN */}
       <section className="py-14 border-y border-stone-100 bg-white/60">
         <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
           {OVERVIEW.map((item, i) => { const Icon = item.icon; return (
-            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }} className="flex flex-col gap-2">
+            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }} className="flex flex-col gap-2">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${ACCENT}18` }}>
                 <Icon className="w-4 h-4" style={{ color: ACCENT }} />
               </div>
@@ -144,22 +145,17 @@ export default function KhoiKinhThanh() {
         </div>
       </section>
 
-      {/* CỰU ƯỚC & TÂN ƯỚC */}
       <section id="noi-dung" className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16">
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.7 }} className="mb-12">
+        <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
+          transition={{ duration: mc.duration(0.7) }} className="mb-12">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Chương trình</p>
           <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">Hành trình qua 73 quyển sách</h2>
-          <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">
-            Từ "Khởi đầu Thiên Chúa sáng tạo" đến "Amen" cuối sách Khải Huyền — một hành trình
-            cứu độ trải dài hàng ngàn năm lịch sử.
-          </p>
+          <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">Từ "Khởi đầu Thiên Chúa sáng tạo" đến "Amen" cuối sách Khải Huyền — một hành trình cứu độ trải dài hàng ngàn năm lịch sử.</p>
         </motion.div>
-
         <div className="grid md:grid-cols-2 gap-6">
           {TESTAMENT.map((t, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.6, delay: i * 0.1 }}
+            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={vp} transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.1) }}
               className={`rounded-2xl border p-6 ${t.color}`}>
               <h3 className={`text-base font-black font-serif mb-5 ${t.nameColor}`}>{t.name}</h3>
               <div className="space-y-4">
@@ -169,8 +165,7 @@ export default function KhoiKinhThanh() {
                     <ul className="space-y-1.5">
                       {group.items.map((item, k) => (
                         <li key={k} className="flex items-start gap-2 text-sm text-stone-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400 flex-shrink-0 mt-2" />
-                          {item}
+                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400 flex-shrink-0 mt-2" />{item}
                         </li>
                       ))}
                     </ul>
@@ -182,18 +177,18 @@ export default function KhoiKinhThanh() {
         </div>
       </section>
 
-      {/* PHƯƠNG PHÁP */}
       <section className="py-20 md:py-28" style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 100%)` }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.7 }} className="mb-12">
+          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
+            transition={{ duration: mc.duration(0.7) }} className="mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Phương pháp</p>
             <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">Kinh Thánh sống động,<br />không phải khô khan</h2>
           </motion.div>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
             {METHODS.map((item, i) => { const Icon = item.icon; return (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
+              <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
+                whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
                 className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${ACCENT}15` }}>
                   <Icon className="w-5 h-5" style={{ color: ACCENT }} />
@@ -206,26 +201,21 @@ export default function KhoiKinhThanh() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-20 max-w-2xl mx-auto px-5 sm:px-6 text-center">
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.7 }}>
-          <BookOpen className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
-          <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">
-            Mở trang Kinh Thánh cùng con
-          </h2>
-          <p className="text-stone-500 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-            Đăng ký để con em bước vào hành trình khám phá Lời Chúa — nền tảng
-            vững chắc nhất cho một cuộc đời đức tin.
-          </p>
+        <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: mc.duration(0.7) }}>
+          <motion.div animate={mc.reduced ? {} : { scale: [1, 1.12, 1], transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" } }}>
+            <BookOpen className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">Mở trang Kinh Thánh cùng con</h2>
+          <p className="text-stone-500 text-sm leading-relaxed mb-8 max-w-md mx-auto">Đăng ký để con em bước vào hành trình khám phá Lời Chúa — nền tảng vững chắc nhất cho một cuộc đời đức tin.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/tuyển-sinh"
-              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
               style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
               Đăng ký ngay<ArrowRight className="w-4 h-4" />
             </Link>
             <Link to="/liên-hệ"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
               Liên hệ hỏi thêm
             </Link>
           </div>

@@ -12,7 +12,7 @@ const ReactLenisLazy = lazy(() =>
   })
 );
 
-import Header from "./components/Header.jsx";
+import Header from "./components/Header1.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
@@ -69,9 +69,9 @@ const fontSizeMap = {
   xl: "text-xl",
 };
 
-const AppLayout = ({ fontSize, toggleModal, isLogin }) => (
+const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) => (
   <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
-    <Header toggleModal={toggleModal} isLogin={isLogin} />
+    <Header toggleModal={toggleModal} isLogin={isLogin} setIsLogin={setIsLogin} handleClose={handleClose}/>
     <main className="w-full flex-grow pb-16">
       <Suspense fallback={<PageLoader />}>
         <Outlet />
@@ -92,6 +92,13 @@ export default function App() {
   const handleClose = () => setTurnOnModal(false);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    // Kiểm tra nếu user đã lưu 'dark' HOẶC hệ thống máy tính của user đang để dark mode mặc định
+    const isDark = savedTheme === "dark" || 
+      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    
+    document.documentElement.classList.toggle("dark", isDark);
+
     const username = localStorage.getItem("username");
     if (username) setIsLogin(true);
 
@@ -100,6 +107,10 @@ export default function App() {
       setFontSize(savedFontSize);
     }
   }, []);
+  useEffect(() => {
+    const sizeMap = { sm: "14px", base: "16px", lg: "18px", xl: "20px" };
+    document.documentElement.style.fontSize = sizeMap[fontSize] || "16px";
+  }, [fontSize]);
 
   const handleFontSizeChange = (size) => {
     if (fontSizeMap[size]) {
@@ -112,7 +123,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <Routes>
-        <Route element={<AppLayout fontSize={fontSize} toggleModal={toggleModal} isLogin={isLogin} />}>
+        <Route element={<AppLayout fontSize={fontSize} toggleModal={toggleModal} isLogin={isLogin} setIsLogin={setIsLogin} handleClose={handleClose}/>}>
           <Route index element={<Home />} />
           <Route path="tuyển-sinh" element={<TuyenSinh />} />
           <Route path="giới-thiệu" element={<GioiThieu />} />
@@ -125,7 +136,7 @@ export default function App() {
           <Route path="tài-liệu" element={<TaiLieu />} />
           <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
           <Route path="liên-hệ" element={<Contact />} />
-          <Route path="cài-đặt" element={<Setting />} />
+          <Route path="cài-đặt" element={<Setting fontSize={fontSize} setFontSize={handleFontSizeChange} />} />
           <Route path="bảo-mật" element={<BaoMat />} />
           <Route path="quy-định" element={<QuyDinh />} />
         </Route>

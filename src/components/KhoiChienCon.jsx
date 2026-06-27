@@ -1,56 +1,17 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart, Music, Palette, Users, BookOpen,
   Clock, CalendarDays, ArrowRight, ChevronLeft, Star,
 } from "lucide-react";
-import {
-  motion, useScroll, useTransform, useReducedMotion,
-} from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useLenis } from "lenis/react";
+import { useMotionConfig } from "../hooks/useMotionConfig";
 
 /* ── Design tokens ── */
-const ACCENT   = "#e07b5c";
-const ACCENT_L = "#fdf2ee";
+const ACCENT   = "#db2777";
+const ACCENT_L = "#fdf2f8";
 
-/* ─── Hook phát hiện Mobile ──────────────────────────────────── */
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mql.matches);
-    const handler = (e) => setIsMobile(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-  return isMobile;
-}
-
-/* ─── Hook tạo motion config theo thiết bị ───────────────────── */
-function useMotionConfig() {
-  const isMobile = useIsMobile();
-  const prefersReducedMotion = useReducedMotion();
-
-  // Nếu user bật reduced-motion hoặc đang dùng mobile → animation nhẹ hơn
-  const reduced = prefersReducedMotion || isMobile;
-
-  return {
-    isMobile,
-    reduced,
-    // y offset: mobile dùng 10px thay vì 32px để tránh layout shift
-    yOffset: reduced ? 8 : 32,
-    // duration ngắn hơn trên mobile
-    duration: (base = 0.7) => reduced ? base * 0.6 : base,
-    // stagger nhỏ hơn trên mobile
-    stagger: reduced ? 0.06 : 0.15,
-    // delay co lại trên mobile
-    delay: (base = 0) => reduced ? base * 0.5 : base,
-    // Hero parallax: tắt hoàn toàn trên mobile (tốn GPU)
-    heroParallax: isMobile ? [0, 0] : [0, -80],
-  };
-}
-
-/* ── Dữ liệu chương trình ── */
 const OVERVIEW = [
   { icon: Users,        label: "Độ tuổi",    value: "Mầm non – Lớp 2 (3–8 tuổi)" },
   { icon: Clock,        label: "Thời lượng", value: "60 phút / buổi" },
@@ -108,43 +69,28 @@ const HIGHLIGHTS = [
   },
 ];
 
-/* ═══════════════════════════════════════════ */
 export default function KhoiChienCon() {
   const heroRef = useRef(null);
   const { scrollY } = useScroll();
-  const mc = useMotionConfig(); // ← motion config toàn cục
-
-  // Parallax hero: trả về [0,0] trên mobile → useTransform không làm gì
+  const mc = useMotionConfig();
   const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
-
   const lenis = useLenis();
 
-  /* ── Variants được tính theo mc ── */
   const fadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
-    visible: (delay = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: mc.duration(0.8),
-        ease: [0.16, 1, 0.3, 1],
-        delay: mc.delay(delay),
-      },
+    visible: (d = 0) => ({
+      opacity: 1, y: 0,
+      transition: { duration: mc.duration(0.8), ease: [0.16, 1, 0.3, 1], delay: mc.delay(d) },
     }),
   };
-
   const staggerContainer = {
     hidden: {},
-    visible: {
-      transition: { staggerChildren: mc.stagger },
-    },
+    visible: { transition: { staggerChildren: mc.stagger } },
   };
-
-  /* ── Helper: viewport once, với margin nhỏ hơn trên mobile ── */
-  const vp = { once: true, margin: mc.isMobile ? "0px" : "-60px 0px" };
+  const vp = mc.vp();
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-rose-200 selection:text-rose-900">
+    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden selection:bg-pink-200 selection:text-pink-900">
 
       {/* ══ HERO ══ */}
       <section
@@ -152,7 +98,6 @@ export default function KhoiChienCon() {
         className="relative overflow-hidden pt-16 pb-20 md:pt-28 md:pb-32"
         style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 60%)` }}
       >
-        {/* Ambient blobs — ẩn trên mobile để tiết kiệm GPU */}
         {!mc.isMobile && (
           <>
             <div className="absolute top-0 left-0 w-[600px] h-[500px] bg-rose-200/20 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
@@ -162,22 +107,17 @@ export default function KhoiChienCon() {
 
         <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
 
-          {/* Back link */}
           <motion.div
             initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: mc.duration(0.5) }}
           >
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-800 mb-8 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Trang chủ
+            <Link to="/"
+              className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-800 mb-8 transition-colors">
+              <ChevronLeft className="w-4 h-4" />Trang chủ
             </Link>
           </motion.div>
 
-          {/* Hero content */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
@@ -189,84 +129,56 @@ export default function KhoiChienCon() {
               <motion.div variants={fadeUp} custom={0}>
                 <span
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-5"
-                  style={{ background: `${ACCENT}18`, color: ACCENT }}
-                >
-                  <Heart className="w-3.5 h-3.5" />
-                  Khối Chiên Con
+                  style={{ background: `${ACCENT}18`, color: ACCENT }}>
+                  <Heart className="w-3.5 h-3.5" />Khối Chiên Con
                 </span>
               </motion.div>
 
-              <motion.h1
-                variants={fadeUp}
-                custom={0.05}
-                className="text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5"
-              >
-                Hạt giống
-                <br />
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, #c0392b)` }}
-                >
+              <motion.h1 variants={fadeUp} custom={0.05}
+                className="text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5">
+                Hạt giống<br />
+                <span className="bg-clip-text text-transparent"
+                  style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, #9d174d)` }}>
                   đức tin
-                </span>{" "}
-                đầu đời
+                </span>{" "}đầu đời
               </motion.h1>
 
-              <motion.p
-                variants={fadeUp}
-                custom={0.1}
-                className="text-base md:text-lg text-stone-500 leading-relaxed max-w-lg mb-8"
-              >
+              <motion.p variants={fadeUp} custom={0.1}
+                className="text-base md:text-lg text-stone-500 leading-relaxed max-w-lg mb-8">
                 Giai đoạn mầm non đến lớp 2 là thời điểm vàng để gieo vào tâm hồn trẻ thơ
                 tình yêu với Thiên Chúa — qua những câu chuyện, bài hát và hoạt động sáng tạo
                 phù hợp lứa tuổi.
               </motion.p>
 
-              <motion.div
-                variants={fadeUp}
-                custom={0.15}
-                className="flex flex-col sm:flex-row gap-3"
-              >
+              <motion.div variants={fadeUp} custom={0.15} className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
-                    const target = document.getElementById("chuong-trinh");
-                    if (!target) return;
-                    if (lenis) {
-                      lenis.scrollTo(target, { duration: mc.isMobile ? 0.8 : 1.2 });
-                    } else {
-                      target.scrollIntoView({ behavior: "smooth" });
-                    }
+                    const t = document.getElementById("chuong-trinh");
+                    if (!t) return;
+                    lenis
+                      ? lenis.scrollTo(t, { duration: mc.isMobile ? 0.8 : 1.2 })
+                      : t.scrollIntoView({ behavior: "smooth" });
                   }}
                   className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
-                  style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
-                >
-                  Xem chương trình
-                  <ArrowRight className="w-4 h-4" />
+                  style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
+                  Xem chương trình<ArrowRight className="w-4 h-4" />
                 </button>
-                <Link
-                  to="/tuyển-sinh"
-                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
-                >
+                <Link to="/tuyển-sinh"
+                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
                   Đăng ký cho bé
                 </Link>
               </motion.div>
             </div>
 
-            {/* Right — image card */}
-            <motion.div
-              variants={fadeUp}
-              custom={0.2}
-              className="flex-shrink-0 w-full md:w-[280px]"
-            >
+            {/* Right — image */}
+            <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
               <div
                 className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
-                style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fde8d8)` }}
-              >
+                style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fce7f3)` }}>
                 <img
                   src="https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc"
                   alt="Khối Chiên Con"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
-                  // Lazy-load ảnh hero trên mobile để không block LCP
                   loading={mc.isMobile ? "lazy" : "eager"}
                 />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
@@ -288,18 +200,14 @@ export default function KhoiChienCon() {
           {OVERVIEW.map((item, i) => {
             const Icon = item.icon;
             return (
-              <motion.div
-                key={i}
+              <motion.div key={i}
                 initial={{ opacity: 0, y: mc.yOffset }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={vp}
                 transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
-                className="flex flex-col gap-2"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: `${ACCENT}18` }}
-                >
+                className="flex flex-col gap-2">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: `${ACCENT}18` }}>
                   <Icon className="w-4 h-4" style={{ color: ACCENT }} />
                 </div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">{item.label}</p>
@@ -317,8 +225,7 @@ export default function KhoiChienCon() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={vp}
           transition={{ duration: mc.duration(0.7) }}
-          className="mb-12"
-        >
+          className="mb-12">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
             Chương trình học
           </p>
@@ -333,14 +240,12 @@ export default function KhoiChienCon() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {MODULES.map((mod, i) => (
-            <motion.div
-              key={i}
+            <motion.div key={i}
               initial={{ opacity: 0, y: mc.yOffset }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={vp}
               transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.1) }}
-              className={`rounded-2xl border p-6 ${mod.color}`}
-            >
+              className={`rounded-2xl border p-6 ${mod.color}`}>
               <div className="flex items-center gap-2 mb-5">
                 <div className={`w-2 h-2 rounded-full ${mod.dot}`} />
                 <h3 className="text-sm font-bold text-stone-700 uppercase tracking-wider">{mod.phase}</h3>
@@ -363,16 +268,14 @@ export default function KhoiChienCon() {
       {/* ══ ĐIỂM NỔI BẬT ══ */}
       <section
         className="py-20 md:py-28"
-        style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 100%)` }}
-      >
+        style={{ background: `linear-gradient(160deg, ${ACCENT_L} 0%, #faf8f5 100%)` }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: mc.yOffset }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={vp}
             transition={{ duration: mc.duration(0.7) }}
-            className="mb-12"
-          >
+            className="mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>
               Phương pháp
             </p>
@@ -385,20 +288,15 @@ export default function KhoiChienCon() {
             {HIGHLIGHTS.map((item, i) => {
               const Icon = item.icon;
               return (
-                <motion.div
-                  key={i}
+                <motion.div key={i}
                   initial={{ opacity: 0, y: mc.yOffset }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={vp}
                   transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
-                  // Hover chỉ áp dụng trên desktop — mobile không có hover state thực sự
                   whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                  className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: `${ACCENT}15` }}
-                  >
+                  className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: `${ACCENT}15` }}>
                     <Icon className="w-5 h-5" style={{ color: ACCENT }} />
                   </div>
                   <h3 className="text-sm font-bold text-stone-900 mb-1.5">{item.title}</h3>
@@ -416,18 +314,14 @@ export default function KhoiChienCon() {
           initial={{ opacity: 0, y: mc.yOffset }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={vp}
-          transition={{ duration: mc.duration(0.7) }}
-        >
+          transition={{ duration: mc.duration(0.7) }}>
           <motion.div
-            // Icon pulse: nhẹ hơn trên mobile
             animate={mc.reduced ? {} : {
               scale: [1, 1.12, 1],
               transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
-            }}
-          >
+            }}>
             <Heart className="w-10 h-10 mx-auto mb-4" style={{ color: ACCENT }} />
           </motion.div>
-
           <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">
             Sẵn sàng gửi bé yêu?
           </h2>
@@ -436,18 +330,13 @@ export default function KhoiChienCon() {
             Chủ Nhật trở thành một cuộc phiêu lưu cùng Chúa.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              to="/tuyển-sinh"
+            <Link to="/tuyển-sinh"
               className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
-              style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}
-            >
-              Đăng ký ngay
-              <ArrowRight className="w-4 h-4" />
+              style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
+              Đăng ký ngay<ArrowRight className="w-4 h-4" />
             </Link>
-            <Link
-              to="/liên-hệ"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
-            >
+            <Link to="/liên-hệ"
+              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
               Liên hệ hỏi thêm
             </Link>
           </div>

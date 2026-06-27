@@ -16,7 +16,7 @@ const Sections = [
     path: "/khối-chiên-con",
     title: "Khối Chiên Con",
     desc: "Gieo hạt giống đức tin vào tâm hồn trẻ thơ qua những câu chuyện Kinh Thánh sinh động, bài hát và hoạt động yêu thương.",
-    img: "/images/chiencon.avif",
+    img: "/images/khoichiencon.avif",
     icon: Heart,
     badge: "Mầm non",
     numeral: "I",
@@ -27,7 +27,7 @@ const Sections = [
     path: "/khối-rước-lễ",
     title: "Khối Rước Lễ Lần Đầu",
     desc: "Chuẩn bị tâm hồn đón nhận Chúa Giêsu trong Bí tích Thánh Thể lần đầu tiên — hành trình thiêng liêng nhất của tuổi thơ.",
-    img: "/images/ruocle.avif",
+    img: "/images/khoiruoclelandau.avif",
     icon: Star,
     badge: "Bí tích",
     numeral: "II",
@@ -39,7 +39,7 @@ const Sections = [
     path: "/khối-thêm-sức",
     title: "Khối Thêm Sức",
     desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.",
-    img: "/images/themsuc.avif",
+    img: "/images/khoithemsuc.avif",
     icon: Flame,
     badge: "Trưởng thành",
     numeral: "III",
@@ -50,7 +50,7 @@ const Sections = [
     path: "/khối-phụng-vụ",
     title: "Khối Phụng Vụ",
     desc: "Tìm hiểu sâu sắc về các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ giáo hội.",
-    img: "/images/phungvu.avif",
+    img: "/images/khoiphungvu.avif",
     icon: Sparkles,
     badge: "Tâm linh",
     numeral: "IV",
@@ -61,7 +61,7 @@ const Sections = [
     path: "/khối-kinh-thánh",
     title: "Khối Kinh Thánh",
     desc: "Khám phá chân lý và tình yêu thương qua từng trang sách Thánh để củng cố nền tảng đức tin.",
-    img: "/images/kinhthanh.avif",
+    img: "/images/khoikinhthanh.avif",
     icon: BookOpen,
     badge: "Nền tảng",
     numeral: "V",
@@ -73,7 +73,7 @@ const Sections = [
     path: "/khối-vào-đời",
     title: "Khối Vào Đời",
     desc: "Trang bị hành trang đức tin vững chắc, giúp các bạn trẻ sống chứng nhân giữa lòng xã hội và mang Tin Mừng đến mọi nơi.",
-    img: "/images/vaodoi.avif",
+    img: "/images/khoivaodoi.avif",
     icon: Globe,
     badge: "Vào đời",
     numeral: "VI",
@@ -262,7 +262,7 @@ export default function Home() {
           willChange: "transform",
           contain: "strict",
         }}
-      />exit
+      />
       {/* ── HERO ── */}
       <section
         ref={heroRef}

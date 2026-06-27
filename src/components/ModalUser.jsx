@@ -720,7 +720,7 @@ export function Achievement({ user, studentData }) {
   );
 }
 // ====================== IMAGE HELPERS =========================
-function resizeImage(file, maxSize = 300, quality = 0.85) {
+function resizeImage(file, maxSize = 100, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
@@ -730,23 +730,54 @@ function resizeImage(file, maxSize = 300, quality = 0.85) {
 
     img.onload = () => {
       let { width, height } = img;
-      if (width > height) {
-        if (width > maxSize) { height = height * (maxSize / width); width = maxSize; }
-      } else {
-        if (height > maxSize) { width = width * (maxSize / height); height = maxSize; }
+
+      // Chỉ resize nếu lớn hơn maxSize
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = Math.round(height * (maxSize / width));
+          width = maxSize;
+        } else {
+          width = Math.round(width * (maxSize / height));
+          height = maxSize;
+        }
       }
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
 
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Resize failed"))),
-        "image/jpeg",
-        quality
-      );
+      // Thử avif trước, fallback webp, rồi jpeg
+      const tryEncode = (formats, idx = 0) => {
+        if (idx >= formats.length) {
+          reject(new Error("Encode failed"));
+          return;
+        }
+        const [mime, q] = formats[idx];
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < 10 * 1024) {
+              resolve(blob);
+            } else if (blob && idx < formats.length - 1) {
+              // Còn format khác thử tiếp
+              tryEncode(formats, idx + 1);
+            } else if (blob) {
+              // Hết format, dùng cái cuối dù > 10kb
+              resolve(blob);
+            } else {
+              tryEncode(formats, idx + 1);
+            }
+          },
+          mime,
+          q
+        );
+      };
+
+      tryEncode([
+        ["image/avif", 0.6],
+        ["image/webp", 0.6],
+        ["image/jpeg", 0.5],
+      ]);
     };
 
     reader.readAsDataURL(file);
@@ -792,6 +823,10 @@ export default function ModalUser({ setIsLogin, handleClose }) {
 
       if (data.success) {
         setUser((prev) => ({ ...prev, avatar: data.avatar }));
+        const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem("user", JSON.stringify({ ...savedUser, avatar: data.avatar }));
+        localStorage.setItem("avatar", data.avatar);
+        window.dispatchEvent(new Event("avatar-updated"));
         showToast("Cập nhật avatar thành công", "success");
       } else {
         showToast("Lỗi cập nhật avatar", "warning");
@@ -813,8 +848,9 @@ export default function ModalUser({ setIsLogin, handleClose }) {
 
     setLoadingAva(true);
     try {
-      // Resize image, preview instantly via blob URL, then upload as base64
-      const resizedBlob = await resizeImage(file, 300);
+      const resizedBlob = await resizeImage(file); // maxSize mặc định 100
+      console.log(`Ảnh sau resize: ${(resizedBlob.size / 1024).toFixed(1)}kb — ${resizedBlob.type}`);
+
       const imgUrl = URL.createObjectURL(resizedBlob);
       setAvatarUrl(imgUrl);
 
@@ -835,6 +871,8 @@ export default function ModalUser({ setIsLogin, handleClose }) {
     const res = await fetch(`${API_URL}?action=getUser&username=${username}`);
     const data = await res.json();
 
+    if (!localStorage.getItem("username")) return;
+
     if (!savedData) {
       setUser(data);
       localStorage.setItem("user", JSON.stringify(data));
@@ -850,6 +888,21 @@ export default function ModalUser({ setIsLogin, handleClose }) {
     localStorage.setItem("user", JSON.stringify(data));
     localStorage.setItem("avatar", data.avatar);
   };
+  
+  useEffect(() => {
+    if (window.lenis) window.lenis.stop();
+
+    // Chặn wheel event không cho Lenis bắt
+    const blockScroll = (e) => e.stopPropagation();
+    window.addEventListener("wheel", blockScroll, { capture: true });
+    window.addEventListener("touchmove", blockScroll, { capture: true, passive: false });
+
+    return () => {
+      if (window.lenis) window.lenis.start();
+      window.removeEventListener("wheel", blockScroll, { capture: true });
+      window.removeEventListener("touchmove", blockScroll, { capture: true });
+    };
+  }, []);
 
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("user") || "null");
@@ -914,7 +967,7 @@ export default function ModalUser({ setIsLogin, handleClose }) {
                   )}
                 </div>
                 <button
-            type="button"
+                  type="button"
                   onClick={selectAvatar}
                   disabled={loadingAva}
                   className={`absolute bottom-0 right-0 w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-[14px] ${loadingAva ? "bg-[#E5E5EA] cursor-not-allowed" : "bg-[#FF6B35] hover:bg-[#E85E28] text-white"}`}

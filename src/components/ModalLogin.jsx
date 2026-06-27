@@ -35,6 +35,19 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
         localStorage.setItem("role", result.role);
         setIsLogin(true);
         handleClose();
+        try {
+          const userRes = await fetch(
+            `${API_URL}?action=getUser&username=${encodeURIComponent(result.username)}`
+          );
+          const userData = await userRes.json();
+          localStorage.setItem("user", JSON.stringify(userData));
+          if (userData.avatar) {
+            localStorage.setItem("avatar", userData.avatar);
+          }
+          window.dispatchEvent(new Event("avatar-updated")); // Header sync avatar
+        } catch {
+          // Không block login nếu fetch user thất bại
+        }
       } else {
         showToast("Sai tài khoản hoặc mật khẩu", "error");
       }
