@@ -466,148 +466,127 @@ export default function KhoiPhungVu() {
           )}
         </AnimatePresence>
       </section>
-{/* 7 bí tích */}
-      {/* <section className="py-20 md:py-28 bg-stone-50/60">
+      
+      <section className="py-20 md:py-28 bg-stone-50/60">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
-            transition={{ duration: mc.duration(0.7) }} className="mb-12">
+          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={vp} transition={{ duration: mc.duration(0.7) }} className="mb-12">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Bí tích học</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">Bảy Bí tích — bảy cánh cửa ân sủng</h2>
+            <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">
+              Bảy Bí tích —<br />bảy cánh cửa ân sủng
+            </h2>
+            <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">
+              Mỗi Bí tích là một cuộc gặp gỡ thực sự với Chúa Kitô — không phải nghi lễ hình thức
+              mà là hành động thiêng liêng của chính Thiên Chúa qua dấu chỉ hữu hình.
+            </p>
           </motion.div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-4">
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {SACRAMENTS.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
-                className="bg-white rounded-2xl border border-stone-100 p-4 shadow-sm hover:shadow-md hover:border-orange-200 transition-all">
-                <span className="text-2xl block mb-3">{s.icon}</span>
-                <h3 className="text-sm font-bold text-stone-900 mb-1">{s.name}</h3>
-                <p className="text-xs text-stone-500 leading-relaxed">{s.desc}</p>
-              </motion.div>
+              <motion.button
+                key={s.id}
+                type="button"
+                onClick={() => setSelectedSacrament(s)}
+                initial={{ opacity: 0, y: mc.yOffset }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={vp}
+                transition={{ duration: mc.duration(0.45), delay: mc.delay(i * 0.07) }}
+                whileHover={mc.isMobile ? undefined : { y: -3, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.98 }}
+                className={`group text-left rounded-2xl border p-5 transition-shadow hover:shadow-md active:shadow-sm w-full ${s.color}`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span className="text-2xl">{s.icon}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
+                    Tìm hiểu
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold mb-1">{s.name}</h3>
+                <p className="text-xs opacity-65 leading-relaxed">{s.short}</p>
+                <div className="mt-3 pt-3 border-t border-black/8">
+                  <span className="text-[10px] font-bold opacity-40">{s.details.type}</span>
+                </div>
+              </motion.button>
             ))}
           </div>
         </div>
-      </section> */}
-      {/* SACRAMENTS */}
-<section className="py-20 md:py-28 bg-stone-50/60">
-  <div className="max-w-5xl mx-auto px-5 sm:px-6">
-    <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={vp} transition={{ duration: mc.duration(0.7) }} className="mb-12">
-      <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Bí tích học</p>
-      <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">
-        Bảy Bí tích —<br />bảy cánh cửa ân sủng
-      </h2>
-      <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">
-        Mỗi Bí tích là một cuộc gặp gỡ thực sự với Chúa Kitô — không phải nghi lễ hình thức
-        mà là hành động thiêng liêng của chính Thiên Chúa qua dấu chỉ hữu hình.
-      </p>
-    </motion.div>
 
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
-      {SACRAMENTS.map((s, i) => (
-        <motion.button
-          key={s.id}
-          type="button"
-          onClick={() => setSelectedSacrament(s)}
-          initial={{ opacity: 0, y: mc.yOffset }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp}
-          transition={{ duration: mc.duration(0.45), delay: mc.delay(i * 0.07) }}
-          whileHover={mc.isMobile ? undefined : { y: -3, transition: { duration: 0.2 } }}
-          whileTap={{ scale: 0.98 }}
-          className={`group text-left rounded-2xl border p-5 transition-shadow hover:shadow-md active:shadow-sm w-full ${s.color}`}
-        >
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <span className="text-2xl">{s.icon}</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
-              Tìm hiểu
-            </span>
-          </div>
-          <h3 className="text-sm font-bold mb-1">{s.name}</h3>
-          <p className="text-xs opacity-65 leading-relaxed">{s.short}</p>
-          <div className="mt-3 pt-3 border-t border-black/8">
-            <span className="text-[10px] font-bold opacity-40">{s.details.type}</span>
-          </div>
-        </motion.button>
-      ))}
-    </div>
-  </div>
+        {/* MODAL */}
+        <AnimatePresence>
+          {selectedSacrament && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSelectedSacrament(null)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 8 }}
+                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
+              >
+                <div
+                  className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSacrament.color}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-4 p-6 pb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                      {selectedSacrament.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black font-serif text-base leading-tight">{selectedSacrament.name}</h3>
+                      <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSacrament.short}</p>
+                    </div>
+                    <button type="button" onClick={() => setSelectedSacrament(null)}
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
 
-  {/* MODAL */}
-  <AnimatePresence>
-    {selectedSacrament && (
-      <>
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={() => setSelectedSacrament(null)}
-          className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 8 }}
-          transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-          className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
-        >
-          <div
-            className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSacrament.color}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center gap-4 p-6 pb-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
-                {selectedSacrament.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black font-serif text-base leading-tight">{selectedSacrament.name}</h3>
-                <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSacrament.short}</p>
-              </div>
-              <button type="button" onClick={() => setSelectedSacrament(null)}
-                className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
+                  {/* Badges */}
+                  <div className="flex gap-2 px-6 pb-3 flex-wrap">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                      🏷 {selectedSacrament.details.type}
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                      ✋ {selectedSacrament.details.minister}
+                    </span>
+                  </div>
 
-            {/* Badges */}
-            <div className="flex gap-2 px-6 pb-3 flex-wrap">
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
-                🏷 {selectedSacrament.details.type}
-              </span>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
-                ✋ {selectedSacrament.details.minister}
-              </span>
-            </div>
+                  <div className="h-px bg-black/8 mx-6" />
 
-            <div className="h-px bg-black/8 mx-6" />
-
-            {/* Body */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12, duration: 0.25 }}
-              className="p-6 pt-4 space-y-4 max-h-[55vh] overflow-y-auto"
-            >
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Ý nghĩa thần học</p>
-                <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.meaning}</p>
-              </div>
-              <div className="h-px bg-black/8" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Nghi thức & Đặc trưng</p>
-                <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.highlight}</p>
-              </div>
-              <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
-                {selectedSacrament.details.emoji}
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </>
-    )}
-  </AnimatePresence>
-</section>
+                  {/* Body */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12, duration: 0.25 }}
+                    className="p-6 pt-4 space-y-4 max-h-[55vh] overflow-y-auto"
+                  >
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Ý nghĩa thần học</p>
+                      <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.meaning}</p>
+                    </div>
+                    <div className="h-px bg-black/8" />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Nghi thức & Đặc trưng</p>
+                      <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.highlight}</p>
+                    </div>
+                    <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
+                      {selectedSacrament.details.emoji}
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </section>
 
       <section className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6">
         <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}

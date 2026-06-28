@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
-import { motion } from "framer-motion"; // 1. Import motion
-
 
 const RESOURCE_LINKS = [
   { label: "Khối Kinh Thánh", path: "/khối-kinh-thánh" },
@@ -62,17 +60,13 @@ export default function Footer() {
     setSubscribing(false);
   };
 
+  const year = useMemo(() => new Date().getFullYear(), []);
+
   return (
-    // 2. Chuyển đổi footer thành motion.footer với hiệu ứng fade-in khi xuất hiện
-    <motion.footer 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-      className="mt-auto border-t border-stone-200/50 bg-stone-50/50 pt-12 pb-24 md:pb-12 antialiased"
-    >
+    <footer className="mt-auto border-t border-stone-200/50 bg-stone-50/50 pt-12 pb-24 md:pb-12 antialiased" >
       <div className="mx-auto max-w-5xl px-6">
         {/* Lưới chính */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 md:gap-8">
           {/* Cột 1: Thương hiệu */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 select-none">
@@ -103,22 +97,19 @@ export default function Footer() {
                 href="https://www.facebook.com/profile.php?id=61558564791118"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-stone-400 hover:text-stone-800 transition-colors"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-stone-400 md:hover:text-stone-800 md:hover:bg-stone-100 transition-colors"
                 aria-label="Facebook"
               >
                 <FacebookIcon />
               </a>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  showToast("Trang Instagram đang được cập nhật", "info");
-                }}
-                className="text-stone-400 hover:text-stone-800 transition-colors"
+              <button
+                type="button"
+                onClick={() => showToast("Trang Instagram đang được cập nhật", "info")}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-stone-400 md:hover:text-stone-800 md:hover:bg-stone-100 transition-colors cursor-pointer"
                 aria-label="Instagram"
               >
                 <InstagramIcon />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -132,7 +123,7 @@ export default function Footer() {
                     <button
                       type="button"
                       onClick={() => navigate(link.path)}
-                      className="text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors text-left"
+                      className="text-xs font-medium text-stone-500 md:hover:text-stone-900 transition-colors text-left"
                     >
                       {link.label}
                     </button>
@@ -149,7 +140,7 @@ export default function Footer() {
                     <button
                       type="button"
                       onClick={() => navigate(link.path)}
-                      className="text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors text-left"
+                      className="text-xs font-medium text-stone-500 md:hover:text-stone-900 transition-colors text-left"
                     >
                       {link.label}
                     </button>
@@ -158,7 +149,7 @@ export default function Footer() {
                 <li>
                   <a
                     href="mailto:htdcanngai@gmail.com"
-                    className="block text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="block text-xs font-medium text-stone-500 md:hover:text-stone-900 transition-colors"
                   >
                     Góp ý hệ thống
                   </a>
@@ -173,16 +164,17 @@ export default function Footer() {
             <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={subscribing}
                 placeholder="Email của bạn"
-                className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-xs font-medium placeholder-stone-400 shadow-sm transition-all focus:border-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-400 disabled:opacity-60"
+                className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-medium placeholder-stone-400 shadow-sm transition-all focus:border-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-400 disabled:opacity-60"
               />
               <button
                 type="submit"
                 disabled={subscribing}
-                className="w-full rounded-xl bg-stone-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-stone-800 active:bg-stone-950 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-stone-900 px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm md:hover:bg-stone-800 active:bg-stone-950 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {subscribing && (
                   <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -197,15 +189,13 @@ export default function Footer() {
         </div>
 
         {/* Bản quyền dưới cùng */}
-        <div className="mt-12 border-t border-stone-200/60 pt-6 grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-          <div className="hidden md:block"></div>
-
+        <div className="mt-12 border-t border-stone-200/60 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="md:col-span-2 text-center space-y-1">
             <p className="text-stone-400 text-[10px] font-bold tracking-widest uppercase">
-              HTDC Xứ đoàn Mẹ Mân Côi - Giáo Xứ An Ngãi
+              HTDC Xứ đoàn Mẹ Mân Côi
             </p>
             <p className="text-[10px] text-stone-400/80 font-medium">
-              © {new Date().getFullYear()} Giáo xứ An Ngãi. Design by HTDC Xứ đoàn Mẹ Mân Côi.
+              © {year} Giáo xứ An Ngãi
             </p>
           </div>
 
@@ -219,6 +209,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </motion.footer>
+    </footer>
   );
 }

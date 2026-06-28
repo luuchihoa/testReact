@@ -1,9 +1,6 @@
 import React, { useRef } from "react";
 import { Link } from "react-router-dom";
-import {
-  Star, BookOpen, MessageSquare, ShieldCheck,
-  Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sparkles,
-} from "lucide-react";
+import { Star, BookOpen, MessageSquare, ShieldCheck, Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sparkles } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLenis } from "lenis/react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
@@ -12,10 +9,10 @@ const ACCENT   = "#65a30d";
 const ACCENT_L = "#f7fee7";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Lớp 3 – 4 (8–10 tuổi)" },
-  { icon: Clock,        label: "Thời lượng", value: "75 phút / buổi" },
-  { icon: CalendarDays, label: "Lịch học",   value: "Chủ Nhật sau Thánh Lễ" },
-  { icon: ShieldCheck,  label: "Yêu cầu",    value: "Đã lãnh Bí tích Rửa Tội" },
+  { icon: Users,        label: "Độ tuổi",    value: "Lớp 3 – 4" },
+  { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
+  { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật" },
+  { icon: Star,  label: "Yêu cầu",    value: "Đã lãnh Bí tích Rửa Tội" },
 ];
 
 const JOURNEY = [
@@ -60,9 +57,9 @@ export default function KhoiRuocLe() {
           </>
         )}
 
-        <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
+        <motion.div style={mc.isMobile ? undefined : { y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6">
           <motion.div initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: mc.duration(0.5) }}>
-            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-800 mb-8 transition-colors">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-stone-500 md:hover:text-stone-800 mb-8 transition-colors">
               <ChevronLeft className="w-4 h-4" />Trang chủ
             </Link>
           </motion.div>
@@ -76,7 +73,7 @@ export default function KhoiRuocLe() {
                 </span>
               </motion.div>
               <motion.h1 variants={fadeUp} custom={0.05}
-                className="text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5">
+                className="text-3xl sm:text-4xl md:text-6xl font-serif font-black tracking-tight text-stone-900 leading-[1.1] mb-5">
                 Ngày thiêng liêng<br />
                 <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, #14532d)` }}>
                   trọng nhất
@@ -94,23 +91,23 @@ export default function KhoiRuocLe() {
                     if (!t) return;
                     lenis ? lenis.scrollTo(t, { duration: mc.isMobile ? 0.8 : 1.2 }) : t.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 h-12 sm:h-11 px-6 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95"
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                   Xem hành trình<ArrowRight className="w-4 h-4" />
                 </button>
                 <Link to="/tuyển-sinh"
-                  className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
+                  className="inline-flex items-center justify-center h-12 sm:h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 md:hover:bg-stone-50 shadow-sm transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95">
                   Đăng ký
                 </Link>
               </motion.div>
             </div>
 
             <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
-              <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
+              <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[240px] md:max-w-full mx-auto shadow-xl"
                 style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #dcfce7)` }}>
-                <img src="https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV" alt="Rước Lễ Lần Đầu"
+                <img src="/images/khoiruoclelandau.avif" alt="Rước Lễ Lần Đầu"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
-                  loading={mc.isMobile ? "lazy" : "eager"} />
+                  loading="eager" fetchpriority="high" />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                   <div>
@@ -125,7 +122,7 @@ export default function KhoiRuocLe() {
       </section>
 
       <section className="py-14 border-y border-stone-100 bg-white/60">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-5">
           {OVERVIEW.map((item, i) => { const Icon = item.icon; return (
             <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
               viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }} className="flex flex-col gap-2">
@@ -139,7 +136,7 @@ export default function KhoiRuocLe() {
         </div>
       </section>
 
-      <section id="hanh-trinh" className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16">
+      <section id="hanh-trinh" className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16 md:scroll-mt-20">
         <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
           transition={{ duration: mc.duration(0.7) }} className="mb-12">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Chương trình</p>
@@ -152,7 +149,7 @@ export default function KhoiRuocLe() {
               viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
               whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
               className={`bg-white rounded-2xl border border-stone-100 border-l-4 ${step.color} p-5 shadow-sm`}>
-              <p className="text-3xl font-serif font-black text-stone-100 mb-3 leading-none">{step.step}</p>
+              <p className="text-3xl font-serif font-black text-stone-200 mb-3 leading-none">{step.step}</p>
               <h3 className="text-[15px] font-bold text-stone-900 mb-1.5">{step.title}</h3>
               <p className="text-xs text-stone-500 leading-relaxed">{step.desc}</p>
             </motion.div>
@@ -172,7 +169,7 @@ export default function KhoiRuocLe() {
               <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
                 whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm md:hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${ACCENT}15` }}>
                   <Icon className="w-5 h-5" style={{ color: ACCENT }} />
                 </div>
@@ -194,12 +191,12 @@ export default function KhoiRuocLe() {
           <p className="text-stone-500 text-sm leading-relaxed mb-8 max-w-md mx-auto">Đăng ký để con em được tham gia hành trình thiêng liêng cùng cộng đoàn — kỷ niệm sẽ in đậm trong tâm hồn suốt cuộc đời.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/tuyển-sinh"
-              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+              className="inline-flex items-center justify-center gap-2 h-12 sm:h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95"
               style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
               Đăng ký ngay<ArrowRight className="w-4 h-4" />
             </Link>
             <Link to="/liên-hệ"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
+              className="inline-flex items-center justify-center h-12 sm:h-11 px-6 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 md:hover:bg-stone-50 shadow-sm transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95">
               Liên hệ hỏi thêm
             </Link>
           </div>
