@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Scroll, Map, Users, Clock, CalendarDays, ArrowRight, ChevronLeft, Layers } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -9,30 +9,212 @@ const ACCENT   = "#dc2626";
 const ACCENT_L = "#fef2f2";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Lớp 3 – 5 (8–11 tuổi)" },
-  { icon: Clock,        label: "Thời lượng", value: "75 phút / buổi" },
+  { icon: Users,        label: "Độ tuổi",    value: "Lớp 8 – 9" },
+  { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
   { icon: CalendarDays, label: "Lịch học",   value: "Chủ Nhật sau Thánh Lễ" },
-  { icon: BookOpen,     label: "Giáo trình", value: "Kinh Thánh TOB for Kids" },
+  { icon: BookOpen,     label: "Giáo trình", value: "Kinh Thánh" },
 ];
 
 const TESTAMENT = [
   {
-    name: "Cựu Ước", color: "bg-amber-50 border-amber-200", nameColor: "text-amber-800",
+    name: "Cựu Ước", 
+    color: "bg-amber-50 border-amber-200", 
+    nameColor: "text-amber-800",
     books: [
-      { group: "Ngũ Thư",  items: ["Sáng Thế — Thiên Chúa tạo dựng", "Xuất Hành — Môi-sê và dân Chúa", "Lề Luật — Mười Điều Răn"] },
-      { group: "Lịch Sử",  items: ["Giu-se và các anh em", "Đa-vít — vua theo lòng Chúa", "Sa-lô-môn và Đền Thờ"] },
-      { group: "Ngôn Sứ",  items: ["I-sai-a — lời hứa Đấng Mê-si-a", "Giê-rê-mi-a — ngôn sứ trong đau khổ", "Ê-dê-ki-en — thị kiến"] },
+      { 
+        group: "Ngũ Thư",  
+        items: [
+          "Sáng Thế (St)", 
+          "Xuất Hành (Xh)", 
+          "Lêvi (Lv)", 
+          "Dân Số (Ds)", 
+          "Đệ Nhị Luật (Đnl)"
+        ] 
+      },
+      { 
+        group: "Lịch Sử",  
+        items: [
+          "Giôsuê (Gs)", 
+          "Thủ Lãnh (Tl)", 
+          "Rút (R)", 
+          "1 Sa-mu-en (1 Sm)", 
+          "2 Sa-mu-en (2 Sm)", 
+          "1 Các Vua (1 V)", 
+          "2 Các Vua (2 V)", 
+          "1 Sử Biên Niên (1 Sb)", 
+          "2 Sử Biên Niên (2 Sb)", 
+          "Ét-ra (Er)", 
+          "Nơ-khe-mi-a (Nkm)", 
+          "Tô-bi-a (Tb)", 
+          "Giu-đi-tha (Gđt)", 
+          "Ét-te (Et)", 
+          "1 Ma-ca-bê (1 Mcb)", 
+          "2 Ma-ca-bê (2 Mcb)"
+        ] 
+      },
+      { 
+        group: "Huấn Ca",  
+        items: [
+          "Gióp (G)", 
+          "Thánh Vịnh (Tv)", 
+          "Châm Ngôn (Cn)", 
+          "Giảng Viên (Gv)", 
+          "Diễm Ca (Dc)", 
+          "Khôn Ngoan (Kn)", 
+          "Huấn Ca (Hc)"
+        ] 
+      },
+      { 
+        group: "Ngôn Sứ",  
+        items: [
+          "I-sai-a (Is)", 
+          "Giê-rê-mi-a (Gr)", 
+          "Ai Ca (Ac)", 
+          "Ba-rúc (Ba)", 
+          "Ê-dê-ki-en (Ed)", 
+          "Đa-ni-en (Đn)", 
+          "Hô-sê (Hs)", 
+          "Giô-en (Ge)", 
+          "A-mốt (Am)", 
+          "Ô-va-đi-a (Ôv)", 
+          "Giô-na (Gn)", 
+          "Mi-kha (Mk)", 
+          "Na-khum (Na)", 
+          "Kha-ba-cúc (Kb)", 
+          "Xô-phô-ni-a (Xp)", 
+          "Khác-gai (Kg)", 
+          "Da-ca-ri-a (Dcr)", 
+          "Ma-la-khi (Ml)"
+        ] 
+      },
     ],
   },
   {
-    name: "Tân Ước", color: "bg-red-50 border-red-200", nameColor: "text-red-800",
+    name: "Tân Ước", 
+    color: "bg-red-50 border-red-200", 
+    nameColor: "text-red-800",
     books: [
-      { group: "Tin Mừng",            items: ["Mát-thêu — Chúa Giêsu là Mê-si-a", "Mác-cô — Tin Mừng hành động", "Lu-ca — lòng thương xót", "Gio-an — Ngôi Lời nhập thể"] },
-      { group: "Tông Đồ Công Vụ",     items: ["Chúa Thánh Thần hiện xuống", "Phao-lô truyền giáo", "Giáo Hội sơ khai"] },
-      { group: "Thư & Khải Huyền",    items: ["Thư Phao-lô — sống đức tin", "Thư Gio-an — tình yêu", "Khải Huyền — hy vọng sau cùng"] },
+      { 
+        group: "Tin Mừng",            
+        items: [
+          "Mát-thêu (Mt)", 
+          "Mác-cô (Mc)", 
+          "Lu-ca (Lc)", 
+          "Gio-an (Ga)"
+        ] 
+      },
+      { 
+        group: "Tông Đồ Công Vụ",     
+        items: [
+          "Tông Đồ Công Vụ (Cv)"
+        ] 
+      },
+      { 
+        group: "Thư Gửi Tín Hữu Phao-lô",    
+        items: [
+          "Rô-ma (Rm)", 
+          "1 Cô-rin-tô (1 Cr)", 
+          "2 Cô-rin-tô (2 Cr)", 
+          "Ga-lát (Gl)", 
+          "Ê-phê-sô (Ep)", 
+          "Phi-líp-phê (Pl)", 
+          "Cô-lô-sê (Cl)", 
+          "1 Thê-xa-lô-ni-ca (1 Tx)", 
+          "2 Thê-xa-lô-ni-ca (2 Tx)", 
+          "1 Ti-mô-thê (1 Tm)", 
+          "2 Ti-mô-thê (2 Tm)", 
+          "Ti-tô (Tt)", 
+          "Phi-lê-môn (Plm)", 
+          "Híp-ri (Dt)"
+        ] 
+      },
+      { 
+        group: "Thư Chung & Khải Huyền",    
+        items: [
+          "Gia-cô-bê (Gc)", 
+          "1 Phê-rô (1 P)", 
+          "2 Phê-rô (2 P)", 
+          "1 Gio-an (1 Ga)", 
+          "2 Gio-an (2 Ga)", 
+          "3 Gio-an (3 Ga)", 
+          "Giu-đa (Gđ)", 
+          "Khải Huyền (Kh)"
+        ] 
+      },
     ],
   },
 ];
+
+function TestamentCard({ t, mc, vp, index }) {
+  const [expanded, setExpanded] = useState(false);
+  const PREVIEW_LINES = 15;
+
+  // Đếm tổng số items để biết có cần xem thêm không
+  const totalItems = t.books.reduce((acc, g) => acc + g.items.length, 0);
+  const needsExpand = totalItems > PREVIEW_LINES;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: mc.yOffset }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={vp}
+      transition={{ duration: mc.duration(0.6), delay: mc.delay(index * 0.1) }}
+      className={`rounded-2xl border p-6 ${t.color}`}
+    >
+      <h3 className={`text-base font-black font-serif mb-5 ${t.nameColor}`}>{t.name}</h3>
+
+      {/* Nội dung — clip khi chưa expand */}
+      <div className="relative">
+        <motion.div
+          animate={{ height: expanded ? "auto" : `${PREVIEW_LINES * 1.6}rem` }}
+          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+          className="overflow-hidden"
+        >
+          <div className="space-y-4">
+            {t.books.map((group, j) => (
+              <div key={j}>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2">
+                  {group.group}
+                </p>
+                <ul className="space-y-1.5">
+                  {group.items.map((item, k) => (
+                    <li key={k} className="flex items-start gap-2 text-sm text-stone-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-stone-400 flex-shrink-0 mt-2" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Gradient fade khi chưa expand */}
+        {needsExpand && !expanded && (
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[inherit] to-transparent pointer-events-none rounded-b-xl" />
+        )}
+      </div>
+
+      {/* Nút xem thêm / thu gọn */}
+      {needsExpand && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-4 flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-800 transition-colors"
+        >
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            className="inline-block"
+          >
+            ▾
+          </motion.span>
+          {expanded ? "Thu gọn" : "Xem thêm"}
+        </button>
+      )}
+    </motion.div>
+  );
+}
 
 const METHODS = [
   { icon: Map,     title: "Bản đồ Kinh Thánh",     desc: "Học qua bản đồ địa lý Thánh Kinh — các em nhìn thấy hành trình của dân Chúa bằng mắt." },
@@ -114,14 +296,14 @@ export default function KhoiKinhThanh() {
             <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
               <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
                 style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fee2e2)` }}>
-                <img src="https://lh3.googleusercontent.com/d/1uA0OxFQ-wIbl39uEIn6wAybWCqpNqutc" alt="Khối Kinh Thánh"
+                <img src="/images/khoikinhthanh.avif" alt="Khối Kinh Thánh"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
                   loading={mc.isMobile ? "lazy" : "eager"} />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                   <div>
-                    <p className="text-[11px] font-bold text-stone-900">Lớp 3 – Lớp 5</p>
-                    <p className="text-[10px] text-stone-500">8 – 11 tuổi</p>
+                    <p className="text-[11px] font-bold text-stone-900">Lớp 8 – Lớp 9</p>
+                    <p className="text-[10px] text-stone-500">14 – 15 tuổi</p>
                   </div>
                 </div>
               </div>
@@ -152,27 +334,9 @@ export default function KhoiKinhThanh() {
           <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">Hành trình qua 73 quyển sách</h2>
           <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">Từ "Khởi đầu Thiên Chúa sáng tạo" đến "Amen" cuối sách Khải Huyền — một hành trình cứu độ trải dài hàng ngàn năm lịch sử.</p>
         </motion.div>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 items-start">
           {TESTAMENT.map((t, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={vp} transition={{ duration: mc.duration(0.6), delay: mc.delay(i * 0.1) }}
-              className={`rounded-2xl border p-6 ${t.color}`}>
-              <h3 className={`text-base font-black font-serif mb-5 ${t.nameColor}`}>{t.name}</h3>
-              <div className="space-y-4">
-                {t.books.map((group, j) => (
-                  <div key={j}>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2">{group.group}</p>
-                    <ul className="space-y-1.5">
-                      {group.items.map((item, k) => (
-                        <li key={k} className="flex items-start gap-2 text-sm text-stone-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400 flex-shrink-0 mt-2" />{item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+            <TestamentCard key={i} t={t} mc={mc} vp={vp} index={i} />
           ))}
         </div>
       </section>
