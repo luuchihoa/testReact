@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Music, BookOpen, Calendar, Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sun } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useLenis } from "lenis/react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
 
@@ -9,30 +9,212 @@ const ACCENT   = "#ea580c";
 const ACCENT_L = "#fff7ed";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Lớp 5 – 7 (10–13 tuổi)" },
-  { icon: Clock,        label: "Thời lượng", value: "75 phút / buổi" },
-  { icon: CalendarDays, label: "Lịch học",   value: "Chủ Nhật sau Thánh Lễ" },
-  { icon: BookOpen,     label: "Yêu cầu",    value: "Đã Rước Lễ Lần Đầu" },
+  { icon: Users,        label: "Độ tuổi",    value: "Lớp 7" },
+  { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
+  { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật" },
+  { icon: BookOpen,     label: "Yêu cầu",    value: "Sau Thêm Sức" },
 ];
 
 const LITURGICAL_YEAR = [
-  { season: "Mùa Vọng",              color: "bg-violet-100 text-violet-800 border-violet-200", symbol: "🕯️", desc: "Chờ đợi và chuẩn bị đón Chúa đến." },
-  { season: "Mùa Giáng Sinh",        color: "bg-yellow-100 text-yellow-800 border-yellow-200", symbol: "⭐", desc: "Cử hành Ngôi Hai xuống thế làm người." },
-  { season: "Mùa Thường Niên I",     color: "bg-green-100 text-green-800 border-green-200",   symbol: "🌿", desc: "Suy ngẫm Tin Mừng và lớn lên trong đức tin." },
-  { season: "Mùa Chay",              color: "bg-purple-100 text-purple-800 border-purple-200", symbol: "✝️", desc: "Sám hối, chay tịnh và cầu nguyện." },
-  { season: "Tam Nhật Vượt Qua",     color: "bg-red-100 text-red-800 border-red-200",         symbol: "🔥", desc: "Trung tâm của toàn bộ năm Phụng vụ." },
-  { season: "Mùa Phục Sinh",         color: "bg-white text-stone-800 border-stone-200",        symbol: "🌅", desc: "Vui mừng với Chúa Phục Sinh 50 ngày." },
-  { season: "Mùa Thường Niên II",    color: "bg-green-100 text-green-800 border-green-200",   symbol: "🌿", desc: "Đào sâu và sống Tin Mừng trong ngày thường." },
+  {
+    id: "vong",
+    season: "Mùa Vọng",
+    color: "bg-violet-100 text-violet-900 border-violet-200",
+    symbol: "🕯️",
+    desc: "Chờ đợi và chuẩn bị đón Chúa đến.",
+    details: {
+      meaning: "Thời gian chuẩn bị tâm hồn trong 4 tuần để mừng kính đại lễ Giáng Sinh và hướng lòng mong đợi ngày Chúa lại đến trong vinh quang.",
+      highlight: "Thắp sáng vòng hoa Mùa Vọng qua từng tuần: Hy vọng, Hòa bình, Niềm vui, và Tình yêu.",
+      emoji: "💜 ✨ ⏳",
+      duration: "4 tuần",
+      color_meaning: "Tím — ăn năn & chờ đợi",
+    },
+  },
+  {
+    id: "giang-sinh",
+    season: "Mùa Giáng Sinh",
+    color: "bg-white text-stone-800 border-stone-200",
+    symbol: "⭐",
+    desc: "Cử hành Ngôi Hai Thiên Chúa xuống thế làm người.",
+    details: {
+      meaning: "Niềm vui Con Thiên Chúa làm người ở cùng chúng ta. Mùa này kéo dài từ đêm Giáng Sinh đến hết lễ Chúa Giêsu Chịu Phép Rửa.",
+      highlight: "Hang đá, máng cỏ, ngôi sao Bethlehem và những bài thánh ca hân hoan.",
+      emoji: "👶 🎄 🎶",
+      duration: "~3 tuần",
+      color_meaning: "Trắng/Vàng — vui mừng & vinh quang",
+    },
+  },
+  {
+    id: "thuong-nien-1",
+    season: "Mùa Thường Niên I",
+    color: "bg-green-100 text-green-900 border-green-200",
+    symbol: "🌿",
+    desc: "Theo dõi cuộc đời và sứ vụ công khai của Chúa Giêsu.",
+    details: {
+      meaning: "Giai đoạn ngắn giữa mùa Giáng Sinh và mùa Chay. Tập trung vào cuộc đời rao giảng công khai và các phép lạ của Chúa Giêsu.",
+      highlight: "Màu xanh lá biểu lực cho sự sống, niềm hy vọng và sự tăng trưởng đức tin mỗi ngày.",
+      emoji: "🌱 📖 ⛪",
+      duration: "4–9 tuần",
+      color_meaning: "Xanh lá — sự sống & tăng trưởng",
+    },
+  },
+  {
+    id: "chay",
+    season: "Mùa Chay",
+    color: "bg-purple-100 text-purple-900 border-purple-200",
+    symbol: "✝️",
+    desc: "40 ngày sám hối, chay tịnh và cầu nguyện cùng Giáo Hội.",
+    details: {
+      meaning: "40 ngày thanh luyện noi gương Chúa Giêsu trong hoang địa, chuẩn bị bước vào mầu nhiệm Vượt Qua.",
+      highlight: "Ba cột trụ tâm linh: Cầu nguyện sâu lắng, Ăn chay hãm mình, và Làm việc bác ái chia sẻ.",
+      emoji: "🛐 🪵 ⚖️",
+      duration: "40 ngày",
+      color_meaning: "Tím — sám hối & thanh luyện",
+    },
+  },
+  {
+    id: "tam-nhat",
+    season: "Tam Nhật Vượt Qua",
+    color: "bg-red-100 text-red-900 border-red-200",
+    symbol: "🔥",
+    desc: "Ba ngày thánh thiêng nhất — trái tim của toàn bộ Năm Phụng vụ.",
+    details: {
+      meaning: "Ba ngày thánh thiêng nhất: Thứ Năm Tuần Thánh (Tiệc Ly/Rửa Chân), Thứ Sáu Tuần Thánh (Chúa Chết), Đêm Canh Thức Phục Sinh.",
+      highlight: "Mầu nhiệm Thập giá - đỉnh cao của Tình yêu trao hiến trọn vẹn vì ơn cứu độ nhân loại.",
+      emoji: "🍞 🍷 🥖",
+      duration: "3 ngày",
+      color_meaning: "Đỏ (T6) / Trắng (T5 & CN) — tình yêu trao hiến",
+    },
+  },
+  {
+    id: "phuc-sinh",
+    season: "Mùa Phục Sinh",
+    color: "bg-white text-stone-800 border-stone-200",
+    symbol: "🌅",
+    desc: "50 ngày vui mừng — Chúa đã Phục Sinh, Alleluia!",
+    details: {
+      meaning: "Mùa vui mừng kéo dài 50 ngày đến lễ Chúa Thánh Thần Hiện Xuống. Cử hành chiến thắng vinh quang của Chúa trên sự chết.",
+      highlight: "Nến Phục Sinh rực sáng, tiếng ca Alleluia vang vọng khắp trần gian.",
+      emoji: "🎉 🕊️ 💥",
+      duration: "50 ngày",
+      color_meaning: "Trắng/Vàng — chiến thắng & vui mừng",
+    },
+  },
+  {
+    id: "thuong-nien-2",
+    season: "Mùa Thường Niên II",
+    color: "bg-green-100 text-green-900 border-green-200",
+    symbol: "🌿",
+    desc: "Hành trình dài nhất — đào sâu Tin Mừng trong đời thường.",
+    details: {
+      meaning: "Giai đoạn dài nhất sau lễ Hiện Xuống, đồng hành cùng Giáo Hội dấn thân đem Lời Chúa áp dụng vào cuộc sống đời thường.",
+      highlight: "Hành trình kiên trì học hỏi, sinh hoa trái đức tin thông qua bổn phận nhỏ bé mỗi ngày.",
+      emoji: "🌳 🤝 👑",
+      duration: "~34 tuần",
+      color_meaning: "Xanh lá — tăng trưởng & trung thành",
+    },
+  },
 ];
 
 const SACRAMENTS = [
-  { name: "Rửa Tội",    icon: "💧", desc: "Tái sinh trong nước và Thánh Thần — cửa vào Giáo Hội." },
-  { name: "Thêm Sức",   icon: "🔥", desc: "Củng cố ân sủng Rửa Tội, lãnh nhận Chúa Thánh Thần." },
-  { name: "Thánh Thể",  icon: "🍞", desc: "Nguồn mạch và tột đỉnh của đời sống Kitô hữu." },
-  { name: "Hoà Giải",   icon: "🕊️", desc: "Giao hoà với Chúa và Giáo Hội qua toà giải tội." },
-  { name: "Xức Dầu",    icon: "⚕️", desc: "Chữa lành và an ủi trong bệnh tật hay tuổi già." },
-  { name: "Truyền Chức",icon: "✋", desc: "Thánh hiến người phục vụ Dân Chúa trong thừa tác vụ." },
-  { name: "Hôn Phối",   icon: "💍", desc: "Liên kết hôn nhân trong tình yêu Thiên Chúa." },
+  {
+    id: "rua-toi",
+    name: "Rửa Tội",
+    icon: "💧",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Cửa vào đời sống Kitô hữu.",
+    details: {
+      type: "Bí tích Khai Tâm",
+      minister: "Giám mục, Linh mục, Phó tế (hoặc bất kỳ ai khi khẩn cấp)",
+      meaning: "Là nền tảng của đời sống Kitô hữu. Qua nước và Thánh Thần, người lãnh nhận được sạch tội nguyên tổ, tái sinh làm con Thiên Chúa và gia nhập Giáo Hội.",
+      highlight: "Đổ nước 3 lần với lời truyền pháp nhân danh Cha, Con và Thánh Thần. Đi kèm biểu tượng áo trắng, nến sáng và dầu thánh.",
+      emoji: "💧 🕊️ ✨"
+    }
+  },
+  {
+    id: "them-suc",
+    name: "Thêm Sức",
+    icon: "🔥",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Củng cố ân sủng Rửa Tội, lãnh nhận Chúa Thánh Thần.",
+    details: {
+      type: "Bí tích Khai Tâm",
+      minister: "Giám mục (thông thường); Linh mục (khi được ủy quyền)",
+      meaning: "Hoàn tất ơn Rửa Tội, đổ đầy Chúa Thánh Thần và 7 ơn của Ngài để giúp người Kitô hữu trưởng thành và can đảm làm chứng cho Đức Kitô.",
+      highlight: "Nghi thức xức dầu Thánh (Chrisma) lên trán và đặt tay. Nhắc nhở về 7 ơn Chúa Thánh Thần trong cuộc sống.",
+      emoji: "🔥 ✋ 👑"
+    }
+  },
+  {
+    id: "thanh-the",
+    name: "Thánh Thể",
+    icon: "🍞",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Nguồn mạch và tột đỉnh của đời sống Kitô hữu.",
+    details: {
+      type: "Bí tích Khai Tâm",
+      minister: "Chỉ Linh mục (cử hành); Thừa tác viên ngoại thường (trao Mình Thánh)",
+      meaning: "Trung tâm và đỉnh cao của Giáo Hội. Trong Thánh Lễ, bánh và rượu thực sự trở thành Mình và Máu Thánh Chúa Giêsu chứ không chỉ là biểu tượng.",
+      highlight: "Khoảnh khắc Lời Truyền Phép của Linh mục. Bánh Thánh nuôi dưỡng linh hồn hằng ngày và được tôn thờ nơi Nhà Tạm.",
+      emoji: "🍞 🍷 🙏"
+    }
+  },
+  {
+    id: "hoa-giai",
+    name: "Hoà Giải",
+    icon: "🕊️",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Giao hoà với Chúa và Giáo Hội qua bí tích tha tội.",
+    details: {
+      type: "Bí tích Chữa Lành",
+      minister: "Giám mục và Linh mục (được quyền giải tội)",
+      meaning: "Ban ơn tha thứ của Thiên Chúa cho các tội lỗi phạm sau khi Rửa Tội, giúp chữa lành vết thương tâm hồn và ban sức mạnh hoán cải.",
+      highlight: "Gồm 4 bước: Xét mình, Ăn năn tội, Xưng tội với Linh mục và làm việc Đền tội để giao hòa.",
+      emoji: "🕊️ 🤍 🔓"
+    }
+  },
+  {
+    id: "xuc-dau",
+    name: "Xức Dầu Bệnh Nhân",
+    icon: "⚕️",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Chữa lành và an ủi trong bệnh tật, tuổi già hay nguy tử.",
+    details: {
+      type: "Bí tích Chữa Lành",
+      minister: "Giám mục và Linh mục",
+      meaning: "Dành cho người đau nặng, người già hoặc sắp phẫu thuật. Ban sự bình an, can đảm hiệp thông với cuộc thương khó của Chúa và chữa lành hồn xác.",
+      highlight: "Linh mục đặt tay thinh lặng và xức dầu thánh lên trán, tay bệnh nhân cùng lời nguyện cầu giảm bớt đau đớn.",
+      emoji: "⚕️ 🤲 🕯️"
+    }
+  },
+  {
+    id: "truyen-chuc",
+    name: "Truyền Chức Thánh",
+    icon: "✋",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Thánh hiến người phục vụ Dân Chúa qua 3 cấp bậc.",
+    details: {
+      type: "Bí tích Phục Vụ Cộng Đoàn",
+      minister: "Chỉ Giám mục",
+      meaning: "Tiếp tục sứ mạng tông đồ trong Giáo Hội qua 3 cấp bậc: Giám mục, Linh mục và Phó tế. Người nhận được ghi ấn tín thiêng liêng vĩnh viễn.",
+      highlight: "Nghi thức chính yếu: Giám mục đặt tay lên đầu ứng viên trong thinh lặng và đọc lời nguyện thánh hiến.",
+      emoji: "✋ ⛪ 📿"
+    }
+  },
+  {
+    id: "hon-phoi",
+    name: "Hôn Phối",
+    icon: "💍",
+    color: "bg-white text-stone-800 border-stone-200",
+    short: "Giao ước tình yêu vĩnh cửu phản chiếu tình yêu Thiên Chúa.",
+    details: {
+      type: "Bí tích Phục Vụ Cộng Đoàn",
+      minister: "Chính đôi bạn trao nhau (Linh mục/Phó tế là nhân chứng)",
+      meaning: "Giao ước tình yêu thánh thiêng giữa một người nam và một người nữ, mang đặc tính: tự do, trọn vẹn, trung thành suốt đời và đón nhận con cái.",
+      highlight: "Chính nam nữ là thừa tác viên trao bí tích cho nhau qua lời thề hứa hôn ước bất khả phân ly trước mặt Chúa.",
+      emoji: "💍 💑 🤍"
+    }
+  }
 ];
 
 const HIGHLIGHTS = [
@@ -43,11 +225,19 @@ const HIGHLIGHTS = [
 ];
 
 export default function KhoiPhungVu() {
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [selectedSacrament, setSelectedSacrament] = useState(null);
   const heroRef = useRef(null);
   const { scrollY } = useScroll();
   const mc = useMotionConfig();
   const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
+
+  // Thêm vào đầu component
+  useEffect(() => {
+    document.body.style.overflow = selectedSeason ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedSeason, selectedSacrament]);
 
   const fadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
@@ -115,14 +305,14 @@ export default function KhoiPhungVu() {
             <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[280px]">
               <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[260px] md:max-w-full mx-auto shadow-xl"
                 style={{ background: `linear-gradient(135deg, ${ACCENT_L}, #fed7aa)` }}>
-                <img src="https://lh3.googleusercontent.com/d/1sVKWUGTiMvhwoml1qsdmahfLYFML-NGV" alt="Khối Phụng Vụ"
+                <img src="/images/khoiphungvu.avif" alt="Khối Phụng Vụ"
                   className="w-full h-full object-contain p-8 mix-blend-multiply"
                   loading={mc.isMobile ? "lazy" : "eager"} />
                 <div className="absolute bottom-3 left-3 right-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
                   <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                   <div>
-                    <p className="text-[11px] font-bold text-stone-900">Lớp 5 – Lớp 7</p>
-                    <p className="text-[10px] text-stone-500">10 – 13 tuổi</p>
+                    <p className="text-[11px] font-bold text-stone-900">Lớp 7</p>
+                    <p className="text-[10px] text-stone-500">12 tuổi</p>
                   </div>
                 </div>
               </div>
@@ -150,25 +340,134 @@ export default function KhoiPhungVu() {
         <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
           transition={{ duration: mc.duration(0.7) }} className="mb-12">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Nội dung</p>
-          <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">Năm Phụng vụ — vòng tròn thiêng liêng</h2>
-          <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">Giáo Hội sống theo một nhịp thời gian riêng — mỗi mùa phụng vụ mang màu sắc, ý nghĩa và lời cầu nguyện đặc trưng.</p>
+          <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">
+            Năm Phụng vụ —<br />vòng tròn thiêng liêng
+          </h2>
+          <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">
+            Giáo Hội sống theo một nhịp thời gian riêng — mỗi mùa phụng vụ mang màu sắc,
+            ý nghĩa và lời cầu nguyện đặc trưng.
+          </p>
         </motion.div>
-        <div className="flex flex-col gap-3">
+      
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {LITURGICAL_YEAR.map((season, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: mc.isMobile ? -12 : -20 }} whileInView={{ opacity: 1, x: 0 }}
-              viewport={vp} transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.07) }}
-              className={`flex items-center gap-4 rounded-2xl border px-5 py-4 ${season.color}`}>
-              <span className="text-2xl flex-shrink-0">{season.symbol}</span>
-              <div>
-                <h3 className="text-sm font-bold">{season.season}</h3>
-                <p className="text-xs opacity-70 mt-0.5">{season.desc}</p>
+            <motion.button
+              key={season.id}
+              type="button"
+              onClick={() => setSelectedSeason(season)}
+              initial={{ opacity: 0, y: mc.yOffset }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={vp}
+              transition={{ duration: mc.duration(0.45), delay: mc.delay(i * 0.07) }}
+              whileHover={mc.isMobile ? undefined : { y: -3, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.98 }}
+              className={`group text-left rounded-2xl border p-5 transition-shadow hover:shadow-md active:shadow-sm w-full ${season.color}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <span className="text-2xl">{season.symbol}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
+                  Tap để xem
+                </span>
               </div>
-            </motion.div>
+              <h3 className="text-sm font-bold mb-1">{season.season}</h3>
+              <p className="text-xs opacity-65 leading-relaxed">{season.desc}</p>
+            </motion.button>
           ))}
         </div>
+      
+        {/* ── MODAL ── */}
+        <AnimatePresence>
+          {selectedSeason && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSelectedSeason(null)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
+              />
+      
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 8 }}
+                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
+              >
+                <div
+                  className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSeason.color}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-4 p-6 pb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                      {selectedSeason.symbol}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black font-serif text-base leading-tight">{selectedSeason.season}</h3>
+                      <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSeason.desc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSeason(null)}
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex gap-2 px-6 py-2 flex-wrap">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                      ⏱ {selectedSeason.details.duration}
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                      🎨 {selectedSeason.details.color_meaning}
+                    </span>
+                  </div>
+      
+                  {/* Divider */}
+                  <div className="h-px bg-black/8 mx-6" />
+      
+                  {/* Body */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12, duration: 0.25 }}
+                    className="p-6 pt-4 space-y-4"
+                  >
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                        Ý nghĩa Phụng vụ
+                      </p>
+                      <p className="text-sm leading-relaxed font-medium opacity-85">
+                        {selectedSeason.details.meaning}
+                      </p>
+                    </div>
+                    <div className="h-px bg-black/8" />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                        Đặc trưng & Hoạt động
+                      </p>
+                      <p className="text-sm leading-relaxed font-medium opacity-85">
+                        {selectedSeason.details.highlight}
+                      </p>
+                    </div>
+                    <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
+                      {selectedSeason.details.emoji}
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </section>
-
-      <section className="py-20 md:py-28 bg-stone-50/60">
+{/* 7 bí tích */}
+      {/* <section className="py-20 md:py-28 bg-stone-50/60">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
             transition={{ duration: mc.duration(0.7) }} className="mb-12">
@@ -187,7 +486,128 @@ export default function KhoiPhungVu() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
+      {/* SACRAMENTS */}
+<section className="py-20 md:py-28 bg-stone-50/60">
+  <div className="max-w-5xl mx-auto px-5 sm:px-6">
+    <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={vp} transition={{ duration: mc.duration(0.7) }} className="mb-12">
+      <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: ACCENT }}>Bí tích học</p>
+      <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900">
+        Bảy Bí tích —<br />bảy cánh cửa ân sủng
+      </h2>
+      <p className="mt-3 text-stone-500 max-w-lg text-sm leading-relaxed">
+        Mỗi Bí tích là một cuộc gặp gỡ thực sự với Chúa Kitô — không phải nghi lễ hình thức
+        mà là hành động thiêng liêng của chính Thiên Chúa qua dấu chỉ hữu hình.
+      </p>
+    </motion.div>
+
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+      {SACRAMENTS.map((s, i) => (
+        <motion.button
+          key={s.id}
+          type="button"
+          onClick={() => setSelectedSacrament(s)}
+          initial={{ opacity: 0, y: mc.yOffset }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={vp}
+          transition={{ duration: mc.duration(0.45), delay: mc.delay(i * 0.07) }}
+          whileHover={mc.isMobile ? undefined : { y: -3, transition: { duration: 0.2 } }}
+          whileTap={{ scale: 0.98 }}
+          className={`group text-left rounded-2xl border p-5 transition-shadow hover:shadow-md active:shadow-sm w-full ${s.color}`}
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <span className="text-2xl">{s.icon}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
+              Tìm hiểu
+            </span>
+          </div>
+          <h3 className="text-sm font-bold mb-1">{s.name}</h3>
+          <p className="text-xs opacity-65 leading-relaxed">{s.short}</p>
+          <div className="mt-3 pt-3 border-t border-black/8">
+            <span className="text-[10px] font-bold opacity-40">{s.details.type}</span>
+          </div>
+        </motion.button>
+      ))}
+    </div>
+  </div>
+
+  {/* MODAL */}
+  <AnimatePresence>
+    {selectedSacrament && (
+      <>
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setSelectedSacrament(null)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 8 }}
+          transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+          className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
+        >
+          <div
+            className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSacrament.color}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-4 p-6 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                {selectedSacrament.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-black font-serif text-base leading-tight">{selectedSacrament.name}</h3>
+                <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSacrament.short}</p>
+              </div>
+              <button type="button" onClick={() => setSelectedSacrament(null)}
+                className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Badges */}
+            <div className="flex gap-2 px-6 pb-3 flex-wrap">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                🏷 {selectedSacrament.details.type}
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                ✋ {selectedSacrament.details.minister}
+              </span>
+            </div>
+
+            <div className="h-px bg-black/8 mx-6" />
+
+            {/* Body */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12, duration: 0.25 }}
+              className="p-6 pt-4 space-y-4 max-h-[55vh] overflow-y-auto"
+            >
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Ý nghĩa thần học</p>
+                <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.meaning}</p>
+              </div>
+              <div className="h-px bg-black/8" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Nghi thức & Đặc trưng</p>
+                <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.highlight}</p>
+              </div>
+              <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
+                {selectedSacrament.details.emoji}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </>
+    )}
+  </AnimatePresence>
+</section>
 
       <section className="py-20 md:py-28 max-w-5xl mx-auto px-5 sm:px-6">
         <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp}
