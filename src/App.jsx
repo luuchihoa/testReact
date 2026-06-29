@@ -12,7 +12,7 @@ const ReactLenisLazy = lazy(() =>
   })
 );
 
-import Header from "./components/Header1.jsx";
+import Header from "./components/Header.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
@@ -36,17 +36,18 @@ const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
 const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
 const KhoiRuocLe    = lazyWithRetry(() => import("./components/KhoiRuocLe.jsx"));
-const KhoiThemSuc   = lazyWithRetry(() => import("./components/KhoiThemSuc1.jsx"));
-const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu1.jsx"));
-const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh1.jsx"));
+const KhoiThemSuc   = lazyWithRetry(() => import("./components/KhoiThemSuc.jsx"));
+const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu.jsx"));
+const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh.jsx"));
 const KhoiVaoDoi    = lazyWithRetry(() => import("./components/KhoiVaoDoi.jsx"));
-const TaiLieu       = lazyWithRetry(() => import("./components/TaiLieu1.jsx"));
+const TaiLieu       = lazyWithRetry(() => import("./components/TaiLieu.jsx"));
 const TestQuiz      = lazyWithRetry(() => import("./components/TestQuiz.jsx"));
 const BaoMat        = lazyWithRetry(() => import("./components/BaoMat.jsx"));
 const QuyDinh       = lazyWithRetry(() => import("./components/QuyDinh.jsx"));
 const GioiThieu     = lazyWithRetry(() => import("./components/GioiThieu.jsx"));
 const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
+const GioiTre  = lazyWithRetry(() => import("./components/GioiTre.jsx"));
 
 function PageLoader() {
   return (
@@ -133,6 +134,7 @@ export default function App() {
           <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
           <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
           <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
+          <Route path="nhóm-trẻ-công-giáo" element={<GioiTre />} />
           <Route path="tài-liệu" element={<TaiLieu />} />
           <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
           <Route path="liên-hệ" element={<Contact />} />

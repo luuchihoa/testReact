@@ -204,7 +204,7 @@ export default function KhoiVaoDoi() {
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                   Xem nội dung<ArrowRight className="w-4 h-4" />
                 </button>
-                <Link to="/tuyển-sinh"
+                <Link to="/nhóm-trẻ-công-giáo"
                   className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
                   Tham gia nhóm
                 </Link>
@@ -309,7 +309,7 @@ export default function KhoiVaoDoi() {
           <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">Sẵn sàng bước ra?</h2>
           <p className="text-stone-500 text-sm leading-relaxed mb-8 max-w-md mx-auto">Gia nhập cộng đoàn thanh niên đức tin — nơi bạn không bước vào đời một mình, mà có Chúa và cả một cộng đoàn đồng hành.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/tuyển-sinh"
+            <Link to="/nhóm-trẻ-công-giáo"
               className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
               style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
               Tham gia ngay<ArrowRight className="w-4 h-4" />

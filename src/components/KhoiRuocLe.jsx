@@ -95,7 +95,7 @@ export default function KhoiRuocLe() {
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                   Xem hành trình<ArrowRight className="w-4 h-4" />
                 </button>
-                <Link to="/tuyển-sinh"
+                <Link to="/tuyển-sinh#dang-ky"
                   className="inline-flex items-center justify-center h-12 sm:h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 md:hover:bg-stone-50 shadow-sm transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95">
                   Đăng ký
                 </Link>
@@ -190,7 +190,7 @@ export default function KhoiRuocLe() {
           <h2 className="text-2xl md:text-3xl font-serif font-black text-stone-900 mb-3">Chuẩn bị cho ngày đặc biệt</h2>
           <p className="text-stone-500 text-sm leading-relaxed mb-8 max-w-md mx-auto">Đăng ký để con em được tham gia hành trình thiêng liêng cùng cộng đoàn — kỷ niệm sẽ in đậm trong tâm hồn suốt cuộc đời.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/tuyển-sinh"
+            <Link to="/tuyển-sinh#dang-ky"
               className="inline-flex items-center justify-center gap-2 h-12 sm:h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95"
               style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
               Đăng ký ngay<ArrowRight className="w-4 h-4" />

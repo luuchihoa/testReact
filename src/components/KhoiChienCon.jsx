@@ -331,7 +331,7 @@ export default function KhoiChienCon() {
               Chủ Nhật trở thành một cuộc phiêu lưu cùng Chúa.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/tuyển-sinh"
+              <Link to="/tuyển-sinh#dang-ky"
                 className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-xl text-sm font-bold text-white shadow-md transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95"
                 style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                 Đăng ký ngay<ArrowRight className="w-4 h-4" />
