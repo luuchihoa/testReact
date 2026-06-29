@@ -22,7 +22,7 @@ export default function ScrollToTop() {
         window.lenis.scrollTo(0, { immediate: true });
         window.lenis.resize();
       }
-    }, 50); // Trì hoãn 50ms là khoảng thời gian hoàn hảo để trang mới kịp Render
+    }, 0); // Trì hoãn 50ms là khoảng thời gian hoàn hảo để trang mới kịp Render
 
     return () => clearTimeout(timer);
   }, [pathname]);

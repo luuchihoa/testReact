@@ -1,7 +1,7 @@
 // TuyenSinh.jsx
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { BookOpen, Sparkles, Flame, ArrowRight, ChevronDown, GraduationCap, Heart, CheckCircle, Check } from "lucide-react";
 import { useToast } from "./ui/ToastContext.jsx";
@@ -380,24 +380,46 @@ export default function TuyenSinh() {
   const lenis       = useLenis();
   const { showToast } = useToast();
   const [heroHeight, setHeroHeight] = useState(700);
+  const location = useLocation();
 
   useEffect(() => {
     if (heroRef.current) setHeroHeight(heroRef.current.offsetHeight);
   }, []);
 
+  useEffect(() => {
+    if (location.hash !== "#dang-ky") return;
+
+    const el = document.getElementById("dang-ky");
+    if (!el) return;
+
+    const timeout = setTimeout(() => {
+      const navbar = document.querySelector("header");
+      const navbarHeight = navbar?.offsetHeight ?? 0;
+
+      if (window.lenis) {
+        window.lenis.scrollTo(el, { duration: 1.4, offset: navbarHeight });
+      } else {
+        const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+    }, 300); // Phải lớn hơn 50ms của ScrollToTop để chạy sau
+
+    return () => clearTimeout(timeout);
+  }, [location.hash]);
+
   const heroOpacity = useTransform(scrollY, [heroHeight * 0.3, heroHeight * 0.85], [1, 0]);
   const heroY       = useTransform(scrollY, [0, heroHeight * 0.85], [0, -60]);
+  const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
     <div className="bg-[#F8FAFC] text-slate-800 antialiased overflow-x-hidden selection:bg-amber-300 selection:text-slate-900">
-
+      
       {/* Noise overlay */}
-      <div
-        aria-hidden="true"
+      <div aria-hidden="true"
         className="fixed inset-0 pointer-events-none z-50 opacity-[0.03]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          willChange: "transform",
+          willChange: "transform", 
           contain: "strict",
         }}
       />
@@ -421,7 +443,7 @@ export default function TuyenSinh() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
               <span className="text-xs font-semibold text-slate-600 tracking-wide uppercase">
-                Tuyển sinh niên khóa {new Date().getFullYear()} – {(new Date().getFullYear()) + 1}
+                Tuyển sinh niên khóa {year} – {(year) + 1}
               </span>
             </motion.div>
 
@@ -448,10 +470,17 @@ export default function TuyenSinh() {
                 type="button"
                 /* Fallback Native Scroll API nếu Lenis chưa load */
                 onClick={() => {
-                  if (lenis) {
-                    lenis.scrollTo("#dang-ky", { duration: 1.4 });
+                  const el = document.getElementById("dang-ky");
+                  if (!el) return;
+
+                  const navbar = document.querySelector("header");
+                  const navbarHeight = navbar?.offsetHeight ?? 0;
+                  
+                  if (window.lenis) {
+                    window.lenis.scrollTo(el, { duration: 1.4, offset: navbarHeight });
                   } else {
-                    document.getElementById("dang-ky")?.scrollIntoView({ behavior: "smooth" });
+                    const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+                    window.scrollTo({ top, behavior: "smooth" });
                   }
                 }}
                 className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 text-sm font-bold text-white bg-slate-900 rounded-full overflow-hidden ${!isMobile ? "hover:scale-105" : ""} transition-transform duration-300 shadow-lg shadow-slate-900/20 cursor-pointer`}
@@ -652,7 +681,7 @@ function RegisterSection({ showToast, lenis }) {
     <section
       id="dang-ky"
       /* scroll-mt-12 để tránh bị che bởi thanh điều hướng khi scroll tới form */
-      className="py-20 sm:py-32 relative overflow-hidden scroll-mt-12"
+      className="py-20 sm:py-32 relative pt-6 scroll-mt-20 md:scroll-mt-16"
       style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
     >
       {/* grain */}

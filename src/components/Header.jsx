@@ -329,6 +329,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
 
   return (
     <header
+      id="header"
       className="sticky top-0 z-50 w-full border-b border-stone-200/40 bg-white/85 backdrop-blur-md antialiased"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >

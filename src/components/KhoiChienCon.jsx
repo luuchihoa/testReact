@@ -162,7 +162,7 @@ export default function KhoiChienCon() {
                   style={{ background: ACCENT, boxShadow: `0 4px 16px ${ACCENT}40` }}>
                   Xem chương trình<ArrowRight className="w-4 h-4" />
                 </button>
-                <Link to="/tuyển-sinh"
+                <Link to="/tuyển-sinh#dang-ky"
                   className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-semibold border border-stone-200 bg-white text-stone-800 md:hover:bg-stone-50 shadow-sm transition-all duration-300 md:hover:-translate-y-0.5 active:scale-95">
                   Đăng ký cho bé
                 </Link>
