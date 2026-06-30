@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { LoadingBox, StartBox } from "./ui/Feedback.jsx";
 import { useParams, useNavigate } from "react-router-dom";
 import QuizBox from "./QuizBox.jsx";
-import DoVui from "./DoVui.jsx";
+import DoVui from "./DoVui_cũ.jsx";
 import { AnimatePresence } from "framer-motion";
 
 const quizConfig = {
@@ -89,11 +89,11 @@ export default function TestQuiz() {
     <div className="min-h-screen bg-[#F2F2F7]">
       <AnimatePresence mode="wait">
         {!started ? (
-          <StartBox key="start" startQuiz={() => setStarted(true)} config={config} />
+          <StartBox key="start" startQuiz={() => setStarted(true)} config={config} onClose={() => navigate(-1)}/>
         ) : (
           <QuizMap
             key="quiz"
-            handleExit={() => navigate(-1)}
+            handleExit={() => setStarted(false)}
             config={config}
             quizData={quizData}
           />

@@ -299,33 +299,49 @@ export default function KhoiThemSuc() {
         <AnimatePresence>
           {selectedGift && (
             <>
+              {/* 1. Backdrop (Nền tối + mờ nhẹ) */}
               <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setSelectedGift(null)}
                 className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
               />
+
+              {/* 2. Wrapper định vị (Đẩy hẳn xuống đáy màn hình trên Mobile, căn giữa trên Desktop) */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                initial={{ opacity: 0, scale: 0.95, y: "100%" }} // Mobile: Trồi từ đáy lên mượt hơn scale
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 8 }}
-                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                exit={{ opacity: 0, scale: 0.95, y: "100%" }}
+                transition={{ duration: 0.3, ease: [0.32, 0.94, 0.6, 1] }} // Sử dụng curve mượt của Apple iOS
                 className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 pointer-events-none"
               >
+                {/* 3. Thẻ nội dung thực tế (Kéo vuốt mượt mà ở đây) */}
                 <motion.div
                   drag="y"
-                  dragConstraints={{ top: 0 }}
-                  dragElastic={{ top: 0, bottom: 0.3 }}
-                  onDragEnd={(_, info) => { if (info.offset.y > 80) setSelectedGift(null); }}
-                  className={`relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden max-h-[90vh] ${selectedGift.color}`}
+                  // Khóa chặt top & bottom về 0 để tạo lực lò xo đàn hồi (Elastic) khi kéo
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  // Kéo lên cứng đờ (0), kéo xuống cho giãn (0.55) cực nịnh mắt trên mobile
+                  dragElastic={{ top: 0, bottom: 0.55 }}
+                  onDragEnd={(_, info) => { 
+                    // TỐI ƯU MOBILE: Đóng nếu kéo xuống > 70px HOẶC người dùng vuốt nhanh (vận tốc trục Y > 350)
+                    if (info.offset.y > 70 || info.velocity.y > 350) { 
+                      setSelectedGift(null); 
+                    } 
+                  }}
+                  // touch-none: ÉP trình duyệt nhường quyền điều khiển touch cho Framer Motion (Chống giật lag)
+                  className={`relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden max-h-[85vh] touch-none ${selectedGift.color}`}
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Pull Tab - Thanh gạch chỉ dẫn vuốt trên Mobile */}
                   <div className="flex justify-center pt-3 pb-1 sm:hidden">
                     <div className="w-10 h-1 rounded-full bg-black/15" />
                   </div>
+
                   {/* Header */}
                   <div className="flex items-center gap-4 p-6 pb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/60 flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                    <div className="w-12 h-12 rounded-2xl bg-white/60 flex items-center justify-center shadow-sm flex-shrink-0 text-2xl select-none">
                       {selectedGift.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -337,7 +353,7 @@ export default function KhoiThemSuc() {
                       </h3>
                     </div>
                     <button type="button" onClick={() => setSelectedGift(null)}
-                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 md:hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors">
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 active:bg-black/20 flex items-center justify-center transition-colors">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
                       </svg>
@@ -346,11 +362,12 @@ export default function KhoiThemSuc() {
 
                   <div className="h-px bg-black/8 mx-6" />
 
+                  {/* Body Content - Tận dụng bộ tăng tốc phần cứng (Hardware Acceleration) */}
                   <motion.div
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12, duration: 0.25 }}
-                    className="p-6 pt-4 space-y-4"
+                    transition={{ delay: 0.1, duration: 0.2 }}
+                    className="p-6 pt-4 space-y-4 overflow-y-auto max-h-[calc(85vh-90px)]"
                   >
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">

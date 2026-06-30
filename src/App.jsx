@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
-import { Routes, Route, useLocation, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 const ReactLenisLazy = lazy(() => 
@@ -31,7 +31,7 @@ const lazyWithRetry = (componentImport) =>
   );
 
 const ModalLogin    = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
-const ModalUser     = lazyWithRetry(() => import("./components/ModalUser.jsx"));
+const ModalUser     = lazyWithRetry(() => import("./components/ModalUser1.jsx"));
 const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
 const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
@@ -47,7 +47,8 @@ const QuyDinh       = lazyWithRetry(() => import("./components/QuyDinh.jsx"));
 const GioiThieu     = lazyWithRetry(() => import("./components/GioiThieu.jsx"));
 const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
-const GioiTre  = lazyWithRetry(() => import("./components/GioiTre.jsx"));
+const LichHoc       = lazyWithRetry(() => import("./components/LichHoc.jsx"));
+const GioiTre       = lazyWithRetry(() => import("./components/GioiTre.jsx"));
 
 function PageLoader() {
   return (
@@ -134,8 +135,9 @@ export default function App() {
           <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
           <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
           <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
-          <Route path="nhóm-trẻ-công-giáo" element={<GioiTre />} />
+          <Route path="giới-trẻ-công-giáo" element={<GioiTre />} />
           <Route path="tài-liệu" element={<TaiLieu />} />
+          <Route path="lịch-học" element={<LichHoc />} />
           <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
           <Route path="liên-hệ" element={<Contact />} />
           <Route path="cài-đặt" element={<Setting fontSize={fontSize} setFontSize={handleFontSizeChange} />} />

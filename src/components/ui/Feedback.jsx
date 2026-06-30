@@ -1,13 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { createPortal } from "react-dom";
 import Backdrop from "./Backdrop.jsx";
-
-/**
- * File này MỞ RỘNG bộ overlay cũ để dùng chung cho cả QuizContent (theme="light",
- * mặc định — y hệt giao diện cũ) và DoVui (theme="dark", giao diện kính mờ tối).
- * Mọi prop cũ vẫn hoạt động y nguyên — chỉ thêm prop mới, không xóa/đổi tên prop cũ.
- */
 
 const THEME = {
   light: {
@@ -49,8 +43,6 @@ const Sheet = ({ children, onClick, theme = "light" }) => (
 );
 
 // ====================== ERROR =========================
-// onRetry: TÙY CHỌN MỚI — nếu truyền vào sẽ hiện thêm nút "Thử lại" (DoVui cần,
-// QuizContent không truyền thì giao diện y hệt bản cũ).
 export function ErrorBox({ message, handleClose, onRetry, theme = "light" }) {
   const t = THEME[theme];
   return (
@@ -89,7 +81,6 @@ export function ErrorBox({ message, handleClose, onRetry, theme = "light" }) {
 }
 
 // ====================== EXIT CONFIRM =========================
-// API giữ nguyên 100%: handleExit, handleClose. Thêm `theme` tùy chọn.
 export function ExitButton({ handleExit, handleClose, theme = "light" }) {
   const t = THEME[theme];
   return createPortal(
@@ -158,83 +149,170 @@ export function LoadingBox({ theme = "light" }) {
 }
 
 // ====================== START =========================
-// API giữ nguyên: startQuiz, config. Thêm `theme` tùy chọn.
-export function StartBox({ startQuiz, config, theme = "light" }) {
-  const t = THEME[theme];
-  if (theme === "dark") {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className={`relative p-8 md:p-10 rounded-3xl max-w-md w-[90%] text-center shadow-2xl ${t.sheet}`}>
-          <div className="mb-6 flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center shadow-lg animate-pulse">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-10 h-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </div>
-          <h2 className="text-4xl font-extrabold drop-shadow-lg mb-3">Sẵn Sàng Chưa?</h2>
-          <p className={`text-lg mb-6 leading-relaxed ${t.sub}`}>
-            Chào mừng bạn đến với{" "}
-            <span className={`font-semibold ${t.accent}`}>{config?.title}</span>. Nhấn{" "}
-            <b className="text-green-400">Bắt đầu</b> để tham gia nào!
-          </p>
-          <button
-            type="button"
-            onClick={startQuiz}
-            className={`w-full py-3 mt-4 font-bold rounded-xl shadow-xl transition-all active:scale-95 ${t.successBtn}`}
-          >
-            BẮT ĐẦU NGAY
-          </button>
-        </div>
-      </div>
-    );
-  }
+export function StartBox({ startQuiz, config, theme = "light", isOpen = true, onClose }) {
+  // Quản lý tọa độ kéo trên Mobile độc lập với CSS Transform ban đầu
+  const y = useMotionValue(0);
+
+  // Hàm xử lý khi hoàn tất hành vi vuốt đóng (Drag-to-dismiss)
+  const handleDragEnd = (event, info) => {
+    if (info.offset.y > 70 || info.velocity.y > 350) {
+      if (onClose) onClose(); // Gọi hàm close từ cha nếu có
+    }
+  };
+
+  // Hệ thống Style Tokens chuẩn hóa cho cả 2 Theme
+  const themes = {
+    light: {
+      backdrop: "bg-black/20 backdrop-blur-[2px]",
+      card: "bg-white text-gray-900 border-gray-100",
+      pullTab: "bg-gray-300",
+      iconBg: "bg-[#FFF0E8] text-3xl",
+      icon: "⚡",
+      title: "text-gray-900",
+      subtitle: "text-gray-500",
+      accent: "text-[#FF6B35]",
+      btn: "bg-[#FF6B35] text-white hover:bg-[#E85E28] active:bg-[#D45220] shadow-md shadow-orange-500/10"
+    },
+    dark: {
+      backdrop: "bg-black/60 backdrop-blur-sm",
+      card: "bg-[#1C1C1E]/95 text-white border-white/10 backdrop-blur-md",
+      pullTab: "bg-white/20",
+      iconBg: "bg-white/10 border border-white/10 shadow-lg animate-pulse",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      title: "text-white font-serif",
+      subtitle: "text-gray-400",
+      accent: "text-green-400 font-semibold",
+      btn: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:brightness-110 active:scale-[0.98] shadow-lg shadow-emerald-500/20"
+    }
+  };
+
+  const t = themes[theme] || themes.light;
+
+  // Cấu hình mượt mà cho Variants, xử lý xung đột kiểu dữ liệu chuỗi (%) trên thiết bị di động
+  const sheetVariants = {
+    hidden: {
+      y: typeof window !== "undefined" && window.innerWidth < 640 ? "100%" : 24,
+      opacity: typeof window !== "undefined" && window.innerWidth < 640 ? 1 : 0,
+      scale: typeof window !== "undefined" && window.innerWidth < 640 ? 1 : 0.95
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: { type: "spring", damping: 32, stiffness: 350 }
+    },
+    exit: {
+      y: typeof window !== "undefined" && window.innerWidth < 640 ? "100%" : 12,
+      opacity: typeof window !== "undefined" && window.innerWidth < 640 ? 1 : 0,
+      scale: typeof window !== "undefined" && window.innerWidth < 640 ? 1 : 0.95,
+      transition: { duration: 0.22, ease: "easeOut" }
+    }
+  };
+
   return (
-    <div className="fixed inset-0 flex items-end sm:items-center justify-center bg-[#F2F2F7] z-40 px-0 sm:px-4">
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full sm:max-w-sm bg-white sm:rounded-3xl rounded-t-3xl shadow-xl px-6 pt-4 pb-10 sm:pb-6 text-center"
-      >
-        <div className="flex justify-center mb-5 sm:hidden">
-          <div className="w-10 h-1 rounded-full bg-[#C7C7CC]" />
-        </div>
-        <div className="mx-auto mb-5 w-16 h-16 rounded-full bg-[#FFF0E8] flex items-center justify-center text-3xl">
-          ⚡
-        </div>
-        <h2 className="text-[22px] font-extrabold text-gray-900 mb-1">Sẵn sàng chưa?</h2>
-        {config?.title && (
-          <p className="text-[13px] font-semibold text-[#FF6B35] uppercase tracking-wider mb-1">
-            {config.title}
-          </p>
-        )}
-        <p className="text-[14px] text-gray-400 mb-8 leading-relaxed">Chúc bạn làm bài thật tốt! 💪</p>
-        <motion.button
-          type="button"
-          onClick={startQuiz}
-          whileTap={{ scale: 0.97 }}
-          className="w-full py-4 rounded-2xl bg-[#FF6B35] text-white text-[16px] font-bold shadow-sm hover:bg-[#E85E28] transition-colors"
-        >
-          Bắt đầu ngay →
-        </motion.button>
-      </motion.div>
-    </div>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop (Phông nền) */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed inset-0 z-50 pointer-events-auto ${t.backdrop}`}
+          />
+
+          {/* Wrapper layout: Mobile dính đáy (justify-end), Desktop căn giữa (sm:items-center sm:justify-center) */}
+          <div className="fixed inset-0 z-50 flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4 pointer-events-none">
+            
+            {/* Thẻ Nội dung chính (Bottom Sheet / Modal) */}
+            <motion.div
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              
+              // Kích hoạt tính năng kéo trượt
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.5 }}
+              onDragEnd={handleDragEnd}
+              style={{ y }}
+              
+              className={`relative w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-3xl border shadow-2xl pointer-events-auto max-h-[85vh] flex flex-col overflow-hidden transition-colors duration-300 ${t.card}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => onClose?.()}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 active:bg-black/15 flex items-center justify-center transition-colors dark:bg-white/10 dark:hover:bg-white/15 text-current"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+              
+              {/* 1. Pull Tab: Vùng tay cầm kéo đóng dành riêng cho Mobile */}
+              <div className="flex justify-center pt-4 pb-2 sm:hidden touch-none cursor-grab active:cursor-grabbing flex-shrink-0">
+                <div className={`w-12 h-1.5 rounded-full ${t.pullTab}`} />
+              </div>
+
+              {/* 2. Body: Cuộn mượt cô lập hoàn toàn (overscroll-contain) không ảnh hưởng tới Lenis bên ngoài */}
+              <div className="p-6 pt-4 pb-8 sm:pb-6 space-y-6 overflow-y-auto overscroll-contain flex-1 pointer-events-auto custom-scrollbar text-center">
+                
+                {/* Vùng Icon linh hoạt thay đổi theo Theme */}
+                <div className="flex justify-center touch-none">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center select-none flex-shrink-0 ${t.iconBg}`}>
+                    {t.icon}
+                  </div>
+                </div>
+
+                {/* Tiêu đề & Nội dung */}
+                <div className="space-y-2 touch-none">
+                  <h2 className={`text-2xl sm:text-3xl font-black tracking-tight leading-tight ${t.title}`}>
+                    Sẵn Sàng Chưa?
+                  </h2>
+                  {config?.title && (
+                    <p className={`text-xs font-bold uppercase tracking-widest ${t.accent}`}>
+                      {config.title}
+                    </p>
+                  )}
+                </div>
+
+                <p className={`text-sm sm:text-base leading-relaxed font-medium ${t.subtitle}`}>
+                  {theme === "dark" ? (
+                    <>
+                      Chào mừng bạn đến với <span className={t.accent}>{config?.title}</span>. Nhấn nút bên dưới để tham gia thử thách!
+                    </>
+                  ) : (
+                    "Chúc bạn làm bài thật tốt! Chinh phục điểm tuyệt đối nào. 💪"
+                  )}
+                </p>
+
+                {/* Nút hành động chính */}
+                <motion.button
+                  type="button"
+                  onClick={startQuiz}
+                  whileTap={{ scale: 0.96 }}
+                  className={`w-full py-4 rounded-2xl font-bold text-base tracking-wide transition-all ${t.btn}`}
+                >
+                  BẮT ĐẦU NGAY
+                </motion.button>
+              </div>
+
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
 // ====================== GUIDE =========================
-// API cũ giữ nguyên: setShowGuide (sẽ tự lưu localStorage rồi gọi setShowGuide(true)
-// y hệt code cũ — KHÔNG sửa hành vi cũ dù trông như 1 chỗ dễ nhầm, vì có thể có
-// component cha đang phụ thuộc vào đúng hành vi này).
-// API mới cho DoVui: truyền `onConfirm(skipChecked)` thay vì `setShowGuide`.
 export function GuideBox({
   setShowGuide,
   onConfirm,

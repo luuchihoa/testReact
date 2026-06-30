@@ -1,15 +1,3 @@
-/**
- * DoVui.jsx — UI Apple-style, mobile-first.
- *
- * Thiết kế đồng bộ với QuizContent.jsx: nền xám nhạt #F2F2F7, card trắng
- * bo góc lớn (rounded-3xl), màu hệ thống (cam thương hiệu #FF6B35, xanh lá
- * #34C759 = đúng, đỏ #FF375F = sai/nguy cấp, cam #FF9500 = cảnh báo).
- * Đồng hồ đếm ngược theo câu là 1 vòng tròn tiến trình (kiểu Apple Watch ring),
- * đổi màu theo mức khẩn cấp — gọn, rõ, không chiếm diện tích trên màn hình nhỏ.
- *
- * Nhận props giống QuizBox: config, quizData, handleExit.
- */
-
 import { useState, useRef, useCallback, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useSound from "./sound/useSounds.js";
@@ -24,99 +12,266 @@ function getRandomItems(arr, n) {
 }
 
 /* ══════════════════════════════════════════════
-   OPTION BUTTON — cùng ngôn ngữ thiết kế với QuizContent.OptionButton
+   DESIGN TOKENS — tập trung 1 chỗ, dễ đổi theme
 ══════════════════════════════════════════════ */
-const VARIANTS = {
-  idle: "bg-white border border-[#E5E5EA] text-gray-800 active:scale-[0.98] active:bg-[#F2F2F7]",
-  correct: "bg-[#D1FAE5] border border-[#34C759] text-[#065F46] font-semibold",
-  wrong: "bg-[#FFE4E6] border border-[#FF375F] text-[#7F1D1D] font-semibold",
-  dim: "bg-[#F9F9F9] border border-[#F0F0F0] text-gray-400",
+const T = {
+  brand:       "#FF6B35",
+  brandDark:   "#E85E28",
+  brandLight:  "#FFF3EE",
+  correct:     "#16A34A",
+  correctBg:   "#DCFCE7",
+  correctBdr:  "#86EFAC",
+  wrong:       "#DC2626",
+  wrongBg:     "#FEE2E2",
+  wrongBdr:    "#FCA5A5",
+  surface:     "#FFFFFF",
+  page:        "#F5F5F7",
+  border:      "#E8E8ED",
+  borderFocus: "#D1D1D6",
+  textPri:     "#1C1C1E",
+  textSec:     "#636366",
+  textMuted:   "#AEAEB2",
+  radius:      "16px",
+  radiusSm:    "12px",
+  shadow:      "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+  shadowMd:    "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
 };
-const CIRCLE_VARIANTS = {
-  idle: "bg-[#F2F2F7] text-gray-500 border border-[#E5E5EA]",
-  correct: "bg-[#34C759] text-white border-transparent",
-  wrong: "bg-[#FF375F] text-white border-transparent",
-  dim: "bg-[#F2F2F7] text-gray-300 border border-[#E5E5EA]",
-};
-
-const OptionBtn = memo(({ letter, text, state, onClick, onHover, disabled }) => (
-  <motion.button
-    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left text-[15px] font-medium transition-all duration-200 select-none ${VARIANTS[state]}`}
-    onClick={onClick}
-    onMouseEnter={onHover}
-    disabled={disabled}
-    whileTap={state === "idle" ? { scale: 0.97 } : {}}
-    animate={state === "wrong" ? { x: [0, -8, 8, -6, 6, -4, 4, 0] } : {}}
-    transition={state === "wrong" ? { duration: 0.35, ease: "easeInOut" } : {}}
-  >
-    <span
-      className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border ${CIRCLE_VARIANTS[state]}`}
-    >
-      {letter}
-    </span>
-    <span className="flex-1 leading-snug">{text}</span>
-    {state === "correct" && <span className="text-[#34C759] text-lg">✓</span>}
-    {state === "wrong" && <span className="text-[#FF375F] text-lg">✕</span>}
-  </motion.button>
-));
 
 /* ══════════════════════════════════════════════
-   RESULT CARD — vòng tròn điểm số, đồng bộ QuizContent.Result
+   OPTION BUTTON
 ══════════════════════════════════════════════ */
-function ResultCard({ score, total, onRetry }) {
+const OPTION_STYLE = {
+  idle:    { bg: T.surface,    border: T.border,      text: T.textPri,  circBg: T.page,      circText: T.textSec,  circBdr: T.border      },
+  correct: { bg: T.correctBg,  border: T.correctBdr,  text: T.correct,  circBg: T.correct,   circText: "#fff",     circBdr: "transparent" },
+  wrong:   { bg: T.wrongBg,    border: T.wrongBdr,    text: T.wrong,    circBg: T.wrong,     circText: "#fff",     circBdr: "transparent" },
+  dim:     { bg: "#FAFAFA",    border: "#F0F0F0",     text: T.textMuted, circBg: "#F5F5F5",  circText: T.textMuted, circBdr: "#EBEBEB"    },
+};
+
+const OptionBtn = memo(({ letter, text, state, onClick, onHover, disabled }) => {
+  const s = OPTION_STYLE[state] ?? OPTION_STYLE.idle;
+  return (
+    <motion.button
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        padding: "14px 16px",
+        borderRadius: T.radius,
+        border: `1.5px solid ${s.border}`,
+        background: s.bg,
+        color: s.text,
+        textAlign: "left",
+        fontSize: "15px",
+        fontWeight: state === "idle" ? 400 : 600,
+        cursor: disabled ? "default" : "pointer",
+        userSelect: "none",
+        WebkitTapHighlightColor: "transparent",
+        transition: "background 0.15s, border-color 0.15s",
+        // Tactile shadow khi idle
+        boxShadow: state === "idle" ? T.shadow : "none",
+        // Minimum touch target
+        minHeight: "52px",
+      }}
+      onClick={onClick}
+      onMouseEnter={onHover}
+      disabled={disabled}
+      whileTap={state === "idle" ? { scale: 0.985 } : {}}
+      animate={state === "wrong" ? { x: [0, -6, 6, -4, 4, -2, 2, 0] } : {}}
+      transition={state === "wrong" ? { duration: 0.3, ease: "easeInOut" } : {}}
+    >
+      {/* Letter circle */}
+      <span style={{
+        flexShrink: 0,
+        width: "34px",
+        height: "34px",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "13px",
+        fontWeight: 700,
+        background: s.circBg,
+        color: s.circText,
+        border: `1.5px solid ${s.circBdr}`,
+        transition: "all 0.15s",
+      }}>
+        {state === "correct" ? "✓" : state === "wrong" ? "✕" : letter}
+      </span>
+
+      {/* Text */}
+      <span style={{ flex: 1, lineHeight: 1.45 }}>{text}</span>
+    </motion.button>
+  );
+});
+
+/* ══════════════════════════════════════════════
+   STAT PILL — dùng trong header
+══════════════════════════════════════════════ */
+function StatPill({ label, value, accent }) {
+  return (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      background: accent ? T.brandLight : T.page,
+      borderRadius: "10px",
+      padding: "6px 12px",
+      minWidth: "52px",
+    }}>
+      <span style={{ fontSize: "16px", fontWeight: 700, color: accent ? T.brand : T.textPri, lineHeight: 1.2 }}>{value}</span>
+      <span style={{ fontSize: "11px", color: T.textMuted, fontWeight: 500, marginTop: "1px" }}>{label}</span>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   RESULT SCREEN — toàn màn hình, không phải card
+══════════════════════════════════════════════ */
+function ResultScreen({ score, total, onRetry }) {
   const display = total ? ((score / total) * 10).toFixed(1) : "0.0";
-  const pct = total ? Math.round((score / total) * 100) : 0;
+  const pct     = total ? Math.round((score / total) * 100) : 0;
+  const wrong   = total - score;
+
   const grade =
-    pct >= 80
-      ? { label: "Xuất sắc 🎉", color: "text-[#34C759]" }
-      : pct >= 60
-      ? { label: "Tốt 👍", color: "text-[#007AFF]" }
-      : pct >= 40
-      ? { label: "Cần cố gắng 📚", color: "text-[#FF9500]" }
-      : { label: "Cần ôn thêm 💪", color: "text-[#FF375F]" };
-  const circumference = 2 * Math.PI * 42;
+    pct >= 80 ? { label: "Xuất sắc!", sub: "Bạn thật tuyệt vời",  color: T.correct,  bg: T.correctBg  } :
+    pct >= 60 ? { label: "Tốt lắm!",  sub: "Tiếp tục phát huy",   color: "#2563EB",  bg: "#DBEAFE"    } :
+    pct >= 40 ? { label: "Khá ổn",    sub: "Ôn thêm nhé bạn",     color: "#D97706",  bg: "#FEF3C7"    } :
+               { label: "Cần cố gắng", sub: "Đừng bỏ cuộc nhé",   color: T.wrong,    bg: T.wrongBg    };
+
+  const circumference = 2 * Math.PI * 40;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="w-full max-w-sm mx-auto bg-white rounded-3xl p-6 border border-[#F0F0F0] shadow-sm text-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 20px",
+        paddingTop: "max(env(safe-area-inset-top), 24px)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 24px)",
+        gap: "20px",
+      }}
     >
-      <p className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Kết quả</p>
-
-      <div className="relative mx-auto w-28 h-28 mb-4">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="#F2F2F7" strokeWidth="8" />
+      {/* Score ring */}
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1, type: "spring", stiffness: 280, damping: 22 }}
+        style={{ position: "relative", width: "144px", height: "144px" }}
+      >
+        <svg style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }} viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke={T.page} strokeWidth="10" />
           <motion.circle
-            cx="50"
-            cy="50"
-            r="42"
+            cx="50" cy="50" r="40"
             fill="none"
-            stroke="#FF6B35"
-            strokeWidth="8"
+            stroke={grade.color}
+            strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: circumference * (1 - pct / 100) }}
-            transition={{ duration: 1, delay: 0.25, ease: "easeOut" }}
+            transition={{ duration: 1.1, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900">{display}</span>
-          <span className="text-xs text-gray-400 font-medium">/10</span>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <motion.span
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            style={{ fontSize: "28px", fontWeight: 800, color: T.textPri, lineHeight: 1 }}
+          >
+            {display}
+          </motion.span>
+          <span style={{ fontSize: "12px", color: T.textMuted, fontWeight: 500 }}>/10 điểm</span>
         </div>
-      </div>
+      </motion.div>
 
-      <p className={`text-lg font-bold ${grade.color}`}>{grade.label}</p>
-      <p className="text-[13px] text-gray-400 mt-1">Đúng {score}/{total} câu</p>
+      {/* Grade badge */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        style={{ textAlign: "center" }}
+      >
+        <div style={{
+          display: "inline-block",
+          background: grade.bg,
+          color: grade.color,
+          borderRadius: "100px",
+          padding: "6px 18px",
+          fontSize: "14px",
+          fontWeight: 700,
+          marginBottom: "6px",
+        }}>
+          {grade.label}
+        </div>
+        <p style={{ fontSize: "14px", color: T.textSec, margin: 0 }}>{grade.sub}</p>
+      </motion.div>
 
+      {/* Stats row */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: "10px",
+          width: "100%",
+          maxWidth: "340px",
+        }}
+      >
+        {[
+          { label: "Tổng câu", value: total, accent: false },
+          { label: "Đúng",     value: score, accent: true  },
+          { label: "Sai",      value: wrong, accent: false },
+        ].map((item) => (
+          <div key={item.label} style={{
+            background: T.surface,
+            borderRadius: T.radiusSm,
+            border: `1px solid ${T.border}`,
+            padding: "12px 8px",
+            textAlign: "center",
+            boxShadow: T.shadow,
+          }}>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: item.accent ? T.brand : T.textPri }}>{item.value}</div>
+            <div style={{ fontSize: "11px", color: T.textMuted, marginTop: "2px", fontWeight: 500 }}>{item.label}</div>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* CTA */}
       <motion.button
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
         onClick={onRetry}
         whileTap={{ scale: 0.97 }}
-        className="w-full mt-6 py-4 rounded-2xl text-[16px] font-bold text-white bg-[#FF6B35] shadow-sm hover:bg-[#E85E28] transition-colors"
+        style={{
+          width: "100%",
+          maxWidth: "340px",
+          padding: "16px",
+          borderRadius: T.radius,
+          background: T.brand,
+          color: "#fff",
+          fontSize: "16px",
+          fontWeight: 700,
+          border: "none",
+          cursor: "pointer",
+          boxShadow: `0 4px 16px ${T.brand}40`,
+          WebkitTapHighlightColor: "transparent",
+        }}
       >
-        Làm lại
+        Làm lại ↺
       </motion.button>
     </motion.div>
   );
@@ -124,144 +279,165 @@ function ResultCard({ score, total, onRetry }) {
 
 /* ══════════════════════════════════════════════
    MAIN COMPONENT
-   Props giống QuizBox: config, quizData, handleExit
 ══════════════════════════════════════════════ */
 export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
   const { play, unlock, stopAll } = useSound();
 
-  // phase: "quiz" | "result"
-  const [phase, setPhase] = useState("quiz");
+  const [phase,     setPhase]     = useState("quiz");
   const [showGuide, setShowGuide] = useState(false);
-  const [showExit, setShowExit] = useState(false);
-  const [quizQ, setQuizQ] = useState([]);
-  const [current, setCurrent] = useState(0);
-  const [score, setScore] = useState(0);
-  const [locked, setLocked] = useState(false);
-  const [timerOn, setTimerOn] = useState(false);
+  const [showExit,  setShowExit]  = useState(false);
+  const [quizQ,     setQuizQ]     = useState([]);
+  const [current,   setCurrent]   = useState(0);
+  const [score,     setScore]     = useState(0);
+  const [timerOn,   setTimerOn]   = useState(false);
   const [optStates, setOptStates] = useState({});
 
-  const quizEndedRef = useRef(false);
+  // Refs cho logic — không trigger re-render
+  const lockedRef      = useRef(false);
+  const quizQRef       = useRef([]);
+  const currentRef     = useRef(0);
+  const quizEndedRef   = useRef(false);
+  const nextQTimerRef  = useRef(null);
+  const hasInitRef     = useRef(false);
 
-  // ── Start quiz ──
+  /* ── Start quiz ── */
   const startQuiz = useCallback(() => {
+    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
     unlock();
-    const pool = Array.isArray(quizData) ? quizData : [];
+    const pool   = Array.isArray(quizData) ? quizData : [];
     const picked = getRandomItems(pool, Math.min(config.mcqCount || pool.length, pool.length));
+
+    quizQRef.current  = picked;
+    currentRef.current = 0;
+    lockedRef.current  = false;
+    quizEndedRef.current = false;
+
     setQuizQ(picked);
     setCurrent(0);
     setScore(0);
-    setLocked(false);
     setOptStates({});
-    quizEndedRef.current = false;
 
     if (localStorage.getItem(SKIP_GUIDE_KEY) === "1") {
-      setPhase("quiz");
-      setTimerOn(true);
+      setPhase("quiz"); setTimerOn(true);
     } else {
-      setPhase("quiz");
-      setShowGuide(true);
-      setTimerOn(false);
+      setPhase("quiz"); setShowGuide(true); setTimerOn(false);
     }
   }, [quizData, config.mcqCount, unlock]);
 
   useEffect(() => {
+    if (hasInitRef.current) return;
+    hasInitRef.current = true;
     startQuiz();
-  },[]);
+  }, [startQuiz]);
 
-  // ── Guide confirm ──
+  useEffect(() => () => { if (nextQTimerRef.current) clearTimeout(nextQTimerRef.current); }, []);
+
+  /* ── Callbacks ── */
   const handleGuideConfirm = useCallback((skipNext) => {
     if (skipNext) localStorage.setItem(SKIP_GUIDE_KEY, "1");
     setShowGuide(false);
     setTimerOn(true);
   }, []);
 
-  // ── Show results ──
   const showResults = useCallback(() => {
     if (quizEndedRef.current) return;
     quizEndedRef.current = true;
+    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
     setTimerOn(false);
     play("win");
     setPhase("result");
   }, [play]);
 
-  // ── Next question ──
   const nextQuestion = useCallback(() => {
-    setCurrent((prev) => {
-      const next = prev + 1;
-      if (next < quizQ.length) {
-        setLocked(false);
-        setOptStates({});
-        setTimerOn(true);
-        return next;
-      } else {
-        showResults();
-        return prev;
-      }
+    const next = currentRef.current + 1;
+    if (next < quizQRef.current.length) {
+      currentRef.current = next;
+      lockedRef.current  = false;
+      setCurrent(next);
+      setOptStates({});
+      setTimerOn(true);
+    } else {
+      showResults();
+    }
+  }, [showResults]);
+
+  const handleAnswer = useCallback((selectedKey = null) => {
+    if (lockedRef.current) return;
+    lockedRef.current = true;
+    setTimerOn(false);
+
+    const q = quizQRef.current[currentRef.current];
+    if (!q) return;
+
+    const correct    = q.correct;
+    const newStates  = {};
+    Object.keys(q.choices).forEach((k) => {
+      if (k === correct)       newStates[k] = "correct";
+      else if (k === selectedKey) newStates[k] = "wrong";
+      else                     newStates[k] = "dim";
     });
-  }, [quizQ.length, showResults]);
+    setOptStates(newStates);
 
-  // ── Handle answer ──
-  const handleAnswer = useCallback(
-    (selectedKey = null) => {
-      if (locked) return;
-      setLocked(true);
-      setTimerOn(false);
+    if (selectedKey === correct) { play("correct"); setScore((s) => s + 1); }
+    else                         { play("wrong"); }
 
-      const q = quizQ[current];
-      const correct = q.correct;
-      const newStates = {};
-      Object.keys(q.choices).forEach((k) => {
-        if (k === correct) newStates[k] = "correct";
-        else if (k === selectedKey) newStates[k] = "wrong";
-        else newStates[k] = "dim";
-      });
-      setOptStates(newStates);
+    nextQTimerRef.current = setTimeout(() => {
+      nextQTimerRef.current = null;
+      nextQuestion();
+    }, 1200);
+  }, [play, nextQuestion]);
 
-      if (selectedKey === correct) {
-        play("correct");
-        setScore((s) => s + 1);
-      } else {
-        play("wrong");
-      }
-
-      setTimeout(() => nextQuestion(), 1200);
-    },
-    [locked, quizQ, current, play, nextQuestion]
-  );
-
-  // ── Timer callbacks ──
   const handleTimeUp = useCallback(() => {
-    if (locked) return;
+    if (lockedRef.current) return;
     play("wrong");
     handleAnswer(null);
-  }, [locked, play, handleAnswer]);
+  }, [play, handleAnswer]);
 
   const handleFinalRush = useCallback(() => {
     play("tick1", 1.6);
     setTimeout(() => play("tick2", 1.8), 350);
   }, [play]);
 
-  // ── Exit: dừng âm thanh rồi điều hướng ra khỏi route (do TestQuiz cung cấp) ──
+  const handleHover = useCallback(() => play("hover"), [play]);
+
   const confirmExit = useCallback(() => {
+    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
     setTimerOn(false);
     stopAll();
+    lockedRef.current = true;
     quizEndedRef.current = true;
     setShowExit(false);
     onExitToRoute?.();
   }, [stopAll, onExitToRoute]);
 
-  const q = quizQ[current];
-  const totalQ = quizQ.length;
-  const progress = totalQ ? (current / totalQ) * 100 : 0;
+  const handleEarlyEnd = useCallback(() => {
+    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
+    setTimerOn(false);
+    showResults();
+  }, [showResults]);
 
-  // Dữ liệu trống/không đủ câu — phòng hờ
+  /* ── Derived ── */
+  const q      = quizQ[current];
+  const totalQ = quizQ.length;
+  const answered = Object.keys(optStates).length > 0;
+
+  /* ── Empty state ── */
   if (!Array.isArray(quizData) || quizData.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F2F2F7] px-4 text-center">
-        <p className="text-[16px] font-semibold text-gray-700">Không có câu hỏi nào 😕</p>
+      <div style={{
+        minHeight: "100dvh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: "16px", background: T.page, padding: "24px", textAlign: "center",
+      }}>
+        <div style={{ fontSize: "48px" }}>😕</div>
+        <p style={{ fontSize: "16px", fontWeight: 600, color: T.textPri, margin: 0 }}>Không có câu hỏi nào</p>
         <button
           onClick={() => onExitToRoute?.()}
-          className="px-5 py-2.5 rounded-2xl bg-[#FF6B35] text-white text-[15px] font-semibold"
+          style={{
+            padding: "12px 28px", borderRadius: T.radius,
+            background: T.brand, color: "#fff",
+            fontSize: "15px", fontWeight: 600, border: "none", cursor: "pointer",
+          }}
         >
           Quay lại
         </button>
@@ -270,81 +446,178 @@ export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7]">
+    <div style={{ minHeight: "100dvh", background: T.page }}>
       {showGuide && <GuideBox onConfirm={handleGuideConfirm} skipStorageKey={SKIP_GUIDE_KEY} />}
-      {showExit && <ExitButton handleExit={confirmExit} handleClose={() => setShowExit(false)} />}
+      {showExit  && <ExitButton handleExit={confirmExit} handleClose={() => setShowExit(false)} />}
 
-      {/* ─── QUIZ PHASE ─── */}
+      {/* ══════════════ QUIZ PHASE ══════════════ */}
       {phase === "quiz" && q && (
-        <div
-          className="flex flex-col min-h-screen max-w-md mx-auto w-full px-4"
-          style={{
-            paddingTop: "max(env(safe-area-inset-top), 16px)",
-            paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3 pt-1">
-            <div>
-              <h1 className="text-[20px] font-extrabold text-[#FF6B35] tracking-tight">{config.title}</h1>
-              <p className="text-[13px] font-medium text-gray-400 mt-0.5">
-                Câu {current + 1} / {totalQ}
-              </p>
-            </div>
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100dvh",
+          maxWidth: "480px",
+          margin: "0 auto",
+          padding: "0 16px",
+          paddingTop:    "max(env(safe-area-inset-top), 16px)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
+        }}>
+
+          {/* ── Header bar ── */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "14px",
+            paddingTop: "4px",
+            gap: "12px",
+          }}>
+            {/* Exit button */}
             <button
               onClick={() => setShowExit(true)}
               aria-label="Thoát"
-              className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#F0F0F0] flex items-center justify-center text-gray-400 active:scale-95 transition"
+              style={{
+                flexShrink: 0,
+                width: "38px", height: "38px",
+                borderRadius: "50%",
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "16px", color: T.textSec,
+                cursor: "pointer",
+                boxShadow: T.shadow,
+                WebkitTapHighlightColor: "transparent",
+              }}
             >
               ✕
             </button>
+
+            {/* Title */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 style={{
+                fontSize: "16px", fontWeight: 700,
+                color: T.brand, margin: 0,
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                {config.title}
+              </h1>
+            </div>
+
+            {/* Stats pills */}
+            <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+              <StatPill label="câu" value={`${current + 1}/${totalQ}`} />
+              <StatPill label="điểm" value={score} accent />
+            </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="h-1.5 bg-[#E5E5EA] rounded-full overflow-hidden mb-5">
-            <motion.div
-              className="h-full bg-[#FF6B35] rounded-full"
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            />
+          {/* ── Segmented progress ── */}
+          <div style={{
+            display: "flex",
+            gap: "3px",
+            marginBottom: "16px",
+          }}>
+            {Array.from({ length: totalQ }).map((_, i) => {
+              const isDone = i < current;
+              return (
+                <div key={i} style={{
+                  flex: 1,
+                  height: "4px",
+                  borderRadius: "2px",
+                  background: T.border,
+                  overflow: "hidden",
+                  position: "relative",
+                }}>
+                  <motion.div
+                    style={{
+                      position: "absolute", top: 0, left: 0, bottom: 0,
+                      background: T.brand,
+                      borderRadius: "2px",
+                    }}
+                    initial={{ width: isDone ? "100%" : "0%" }}
+                    animate={{ width: isDone ? "100%" : "0%" }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
+                </div>
+              );
+            })}
           </div>
 
-          {/* Question card + ring timer */}
+          {/* ── Question card ── */}
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ x: 24, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -24, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-              className="bg-white rounded-3xl p-5 shadow-sm border border-[#F0F0F0] mb-5 flex items-start gap-4"
+              initial={{ x: 28, opacity: 0 }}
+              animate={{ x: 0,  opacity: 1 }}
+              exit={{   x: -28, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              style={{
+                background: T.surface,
+                borderRadius: "20px",
+                padding: "18px 18px 16px",
+                border: `1px solid ${T.border}`,
+                boxShadow: T.shadowMd,
+                marginBottom: "14px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "14px",
+              }}
             >
-              <p className="flex-1 text-[17px] font-semibold text-gray-900 leading-snug">{q.text}</p>
-              <QuizTimerRing
-                duration={QUESTION_DURATION_MS}
-                running={timerOn && !showGuide}
-                resetKey={current}
-                onTimeUp={handleTimeUp}
-                onFinalRush={handleFinalRush}
-              />
+              {/* Question number badge */}
+              <span style={{
+                flexShrink: 0,
+                marginTop: "2px",
+                width: "28px", height: "28px",
+                borderRadius: "8px",
+                background: T.brandLight,
+                color: T.brand,
+                fontSize: "13px", fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {current + 1}
+              </span>
+
+              <p style={{
+                flex: 1,
+                fontSize: "16px",
+                fontWeight: 600,
+                color: T.textPri,
+                lineHeight: 1.5,
+                margin: 0,
+              }}>
+                {q.text}
+              </p>
+
+              {/* Timer ring */}
+              <div style={{ flexShrink: 0 }}>
+                <QuizTimerRing
+                  duration={QUESTION_DURATION_MS}
+                  running={timerOn && !showGuide}
+                  resetKey={current}
+                  onTimeUp={handleTimeUp}
+                  onFinalRush={handleFinalRush}
+                />
+              </div>
             </motion.div>
           </AnimatePresence>
 
-          {/* Options */}
+          {/* ── Options ── */}
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
               initial="hidden"
               animate="show"
-              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } } }}
-              className="flex flex-col gap-2.5 mb-5"
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.055, delayChildren: 0.06 } },
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "9px", marginBottom: "14px" }}
             >
               {Object.entries(q.choices).map(([letter, text]) => (
                 <motion.div
                   key={letter}
                   variants={{
-                    hidden: { opacity: 0, y: 12 },
-                    show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+                    hidden: { opacity: 0, y: 10 },
+                    show:   { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
                   }}
                 >
                   <OptionBtn
@@ -352,44 +625,82 @@ export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
                     text={text}
                     state={optStates[letter] ?? "idle"}
                     onClick={() => handleAnswer(letter)}
-                    onHover={() => play("hover")}
-                    disabled={locked}
+                    onHover={handleHover}
+                    disabled={!!optStates[letter]}
                   />
                 </motion.div>
               ))}
             </motion.div>
           </AnimatePresence>
 
-          {/* Bottom actions */}
-          <div className="mt-auto flex flex-col gap-2.5 pt-2">
+          {/* ── Bottom actions ── */}
+          <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "9px", paddingTop: "4px" }}>
+
+            {/* Skip button — ẩn nhẹ khi đã trả lời */}
             <motion.button
               onClick={() => handleAnswer(null)}
-              disabled={locked}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-gray-500 bg-white border border-[#E5E5EA] disabled:opacity-40 transition-colors hover:bg-[#F2F2F7]"
+              disabled={answered}
+              whileTap={{ scale: 0.98 }}
+              animate={{ opacity: answered ? 0 : 1 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: T.radius,
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                color: T.textSec,
+                fontSize: "15px",
+                fontWeight: 500,
+                cursor: answered ? "default" : "pointer",
+                WebkitTapHighlightColor: "transparent",
+                minHeight: "50px",
+              }}
             >
-              Bỏ qua →
+              Bỏ qua câu này →
             </motion.button>
-            <div className="flex gap-2.5">
+
+            {/* Action row */}
+            <div style={{ display: "flex", gap: "9px" }}>
+              {/* End early */}
               <motion.button
-                onClick={() => {
-                  setTimerOn(false);
-                  showResults();
-                }}
-                disabled={locked}
+                onClick={handleEarlyEnd}
                 whileTap={{ scale: 0.97 }}
-                className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-[#FF375F] bg-[#FFE4E6] disabled:opacity-40 transition-colors"
+                style={{
+                  flex: 1,
+                  padding: "13px",
+                  borderRadius: T.radius,
+                  background: T.wrongBg,
+                  border: `1px solid ${T.wrongBdr}`,
+                  color: T.wrong,
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                  minHeight: "48px",
+                }}
               >
                 Kết thúc sớm
               </motion.button>
+
+              {/* Help */}
               <motion.button
-                onClick={() => {
-                  setTimerOn(false);
-                  setShowGuide(true);
-                }}
+                onClick={() => { setTimerOn(false); setShowGuide(true); }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Hướng dẫn"
-                className="w-12 h-12 flex-shrink-0 rounded-2xl bg-[#FF6B35] text-white text-[16px] font-bold shadow-sm hover:bg-[#E85E28] transition-colors"
+                style={{
+                  flexShrink: 0,
+                  width: "48px", height: "48px",
+                  borderRadius: T.radius,
+                  background: T.brand,
+                  border: "none",
+                  color: "#fff",
+                  fontSize: "18px",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                  boxShadow: `0 2px 8px ${T.brand}50`,
+                }}
               >
                 ?
               </motion.button>
@@ -398,11 +709,9 @@ export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
         </div>
       )}
 
-      {/* ─── RESULT PHASE ─── */}
+      {/* ══════════════ RESULT PHASE ══════════════ */}
       {phase === "result" && (
-        <div className="min-h-screen flex items-center justify-center px-4 py-10">
-          <ResultCard score={score} total={totalQ} onRetry={startQuiz} />
-        </div>
+        <ResultScreen score={score} total={totalQ} onRetry={startQuiz} />
       )}
     </div>
   );

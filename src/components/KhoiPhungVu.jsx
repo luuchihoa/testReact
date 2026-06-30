@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Music, BookOpen, Calendar, Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sun } from "lucide-react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue } from "framer-motion";
 import { useLenis } from "lenis/react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
 
@@ -232,6 +232,15 @@ export default function KhoiPhungVu() {
   const mc = useMotionConfig();
   const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
+  const y = useMotionValue(0);
+
+  const handleDragEnd = (event, info) => {
+    // Đóng nếu vuốt xuống hơn 70px HOẶC vận tốc vuốt xuống đủ nhanh (> 350)
+    if (info.offset.y > 70 || info.velocity.y > 350) {
+      setSelectedSeason(null);
+      setSelectedSacrament(null);
+    }
+  };
 
   // Thêm vào đầu component
   useEffect(() => {
@@ -388,80 +397,116 @@ export default function KhoiPhungVu() {
                 onClick={() => setSelectedSeason(null)}
                 className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
               />
-      
-              {/* Modal */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 8 }}
-                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
-              >
-                <div
-                  className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSeason.color}`}
+
+              {/* Wrapper container: Xử lý vị trí responsive */}
+              <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
+                
+                {/* Modal / Bottom Sheet Card */}
+                <motion.div
+                  // Cấu hình kéo thả (Chỉ kích hoạt trên mobile/tablet, tắt trên desktop nếu muốn cố định)
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.5 }}
+                  onDragEnd={handleDragEnd}
+                  style={{ y }}
+                  
+                  // Animation trạng thái xuất hiện
+                  initial={{ 
+                    opacity: 0, 
+                    y: window.innerWidth < 768 ? '100%' : 16,
+                    scale: window.innerWidth < 768 ? 1 : 0.95 
+                  }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    scale: 1 
+                  }}
+                  exit={{ 
+                    opacity: 0, 
+                    y: window.innerWidth < 768 ? '100%' : 8,
+                    scale: window.innerWidth < 768 ? 1 : 0.95 
+                  }}
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  
+                  // CSS Styles: Bo góc đáy trên Mobile, bo tròn toàn bộ trên Desktop
+                  className={`relative w-full md:max-w-sm rounded-t-[2rem] md:rounded-3xl border border-black/5 shadow-2xl pointer-events-auto max-h-[85vh] flex flex-col overflow-hidden ${selectedSeason.color}`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header */}
-                  <div className="flex items-center gap-4 p-6 pb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                  
+                  {/* 1. Pull Tab (Thanh gạch nhỏ để kéo trên Mobile) */}
+                  <div className="flex justify-center pt-3 pb-1 md:hidden touch-none cursor-grab active:cursor-grabbing">
+                    <div className="w-12 h-1.5 bg-black/15 rounded-full" />
+                  </div>
+
+                  {/* Header: touch-none giúp việc kéo vùng này chính xác hơn, tránh xung đột cuộn */}
+                  <div className="flex items-start gap-4 p-6 pb-3 touch-none">
+                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl select-none">
                       {selectedSeason.symbol}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-black font-serif text-base leading-tight">{selectedSeason.season}</h3>
-                      <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSeason.desc}</p>
+                      <h3 className="font-black font-serif text-lg leading-tight text-black/90">{selectedSeason.season}</h3>
+                      <p className="text-xs opacity-65 mt-1 leading-snug">{selectedSeason.desc}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedSeason(null)}
-                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors"
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 active:bg-black/15 flex items-center justify-center transition-colors self-start"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
                       </svg>
                     </button>
                   </div>
-                  <div className="flex gap-2 px-6 py-2 flex-wrap">
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+
+                  {/* Tags */}
+                  <div className="flex gap-2 px-6 py-2 flex-wrap touch-none">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/5">
                       ⏱ {selectedSeason.details.duration}
                     </span>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/5">
                       🎨 {selectedSeason.details.color_meaning}
                     </span>
                   </div>
-      
+
                   {/* Divider */}
-                  <div className="h-px bg-black/8 mx-6" />
-      
-                  {/* Body */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12, duration: 0.25 }}
-                    className="p-6 pt-4 space-y-4"
-                  >
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
-                        Ý nghĩa Phụng vụ
-                      </p>
-                      <p className="text-sm leading-relaxed font-medium opacity-85">
-                        {selectedSeason.details.meaning}
-                      </p>
-                    </div>
-                    <div className="h-px bg-black/8" />
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
-                        Đặc trưng & Hoạt động
-                      </p>
-                      <p className="text-sm leading-relaxed font-medium opacity-85">
-                        {selectedSeason.details.highlight}
-                      </p>
-                    </div>
-                    <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
-                      {selectedSeason.details.emoji}
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
+                  <div className="h-px bg-black/10 mx-6 flex-shrink-0" />
+
+                  {/* 2. Body: Cho phép cuộn tự do khi nội dung dài, cô lập hoàn toàn với Lenis bên ngoài */}
+                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 custom-scrollbar">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                          Ý nghĩa Phụng vụ
+                        </p>
+                        <p className="text-sm leading-relaxed font-medium opacity-85">
+                          {selectedSeason.details.meaning}
+                        </p>
+                      </div>
+                      
+                      <div className="h-px bg-black/8" />
+                      
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                          Đặc trưng & Hoạt động
+                        </p>
+                        <p className="text-sm leading-relaxed font-medium opacity-85">
+                          {selectedSeason.details.highlight}
+                        </p>
+                      </div>
+                      
+                      <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
+                        {selectedSeason.details.emoji}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                </motion.div>
+              </div>
             </>
           )}
         </AnimatePresence>
@@ -515,74 +560,125 @@ export default function KhoiPhungVu() {
         <AnimatePresence>
           {selectedSacrament && (
             <>
+              {/* Backdrop nền tối phía sau */}
               <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setSelectedSacrament(null)}
                 className="fixed inset-0 bg-black/40 backdrop-blur-[3px] z-40"
               />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 8 }}
-                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
-              >
-                <div
-                  className={`relative w-full max-w-sm rounded-3xl border shadow-2xl pointer-events-auto overflow-hidden ${selectedSacrament.color}`}
+
+              {/* Định vị responsive: Mobile dính đáy, Desktop ra giữa */}
+              <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
+                
+                {/* Thẻ nội dung chính */}
+                <motion.div
+                  // Kích hoạt tính năng vuốt trượt
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.5 }}
+                  onDragEnd={handleDragEnd}
+                  style={{ y }}
+                  
+                  // Thiết lập animation mượt mà dựa trên kích thước màn hình
+                  initial={{ 
+                    opacity: 0, 
+                    y: window.innerWidth < 768 ? '100%' : 16,
+                    scale: window.innerWidth < 768 ? 1 : 0.95 
+                  }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    scale: 1 
+                  }}
+                  exit={{ 
+                    opacity: 0, 
+                    y: window.innerWidth < 768 ? '100%' : 8,
+                    scale: window.innerWidth < 768 ? 1 : 0.95 
+                  }}
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  
+                  // Bo góc dưới dạng Bottom Sheet trên Mobile và dạng Hộp thoại trên Desktop
+                  className={`relative w-full md:max-w-sm rounded-t-[2rem] md:rounded-3xl border border-black/5 shadow-2xl pointer-events-auto max-h-[85vh] flex flex-col overflow-hidden ${selectedSacrament.color}`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header */}
-                  <div className="flex items-center gap-4 p-6 pb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl">
+                  
+                  {/* Thanh gạt (Pull Tab) đóng vai trò tay cầm chỉ hiện trên Mobile */}
+                  <div className="flex justify-center pt-3 pb-1 md:hidden touch-none cursor-grab active:cursor-grabbing">
+                    <div className="w-12 h-1.5 bg-black/15 rounded-full" />
+                  </div>
+
+                  {/* Header khu vực chạm không cuộn trang (touch-none) */}
+                  <div className="flex items-start gap-4 p-6 pb-3 touch-none">
+                    <div className="w-12 h-12 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm flex-shrink-0 text-2xl select-none">
                       {selectedSacrament.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-black font-serif text-base leading-tight">{selectedSacrament.name}</h3>
-                      <p className="text-xs opacity-60 mt-0.5 leading-snug">{selectedSacrament.short}</p>
+                      <h3 className="font-black font-serif text-lg leading-tight text-black/90">{selectedSacrament.name}</h3>
+                      <p className="text-xs opacity-65 mt-1 leading-snug">{selectedSacrament.short}</p>
                     </div>
-                    <button type="button" onClick={() => setSelectedSacrament(null)}
-                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/8 hover:bg-black/15 active:bg-black/20 flex items-center justify-center transition-colors">
+                    <button 
+                      type="button" 
+                      onClick={() => setSelectedSacrament(null)}
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 active:bg-black/15 flex items-center justify-center transition-colors self-start"
+                    >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
                       </svg>
                     </button>
                   </div>
 
-                  {/* Badges */}
-                  <div className="flex gap-2 px-6 pb-3 flex-wrap">
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                  {/* Khu vực Badges */}
+                  <div className="flex gap-2 px-6 pb-3 flex-wrap touch-none">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/5">
                       🏷 {selectedSacrament.details.type}
                     </span>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/8">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/5">
                       ✋ {selectedSacrament.details.minister}
                     </span>
                   </div>
 
-                  <div className="h-px bg-black/8 mx-6" />
+                  {/* Đường kẻ phân cách */}
+                  <div className="h-px bg-black/10 mx-6 flex-shrink-0" />
 
-                  {/* Body */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12, duration: 0.25 }}
-                    className="p-6 pt-4 space-y-4 max-h-[55vh] overflow-y-auto"
-                  >
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Ý nghĩa thần học</p>
-                      <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.meaning}</p>
-                    </div>
-                    <div className="h-px bg-black/8" />
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Nghi thức & Đặc trưng</p>
-                      <p className="text-sm leading-relaxed font-medium opacity-85">{selectedSacrament.details.highlight}</p>
-                    </div>
-                    <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
-                      {selectedSacrament.details.emoji}
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
+                  {/* Body: Cuộn mượt độc lập hoàn toàn bằng overscroll-contain */}
+                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 custom-scrollbar">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                          Ý nghĩa thần học
+                        </p>
+                        <p className="text-sm leading-relaxed font-medium opacity-85">
+                          {selectedSacrament.details.meaning}
+                        </p>
+                      </div>
+                      
+                      <div className="h-px bg-black/8" />
+                      
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">
+                          Nghi thức & Đặc trưng
+                        </p>
+                        <p className="text-sm leading-relaxed font-medium opacity-85">
+                          {selectedSacrament.details.highlight}
+                        </p>
+                      </div>
+                      
+                      <div className="text-center text-xl pt-1 tracking-widest select-none opacity-80">
+                        {selectedSacrament.details.emoji}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                </motion.div>
+              </div>
             </>
           )}
         </AnimatePresence>

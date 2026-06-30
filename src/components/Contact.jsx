@@ -366,7 +366,7 @@ export default function Contact() {
       </section>
 
       {/* ══ NỘI DUNG CHÍNH ══ */}
-      <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-20 space-y-12">
+      <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-16 sm:pb-24 space-y-10 sm:space-y-14">
 
         {/* Kênh liên hệ */}
         <motion.section
