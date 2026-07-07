@@ -49,14 +49,14 @@ export default function TestQuiz() {
   const [quizData, setQuizData] = useState(null);
   const [started, setStarted] = useState(false);
   const [fetchError, setFetchError] = useState(false);
-
+  
   const config = quizConfig[type];
+  
+  useEffect(() => {
+    if (!config) navigate(-1);
+  }, [config, navigate]);
 
-  // Guard: unknown route type
-  if (!config) {
-    navigate(-1);
-    return null;
-  }
+  if (!config) return null;
 
   useEffect(() => {
     setQuizData(null);
@@ -93,7 +93,7 @@ export default function TestQuiz() {
         ) : (
           <QuizMap
             key="quiz"
-            handleExit={() => setStarted(false)}
+            handleExit={() => navigate(-1)}
             config={config}
             quizData={quizData}
           />

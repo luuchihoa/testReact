@@ -100,10 +100,9 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
   const scoreRef = useRef(0);
   const [current, setCurrent] = useState(0);
   const { play } = useSound();
-  // Fix #7 — pointer check thay userAgent
+  const timeoutRef = useRef(null);
   const isMobile = useMemo(() => window.matchMedia("(pointer: coarse)").matches, []);
 
-  // Fix #8 — reset scoreRef khi mcq thay đổi (attempt mới)
   useEffect(() => { scoreRef.current = 0; }, [mcq]);
 
   const q = mcq?.[current];
@@ -125,7 +124,6 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
     else if (isCorrect) {
       play("correct");
       scoreRef.current += 1;
-      // Fix #2 — rect đã capture trước, không stale
       if (rect) burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
     } else {
       play("wrong");
@@ -133,7 +131,7 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
 
     setSubmitted(true);
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setSubmitted(false);
       setSelectedKey(null);
       if (current === mcq.length - 1) {
@@ -144,6 +142,14 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
       }
     }, 900);
   }, [submitted, q, current, mcq, play, config, setMcqScore, setType, setUserAnswers]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!q) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">

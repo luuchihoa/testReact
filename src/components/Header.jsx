@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
+import { supabase } from "../lib/supabase.js";
 import {
   LogIn, LogOut, ChevronDown,
   BookOpen, Sparkles, Flame, Heart, Globe, Users,
   CalendarDays, FileText, Phone, Settings, ShieldCheck,
-  ScrollText, User, Home, GraduationCap, Info, Menu, X
+  ScrollText, User, Home, GraduationCap, Info, Menu, X,
+  LayoutDashboard
 } from "lucide-react";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
@@ -38,6 +40,38 @@ const ACCOUNT_ITEMS = [
   { path: "/bảo-mật",  label: "Bảo mật",  icon: ShieldCheck },
   { path: "/quy-định", label: "Quy định", icon: ScrollText  },
 ];
+
+// Nhãn hiển thị + màu nhận diện theo từng vai trò (role đọc từ bảng `users`)
+const ROLE_LABELS = {
+  admin:   "Quản trị viên",
+  teacher: "Giáo viên",
+  student: "Học sinh",
+  user:    "Thành viên",
+};
+
+const ROLE_ACCENTS = {
+  admin:   "#dc2626", // đỏ — quyền cao nhất
+  teacher: "#2563eb", // xanh dương — giáo lý viên
+  student: "#16a34a", // xanh lá — học sinh
+  user:    "#78716c", // xám — mặc định/chưa phân loại
+};
+
+// Mục menu riêng theo vai trò — hiển thị thêm vào Account Dropdown (desktop)
+// và More Menu Sheet (mobile), phía trên các mục chung (ACCOUNT_ITEMS)
+const ROLE_EXTRA_ITEMS = {
+  admin: [
+    { path: "/quan-tri", label: "Quản trị hệ thống", icon: LayoutDashboard },
+  ],
+  teacher: [
+    { path: "/giáo-viên/lớp-học", label: "Lớp học của tôi", icon: GraduationCap },
+  ],
+  student: [],
+  user: [],
+};
+
+function getRoleExtraItems(role) {
+  return ROLE_EXTRA_ITEMS[role] ?? [];
+}
 
 // Cấu trúc chuẩn 5 nút trên Mobile Bottom Bar theo Apple/Google UX
 const MOBILE_TAB_ITEMS = [
@@ -74,19 +108,20 @@ function useOnClickOutside(ref, handler) {
 }
 
 /* ═══ DESKTOP COMPONENTS (Giữ nguyên) ════════════════════════════ */
-function AccountTriggerButton({ isLogin, avatar, username, isOpen, onToggle, onLogin }) {
+function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggle, onLogin }) {
   if (!isLogin) return (
     <button type="button" onClick={onLogin}
       className="inline-flex h-9 items-center gap-1.5 rounded-full bg-stone-900 px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-stone-800 transition-colors">
       <LogIn className="w-3.5 h-3.5" />Đăng nhập
     </button>
   );
+  const roleAccent = ROLE_ACCENTS[role] || ROLE_ACCENTS.user;
   return (
     <button type="button" onClick={onToggle} aria-expanded={isOpen}
       className={`flex items-center gap-2 rounded-full border transition-all pl-0.5 pr-3 py-0.5 ${
         isOpen ? "border-stone-300 bg-stone-100 shadow-inner" : "border-stone-200/60 bg-stone-50 hover:bg-stone-100"
       }`}>
-      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-stone-200">
+      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: roleAccent }}>
         <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="h-full w-full object-cover" />
       </div>
       <span className="text-xs font-semibold text-stone-700 max-w-[90px] truncate">{username || "Tài khoản"}</span>
@@ -160,7 +195,11 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
   );
 }
 
-function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, username, onLogout, onOpenModal }) {
+function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, username, role, onLogout, onOpenModal }) {
+  const roleAccent = ROLE_ACCENTS[role] || ROLE_ACCENTS.user;
+  const roleLabel  = ROLE_LABELS[role]  || ROLE_LABELS.user;
+  const extraItems = getRoleExtraItems(role);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -170,12 +209,12 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
         >
           <div className="px-4 py-3 border-b border-stone-100 bg-stone-50/60">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 flex-shrink-0" style={{ borderColor: roleAccent }}>
                 <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-stone-900 truncate">{username || "Thành viên"}</p>
-                <p className="text-[10px] text-stone-400">Đã đăng nhập</p>
+                <p className="text-[10px] font-semibold" style={{ color: roleAccent }}>{roleLabel}</p>
               </div>
             </div>
           </div>
@@ -183,6 +222,28 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 hover:bg-stone-50 border-b border-stone-100">
             <User className="w-4 h-4 text-stone-400" /> Hồ sơ của tôi
           </button>
+
+          {extraItems.length > 0 && (
+            <div className="py-1 border-b border-stone-100">
+              <p className="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                Công cụ {roleLabel.toLowerCase()}
+              </p>
+              {extraItems.map((item) => {
+                const Icon     = item.icon;
+                const isActive = currentPath === item.path;
+                return (
+                  <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
+                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold" : "text-stone-700 hover:bg-stone-50"}`}
+                    style={isActive ? { color: roleAccent, background: `${roleAccent}0f` } : undefined}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: isActive ? roleAccent : "#a8a29e" }} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="py-1">
             {ACCOUNT_ITEMS.map((item) => {
               const Icon     = item.icon;
@@ -246,10 +307,13 @@ function KhoiSheet({ open, onClose, navigate }) {
 
 function MoreMenuSheet({
   open, onClose, navigate, location,
-  isLogin, onLoginPress, onLogout, avatar, username,
+  isLogin, onLoginPress, onLogout, avatar, username, role,
   ACCOUNT_ITEMS = [],
 }) {
   const goTo = (path) => { navigate(path); onClose(); };
+  const roleAccent = ROLE_ACCENTS[role] || ROLE_ACCENTS.user;
+  const roleLabel  = ROLE_LABELS[role]  || ROLE_LABELS.user;
+  const extraItems = getRoleExtraItems(role);
  
   // Drag-to-dismiss: đóng khi kéo xuống quá 70px hoặc vuốt nhanh
   const handleDragEnd = (_, info) => {
@@ -317,7 +381,7 @@ function MoreMenuSheet({
               >
                 {isLogin ? (
                   <>
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-200 flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0" style={{ borderColor: roleAccent }}>
                       <img
                         src={avatar || "/images/avatarDefault.avif"}
                         className="w-full h-full object-cover"
@@ -325,9 +389,17 @@ function MoreMenuSheet({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-bold text-stone-900 truncate">
-                        {username || "Thành viên"}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[15px] font-bold text-stone-900 truncate">
+                          {username || "Thành viên"}
+                        </p>
+                        <span
+                          className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ color: roleAccent, background: `${roleAccent}18` }}
+                        >
+                          {roleLabel}
+                        </span>
+                      </div>
                       <p className="text-[13px] text-stone-400">Xem hồ sơ & thành tích →</p>
                     </div>
                   </>
@@ -355,6 +427,35 @@ function MoreMenuSheet({
                 <QuickLink icon={Users} label="Tuyển sinh" onClick={() => goTo("/tuyển-sinh")} accent />
               </div>
  
+              {/* Menu riêng theo vai trò (giáo viên/admin) */}
+              {extraItems.length > 0 && (
+                <div className="py-1 border-b border-stone-100">
+                  <p className="px-5 pt-2 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-stone-400">
+                    Công cụ {roleLabel.toLowerCase()}
+                  </p>
+                  {extraItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        onClick={() => goTo(item.path)}
+                        className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-stone-50 hover:bg-stone-50 transition-colors"
+                        style={isActive ? { color: roleAccent, background: `${roleAccent}0f` } : undefined}
+                      >
+                        <Icon
+                          className="w-[18px] h-[18px] flex-shrink-0"
+                          style={{ color: isActive ? roleAccent : "#a8a29e" }}
+                          strokeWidth={1.75}
+                        />
+                        <span className="text-[14px] font-medium">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Menu hệ thống */}
               <div className="py-1">
                 {ACCOUNT_ITEMS.map((item) => {
@@ -417,7 +518,7 @@ function QuickLink({ icon: Icon, label, onClick, accent = false }) {
 }
 
 /* ═══ MOBILE: Bottom tab bar ═════════════════════════════════════ */
-function BottomTabBar({ location, navigate, isLogin, onLoginPress, onLogout, avatar, username }) {
+function BottomTabBar({ location, navigate, isLogin, onLoginPress, onLogout, avatar, username, role }) {
   const [khoiSheetOpen, setKhoiSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
 
@@ -434,6 +535,7 @@ function BottomTabBar({ location, navigate, isLogin, onLoginPress, onLogout, ava
         onLogout={onLogout}
         avatar={avatar}
         username={username}
+        role={role}
         ACCOUNT_ITEMS={ACCOUNT_ITEMS}
       />
       
@@ -467,7 +569,7 @@ function BottomTabBar({ location, navigate, isLogin, onLoginPress, onLogout, ava
                 >
                   <div className={`w-8 h-5 flex items-center justify-center rounded-full transition-all ${active ? "bg-orange-100/80 w-12" : ""}`}>
                     {isLogin ? (
-                      <div className={`w-4 h-4 rounded-full overflow-hidden border ${active ? "border-orange-500" : "border-stone-300"}`}>
+                      <div className="w-4 h-4 rounded-full overflow-hidden border" style={{ borderColor: active ? (ROLE_ACCENTS[role] || ROLE_ACCENTS.user) : "#d6d3d1" }}>
                         <img src={avatar || "/images/avatarDefault.avif"} className="w-full h-full object-cover" alt="" />
                       </div>
                     ) : (
@@ -507,6 +609,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const [openMenu, setOpenMenu] = useState(null);
   const [avatar,   setAvatar]   = useState(() => localStorage.getItem("avatar")   || "");
   const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
+  const [role,     setRole]     = useState(() => localStorage.getItem("role")     || "student");
 
   const khoiRef      = useRef(null);
   const communityRef = useRef(null);
@@ -516,6 +619,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     const sync = () => {
       setAvatar(localStorage.getItem("avatar")   || "");
       setUsername(localStorage.getItem("username") || "");
+      setRole(localStorage.getItem("role")     || "student");
     };
     window.addEventListener("avatar-updated", sync);
     window.addEventListener("storage",        sync);
@@ -524,6 +628,39 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
       window.removeEventListener("storage",        sync);
     };
   }, []);
+
+  // Không có màn hình đăng nhập nào hiện đang ghi "role" vào localStorage,
+  // nên tự lấy role thật từ Supabase mỗi khi vừa đăng nhập — vừa chính xác,
+  // vừa tự khắc phục nếu localStorage bị thiếu/cũ.
+  useEffect(() => {
+    if (!isLogin) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser || cancelled) return;
+
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("auth_id", authUser.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+        if (error) { console.error("Header: fetch role error:", error); return; }
+
+        if (data?.role) {
+          setRole(data.role);
+          localStorage.setItem("role", data.role);
+        }
+      } catch (err) {
+        console.error("Header: fetch role exception:", err);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isLogin]);
 
   useEffect(() => { setOpenMenu(null); }, [location.pathname]);
 
@@ -549,6 +686,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const handleLogout = () => {
     ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
     setIsLogin(false);
+    setRole("student");
     handleClose?.();
     showToast("Đã đăng xuất", "success");
   };
@@ -597,14 +735,14 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
 
           <div className="flex items-center gap-2">
             <div ref={accountRef} className="relative hidden md:block">
-              <AccountTriggerButton isLogin={isLogin} avatar={avatar} username={username} isOpen={openMenu === "account"} onToggle={(e) => toggle("account", e)} onLogin={toggleModal} />
-              {isLogin && <AccountDropdown isOpen={openMenu === "account"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} avatar={avatar} username={username} onLogout={handleLogout} onOpenModal={toggleModal} />}
+              <AccountTriggerButton isLogin={isLogin} avatar={avatar} username={username} role={role} isOpen={openMenu === "account"} onToggle={(e) => toggle("account", e)} onLogin={toggleModal} />
+              {isLogin && <AccountDropdown isOpen={openMenu === "account"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} avatar={avatar} username={username} role={role} onLogout={handleLogout} onOpenModal={toggleModal} />}
             </div>
           </div>
         </div>
       </header>
 
-      <BottomTabBar location={location} navigate={navigate} isLogin={isLogin} onLoginPress={toggleModal} onLogout={handleLogout} avatar={avatar} username={username} />
+      <BottomTabBar location={location} navigate={navigate} isLogin={isLogin} onLoginPress={toggleModal} onLogout={handleLogout} avatar={avatar} username={username} role={role} />
     </>
   );
 }

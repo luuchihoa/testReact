@@ -96,26 +96,9 @@ function safeStore(key, value) {
   try { localStorage.setItem(key, value); } catch { /* quota / private mode */ }
 }
 
-// Avatar mặc định khi user chưa upload ảnh — dựa theo giới tính
-const DEFAULT_AVATAR_BOY     = "/images/avatarBoy.avif";
-const DEFAULT_AVATAR_GIRL    = "/images/avatarGirl.avif";
-const DEFAULT_AVATAR_NEUTRAL = "/images/avatarDefault.avif";
-
-function getDefaultAvatarByGender(gioiTinh) {
-  if (gioiTinh === "Nam") return DEFAULT_AVATAR_BOY;
-  if (gioiTinh === "Nữ")  return DEFAULT_AVATAR_GIRL;
-  return DEFAULT_AVATAR_NEUTRAL;
-}
-
-// Nhận diện avatar hiện tại có phải là một trong các avatar mặc định (chưa upload thật)
-function isDefaultAvatarUrl(url) {
-  return url === DEFAULT_AVATAR_BOY || url === DEFAULT_AVATAR_GIRL || url === DEFAULT_AVATAR_NEUTRAL || !url;
-}
-
 // Chuẩn hoá dữ liệu học sinh từ Supabase sang shape mà UI cần
 function normalizeStudent(raw) {
   if (!raw) return {};
-  const gioiTinh = raw.gioi_tinh ?? "";
   return {
     username:      raw.username ?? "",
     tenThanh:      raw.ten_thanh ?? "",
@@ -128,9 +111,8 @@ function normalizeStudent(raw) {
     tenMe:         raw.ten_me ?? "",
     sdt:           raw.sdt ?? "",
     giaoXom:       raw.giao_xom ?? "",
-    gioiTinh,
-    // Chưa có avatar trong DB → gán avatar mặc định theo giới tính
-    avatar:        raw.avatar || getDefaultAvatarByGender(gioiTinh),
+    gioiTinh:      raw.gioi_tinh ?? "",
+    avatar:        raw.avatar ?? "",
     role:          raw.role ?? "user",
     trangThai:     raw.trang_thai ?? "đang học",
   };
@@ -463,35 +445,20 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
 
   const handleBlur = (field) => {
     if (tempValue !== user[field]) setIsAnyChange(true);
-    setUser((prev) => {
-      const next = { ...prev, [field]: tempValue };
-      // Nếu đổi giới tính mà avatar hiện tại vẫn là avatar mặc định (chưa upload ảnh thật)
-      // thì đổi luôn avatar mặc định theo giới tính mới
-      if (field === "gioiTinh" && isDefaultAvatarUrl(prev.avatar)) {
-        next.avatar = getDefaultAvatarByGender(tempValue);
-      }
-      return next;
-    });
+    setUser((prev) => ({ ...prev, [field]: tempValue }));
     setEditingField(null);
     setTempValue("");
   };
-
-  // Admin/Giáo viên không phải học sinh → ẩn các trường mang tính chất bí tích/gia đình
-  const isStaff = user.role === "admin" || user.role === "teacher";
 
   const rows = [
     { icon: GENDER_ICON[user.gioiTinh] ?? "👤", label: "Họ và tên",       field: "hoTen" },
     { icon: "✝️",                                label: "Tên Thánh",        field: "tenThanh" },
     { icon: "🎂",  label: "Ngày sinh",           field: "ngaySinh",   type: "date", displayValue: transferDateForView(user.ngaySinh) },
-    ...(!isStaff ? [
-      { icon: "💦",  label: "Ngày Rửa Tội",        field: "ngayRuaToi", type: "date", displayValue: transferDateForView(user.ngayRuaToi) },
-      { icon: "🫓",  label: "Ngày Rước Lễ",        field: "ngayRuocLe", type: "date", displayValue: transferDateForView(user.ngayRuocLe) },
-      { icon: "🕊️", label: "Ngày Thêm Sức",       field: "ngayThemSuc",type: "date", displayValue: transferDateForView(user.ngayThemSuc) },
-    ] : []),
-    ...(!isStaff ? [
-      { icon: "👨🏻", label: "Họ & Tên Cha",        field: "tenCha" },
-      { icon: "👩🏻", label: "Họ & Tên Mẹ",        field: "tenMe" },
-    ] : []),
+    { icon: "💦",  label: "Ngày Rửa Tội",        field: "ngayRuaToi", type: "date", displayValue: transferDateForView(user.ngayRuaToi) },
+    { icon: "🫓",  label: "Ngày Rước Lễ",        field: "ngayRuocLe", type: "date", displayValue: transferDateForView(user.ngayRuocLe) },
+    { icon: "🕊️", label: "Ngày Thêm Sức",       field: "ngayThemSuc",type: "date", displayValue: transferDateForView(user.ngayThemSuc) },
+    { icon: "👨🏻", label: "Họ & Tên Cha",        field: "tenCha" },
+    { icon: "👩🏻", label: "Họ & Tên Mẹ",        field: "tenMe" },
     { icon: "📞",  label: "Số điện thoại",       field: "sdt" },
     { icon: "🏠",  label: "Giáo Xóm",            field: "giaoXom" },
     { icon: "⚧️", label: "Giới tính",            field: "gioiTinh",  options: ["Nam", "Nữ"] },
@@ -955,18 +922,9 @@ export default function ModalUser({ setIsLogin, handleClose }) {
   const [isAnyChange,  setIsAnyChange]  = useState(false);
   const [achievementCache, setAchievementCache] = useState({});
 
-  // Admin/Giáo viên không có dữ liệu học tập (điểm, điểm danh...) → ẩn tab Thành tích
-  const isStaff = user.role === "admin" || user.role === "teacher";
-
   const openExitButton  = () => (isAnyChange ? setIsOpenExit(true) : handleClose());
   const handleCloseExit = () => setIsOpenExit(false);
   const selectAvatar    = () => fileRef.current?.click();
-
-  // Nếu role là admin/teacher mà đang đứng ở tab Thành tích (ví dụ do dữ liệu
-  // localStorage cũ), tự động chuyển về tab Hồ sơ để tránh render tab bị ẩn
-  useEffect(() => {
-    if (isStaff && switchTab === "Achievement") setSwitchTab("Profile");
-  }, [isStaff, switchTab]);
 
   const avatarUploadCancelRef = useRef(() => {});
 
@@ -1053,7 +1011,6 @@ export default function ModalUser({ setIsLogin, handleClose }) {
       const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
       safeStore("user",   JSON.stringify({ ...savedUser, avatar: publicUrl }));
       safeStore("avatar", publicUrl);
-      safeStore("role", user.role);
       window.dispatchEvent(new Event("avatar-updated"));
 
       showToast("Cập nhật avatar thành công", "success");
@@ -1074,19 +1031,10 @@ export default function ModalUser({ setIsLogin, handleClose }) {
   // ── Load profile từ Supabase ────────────────────────────────────────
   const loadUser = async () => {
     try {
-      const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !authUser) {
-        console.error("loadUser: không lấy được auth user:", authErr);
-        return;
-      }
-
-      // Lọc tường minh theo auth_id thay vì chỉ dựa vào RLS + .single():
-      // với role admin/teacher, RLS thường cho phép xem NHIỀU dòng (quản lý lớp/hệ thống),
-      // nên .single() không kèm .eq() sẽ throw lỗi "multiple rows returned" và load thất bại.
+      // Dùng RLS: chỉ trả về dòng của user đang đăng nhập (auth_id = auth.uid())
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("auth_id", authUser.id)
         .single();
 
       if (error) {
@@ -1098,7 +1046,7 @@ export default function ModalUser({ setIsLogin, handleClose }) {
       setUser(normalized);
       safeStore("user",   JSON.stringify(normalized));
       safeStore("avatar", normalized.avatar);
-      safeStore("role",   normalized.role);
+      safeStore("role", normalized.role);
     } catch (err) {
       console.error("loadUser exception:", err);
     }
@@ -1183,7 +1131,7 @@ export default function ModalUser({ setIsLogin, handleClose }) {
           onClick={(e) => e.stopPropagation()}
         >
           <AnimatePresence>
-            {isOpenExit && <ExitButton handleClose={handleCloseExit} handleExit={handleClose} pill={"Thoát chỉnh sửa"} title={"Huỷ thay đổi?"}/>}
+            {isOpenExit && <ExitButton handleClose={handleCloseExit} handleExit={handleClose} />}
           </AnimatePresence>
 
           {/* Header bar */}
@@ -1226,30 +1174,28 @@ export default function ModalUser({ setIsLogin, handleClose }) {
                 <input type="file" ref={fileRef} accept="image/*" hidden onChange={handleAvatar} />
               </div>
 
-              {/* Segmented control — chỉ hiện khi có tab Thành tích (học sinh) */}
-              {!isStaff && (
-                <div className="relative w-full max-w-xs h-11 rounded-2xl bg-[#E5E5EA] p-1 flex cursor-pointer select-none">
-                  <motion.div
-                    className="absolute top-1 left-1 h-9 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm"
-                    animate={{ x: switchTab === "Profile" ? 0 : "100%" }}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                  <div className="relative z-10 grid grid-cols-2 w-full text-[13px] font-semibold">
-                    <button type="button" onClick={() => setSwitchTab("Profile")}
-                      className={`rounded-xl transition-colors ${switchTab === "Profile" ? "text-[#FF6B35]" : "text-gray-500"}`}>
-                      Hồ sơ
-                    </button>
-                    <button type="button" onClick={() => setSwitchTab("Achievement")}
-                      className={`rounded-xl transition-colors ${switchTab === "Achievement" ? "text-[#FF6B35]" : "text-gray-500"}`}>
-                      Thành tích
-                    </button>
-                  </div>
+              {/* Segmented control */}
+              <div className="relative w-full max-w-xs h-11 rounded-2xl bg-[#E5E5EA] p-1 flex cursor-pointer select-none">
+                <motion.div
+                  className="absolute top-1 left-1 h-9 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm"
+                  animate={{ x: switchTab === "Profile" ? 0 : "100%" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+                <div className="relative z-10 grid grid-cols-2 w-full text-[13px] font-semibold">
+                  <button type="button" onClick={() => setSwitchTab("Profile")}
+                    className={`rounded-xl transition-colors ${switchTab === "Profile" ? "text-[#FF6B35]" : "text-gray-500"}`}>
+                    Hồ sơ
+                  </button>
+                  <button type="button" onClick={() => setSwitchTab("Achievement")}
+                    className={`rounded-xl transition-colors ${switchTab === "Achievement" ? "text-[#FF6B35]" : "text-gray-500"}`}>
+                    Thành tích
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
 
             <AnimatePresence mode="wait">
-              {(isStaff || switchTab === "Profile") && (
+              {switchTab === "Profile" && (
                 <motion.div key="profile"
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}>
@@ -1261,7 +1207,7 @@ export default function ModalUser({ setIsLogin, handleClose }) {
                   />
                 </motion.div>
               )}
-              {!isStaff && switchTab === "Achievement" && (
+              {switchTab === "Achievement" && (
                 <motion.div key="achievement"
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}>

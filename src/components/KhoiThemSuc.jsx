@@ -410,7 +410,7 @@ export default function KhoiThemSuc() {
                 <div className="flex items-start gap-2 mb-5">
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${mod.dot}`} />
                   <h3 className="text-sm font-bold text-stone-700">{mod.phase}</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 whitespace-nowrap flex-shrink-0 ml-auto layout-badge">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 whitespace-nowrap flex-shrink-0 ml-auto">
                     {mod.weeks}
                   </span>
                 </div>

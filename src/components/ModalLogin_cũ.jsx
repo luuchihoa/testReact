@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import Backdrop from "./ui/Backdrop.jsx";
 import { useToast } from "./ui/ToastContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
-// 💡 Thay đổi đường dẫn import này cho đúng với file khởi tạo supabase client của bạn
-import { supabase } from "../lib/supabase.js"; 
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxGHSrh9HCFcKxfPqDnmYuMRxRHeoIeztowkZ6km8SKiJikm0AXioNWek97vhUlO6A/exec";
 
 /* ── safe localStorage wrapper ── */
 function safeStore(key, value) {
@@ -15,7 +16,7 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");   
+  const [error, setError]       = useState("");   // inline error thay vì toast
   const { showToast }           = useToast();
   const usernameRef             = useRef(null);
 
@@ -39,46 +40,30 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
 
     setLoading(true);
     try {
-      const fakeEmail = `${u.toLowerCase()}@giaoly.local`;
+      const params = new URLSearchParams({ action: "login", username: u, password: p });
+      const res = await fetch(`${API_URL}?${params}`);
+      const result = await res.json();
 
-      // Supabase tự lưu session vào localStorage của riêng nó ngay tại đây!
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: fakeEmail,
-        password: p,
-      });
+      if (result.success) {
+        safeStore("sessionKey", result.sessionKey);
+        safeStore("username",   result.username);
+        safeStore("role",       result.role);
+        setIsLogin(true);
+        handleClose();
+        showToast("Đăng nhập thành công", "success");
 
-      if (authError) {
-        if (authError.message.includes("Invalid login credentials")) {
-          setError("Tên đăng nhập hoặc mật khẩu không đúng.");
-        } else {
-          setError(authError.message);
-        }
-        return;
+        fetch(`${API_URL}?action=getUser&username=${encodeURIComponent(result.username)}`)
+          .then((r) => r.json())
+          .then((userData) => {
+            safeStore("user",   JSON.stringify(userData));
+            if (userData.avatar) safeStore("avatar", userData.avatar);
+            window.dispatchEvent(new Event("avatar-updated"));
+          })
+          .catch(() => {});
+      } else {
+        setError("Tên đăng nhập hoặc mật khẩu không đúng.");
       }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("users")
-        .select("username, ho_va_ten, avatar, gioi_tinh")
-        .eq("auth_id", authData.user.id)
-        .single();
-
-      if (!profileError && profile) {
-        const defaultAvatar =
-          profile.gioi_tinh === "Nam" ? "/images/avatarBoy.avif" :
-          profile.gioi_tinh === "Nữ"  ? "/images/avatarGirl.avif" :
-          "/images/avatarDefault.avif";
-
-        localStorage.setItem("username", profile.username || "");
-        localStorage.setItem("avatar", profile.avatar || defaultAvatar);
-        window.dispatchEvent(new Event("avatar-updated")); // báo cho Header sync lại
-      }
-
-      // 💡 KHÔNG CẦN SET LOCALSTORAGE Ở ĐÂY NỮA!
-      setIsLogin(true);
-      handleClose();
-      showToast("Đăng nhập thành công", "success");
-
-    } catch (err) {
+    } catch {
       setError("Không kết nối được máy chủ. Thử lại sau.");
     } finally {
       setLoading(false);
@@ -104,6 +89,7 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
         className="bg-white w-full max-w-sm mx-4 rounded-3xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* ── Top accent bar ── */}
         <div className="h-1 w-full bg-gradient-to-r from-[#FF6B35] via-[#FF8C5A] to-[#FF6B35]" />
 
         <div className="p-6">
@@ -205,7 +191,7 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Đang đăng nhập…
+                  Đang kiểm tra…
                 </>
               ) : (
                 "Đăng nhập"

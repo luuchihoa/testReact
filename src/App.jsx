@@ -16,6 +16,9 @@ import Header from "./components/Header.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
+// RequireTeacherRoute là named export (không phải default) nên import trực tiếp,
+// không qua lazyWithRetry — nó cần chạy ngay khi Route khớp để kiểm tra quyền.
+import { RequireTeacherRoute } from "./components/TeacherClassView.jsx";
 
 const lazyWithRetry = (componentImport) =>
   lazy(() =>
@@ -31,7 +34,7 @@ const lazyWithRetry = (componentImport) =>
   );
 
 const ModalLogin    = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
-const ModalUser     = lazyWithRetry(() => import("./components/ModalUser1.jsx"));
+const ModalUser     = lazyWithRetry(() => import("./components/ModalUser.jsx"));
 const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
 const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
@@ -49,6 +52,7 @@ const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
 const LichHoc       = lazyWithRetry(() => import("./components/LichHoc.jsx"));
 const GioiTre       = lazyWithRetry(() => import("./components/GioiTre.jsx"));
+const TeacherClassView = lazyWithRetry(() => import("./components/TeacherClassView.jsx"));
 
 function PageLoader() {
   return (
@@ -143,6 +147,14 @@ export default function App() {
           <Route path="cài-đặt" element={<Setting fontSize={fontSize} setFontSize={handleFontSizeChange} />} />
           <Route path="bảo-mật" element={<BaoMat />} />
           <Route path="quy-định" element={<QuyDinh />} />
+          <Route
+            path="giáo-viên/lớp-học"
+            element={
+              <RequireTeacherRoute>
+                <TeacherClassView />
+              </RequireTeacherRoute>
+            }
+          />
         </Route>
         <Route
           path="/:khoi/:type"

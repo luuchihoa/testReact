@@ -41,10 +41,20 @@ export default function useSound() {
   const play = useCallback((name, rate = 1) => {
     const audio = sounds.current[name];
     if (!audio) return;
-    // clone để có thể phát chồng nhiều lần liên tiếp (giữ nguyên hành vi cũ)
+
     const clone = audio.cloneNode();
     clone.volume = audio.volume;
     clone.playbackRate = rate;
+
+    // CƠ CHẾ DỌN DẸP:
+    // Sau khi phát xong, tự giải phóng tham chiếu để GC dọn dẹp ngay lập tức
+    const cleanup = () => {
+      clone.removeEventListener("ended", cleanup);
+      clone.src = ""; // Giải phóng buffer
+      clone.load();   // Đảm bảo không còn dữ liệu treo
+    };
+    clone.addEventListener("ended", cleanup);
+
     clone.play().catch(() => {});
   }, []);
 

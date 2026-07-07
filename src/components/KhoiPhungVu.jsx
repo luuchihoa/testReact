@@ -232,7 +232,25 @@ export default function KhoiPhungVu() {
   const mc = useMotionConfig();
   const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
   const lenis = useLenis();
-  const y = useMotionValue(0);
+
+  const seasonY = useMotionValue(0);
+  const sacramentY = useMotionValue(0);
+
+  const handleSeasonDragEnd = (event, info) => {
+    if (info.offset.y > 70 || info.velocity.y > 350) {
+      setSelectedSeason(null);
+    } else {
+      seasonY.set(0); // reset về vị trí gốc nếu không đủ điều kiện đóng
+    }
+  };
+
+  const handleSacramentDragEnd = (event, info) => {
+    if (info.offset.y > 70 || info.velocity.y > 350) {
+      setSelectedSacrament(null);
+    } else {
+      sacramentY.set(0);
+    }
+  };
 
   const handleDragEnd = (event, info) => {
     // Đóng nếu vuốt xuống hơn 70px HOẶC vận tốc vuốt xuống đủ nhanh (> 350)
@@ -242,11 +260,13 @@ export default function KhoiPhungVu() {
     }
   };
 
-  // Thêm vào đầu component
   useEffect(() => {
-    document.body.style.overflow = selectedSeason ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [selectedSeason, selectedSacrament]);
+    if (selectedSeason) seasonY.set(0);
+  }, [selectedSeason]);
+
+  useEffect(() => {
+    if (selectedSacrament) sacramentY.set(0);
+  }, [selectedSacrament]);
 
   const fadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
@@ -408,7 +428,7 @@ export default function KhoiPhungVu() {
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0, bottom: 0.5 }}
                   onDragEnd={handleDragEnd}
-                  style={{ y }}
+                  style={{ y: seasonY }}
                   
                   // Animation trạng thái xuất hiện
                   initial={{ 
@@ -580,7 +600,7 @@ export default function KhoiPhungVu() {
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0, bottom: 0.5 }}
                   onDragEnd={handleDragEnd}
-                  style={{ y }}
+                  style={{ y: sacramentY }}
                   
                   // Thiết lập animation mượt mà dựa trên kích thước màn hình
                   initial={{ 
@@ -644,7 +664,7 @@ export default function KhoiPhungVu() {
                   <div className="h-px bg-black/10 mx-6 flex-shrink-0" />
 
                   {/* Body: Cuộn mượt độc lập hoàn toàn bằng overscroll-contain */}
-                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 custom-scrollbar">
+                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 touch-none">
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
