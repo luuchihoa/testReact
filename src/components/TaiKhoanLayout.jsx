@@ -1,33 +1,47 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Routes, Route, Navigate, NavLink, useNavigate, useMatch, useSearchParams, useOutletContext } from "react-router-dom";
 import { modalVariant, pressable } from "./ui/variant.jsx";
 import { useToast } from "./ui/ToastContext.jsx";
 import { createPortal } from "react-dom";
-import { ExitButton } from "./ui/Feedback.jsx";
 import Backdrop from "./ui/Backdrop.jsx";
-// 💡 Thay đổi đường dẫn import này cho đúng với file khởi tạo supabase client của bạn
+import { AchievementSkeleton } from "./ui/Skeleton.jsx";
 import { supabase } from "../lib/supabase.js";
 
 // ============================================================
 //  CONSTANTS
 // ============================================================
 
-// Fallback khi term_summary.ngay_bat_dau chưa có trong DB
-const SEMESTER_FALLBACK_START = {
-  HK1: new Date(2025, 8, 14), // 14/09/2025
-  HK2: new Date(2026, 0, 25), // 25/01/2026
+// Ngày trong năm mà HK1/HK2 thường bắt đầu — dùng làm fallback khi
+// term_summary.ngay_bat_dau chưa có trong DB. Được TÍNH LẠI mỗi năm học dựa
+// theo năm hiện tại (không hard-code năm cụ thể như bản cũ), để không bị
+// sai học kỳ khi hệ thống bước sang năm học mới.
+const SEMESTER_START_MONTH_DAY = {
+  HK1: { month: 8, day: 14 }, // 14/09 (tháng 0-indexed)
+  HK2: { month: 0, day: 25 }, // 25/01
 };
 
 function getCurrentNamHoc(date = new Date()) {
-  // Năm học bắt đầu từ tháng 9 (cùng mốc với SEMESTER_FALLBACK_START.HK1)
+  // Năm học bắt đầu từ tháng 9
   const year  = date.getFullYear();
   const month = date.getMonth(); // 0-indexed, tháng 9 = 8
   const startYear = month >= 8 ? year : year - 1;
   return `${startYear}-${startYear + 1}`;
 }
 
+function getSemesterFallbackStart(semesterKey, date = new Date()) {
+  const year  = date.getFullYear();
+  const month = date.getMonth();
+  const startYear = month >= 8 ? year : year - 1; // năm bắt đầu của năm học hiện tại
+  const { month: m, day } = SEMESTER_START_MONTH_DAY[semesterKey];
+  // HK1 rơi vào nửa đầu năm học (startYear), HK2 rơi vào nửa sau (startYear + 1)
+  const calendarYear = semesterKey === "HK1" ? startYear : startYear + 1;
+  return new Date(calendarYear, m, day);
+}
+
 // Map hoc_ky (INT) → key HK1/HK2
 const HK_INT_MAP = { HK1: 1, HK2: 2 };
+const VALID_SEMESTERS = ["HK1", "HK2", "NAM"];
 
 const RANK_COLORS = {
   hoc_luc: {
@@ -77,9 +91,12 @@ function pickRandom(arr) {
 }
 
 function getCurrentSemester(date = new Date()) {
-  // Dùng fallback start để xác định học kỳ hiện tại khi chưa có DB data
-  if (date >= SEMESTER_FALLBACK_START.HK2) return "HK2";
-  if (date >= SEMESTER_FALLBACK_START.HK1) return "HK1";
+  // Dùng fallback start (tính động theo năm) để xác định học kỳ hiện tại
+  // khi chưa có DB data
+  const hk2Start = getSemesterFallbackStart("HK2", date);
+  const hk1Start = getSemesterFallbackStart("HK1", date);
+  if (date >= hk2Start) return "HK2";
+  if (date >= hk1Start) return "HK1";
   return "HK1";
 }
 
@@ -96,9 +113,56 @@ function safeStore(key, value) {
   try { localStorage.setItem(key, value); } catch { /* quota / private mode */ }
 }
 
+// Đọc + parse JSON an toàn từ localStorage — tránh crash trắng trang nếu
+// dữ liệu lưu bị hỏng (ghi dở, chỉnh tay, encoding lạ...).
+function safeParse(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+// Định dạng số điện thoại VN cơ bản: 0xxxxxxxxx (10 số, bắt đầu bằng 0)
+// hoặc +84xxxxxxxxx. Không chặn cứng — chỉ dùng để cảnh báo nhẹ.
+function isValidVNPhone(value) {
+  if (!value) return true; // để trống vẫn cho qua, không ép buộc
+  const cleaned = value.replace(/[\s.-]/g, "");
+  return /^(0\d{9}|\+84\d{9})$/.test(cleaned);
+}
+
+// Không cho chọn ngày sinh ở tương lai
+function isPastOrToday(dateStr) {
+  if (!dateStr) return true;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return true;
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  return d <= today;
+}
+
+// Avatar mặc định khi user chưa upload ảnh — dựa theo giới tính
+const DEFAULT_AVATAR_BOY     = "/images/avatarBoy.avif";
+const DEFAULT_AVATAR_GIRL    = "/images/avatarGirl.avif";
+const DEFAULT_AVATAR_NEUTRAL = "/images/avatarDefault.avif";
+
+function getDefaultAvatarByGender(gioiTinh) {
+  if (gioiTinh === "Nam") return DEFAULT_AVATAR_BOY;
+  if (gioiTinh === "Nữ")  return DEFAULT_AVATAR_GIRL;
+  return DEFAULT_AVATAR_NEUTRAL;
+}
+
+// Nhận diện avatar hiện tại có phải là một trong các avatar mặc định (chưa upload thật)
+function isDefaultAvatarUrl(url) {
+  return url === DEFAULT_AVATAR_BOY || url === DEFAULT_AVATAR_GIRL || url === DEFAULT_AVATAR_NEUTRAL || !url;
+}
+
 // Chuẩn hoá dữ liệu học sinh từ Supabase sang shape mà UI cần
 function normalizeStudent(raw) {
   if (!raw) return {};
+  const gioiTinh = raw.gioi_tinh ?? "";
   return {
     username:      raw.username ?? "",
     tenThanh:      raw.ten_thanh ?? "",
@@ -111,8 +175,9 @@ function normalizeStudent(raw) {
     tenMe:         raw.ten_me ?? "",
     sdt:           raw.sdt ?? "",
     giaoXom:       raw.giao_xom ?? "",
-    gioiTinh:      raw.gioi_tinh ?? "",
-    avatar:        raw.avatar ?? "",
+    gioiTinh,
+    // Chưa có avatar trong DB → gán avatar mặc định theo giới tính
+    avatar:        raw.avatar || getDefaultAvatarByGender(gioiTinh),
     role:          raw.role ?? "user",
     trangThai:     raw.trang_thai ?? "đang học",
   };
@@ -162,6 +227,29 @@ function ScoreCell({ label, value }) {
     <div className="bg-[#F9F9F9] rounded-xl px-3 py-2.5 text-center flex-1 min-w-[64px]">
       <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
       <p className="text-[15px] font-semibold text-gray-900">{value ?? "—"}</p>
+    </div>
+  );
+}
+
+// ============================================================
+//  ĐĂNG NHẬP ĐỂ XEM (gate khi chưa login mà bấm link trực tiếp)
+// ============================================================
+
+function LoginRequired({ toggleModal }) {
+  return (
+    <div className="min-h-[55vh] w-full flex flex-col items-center justify-center gap-4 text-center px-4 py-16">
+      <div className="w-16 h-16 rounded-full bg-[#FFF0E8] flex items-center justify-center text-3xl">🔒</div>
+      <h1 className="text-[20px] font-bold text-gray-900">Vui lòng đăng nhập để xem trang này</h1>
+      <p className="text-[14px] text-gray-500 max-w-sm leading-relaxed">
+        Bạn cần đăng nhập tài khoản học sinh để xem thông tin cá nhân và kết quả học tập.
+      </p>
+      <motion.button
+        {...pressable()}
+        onClick={toggleModal}
+        className="px-6 py-3 rounded-2xl bg-[#FF6B35] text-white text-[15px] font-bold hover:bg-[#E85E28] transition-colors shadow-[0_4px_16px_rgba(255,107,53,0.30)]"
+      >
+        Đăng nhập ngay
+      </motion.button>
     </div>
   );
 }
@@ -250,6 +338,7 @@ export function ChangePassword({ setIsOpenChangePass }) {
             type="button"
             onClick={close}
             disabled={saveLoading}
+            aria-label="Đóng"
             className="w-8 h-8 rounded-full bg-[#F2F2F7] hover:bg-[#E5E5EA] text-gray-500 text-[14px] font-bold flex items-center justify-center transition-colors active:scale-90 disabled:opacity-40"
           >
             ✕
@@ -297,7 +386,7 @@ export function ChangePassword({ setIsOpenChangePass }) {
         </div>
       </motion.div>
     </Backdrop>,
-    document.getElementById("modal-user")
+    document.getElementById("tai-khoan-page")
   );
 }
 
@@ -382,7 +471,7 @@ export function SaveBox({ setIsSaveBoxOn, user, setIsAnyChange }) {
         </div>
       </motion.div>
     </Backdrop>,
-    document.getElementById("modal-user")
+    document.getElementById("tai-khoan-page")
   );
 }
 
@@ -392,8 +481,16 @@ export function SaveBox({ setIsSaveBoxOn, user, setIsAnyChange }) {
 
 const GENDER_ICON = { "": "👤", "Nam": "👦🏻", "Nữ": "👧🏻" };
 
-function FieldRow({ icon, label, field, value, displayValue, type = "text", editingField, tempValue, setTempValue, onEdit, onBlur, options }) {
+function FieldRow({ icon, label, field, value, displayValue, type = "text", editingField, tempValue, setTempValue, onEdit, onBlur, onCancel, options }) {
   const isEditing = editingField === field;
+
+  // Esc huỷ chỉnh sửa (không lưu), Enter xác nhận lưu ngay — UX quen thuộc
+  // với form input, tránh người dùng bị "kẹt" giữa chừng không biết thoát sao.
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") { e.preventDefault(); onCancel?.(); }
+    else if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+  };
+
   return (
     <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
       <div className="flex items-center gap-3.5 min-w-0">
@@ -406,19 +503,22 @@ function FieldRow({ icon, label, field, value, displayValue, type = "text", edit
             </div>
           )}
           {isEditing && options && (
-            <select value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} autoFocus
+            <select value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} onKeyDown={handleKeyDown} autoFocus
+              aria-label={label}
               className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] text-[15px] bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]">
               {options.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           )}
           {isEditing && !options && (
-            <input type={type} value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} autoFocus
+            <input type={type} value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} onKeyDown={handleKeyDown} autoFocus
+              aria-label={label}
+              max={type === "date" ? new Date().toISOString().slice(0, 10) : undefined}
               className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] text-[15px] bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35] w-full" />
           )}
         </div>
       </div>
       {!isEditing && (
-        <motion.button {...pressable(1.15)} onClick={onEdit}
+        <motion.button {...pressable(1.15)} onClick={onEdit} aria-label={`Sửa ${label}`}
           className="flex-shrink-0 w-8 h-8 rounded-full hover:bg-[#E5E5EA] flex items-center justify-center text-[15px]">
           ✏️
         </motion.button>
@@ -427,11 +527,34 @@ function FieldRow({ icon, label, field, value, displayValue, type = "text", edit
   );
 }
 
+// Skeleton hiển thị khi hồ sơ chưa có dữ liệu (lần đầu vào trang, chưa có
+// cache localStorage) — tránh nháy các field trống "—" trước khi Supabase
+// trả dữ liệu về.
+function ProfileSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-pulse" aria-busy="true" aria-label="Đang tải hồ sơ">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3.5 bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
+          <div className="w-8 h-8 rounded-full bg-[#E5E5EA] flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="h-2.5 w-16 rounded bg-[#E5E5EA] mb-2" />
+            <div className="h-3.5 w-28 rounded bg-[#E5E5EA]" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ============================================================
 //  PROFILE TAB
 // ============================================================
 
+// Field cho phép kiểu ngày cần validate không ở tương lai
+const DATE_FIELDS = ["ngaySinh", "ngayRuaToi", "ngayRuocLe", "ngayThemSuc"];
+
 export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
+  const { showToast } = useToast();
   const [editingField, setEditingField] = useState(null);
   const [tempValue,    setTempValue]    = useState("");
   const [isSaveBoxOn,  setIsSaveBoxOn]  = useState(false);
@@ -443,22 +566,56 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
     setTempValue(user[field] ?? "");
   };
 
-  const handleBlur = (field) => {
-    if (tempValue !== user[field]) setIsAnyChange(true);
-    setUser((prev) => ({ ...prev, [field]: tempValue }));
+  // Huỷ chỉnh sửa, không lưu — dùng cho phím Esc
+  const cancelEdit = () => {
     setEditingField(null);
     setTempValue("");
   };
+
+  const handleBlur = (field) => {
+    // Validate nhẹ nhàng: cảnh báo và giữ nguyên giá trị cũ nếu không hợp lệ,
+    // thay vì lưu im lặng dữ liệu sai định dạng.
+    if (field === "sdt" && !isValidVNPhone(tempValue)) {
+      showToast("Số điện thoại chưa đúng định dạng (VD: 0912345678)", "warning");
+      cancelEdit();
+      return;
+    }
+    if (DATE_FIELDS.includes(field) && !isPastOrToday(tempValue)) {
+      showToast("Ngày không được ở trong tương lai", "warning");
+      cancelEdit();
+      return;
+    }
+
+    if (tempValue !== user[field]) setIsAnyChange(true);
+    setUser((prev) => {
+      const next = { ...prev, [field]: tempValue };
+      // Nếu đổi giới tính mà avatar hiện tại vẫn là avatar mặc định (chưa upload ảnh thật)
+      // thì đổi luôn avatar mặc định theo giới tính mới
+      if (field === "gioiTinh" && isDefaultAvatarUrl(prev.avatar)) {
+        next.avatar = getDefaultAvatarByGender(tempValue);
+      }
+      return next;
+    });
+    setEditingField(null);
+    setTempValue("");
+  };
+
+  // Admin/Giáo viên không phải học sinh → ẩn các trường mang tính chất bí tích/gia đình
+  const isStaff = user.role === "admin" || user.role === "teacher";
 
   const rows = [
     { icon: GENDER_ICON[user.gioiTinh] ?? "👤", label: "Họ và tên",       field: "hoTen" },
     { icon: "✝️",                                label: "Tên Thánh",        field: "tenThanh" },
     { icon: "🎂",  label: "Ngày sinh",           field: "ngaySinh",   type: "date", displayValue: transferDateForView(user.ngaySinh) },
-    { icon: "💦",  label: "Ngày Rửa Tội",        field: "ngayRuaToi", type: "date", displayValue: transferDateForView(user.ngayRuaToi) },
-    { icon: "🫓",  label: "Ngày Rước Lễ",        field: "ngayRuocLe", type: "date", displayValue: transferDateForView(user.ngayRuocLe) },
-    { icon: "🕊️", label: "Ngày Thêm Sức",       field: "ngayThemSuc",type: "date", displayValue: transferDateForView(user.ngayThemSuc) },
-    { icon: "👨🏻", label: "Họ & Tên Cha",        field: "tenCha" },
-    { icon: "👩🏻", label: "Họ & Tên Mẹ",        field: "tenMe" },
+    ...(!isStaff ? [
+      { icon: "💦",  label: "Ngày Rửa Tội",        field: "ngayRuaToi", type: "date", displayValue: transferDateForView(user.ngayRuaToi) },
+      { icon: "🫓",  label: "Ngày Rước Lễ",        field: "ngayRuocLe", type: "date", displayValue: transferDateForView(user.ngayRuocLe) },
+      { icon: "🕊️", label: "Ngày Thêm Sức",       field: "ngayThemSuc",type: "date", displayValue: transferDateForView(user.ngayThemSuc) },
+    ] : []),
+    ...(!isStaff ? [
+      { icon: "👨🏻", label: "Họ & Tên Cha",        field: "tenCha" },
+      { icon: "👩🏻", label: "Họ & Tên Mẹ",        field: "tenMe" },
+    ] : []),
     { icon: "📞",  label: "Số điện thoại",       field: "sdt" },
     { icon: "🏠",  label: "Giáo Xóm",            field: "giaoXom" },
     { icon: "⚧️", label: "Giới tính",            field: "gioiTinh",  options: ["Nam", "Nữ"] },
@@ -481,6 +638,7 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
           setTempValue={setTempValue}
           onEdit={editField(r.field)}
           onBlur={() => handleBlur(r.field)}
+          onCancel={cancelEdit}
         />
       ))}
 
@@ -496,6 +654,21 @@ export function Profile({ handleLogout, user, setUser, setIsAnyChange }) {
         <motion.button {...pressable()} onClick={() => setIsOpenChangePass(true)}
           className="flex-shrink-0 text-[13px] font-semibold px-3.5 py-2 rounded-xl bg-[#F2F2F7] text-gray-700 hover:bg-[#E5E5EA] transition-colors">
           Thay đổi
+        </motion.button>
+      </div>
+
+      {/* Đăng xuất */}
+      <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <span className="text-xl flex-shrink-0">🚪</span>
+          <div className="min-w-0">
+            <div className="text-[12px] text-gray-400 mb-0.5">Phiên đăng nhập</div>
+            <div className="text-[15px] font-semibold text-gray-900">Đang đăng nhập</div>
+          </div>
+        </div>
+        <motion.button {...pressable()} onClick={handleLogout}
+          className="flex-shrink-0 text-[13px] font-semibold px-3.5 py-2 rounded-xl bg-[#FEECEC] text-[#FF375F] hover:bg-[#FDD9D9] transition-colors">
+          Đăng xuất
         </motion.button>
       </div>
 
@@ -587,9 +760,24 @@ async function fetchAchievementData(username, namHoc, hocKyInt) {
 }
 
 export function Achievement({ user, cache, setCache }) {
-  const [semester, setSemester] = useState(getCurrentSemester);
+  // 💡 Đồng bộ học kỳ với query param ?hocky= để link thông báo điểm
+  // (VD: /tài-khoản/thành-tích?hocky=HK1) mở thẳng đúng học kỳ có điểm mới.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hockyParam = searchParams.get("hocky");
+  const initialSemester = VALID_SEMESTERS.includes(hockyParam) ? hockyParam : getCurrentSemester();
+
+  const [semester, setSemesterState] = useState(initialSemester);
   const [namHoc]   = useState(getCurrentNamHoc);
   const [loading,  setLoading]  = useState(false);
+
+  const setSemester = (value) => {
+    setSemesterState(value);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("hocky", value);
+      return next;
+    }, { replace: true });
+  };
 
   const isYearView = semester === "NAM";
   const hocKyInt   = HK_INT_MAP[semester] ?? null; // null khi xem "Cả năm"
@@ -711,12 +899,7 @@ export function Achievement({ user, cache, setCache }) {
       </div>
 
       {/* LOADING STATE */}
-      {loading && (
-        <div className="flex items-center justify-center gap-2.5 py-10 text-[#FF6B35]">
-          <Spinner className="h-6 w-6" />
-          <span className="text-[14px] font-medium text-gray-500">Đang tải dữ liệu…</span>
-        </div>
-      )}
+      {loading && <AchievementSkeleton />}
 
       {!loading && (
         <>
@@ -794,7 +977,10 @@ export function Achievement({ user, cache, setCache }) {
                 })}
               </div>
             ) : (
-              <p className="text-[13px] text-gray-400 text-center py-4">Chưa có dữ liệu điểm danh</p>
+              <div className="flex flex-col items-center gap-2 py-6 text-gray-300">
+                <span className="text-3xl">🗓️</span>
+                <p className="text-[13px] text-gray-400">Chưa có dữ liệu điểm danh cho học kỳ này</p>
+              </div>
             )}
 
             {/* Totals */}
@@ -908,28 +1094,80 @@ function resizeImage(file, maxSize = 100, targetBytes = 10 * 1024) {
 }
 
 // ============================================================
-//  MODAL USER (root)
-// ============================================================
+//  TÀI KHOẢN PAGE (root) — thay thế ModalUser, dùng làm trang thật
+//  route cha ("/tài-khoản/*") được khai báo trong App.jsx, còn 2 route con
+//  ("hồ-sơ", "thành-tích") tự quản lý ngay trong file này để giữ toàn bộ
+//  logic tài khoản gói gọn trong 1 lazy-chunk duy nhất.
+//
+//  💡 QUAN TRỌNG về chữ có dấu trong route: các hằng số dưới đây là nơi DUY
+//  NHẤT gõ tay "hồ-sơ" / "thành-tích". Toàn bộ Route path, NavLink "to",
+//  Navigate "to" và so sánh location.pathname phía dưới đều tham chiếu lại
+//  đúng các biến này — KHÔNG gõ lại chữ có dấu ở chỗ khác. Lý do: cùng 1 chữ
+//  tiếng Việt có thể được lưu ở 2 dạng Unicode khác nhau (NFC/NFD) tuỳ cách
+//  gõ/copy — nhìn giống hệt nhau nhưng so sánh chuỗi (===, endsWith) sẽ ra
+//  false, khiến route không khớp hoặc thanh trượt tab không hoạt động dù
+//  URL đã đúng. Dùng chung 1 biến giúp loại bỏ hoàn toàn rủi ro này.
+//
+//  💡 QUAN TRỌNG về path TUYỆT ĐỐI vs TƯƠNG ĐỐI: <Routes> ở dưới được lồng
+//  bên trong element của route cha "tài-khoản/*". Nếu NavLink/Navigate dùng
+//  "to" TƯƠNG ĐỐI (không có "/" ở đầu, VD to="hồ-sơ"), React Router sẽ NỐI
+//  THÊM vào path HIỆN TẠI thay vì thay thế hẳn — khi path hiện tại đã là
+//  "/tài-khoản/thành-tích" thì bấm sang "hồ-sơ" sẽ ra
+//  "/tài-khoản/thành-tích/hồ-sơ" (dài dần vô hạn nếu dính redirect loop).
+//  → Mọi NavLink/Navigate trỏ tới hồ-sơ/thành-tích PHẢI dùng URL TUYỆT ĐỐI
+//  (TAB_PROFILE_URL / TAB_ACHIEVEMENT_URL, có "/" ở đầu). Chỉ riêng "path"
+//  của <Route> bên trong <Routes> mới dùng bản KHÔNG có "/" đầu
+//  (TAB_PROFILE_PATH / TAB_ACHIEVEMENT_PATH), vì cú pháp Route path yêu cầu vậy.
+const TAI_KHOAN_BASE       = "/tài-khoản";
+const TAB_PROFILE_PATH     = "hồ-sơ";
+const TAB_ACHIEVEMENT_PATH = "thành-tích";
+const TAB_PROFILE_URL      = `${TAI_KHOAN_BASE}/${TAB_PROFILE_PATH}`;
+const TAB_ACHIEVEMENT_URL  = `${TAI_KHOAN_BASE}/${TAB_ACHIEVEMENT_PATH}`;
 
-export default function ModalUser({ setIsLogin, handleClose }) {
+export default function TaiKhoanLayout() {
+  // isLogin/setIsLogin/toggleModal được AppLayout truyền xuống qua
+  // <Outlet context={...} />. QUAN TRỌNG: phải lấy cả setIsLogin — nếu
+  // thiếu, đăng xuất từ trang này sẽ không cập nhật trạng thái đăng nhập
+  // toàn cục (Header vẫn hiện avatar/tên cũ cho tới khi F5 lại trang).
+  const { isLogin, setIsLogin, toggleModal } = useOutletContext();
+  const navigate = useNavigate();
+  // Dùng đúng cơ chế khớp route mà NavLink đang dùng bên trong (tự xử lý
+  // trailing slash, encoding...) thay vì tự so sánh location.pathname bằng
+  // tay — tránh trường hợp NavLink báo "active" đúng nhưng thanh trượt lại
+  // tính sai do 2 cách khớp khác nhau.
+  const isAchievementActive = !!useMatch(TAB_ACHIEVEMENT_URL);
   const { showToast } = useToast();
   const fileRef        = useRef(null);
   const [loadingAva,   setLoadingAva]   = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState("");
-  const [user,         setUser]         = useState({});
-  const [switchTab,    setSwitchTab]    = useState("Profile");
-  const [isOpenExit,   setIsOpenExit]   = useState(false);
+  // Khởi tạo user NGAY từ localStorage (đọc an toàn qua safeParse) thay vì
+  // {} rồi chờ useEffect — tránh 1 nhịp render đầu tiên isStaff = false sai
+  // (nháy hiện tab Thành tích/Achievement cho admin-teacher trước khi kịp
+  // redirect).
+  const [user,         setUser]         = useState(() => safeParse("user", {}));
   const [isAnyChange,  setIsAnyChange]  = useState(false);
   const [achievementCache, setAchievementCache] = useState({});
+  // Đã có cache local hay chưa — dùng để quyết định hiện skeleton hồ sơ khi
+  // vào trang lần đầu và chưa có gì để hiển thị.
+  const [profileLoaded, setProfileLoaded] = useState(() => Object.keys(safeParse("user", {}) || {}).length > 0);
 
-  const openExitButton  = () => (isAnyChange ? setIsOpenExit(true) : handleClose());
-  const handleCloseExit = () => setIsOpenExit(false);
-  const selectAvatar    = () => fileRef.current?.click();
+  // Admin/Giáo viên không có dữ liệu học tập (điểm, điểm danh...) → ẩn tab Thành tích
+  const isStaff = user.role === "admin" || user.role === "teacher";
+
+  const selectAvatar = () => fileRef.current?.click();
+
+  // ── Cảnh báo khi rời trang lúc còn thay đổi chưa lưu ────────────────
+  useEffect(() => {
+    if (!isAnyChange) return;
+    const handler = (e) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isAnyChange]);
 
   const avatarUploadCancelRef = useRef(() => {});
 
   useEffect(() => {
-    return () => { avatarUploadCancelRef.current(); }; // hủy update state nếu modal đóng khi đang upload
+    return () => { avatarUploadCancelRef.current(); }; // hủy update state nếu unmount khi đang upload
   }, []);
 
   // ── Avatar upload lên Supabase Storage ──────────────────────────────
@@ -1008,9 +1246,10 @@ export default function ModalUser({ setIsLogin, handleClose }) {
       if (cancelled) return;
 
       setUser((prev) => ({ ...prev, avatar: publicUrl }));
-      const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const savedUser = safeParse("user", {});
       safeStore("user",   JSON.stringify({ ...savedUser, avatar: publicUrl }));
       safeStore("avatar", publicUrl);
+      safeStore("role", user.role);
       window.dispatchEvent(new Event("avatar-updated"));
 
       showToast("Cập nhật avatar thành công", "success");
@@ -1031,14 +1270,24 @@ export default function ModalUser({ setIsLogin, handleClose }) {
   // ── Load profile từ Supabase ────────────────────────────────────────
   const loadUser = async () => {
     try {
-      // Dùng RLS: chỉ trả về dòng của user đang đăng nhập (auth_id = auth.uid())
+      const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !authUser) {
+        console.error("loadUser: không lấy được auth user:", authErr);
+        return;
+      }
+
+      // Lọc tường minh theo auth_id thay vì chỉ dựa vào RLS + .single():
+      // với role admin/teacher, RLS thường cho phép xem NHIỀU dòng (quản lý lớp/hệ thống),
+      // nên .single() không kèm .eq() sẽ throw lỗi "multiple rows returned" và load thất bại.
       const { data, error } = await supabase
         .from("users")
         .select("*")
+        .eq("auth_id", authUser.id)
         .single();
 
       if (error) {
         console.error("loadUser error:", error);
+        showToast("Không tải được thông tin tài khoản, thử lại sau", "error");
         return;
       }
 
@@ -1046,60 +1295,22 @@ export default function ModalUser({ setIsLogin, handleClose }) {
       setUser(normalized);
       safeStore("user",   JSON.stringify(normalized));
       safeStore("avatar", normalized.avatar);
-      safeStore("role", normalized.role);
+      safeStore("role",   normalized.role);
     } catch (err) {
       console.error("loadUser exception:", err);
+      showToast("Lỗi kết nối, không tải được tài khoản", "error");
+    } finally {
+      setProfileLoaded(true);
     }
   };
 
-  // ── Scroll lock ─────────────────────────────────────────────────────
-  // Khoá scroll nền bằng kỹ thuật position:fixed trên <body> — cách này
-  // không phụ thuộc vào cơ chế scroll riêng của Lenis (Lenis có thể hijack
-  // wheel/touchmove theo cách khác với scroll gốc của trình duyệt, nên
-  // preventDefault thủ công trên các sự kiện đó không đáng tin cậy).
-  // Việc cuộn bên trong modal vẫn hoạt động bình thường nhờ overflow-y-auto
-  // + overscroll-behavior: contain (chặn scroll-chaining ra ngoài khi tới
-  // đầu/cuối danh sách) và attribute data-lenis-prevent (báo Lenis bỏ qua
-  // vùng này, để trình duyệt tự xử lý scroll nội bộ).
-  useEffect(() => {
-    const lenis = window.lenis;
-    if (lenis) lenis.stop();
-
-    const scrollY = window.scrollY;
-    const { style } = document.body;
-    const prev = {
-      position: style.position,
-      top:      style.top,
-      left:     style.left,
-      right:    style.right,
-      width:    style.width,
-    };
-
-    style.position = "fixed";
-    style.top      = `-${scrollY}px`;
-    style.left     = "0";
-    style.right    = "0";
-    style.width    = "100%";
-
-    return () => {
-      style.position = prev.position;
-      style.top      = prev.top;
-      style.left     = prev.left;
-      style.right    = prev.right;
-      style.width    = prev.width;
-      // Khôi phục đúng vị trí cuộn trước khi mở modal
-      window.scrollTo(0, scrollY);
-
-      if (lenis && typeof lenis.start === "function") lenis.start();
-    };
-  }, []);
-
   // ── Init: load từ localStorage trước, sau đó fetch Supabase ────────
   useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem("user") || "null");
+    if (!isLogin) return;
+    const savedData = safeParse("user", null);
     if (savedData) setUser(savedData);
     loadUser();
-  }, []);
+  }, [isLogin]);
 
   // ── Cleanup blob URL ────────────────────────────────────────────────
   useEffect(() => {
@@ -1107,117 +1318,137 @@ export default function ModalUser({ setIsLogin, handleClose }) {
   }, [avatarUrl]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem("username");
-    localStorage.removeItem("user");
-    localStorage.removeItem("avatar");
-    localStorage.removeItem("sessionKey");
-    localStorage.removeItem("role");
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("handleLogout: signOut lỗi:", err);
+      // Vẫn tiếp tục dọn dẹp local state kể cả khi signOut lỗi (VD mất mạng),
+      // để người dùng không bị kẹt lại ở trạng thái "đăng nhập" trên UI.
+    }
+    ["username", "user", "avatar", "sessionKey", "role", "studentData"].forEach((k) => localStorage.removeItem(k));
     setUser({});
+    setIsAnyChange(false);
+    // ⚠️ Bắt buộc gọi setIsLogin(false) để đồng bộ trạng thái đăng nhập lên
+    // App.jsx/Header — nếu thiếu, Header vẫn hiện avatar/tên cũ cho tới khi
+    // người dùng F5 lại trang.
     setIsLogin(false);
     showToast("Đã đăng xuất", "success");
+    navigate("/");
   };
 
-  return (
-    <div id="modal-user">
-      <Backdrop handleClose={openExitButton}>
-        <motion.div
-          data-lenis-prevent
-          initial={{ scale: 0.95, y: 16, opacity: 0 }}
-          animate={{ scale: 1,    y: 0,  opacity: 1 }}
-          exit={{   scale: 0.95, y: 16, opacity: 0 }}
-          transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-          className="relative bg-[#F9F9F9] rounded-3xl shadow-xl w-full max-w-[95vw] md:w-[85vw] lg:w-[65vw] max-h-[90vh] overflow-y-auto overscroll-contain"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <AnimatePresence>
-            {isOpenExit && <ExitButton handleClose={handleCloseExit} handleExit={handleClose} />}
-          </AnimatePresence>
+  // ── Chưa đăng nhập: hiện màn hình yêu cầu đăng nhập, không load gì thêm ──
+  if (!isLogin) {
+    return <LoginRequired toggleModal={toggleModal} />;
+  }
 
-          {/* Header bar */}
-          <div className="sticky top-0 z-20 bg-[#F9F9F9]/95 backdrop-blur-sm flex items-center justify-between px-5 py-3 border-b border-[#E5E5EA]">
-            <span className="text-[15px] font-semibold text-gray-700">Tài khoản</span>
+  return (
+    <div id="tai-khoan-page" className="w-full max-w-4xl mx-auto px-4 md:px-6 py-8">
+      {/* Header trang */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-[22px] font-bold text-gray-900">Tài khoản của tôi</h1>
+          <p className="text-[13px] text-gray-400 mt-0.5">Thông tin cá nhân và kết quả học tập</p>
+        </div>
+        <NavLink to="/" className="text-[13px] font-semibold text-gray-500 hover:text-[#FF6B35] transition-colors">
+          ← Về trang chủ
+        </NavLink>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-sm border border-[#F0F0F0] px-4 md:px-8 py-6">
+        {/* Avatar + tab switcher */}
+        <div className="flex flex-col items-center gap-5 mb-6">
+          <div className="relative">
+            <div className={`relative w-24 h-24 rounded-full overflow-hidden ring-4 ring-[#F9F9F9] shadow-sm ${loadingAva ? "opacity-70" : ""}`}>
+              <img
+                src={avatarUrl || user.avatar}
+                alt={user.hoTen || "Avatar"}
+                className="w-full h-full object-cover bg-[#E5E5EA]"
+                onError={(e) => {
+                  // Ảnh lỗi (404/CDN miss) → rơi về avatar mặc định theo giới tính,
+                  // tránh hiện icon vỡ ảnh xấu xí. Dùng dataset để chặn vòng lặp lỗi
+                  // vô hạn nếu ảnh fallback cũng lỗi.
+                  if (e.currentTarget.dataset.fallbackApplied) return;
+                  e.currentTarget.dataset.fallbackApplied = "1";
+                  e.currentTarget.src = getDefaultAvatarByGender(user.gioiTinh);
+                }}
+              />
+              {loadingAva && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+                  <div className="w-7 h-7 border-[3px] border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
             <button
               type="button"
-              onClick={openExitButton}
-              className="w-8 h-8 rounded-full bg-[#E5E5EA] hover:bg-[#D1D1D6] text-gray-600 text-[14px] font-bold flex items-center justify-center transition-colors active:scale-90"
-              aria-label="Đóng"
+              onClick={selectAvatar}
+              disabled={loadingAva}
+              aria-label="Đổi ảnh đại diện"
+              className={`absolute bottom-0 right-0 w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-[14px] ${loadingAva ? "bg-[#E5E5EA] cursor-not-allowed" : "bg-[#FF6B35] hover:bg-[#E85E28] text-white"}`}
             >
-              ✕
+              ✏️
             </button>
+            <input type="file" ref={fileRef} accept="image/*" hidden onChange={handleAvatar} />
           </div>
 
-          <div className="px-4 md:px-8 py-5">
-            {/* Avatar + tab switcher */}
-            <div className="flex flex-col items-center gap-5 mb-6">
-              <div className="relative">
-                <div className={`relative w-24 h-24 rounded-full overflow-hidden ring-4 ring-white shadow-sm ${loadingAva ? "opacity-70" : ""}`}>
-                  <img
-                    src={avatarUrl || user.avatar}
-                    alt={user.hoTen || "Avatar"}
-                    className="w-full h-full object-cover bg-[#E5E5EA]"
-                  />
-                  {loadingAva && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
-                      <div className="w-7 h-7 border-[3px] border-white border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={selectAvatar}
-                  disabled={loadingAva}
-                  className={`absolute bottom-0 right-0 w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-[14px] ${loadingAva ? "bg-[#E5E5EA] cursor-not-allowed" : "bg-[#FF6B35] hover:bg-[#E85E28] text-white"}`}
-                >
-                  ✏️
-                </button>
-                <input type="file" ref={fileRef} accept="image/*" hidden onChange={handleAvatar} />
-              </div>
-
-              {/* Segmented control */}
-              <div className="relative w-full max-w-xs h-11 rounded-2xl bg-[#E5E5EA] p-1 flex cursor-pointer select-none">
-                <motion.div
-                  className="absolute top-1 left-1 h-9 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm"
-                  animate={{ x: switchTab === "Profile" ? 0 : "100%" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-                <div className="relative z-10 grid grid-cols-2 w-full text-[13px] font-semibold">
-                  <button type="button" onClick={() => setSwitchTab("Profile")}
-                    className={`rounded-xl transition-colors ${switchTab === "Profile" ? "text-[#FF6B35]" : "text-gray-500"}`}>
-                    Hồ sơ
-                  </button>
-                  <button type="button" onClick={() => setSwitchTab("Achievement")}
-                    className={`rounded-xl transition-colors ${switchTab === "Achievement" ? "text-[#FF6B35]" : "text-gray-500"}`}>
-                    Thành tích
-                  </button>
-                </div>
+          {/* Segmented control — chỉ hiện khi có tab Thành tích (học sinh) */}
+          {!isStaff && (
+            <div className="relative w-full max-w-xs h-11 rounded-2xl bg-[#E5E5EA] p-1 flex select-none">
+              <TabIndicator activeTab={isAchievementActive ? "thanh-tich" : "ho-so"} />
+              <div className="relative z-10 grid grid-cols-2 w-full text-[13px] font-semibold">
+                <NavLink to={TAB_PROFILE_URL} end
+                  className={({ isActive }) => `flex items-center justify-center rounded-xl transition-colors ${isActive ? "text-[#FF6B35]" : "text-gray-500"}`}>
+                  Hồ sơ
+                </NavLink>
+                <NavLink to={TAB_ACHIEVEMENT_URL}
+                  className={({ isActive }) => `flex items-center justify-center rounded-xl transition-colors ${isActive ? "text-[#FF6B35]" : "text-gray-500"}`}>
+                  Thành tích
+                </NavLink>
               </div>
             </div>
+          )}
+        </div>
 
-            <AnimatePresence mode="wait">
-              {switchTab === "Profile" && (
-                <motion.div key="profile"
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}>
-                  <Profile
-                    user={user}
-                    handleLogout={handleLogout}
-                    setUser={setUser}
-                    setIsAnyChange={setIsAnyChange}
-                  />
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route index element={<Navigate to={TAB_PROFILE_URL} replace />} />
+            <Route
+              path={TAB_PROFILE_PATH}
+              element={
+                <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+                  {profileLoaded
+                    ? <Profile user={user} handleLogout={handleLogout} setUser={setUser} setIsAnyChange={setIsAnyChange} />
+                    : <ProfileSkeleton />}
                 </motion.div>
-              )}
-              {switchTab === "Achievement" && (
-                <motion.div key="achievement"
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}>
-                  <Achievement user={user} cache={achievementCache} setCache={setAchievementCache}/>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </Backdrop>
+              }
+            />
+            <Route
+              path={TAB_ACHIEVEMENT_PATH}
+              element={
+                isStaff ? (
+                  <Navigate to={TAB_PROFILE_URL} replace />
+                ) : (
+                  <motion.div key="achievement" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+                    <Achievement user={user} cache={achievementCache} setCache={setAchievementCache} />
+                  </motion.div>
+                )
+              }
+            />
+            <Route path="*" element={<Navigate to={TAB_PROFILE_URL} replace />} />
+          </Routes>
+        </AnimatePresence>
+      </div>
     </div>
+  );
+}
+
+// Thanh trượt segmented control — nhận tab đang active từ cha (tính qua useMatch,
+// cùng cơ chế NavLink dùng) để luôn đồng bộ với màu chữ tab.
+function TabIndicator({ activeTab }) {
+  return (
+    <motion.span
+      className="absolute top-1 left-1 h-9 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm"
+      animate={{ x: activeTab === "thanh-tich" ? "100%" : "0%" }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+    />
   );
 }

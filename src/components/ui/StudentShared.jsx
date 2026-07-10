@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { pressable } from "./variant.jsx";
 import { motion } from "framer-motion";
 
@@ -152,6 +153,67 @@ export function FieldRow({ icon, label, field, value, displayValue, type = "text
           ✏️
         </motion.button>
       )}
+    </div>
+  );
+}
+
+export function ConfirmDialog({ open, title, message, confirmLabel = "Xác nhận", danger = false, onConfirm, onCancel }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
+      {/* Overlay: Giảm độ mờ để dialog trông "nổi" hơn */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-all animate-in fade-in duration-200" onClick={onCancel} />
+      
+      {/* Dialog container: Thêm animation zoom nhẹ để có chiều sâu */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-sm rounded-3xl border border-white/20 dark:border-white/5
+          bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-xl
+          shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.05)]
+          p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-200"
+      >
+        <div className="flex flex-col gap-2">
+          {/* Icon: Nhẹ nhàng hơn, bớt thô */}
+          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+            danger ? "bg-red-50 dark:bg-red-900/20 text-red-500"
+                   : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
+          }`}>
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          
+          <div className="flex-1">
+            <h4 className="text-base font-semibold text-stone-900 dark:text-white leading-tight">{title}</h4>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1.5 leading-relaxed">{message}</p>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          <button type="button" onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300
+              bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700
+              active:scale-[0.98] transition-all">
+            Hủy
+          </button>
+          <button type="button" onClick={onConfirm}
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-[0.98]
+              transition-all shadow-sm ${
+              danger ? "bg-red-600 hover:bg-red-700 shadow-red-500/20" 
+                     : "bg-stone-900 dark:bg-white dark:text-stone-900 hover:bg-stone-800"
+            }`}>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

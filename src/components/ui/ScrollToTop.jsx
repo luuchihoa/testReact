@@ -1,10 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+
+// Những "container" route mà việc đổi path con bên trong chỉ là đổi TAB
+// (không phải chuyển trang thật, VD /tài-khoản/hồ-sơ ↔ /tài-khoản/thành-tích)
+// — không nên cuộn lên đầu khi đổi. Thêm prefix mới vào đây nếu sau này có
+// thêm trang dạng tab tương tự.
+const TAB_CONTAINER_PREFIXES = ["/tài-khoản"];
+
+function isSameTabContainer(prevPath, nextPath) {
+  return TAB_CONTAINER_PREFIXES.some(
+    (prefix) => prevPath.startsWith(prefix) && nextPath.startsWith(prefix)
+  );
+}
 
 export default function ScrollToTop() {
   const { pathname } = useLocation();
+  const prevPathnameRef = useRef(pathname);
 
   useEffect(() => {
+    const prevPathname = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+
+    // Chuyển tab trong cùng 1 container (VD /tài-khoản/hồ-sơ → /tài-khoản/thành-tích)
+    // thì giữ nguyên vị trí cuộn — chỉ cuộn lên đầu khi thực sự sang trang khác.
+    if (isSameTabContainer(prevPathname, pathname)) return;
+
     // Sử dụng setTimeout (0ms hoặc 10ms) để đẩy lệnh cuộn vào cuối hàng đợi (Macro-task).
     // Điều này ép trình duyệt phải chạy hiệu ứng AnimatePresence xong,
     // vẽ xong giao diện trang mới rồi mới chính thức cuộn lên đầu.

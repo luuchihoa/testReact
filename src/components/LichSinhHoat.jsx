@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Calendar, Tent, BookOpen, Sparkles, Flame, Sun } from "lucide-react";
+import { Calendar, Tent, BookOpen, Sparkles, Flame, Sun, Info } from "lucide-react";
 
 /* ─── Hook phát hiện Mobile (reactive, SSR-safe) ─────────────── */
 function useIsMobile() {
@@ -24,17 +24,32 @@ function useMotionConfig() {
   return {
     isMobile,
     reduced,
-    yOffset:  reduced ? 8 : 20,
-    duration: reduced ? 0.3 : 0.5,
+    yOffset:  reduced ? 8 : 24,
+    duration: reduced ? 0.3 : 0.6,
     stagger:  reduced ? 0.04 : 0.08,
   };
 }
 
-/* ── Styles ── */
+/* ── Styles (Tích hợp Dark Mode) ── */
 const KHOI_STYLE = {
-  "Kinh Thánh":                       { icon: BookOpen,  color: "text-amber-700",  bg: "bg-amber-50",  border: "border-amber-200"  },
-  "Vào Đời & Thêm Sức":               { icon: Flame,     color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200" },
-  "Thêm Sức 1 & Rước Lễ Lần Đầu 1":  { icon: Sparkles,  color: "text-teal-700",   bg: "bg-teal-50",   border: "border-teal-200"   },
+  "Kinh Thánh": { 
+    icon: BookOpen, 
+    color: "text-amber-600 dark:text-amber-400", 
+    bg: "bg-amber-50 dark:bg-amber-500/10", 
+    border: "border-amber-200 dark:border-amber-500/20"  
+  },
+  "Vào Đời & Thêm Sức": { 
+    icon: Flame, 
+    color: "text-orange-600 dark:text-orange-400", 
+    bg: "bg-orange-50 dark:bg-orange-500/10", 
+    border: "border-orange-200 dark:border-orange-500/20" 
+  },
+  "Thêm Sức 1 & Rước Lễ Lần Đầu 1": { 
+    icon: Sparkles, 
+    color: "text-teal-600 dark:text-teal-400", 
+    bg: "bg-teal-50 dark:bg-teal-500/10", 
+    border: "border-teal-200 dark:border-teal-500/20" 
+  },
 };
 
 const SESSION_TIME = "19h15 – 20h30";
@@ -100,7 +115,7 @@ function isTodayDate(dateStr) {
   );
 }
 
-/* ── DayCard ── */
+/* ── DayCard (Widget Style) ── */
 function DayCard({ day }) {
   const style = KHOI_STYLE[day.khoi];
   const Icon = style.icon;
@@ -109,38 +124,38 @@ function DayCard({ day }) {
   return (
     <div
       className={`
-        flex items-center gap-3.5 rounded-2xl border px-4 py-3 transition-shadow
+        flex items-center gap-4 rounded-[1.5rem] border p-4 transition-all duration-300
         ${isToday
-          ? "bg-stone-900 border-stone-700 shadow-lg ring-2 ring-stone-900/20"
-          : `${style.border} ${style.bg}`
+          ? "bg-stone-900 border-stone-800 text-white shadow-xl dark:bg-white dark:border-stone-200 dark:text-stone-900 scale-[1.02]"
+          : `bg-white dark:bg-[#1c1c1e] border-stone-200/60 dark:border-stone-800/80 shadow-sm hover:shadow-md dark:shadow-none`
         }
       `}
     >
       <div className="flex-shrink-0 w-12 text-center">
-        <p className={`text-[10px] font-bold uppercase tracking-wide ${isToday ? "text-stone-400" : "text-stone-400"}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 ${isToday ? "text-stone-400 dark:text-stone-500" : "text-stone-400 dark:text-stone-500"}`}>
           {day.weekday}
         </p>
-        <p className={`text-base font-bold ${isToday ? "text-white" : "text-stone-800"}`}>
+        <p className={`text-xl font-extrabold tracking-tight ${isToday ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
           {day.date}
         </p>
       </div>
 
-      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${isToday ? "bg-white/15" : "bg-white"} ${style.color}`}>
+      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isToday ? "bg-white/10 dark:bg-black/5" : style.bg} ${isToday ? "text-white dark:text-stone-900" : style.color}`}>
         <Icon className="w-4 h-4" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className={`text-sm font-bold leading-snug truncate ${isToday ? "text-white" : style.color}`}>
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className={`text-[13px] font-bold leading-tight truncate ${isToday ? "text-white dark:text-stone-900" : "text-stone-900 dark:text-stone-100"}`}>
             {day.khoi}
           </p>
           {isToday && (
-            <span className="flex-shrink-0 text-[10px] font-bold bg-white text-stone-900 rounded-full px-2 py-0.5 leading-none">
+            <span className="flex-shrink-0 text-[10px] font-extrabold bg-blue-500 text-white dark:bg-blue-600 rounded-full px-2 py-0.5 leading-none uppercase tracking-wide">
               Hôm nay
             </span>
           )}
         </div>
-        <p className={`text-[11px] font-semibold ${isToday ? "text-stone-400" : "text-stone-400"}`}>
+        <p className={`text-[12px] font-medium ${isToday ? "text-stone-300 dark:text-stone-600" : "text-stone-500 dark:text-stone-400"}`}>
           {day.session}
         </p>
       </div>
@@ -155,7 +170,7 @@ export default function LichSinhHoat() {
   /* Variants tính động theo mc */
   const fadeInUp = {
     hidden:  { opacity: 0, y: mc.yOffset },
-    visible: { opacity: 1, y: 0, transition: { duration: mc.duration, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: mc.duration, ease: [0.16, 1, 0.3, 1] } },
   };
 
   const staggerContainer = {
@@ -163,23 +178,21 @@ export default function LichSinhHoat() {
     visible: { opacity: 1, transition: { staggerChildren: mc.stagger } },
   };
 
-  /* viewport helper */
-  const vp = { once: true, margin: mc.isMobile ? "0px" : "-40px", amount: 0.1 };
+  const vp = { once: true, margin: mc.isMobile ? "0px" : "-40px" };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#09090b] text-stone-900 dark:text-stone-50 font-sans antialiased overflow-x-hidden selection:bg-amber-500/30 transition-colors duration-500">
 
       {/* ══ HERO ══ */}
-      <header className="relative max-w-4xl mx-auto px-6 pt-16 pb-12 md:pt-24 md:pb-16 text-center overflow-hidden">
-        {/* Blob chỉ render trên desktop */}
+      <header className="relative max-w-4xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-20 text-center overflow-hidden">
         {!mc.isMobile && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[480px] h-[480px] bg-amber-100/30 blur-[120px] rounded-full -z-10 pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-500/10 dark:bg-amber-500/15 blur-[100px] rounded-full -z-10 pointer-events-none" />
         )}
 
         <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
           <motion.div
             variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold bg-amber-50 border border-amber-200/60 text-amber-800 rounded-full mb-6 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 rounded-full mb-6 shadow-sm"
           >
             <Calendar className="w-3.5 h-3.5" />
             Lịch sinh hoạt
@@ -187,57 +200,52 @@ export default function LichSinhHoat() {
 
           <motion.h1
             variants={fadeInUp}
-            className="font-serif font-black text-3xl md:text-5xl tracking-tight text-stone-900 mb-4 leading-[1.15]"
+            className="font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight text-stone-900 dark:text-stone-100 mb-5 leading-[1.08]"
           >
             Hành trình đến{" "}
-            <span className="bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-500 bg-clip-text text-transparent">
               Ngày Hội Trại
             </span>
           </motion.h1>
 
-          <motion.p variants={fadeInUp} className="max-w-xl mx-auto text-sm md:text-base text-stone-500 leading-relaxed">
+          <motion.p variants={fadeInUp} className="max-w-lg mx-auto text-base text-stone-500 dark:text-stone-400 font-medium leading-relaxed">
             Bốn tuần sinh hoạt cùng nhau chuẩn bị tâm hồn và tinh thần, hướng tới ngày hội trại lớn.
           </motion.p>
         </motion.div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 pb-20 space-y-12">
+      <main className="max-w-3xl mx-auto px-6 pb-24 space-y-16">
 
-        {/* ══ HỘI TRẠI BANNER ══ */}
+        {/* ══ HỘI TRẠI BANNER (Apple Widget Style) ══ */}
         <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={fadeInUp}
         >
-          {/* Bỏ backdrop-blur — gây sụt FPS nặng trên iOS Safari */}
-          <div className="relative bg-gradient-to-br from-orange-700 via-amber-700 to-orange-800 rounded-3xl p-8 md:p-10 overflow-hidden text-center shadow-md">
-            {!mc.isMobile && (
-              <>
-                <div className="absolute -top-12 -left-12 w-48 h-48 bg-yellow-300/10 blur-3xl rounded-full pointer-events-none" />
-                <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-rose-400/10 blur-3xl rounded-full pointer-events-none" />
-              </>
-            )}
+          <div className="relative bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-600 dark:to-amber-700 rounded-[2rem] p-8 md:p-10 overflow-hidden text-center shadow-lg dark:shadow-none">
+            {/* Abstract Background Elements */}
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-yellow-300/20 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-rose-500/20 blur-3xl rounded-full pointer-events-none" />
 
-            <div className="relative">
-              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-5 shadow-md">
-                <Tent className="w-7 h-7 text-white" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-[1.25rem] bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/10">
+                <Tent className="w-8 h-8 text-white" />
               </div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-amber-100 mb-2">
+              <p className="text-[12px] font-extrabold uppercase tracking-widest text-amber-100 mb-2">
                 Hội Trại
               </p>
-              <h2 className="font-serif font-black text-2xl md:text-3xl text-white mb-3">
+              <h2 className="font-extrabold tracking-tight text-3xl md:text-4xl text-white mb-4">
                 Thứ Bảy, 04/07/2026
               </h2>
-              <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 mb-4">
+              <div className="inline-flex items-center gap-2 bg-black/15 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2.5 mb-5">
                 <Sun className="w-4 h-4 text-amber-200" />
-                <p className="text-sm font-semibold text-white">
-                  Chủ đề: "Anh em là ánh sáng cho thế gian"
+                <p className="text-[13px] font-bold text-white tracking-wide">
+                  Chủ đề: "Anh em là ánh sáng thế gian"
                 </p>
               </div>
-              <p className="text-xs md:text-sm text-amber-100/90 max-w-md mx-auto leading-relaxed">
-                Mt 5,14 — Ngày hội ngộ của tất cả các khối, cùng nhau sống tinh thần truyền giáo
-                và lan tỏa ánh sáng Tin Mừng.
+              <p className="text-[14px] text-amber-50 max-w-md mx-auto font-medium leading-relaxed opacity-90">
+                Mt 5,14 — Ngày hội ngộ của tất cả các khối, cùng nhau sống tinh thần truyền giáo và lan tỏa ánh sáng Tin Mừng.
               </p>
             </div>
           </div>
@@ -250,13 +258,13 @@ export default function LichSinhHoat() {
           viewport={vp}
           variants={fadeInUp}
         >
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-2.5">
             {Object.entries(KHOI_STYLE).map(([name, style]) => {
               const Icon = style.icon;
               return (
                 <span
                   key={name}
-                  className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold border ${style.border} ${style.bg} ${style.color}`}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-bold border ${style.border} ${style.bg} ${style.color}`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   {name}
@@ -272,29 +280,34 @@ export default function LichSinhHoat() {
           whileInView="visible"
           viewport={vp}
           variants={staggerContainer}
-          className="space-y-8"
+          className="space-y-12"
         >
           {WEEKS.map((week, idx) => (
-            <motion.div key={week.range} variants={fadeInUp}>
+            <motion.div key={week.range} variants={fadeInUp} className="relative">
+              {/* Vertical Line for Desktop Timeline */}
+              {!mc.isMobile && (
+                <div className="absolute left-[1.15rem] top-12 bottom-0 w-0.5 bg-stone-200 dark:bg-stone-800/80 -z-10" />
+              )}
+
               {/* Week header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-shrink-0 w-9 h-9 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-bold">
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex-shrink-0 w-10 h-10 rounded-[1rem] bg-stone-900 dark:bg-white text-white dark:text-stone-900 flex items-center justify-center text-sm font-extrabold shadow-sm">
                   {idx + 1}
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-stone-400">Tuần {idx + 1}</p>
-                  <h3 className="text-base font-bold text-stone-800">{week.range}</h3>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-0.5">Tuần {idx + 1}</p>
+                  <h3 className="text-lg font-extrabold text-stone-900 dark:text-stone-100">{week.range}</h3>
                 </div>
                 {week.isLastBeforeCamp && (
-                  <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded-full px-3 py-1">
-                    <Tent className="w-3 h-3" />
+                  <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 dark:text-orange-400 dark:bg-orange-500/10 dark:border-orange-500/20 rounded-full px-3 py-1.5 uppercase tracking-wide">
+                    <Tent className="w-3.5 h-3.5" />
                     Tuần hội trại
                   </span>
                 )}
               </div>
 
-              {/* Day cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pl-12">
+              {/* Day cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:pl-[3.5rem]">
                 {week.days.map((day) => (
                   <DayCard key={day.date} day={day} />
                 ))}
@@ -303,17 +316,19 @@ export default function LichSinhHoat() {
           ))}
         </motion.section>
 
-        {/* ══ GHI CHÚ ══ */}
+        {/* ══ GHI CHÚ (Apple Info Box) ══ */}
         <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={fadeInUp}
         >
-          <div className="bg-white rounded-2xl border border-stone-200/70 shadow-sm p-6 text-center">
-            <p className="text-sm text-stone-500 leading-relaxed">
-              Lịch sinh hoạt có thể thay đổi tùy theo điều kiện thực tế. Vui lòng theo dõi thông báo
-              cập nhật từ giáo lý viên phụ trách từng khối.
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-[1.75rem] p-6 text-center sm:text-left">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <Info className="w-5 h-5" />
+            </div>
+            <p className="text-[14px] text-stone-600 dark:text-stone-400 font-medium leading-relaxed pt-1">
+              Lịch sinh hoạt có thể thay đổi tùy theo điều kiện thực tế. Vui lòng theo dõi thông báo cập nhật từ giáo lý viên phụ trách từng khối để nắm bắt thông tin nhanh nhất.
             </p>
           </div>
         </motion.section>

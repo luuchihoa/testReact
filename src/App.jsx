@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 const ReactLenisLazy = lazy(() => 
@@ -16,10 +16,9 @@ import Header from "./components/Header.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
-// RequireTeacherRoute là named export (không phải default) nên import trực tiếp,
-// không qua lazyWithRetry — nó cần chạy ngay khi Route khớp để kiểm tra quyền.
-import { RequireTeacherRoute } from "./components/TeacherClassView.jsx";
-import { RequireAdminRoute } from "./components/AdminView.jsx"
+import { PageContentSkeleton } from "./components/ui/Skeleton.jsx";
+import TeacherLayout , { RequireTeacherRoute } from "./components/teacher/TeacherLayout.jsx";
+import AdminLayout , { RequireAdminRoute } from "./components/admin/AdminLayout.jsx";
 
 const lazyWithRetry = (componentImport) =>
   lazy(() =>
@@ -35,7 +34,7 @@ const lazyWithRetry = (componentImport) =>
   );
 
 const ModalLogin    = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
-const ModalUser     = lazyWithRetry(() => import("./components/ModalUser.jsx"));
+const TaiKhoanLayout = lazyWithRetry(() => import("./components/TaiKhoanLayout.jsx"));
 const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
 const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
@@ -53,21 +52,28 @@ const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
 const LichHoc       = lazyWithRetry(() => import("./components/LichHoc.jsx"));
 const GioiTre       = lazyWithRetry(() => import("./components/GioiTre.jsx"));
-const AdminView     = lazyWithRetry(() => import("./components/AdminView.jsx"));
-const TeacherClassView = lazyWithRetry(() => import("./components/TeacherClassView.jsx"));
+
+// ── Bài viết ──
+const ArticleList   = lazyWithRetry(() => import("./components/articles/ArticleList.jsx"));
+const ArticleDetail = lazyWithRetry(() => import("./components/articles/ArticleDetail.jsx"));
+const MyArticles    = lazyWithRetry(() => import("./components/articles/MyArticles.jsx"));
+const ArticleEditor = lazyWithRetry(() => import("./components/articles/ArticleEditor.jsx"));
+
+const DashboardTab    = lazyWithRetry(() => import("./components/admin/DashboardTab.jsx"));
+const UsersTab        = lazyWithRetry(() => import("./components/admin/UsersTab.jsx"));
+const ClassesTab      = lazyWithRetry(() => import("./components/admin/ClassesTab.jsx"));
+const AdminGradesTab     = lazyWithRetry(() => import("./components/admin/GradesTab.jsx"));
+const ReportsTab      = lazyWithRetry(() => import("./components/admin/ReportsTab"));
+const BroadcastTab    = lazyWithRetry(() => import("./components/admin/BroadcastTab.jsx"));
+const ArticlesTab     = lazyWithRetry(() => import("./components/admin/ArticlesTab.jsx"));
+
+const TeacherSummaryTab   = lazyWithRetry(() => import("./components/teacher/SummaryTab.jsx"));
+const TeacherRosterTab    = lazyWithRetry(() => import("./components/teacher/RosterTab.jsx"));
+const TeacherAttendanceTab= lazyWithRetry(() => import("./components/teacher/AttendanceTab.jsx"));
+const TeacherGradesTab    = lazyWithRetry(() => import("./components/teacher/GradesTab.jsx"));
 
 function PageLoader() {
-  return (
-    <div className="min-h-[60vh] w-full flex flex-col items-center justify-center bg-[#faf8f5]/50 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-3">
-        <svg className="w-8 h-8 animate-spin text-orange-600" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-        </svg>
-        <p className="text-sm text-stone-400 font-medium tracking-wide animate-pulse">Đang tải...</p>
-      </div>
-    </div>
-  );
+  return <PageContentSkeleton />;
 }
 
 const fontSizeMap = {
@@ -78,13 +84,23 @@ const fontSizeMap = {
 };
 
 const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) => (
-  <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] text-stone-900 antialiased transition-all duration-300 selection:bg-orange-100 selection:text-orange-900`}>
-    <Header toggleModal={toggleModal} isLogin={isLogin} setIsLogin={setIsLogin} handleClose={handleClose}/>
-    <main className="w-full flex-grow pb-16">
+  <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
+    {/* Thanh điều hướng Header */}
+    <Header 
+      toggleModal={toggleModal} 
+      isLogin={isLogin} 
+      setIsLogin={setIsLogin} 
+      handleClose={handleClose}
+    />
+    
+    {/* Không gian nội dung chính tối ưu hóa khoảng cách thiết bị di động */}
+    <main className="w-full flex-grow">
       <Suspense fallback={<PageLoader />}>
-        <Outlet />
+        <Outlet context={{ toggleModal, isLogin, setIsLogin }} />
       </Suspense>
     </main>
+    
+    {/* Chân trang Footer */}
     <Footer />
   </div>
 );
@@ -149,27 +165,53 @@ export default function App() {
           <Route path="cài-đặt" element={<Setting fontSize={fontSize} setFontSize={handleFontSizeChange} />} />
           <Route path="bảo-mật" element={<BaoMat />} />
           <Route path="quy-định" element={<QuyDinh />} />
+          <Route path="tài-khoản/*" element={<TaiKhoanLayout />} />
+
+          {/* ── Bài viết ── */}
+          <Route path="bài-viết" element={<ArticleList />} />
+          <Route path="bài-viết/:slug" element={<ArticleDetail />} />
+          <Route path="bài-viết-của-tôi" element={<MyArticles />} />
+          <Route path="bài-viết-của-tôi/soạn" element={<ArticleEditor />} />
+          <Route path="bài-viết-của-tôi/soạn/:id" element={<ArticleEditor />} />
+
           <Route
-            path="quan-tri"
+            path="quản-trị"
             element={
               <RequireAdminRoute>
-                <AdminView />
+                <AdminLayout />
               </RequireAdminRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="tổng-quan" replace />} />
+            <Route path="tổng-quan"  element={<DashboardTab />} />
+            <Route path="người-dùng" element={<UsersTab />} />
+            <Route path="lớp-học"    element={<ClassesTab />} />
+            <Route path="sổ-điểm"    element={<AdminGradesTab />} />
+            <Route path="báo-cáo"    element={<ReportsTab />} />
+            <Route path="thông-báo"  element={<BroadcastTab />} />
+            <Route path="bài-viết"   element={<ArticlesTab />} />
+          </Route>
+          
+          {/* Thay thế đoạn Route /quản-lý-học-sinh cũ bằng đoạn mã tối ưu này */}
           <Route
-            path="giáo-viên/lớp-học"
+            path="/quản-lý-học-sinh"
             element={
               <RequireTeacherRoute>
-                <TeacherClassView />
+                <TeacherLayout />
               </RequireTeacherRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="tổng-quan" replace />} />
+            <Route path="tổng-quan"  element={<TeacherSummaryTab />} />
+            <Route path="học-sinh"   element={<TeacherRosterTab />} />
+            <Route path="điểm-danh"  element={<TeacherAttendanceTab />} />
+            <Route path="nhập-điểm"  element={<TeacherGradesTab />} />
+          </Route>
         </Route>
         <Route
           path="/:khoi/:type"
           element={
-            <div className={`${fontSizeMap[fontSize]} min-h-screen bg-stone-50 antialiased`}>
+            <div className={`${fontSizeMap[fontSize]} min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
               <Suspense fallback={<PageLoader />}>
                 <TestQuiz />
               </Suspense>
@@ -182,9 +224,6 @@ export default function App() {
         <AnimatePresence>
           {!isLogin && turnOnModal && (
             <ModalLogin key="modal-login" handleClose={handleClose} setIsLogin={setIsLogin} />
-          )}
-          {isLogin && turnOnModal && (
-            <ModalUser key="modal-user" setIsLogin={setIsLogin} handleClose={handleClose} />
           )}
         </AnimatePresence>
       </Suspense>

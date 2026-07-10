@@ -1,16 +1,11 @@
 /**
- * QuizBox.jsx — GỘP QuizBox.jsx + QuizContent.jsx thành 1 file.
- * File QuizContent.jsx cũ không còn cần thiết, có thể xoá.
- *
- * Khung trang đổi sang kiểu DoVui.jsx: không còn modal/backdrop/bottom-sheet
- * nổi trên nền đen mờ, mà là trang full-screen riêng (min-h-screen bg-[#F2F2F7],
- * max-w-md mx-auto, padding theo safe-area, header có nút "?" + "✕").
- *
- * Phần Mcq / Essay / Result giữ NGUYÊN không đổi — DoVui vốn đã học theo
- * đúng ngôn ngữ thiết kế của các component này rồi nên không cần restyle lại.
+ * QuizBox.jsx
+ * Đã gộp toàn bộ logic của QuizContent vào file này.
+ * Giao diện được tối ưu hoá theo hướng full-screen (iOS-like),
+ * loại bỏ modal/backdrop cũ.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import QuizTimer from "./ui/Timer.jsx";
 import useSound from "./sound/useSounds.js";
@@ -21,7 +16,6 @@ function getRandomItems(arr, n) {
   return [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
 }
 
-// Fix #6 — cleanup on unmount
 function burstConfetti(x, y) {
   const colors = ["#FF6B35", "#007AFF", "#34C759", "#FFD60A", "#FF375F", "#AF52DE"];
   const els = [];
@@ -49,9 +43,13 @@ function burstConfetti(x, y) {
       { duration: 550, easing: "cubic-bezier(0.22,1,0.36,1)", fill: "forwards" }
     );
   });
-  // cleanup sau 600ms dù component unmount
+  
+  // Cleanup sau 600ms dù component unmount
   const t = setTimeout(() => els.forEach((el) => el.remove()), 600);
-  return () => { clearTimeout(t); els.forEach((el) => el.remove()); };
+  return () => { 
+    clearTimeout(t); 
+    els.forEach((el) => el.remove()); 
+  };
 }
 
 // ====================== OPTION BUTTON =========================
@@ -62,6 +60,7 @@ function OptionButton({ label, text, state, onClick, onMouseEnter, disabled }) {
     wrong: "bg-[#FFE4E6] border border-[#FF375F] text-[#7F1D1D] font-semibold",
     reveal: "bg-[#EFF6FF] border border-[#007AFF] text-[#1D4ED8]",
   };
+  
   const circleVariants = {
     idle: "bg-[#F2F2F7] text-gray-500 border border-[#E5E5EA]",
     correct: "bg-[#34C759] text-white border-transparent",
@@ -69,7 +68,6 @@ function OptionButton({ label, text, state, onClick, onMouseEnter, disabled }) {
     reveal: "bg-[#007AFF] text-white border-transparent",
   };
 
-  // Fix #2 — capture rect trước khi async, không dùng currentTarget sau timeout
   const handleClick = useCallback((e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     onClick(rect);
@@ -120,8 +118,9 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
     const isCorrect = key === q.correct;
     const isSkip = key === "Không trả lời";
 
-    if (isSkip) play("select");
-    else if (isCorrect) {
+    if (isSkip) {
+      play("select");
+    } else if (isCorrect) {
       play("correct");
       scoreRef.current += 1;
       if (rect) burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
@@ -145,9 +144,7 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
@@ -183,7 +180,7 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
         </div>
       </div>
 
-      {/* Question — Fix #5: key hợp lệ, tách riêng AnimatePresence */}
+      {/* Question */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`q-${current}`}
@@ -193,7 +190,6 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
           transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
           className="bg-white rounded-3xl p-5 shadow-sm border border-[#F0F0F0]"
         >
-          {/* Question number badge */}
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35]/10 text-[#FF6B35] text-[11px] font-bold">
               {current + 1}
@@ -206,7 +202,7 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Options — Fix #5: key riêng */}
+      {/* Options */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`opts-${current}`}
@@ -258,7 +254,6 @@ function Essay({ essay, setType, setEssayScore, config, setUserEssayAns }) {
   const ansRefs = useRef({});
   const essayRef = useRef(0);
 
-  // Fix #3 — guard empty essay
   useEffect(() => {
     if (!essay || essay.length === 0) {
       setEssayScore("0.00");
@@ -274,8 +269,9 @@ function Essay({ essay, setType, setEssayScore, config, setUserEssayAns }) {
       let score = 0;
       (q.keywords || []).forEach((item) => {
         const keyLower = (item.word || []).map((w) => w.toLowerCase());
-        if (keyLower.every((w) => ans.includes(w)))
+        if (keyLower.every((w) => ans.includes(w))) {
           score += config.essayPoint / (config.essayCount || 1) / (q.keywords.length || 1);
+        }
       });
       essayRef.current += score;
     });
@@ -292,7 +288,6 @@ function Essay({ essay, setType, setEssayScore, config, setUserEssayAns }) {
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="flex flex-col gap-4"
     >
-      {/* Section header */}
       <div className="bg-white rounded-2xl px-4 py-3 border border-[#F0F0F0] shadow-sm flex items-center gap-2">
         <span className="text-lg">✍️</span>
         <div>
@@ -336,9 +331,11 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
   const total = (parseFloat(essayScore || 0) + parseFloat(mcqScore || 0)).toFixed(2);
   const pct = Math.round((parseFloat(total) / 10) * 100);
 
-  // Fix #1 — safe localStorage access
   async function sendData() {
-    const username = (() => { try { return localStorage.getItem("username") || "anonymous"; } catch { return "anonymous"; } })();
+    const username = (() => { 
+      try { return localStorage.getItem("username") || "anonymous"; } 
+      catch { return "anonymous"; } 
+    })();
     const API_URL = "https://script.google.com/macros/s/AKfycbxi7H5MhkxM478EnIX-shg1NMxg4ljIyCcokmODv55zBnNLyTBtkKTGG-brJcSmf5Q/exec";
     try {
       await fetch(API_URL, {
@@ -529,8 +526,6 @@ export default function QuizBox({ handleExit, config, quizData }) {
     setShowGuide(false);
   };
 
-  // Fix #4 — autoSubmit chỉ dùng để signal, không can thiệp state Mcq
-  // Timer hết giờ → chuyển thẳng sang essay/result
   const autoSubmit = useCallback(() => {
     if (type === "mcq") {
       setMcqScore(0); // chấp nhận 0 điểm MCQ khi hết giờ
@@ -623,7 +618,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
           </div>
         </div>
 
-        {/* Content với AnimatePresence để transition mượt giữa các phase */}
+        {/* Content */}
         <div className="flex-1">
           <AnimatePresence mode="wait">
             <motion.div
