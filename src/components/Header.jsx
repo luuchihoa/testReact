@@ -661,7 +661,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/94 dark:bg-stone-900/94 backdrop-blur-xl border-t border-stone-200/60 dark:border-stone-800 shadow-lg dark:shadow-black/30"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="flex h-16 items-stretch justify-around">
+        <div className="flex h-18 items-stretch justify-around">
           {MOBILE_TAB_ITEMS.map((item) => {
             const active = isItemActive(item, location.pathname);
             

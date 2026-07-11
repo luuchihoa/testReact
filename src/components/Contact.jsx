@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Clock, ChevronRight, CheckCircle } from "lucide-react";
+import { MapPin, Clock, ChevronRight, CheckCircle, Phone } from "lucide-react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
 
 /* ── Dữ liệu ── */
@@ -146,7 +146,7 @@ function ContactForm({ mc }) {
               <button
                 type="button"
                 onClick={() => { setForm(FORM_INIT); setDone(false); }}
-                className="mt-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:opacity-80 transition-opacity active:scale-95"
+                className="mt-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 md:hover:opacity-80 transition-opacity active:scale-95"
               >
                 Gửi thêm tin nhắn khác
               </button>
@@ -180,7 +180,7 @@ function ContactForm({ mc }) {
               <button
                 type="submit" disabled={loading}
                 style={{ touchAction: "manipulation" }}
-                className="w-full py-3 rounded-xl text-sm font-bold bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-3 rounded-xl text-sm font-bold bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 md:hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading ? (
                   <>
@@ -218,7 +218,7 @@ function FaqItem({ faq, index, mc, isOpen, onToggle }) {
         className={`w-full flex items-center justify-between gap-4 p-4.5 rounded-2xl text-left transition-all duration-300 border ${
           isOpen
             ? "bg-amber-500/5 border-amber-500/20 dark:bg-amber-500/10 dark:border-amber-500/20 shadow-none"
-            : "bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none hover:border-amber-500/30"
+            : "bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none md:hover:border-amber-500/30"
         }`}
       >
         <span className="flex items-center gap-3 min-w-0">
@@ -267,10 +267,38 @@ function FaqItem({ faq, index, mc, isOpen, onToggle }) {
   );
 }
 
+const headerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (d = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5, delay: d },
+  }),
+};
+
+const listVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.15, // Chạy nối đuôi ngay khi header đang trượt lên
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 },
+  },
+};
+
 export default function Contact() {
   const systemConfig = useMotionConfig();
   
-  // Tránh lỗi runtime, đồng bộ cấu hình animation chuyển động
+  // Giữ nguyên config cho các section khác bên dưới (Map, Hours, Form...)
   const mc = systemConfig || {
     yOffset: 25,
     duration: (d) => d || 0.6,
@@ -283,38 +311,24 @@ export default function Contact() {
   const vp = mc.vp();
   const [openFaq, setOpenFaq] = useState(null);
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1, 
-      y: 0,
-      transition: { type: "spring", stiffness: 90, damping: 15, mass: 0.8, delay: mc.delay(d) },
-    }),
-  };
-
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#000000] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-amber-500/20 dark:selection:bg-amber-500/30 transition-colors duration-500 relative">
       
-      {/* Background lưới mờ tinh tế phân lớp không gian cao cấp */}
+      {/* Background lưới mờ tinh tế */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-      {/* ══ HERO SECTION ══ */}
+      {/* ══ HERO SECTION (Sử dụng headerVariants) ══ */}
       <section className="relative overflow-hidden pt-12 pb-10 md:pt-24 md:pb-16 bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#000000]">
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: mc.stagger } } }}
-            className="space-y-5"
-          >
-            <motion.div variants={fadeUp} custom={0}>
+          <div className="space-y-5 text-left">
+            <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0}>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 select-none">
                 Trung tâm hỗ trợ Ban Giáo Lý
               </span>
             </motion.div>
 
             <motion.h1
-              variants={fadeUp} custom={0.05}
+              variants={headerVariants} initial="hidden" animate="visible" custom={0.05}
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white leading-[1.1]"
             >
               Kênh kết nối &<br />
@@ -324,23 +338,20 @@ export default function Contact() {
             </motion.h1>
 
             <motion.p
-              variants={fadeUp} custom={0.1}
+              variants={headerVariants} initial="hidden" animate="visible" custom={0.1}
               className="text-sm sm:text-base text-stone-500 dark:text-stone-400 leading-relaxed max-w-lg font-normal"
             >
               Mọi thắc mắc về quy trình đăng ký học, khung chương trình đào tạo hoặc đóng góp ý kiến xây dựng, xin vui lòng liên hệ với ban điều hành.
             </motion.p>
 
             {/* Apple Actions Bar */}
-            <motion.div variants={fadeUp} custom={0.15} className="flex flex-wrap gap-2.5 pt-1.5">
+            <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0.15} className="flex flex-wrap gap-2.5 pt-1.5">
               <a
                 href="tel:0905143643"
                 style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 text-xs font-bold hover:opacity-90 active:scale-[0.97] transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 text-md font-bold md:hover:opacity-90 active:scale-[0.97] transition-all shadow-sm"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
+                <Phone size={13} strokeWidth={2.2} aria-hidden="true" />
                 Gọi Tổng đài
               </a>
               <a
@@ -359,42 +370,48 @@ export default function Contact() {
                   }
                 }}
                 style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 text-xs font-bold hover:border-amber-500/40 active:scale-[0.97] transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 text-md font-bold md:hover:border-amber-500/40 active:scale-[0.97] transition-all shadow-sm"
               >
                 Gửi Form liên hệ
                 <ChevronRight className="w-3.5 h-3.5 text-stone-400" aria-hidden="true" />
               </a>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ══ NỘI DUNG CHÍNH (Bento Cards Layout) ══ */}
+      {/* ══ NỘI DUNG CHÍNH ══ */}
       <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-20 space-y-12 relative z-10">
 
-        {/* Kênh liên hệ chính */}
+        {/* Kênh liên hệ chính (Sử dụng listVariants và itemVariants) */}
         <section>
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-4 select-none">
+          <motion.h2 
+            variants={headerVariants} initial="hidden" animate="visible" custom={0.2}
+            className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-4 select-none"
+          >
             Phương thức truyền thông trực tiếp
-          </h2>
+          </motion.h2>
 
-          <div className="grid gap-3">
-            {CONTACTS.map((c, i) => (
+          <motion.div 
+            className="grid gap-3"
+            variants={listVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {CONTACTS.map((c) => (
               <motion.a
                 key={c.id}
                 href={c.href}
                 aria-label={`${c.label}: ${c.value}`}
                 target={c.external ? "_blank" : undefined}
                 rel={c.external ? "noreferrer noopener" : undefined}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp}
-                transition={{ type: "spring", stiffness: 100, damping: 16, delay: mc.delay(i * 0.05) }}
+                variants={itemVariants}
+                whileTap={{ scale: 0.98 }}
                 style={{ touchAction: "manipulation" }}
-                className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none active:scale-[0.995] transition-all text-left"
+                className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none transition-colors text-left"
               >
                 {/* Icon Wrapper */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200/40 dark:border-stone-700/50 group-hover:bg-amber-500/10 group-hover:text-amber-600 dark:group-hover:bg-amber-500/20 dark:group-hover:text-amber-400 group-hover:border-transparent transition-all duration-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200/40 dark:border-stone-700/50 md:group-hover:bg-amber-500/10 md:group-hover:text-amber-600 dark:group-hover:bg-amber-500/20 dark:group-hover:text-amber-400 md:group-hover:border-transparent transition-all duration-300">
                   {c.icon}
                 </div>
 
@@ -403,7 +420,7 @@ export default function Contact() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">
                     {c.label}
                   </p>
-                  <p className="text-sm font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
+                  <p className="text-sm font-bold text-stone-900 dark:text-stone-100 md:group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
                     {c.id === "phone" ? (
                       <>
                         <span className="tabular-nums">{c.value}</span>
@@ -420,17 +437,16 @@ export default function Contact() {
 
                 {/* Arrow indicator */}
                 <ChevronRight
-                  className="w-4 h-4 text-stone-300 dark:text-stone-700 group-hover:text-amber-500 dark:group-hover:text-amber-400 transform group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0"
+                  className="w-4 h-4 text-stone-300 dark:text-stone-700 md:group-hover:text-amber-500 dark:group-hover:text-amber-400 transform md:group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0"
                   aria-hidden="true"
                 />
               </motion.a>
             ))}
-          </div>
+          </motion.div>
         </section>
 
-        {/* Địa điểm & Giờ tiếp nhận (Grid Layout 2 Cột) */}
+        {/* Địa điểm & Giờ tiếp nhận (Giữ nguyên logic của bạn) */}
         <div className="grid md:grid-cols-2 gap-4 items-start">
-
           {/* Cột 1: Địa điểm & Bản đồ hình chữ nhật bo góc */}
           <motion.section
             initial={{ opacity: 0, y: mc.yOffset }}
@@ -453,8 +469,8 @@ export default function Contact() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <span className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-[11px] font-bold text-white bg-stone-900/80 dark:bg-stone-100 dark:text-stone-950 px-3 py-1.5 rounded-full backdrop-blur-md">
+              <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/5 dark:group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                <span className="opacity-0 md:group-hover:opacity-100 transition-all duration-300 text-[11px] font-bold text-white bg-stone-900/80 dark:bg-stone-100 dark:text-stone-950 px-3 py-1.5 rounded-full backdrop-blur-md">
                   Mở ứng dụng Bản đồ ↗
                 </span>
               </div>
