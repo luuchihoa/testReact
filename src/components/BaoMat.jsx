@@ -53,7 +53,6 @@ export default function BaoMat() {
     vp: () => ({ once: true, margin: "-10% 0px" })
   };
 
-  // Header: giữ animate ngay khi mount, spring nhẹ nhàng hơn 1 chút
   const fadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
     visible: (d = 0) => ({
@@ -63,25 +62,24 @@ export default function BaoMat() {
     }),
   };
 
-  // Container cho list section: MỘT observer duy nhất, staggerChildren lo
-  // việc so le -> không còn N observer lệch nhịp nhau
   const listContainer = {
     hidden: {},
     visible: {
       transition: {
         staggerChildren: mc.stagger,
-        delayChildren: 0.05, // gần như tức thời
+        // Chờ 0.2s để header animate xong (0.12s) rồi mới bắt đầu cascade sections
+        delayChildren: 0.2, 
       },
     },
   };
 
-  // Từng section: không tự set delay nữa (container lo), chỉ animate
   const itemFadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 },
+      // Bỏ qua dependency từ custom delays, dùng spring thuần túy cho item
+      transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 }, 
     },
   };
 
@@ -117,13 +115,12 @@ export default function BaoMat() {
           </motion.p>
         </header>
 
-        {/* Container duy nhất điều phối stagger cho toàn bộ list */}
+        {/* THAY ĐỔI CỐT LÕI NẰM Ở ĐÂY: Dùng animate="visible" thay cho whileInView */}
         <motion.div
           className="space-y-3 sm:space-y-4"
           variants={listContainer}
           initial="hidden"
-          whileInView="visible"
-          viewport={mc.vp()}
+          animate="visible" 
         >
           {sections.map((s) => {
             const Icon = s.icon;
