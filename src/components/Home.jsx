@@ -111,6 +111,7 @@ function useIsMobile() {
 }
 
 /* ─── Variants ────────────────────────────────────────────────── */
+// Dùng cho bento grid bên dưới (trigger khi cuộn tới, whileInView)
 const fadeUp = {
   hidden: (c) => ({ opacity: 0, y: c?.m ? 12 : 32 }),
   visible: (c) => ({
@@ -124,10 +125,18 @@ const fadeUp = {
   }),
 };
 
-const stagger = {
-  hidden: {},
-  visible: (m) => ({
-    transition: { staggerChildren: m ? 0.08 : 0.15 },
+// ── Kỹ thuật Fade Up / Reveal của KhoiChienCon áp dụng cho HERO ──
+// Khác với `fadeUp` ở trên (tween + parent stagger container), mỗi phần tử
+// hero tự "initial → animate" độc lập ngay khi mount, dùng spring vật lý
+// thay vì tween cubic-bezier. Spring không cần cả cụm tính toán timeline
+// chung như stagger container, nên không còn hiện tượng cả hero "bung ra"
+// cùng một lúc trên máy yếu — mỗi phần tử tự rơi vào đúng nhịp của nó.
+const heroReveal = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (d = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 100, damping: 18, mass: 0.7, delay: d },
   }),
 };
 
@@ -270,6 +279,11 @@ export default function Home() {
   const heroOpacity = useTransform(scrollY, [heroHeight * 0.3, heroHeight * 0.85], [1, 0]);
   const heroY = useTransform(scrollY, [0, heroHeight * 0.85], [0, -60]);
 
+  // Trên mobile rút ngắn khoảng cách delay giữa các phần tử hero (nhịp nhanh
+  // hơn, tổng thời gian reveal ngắn lại) để giảm số animation chạy song song
+  // tại bất kỳ thời điểm nào — máy yếu càng ít việc cùng lúc càng mượt.
+  const heroDelay = (d) => (isMobile ? d * 0.6 : d);
+
   return (
     <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300">
       {/* Noise overlay — bộ lọc feTurbulence rất tốn GPU để rasterize/composite
@@ -298,15 +312,14 @@ export default function Home() {
           style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
           className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10"
         >
-          <motion.div
-            variants={stagger}
-            custom={isMobile}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col items-center gap-5 sm:gap-7"
-          >
+          <div className="flex flex-col items-center gap-5 sm:gap-7">
             {/* Badge */}
-            <motion.div variants={fadeUp} custom={{ d: 0, m: isMobile }}>
+            <motion.div
+              variants={heroReveal}
+              initial="hidden"
+              animate="visible"
+              custom={heroDelay(0)}
+            >
               <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm transition-colors cursor-default">
                 <span className="relative flex h-2 w-2 flex-shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
@@ -320,8 +333,10 @@ export default function Home() {
 
             {/* H1 */}
             <motion.h1
-              variants={fadeUp}
-              custom={{ d: 0.1, m: isMobile }}
+              variants={heroReveal}
+              initial="hidden"
+              animate="visible"
+              custom={heroDelay(0.08)}
               className="w-full"
               style={{ fontFamily: "'Cormorant', Georgia, serif" }}
             >
@@ -340,8 +355,10 @@ export default function Home() {
 
             {/* Divider */}
             <motion.div
-              variants={fadeUp}
-              custom={{ d: 0.18, m: isMobile }}
+              variants={heroReveal}
+              initial="hidden"
+              animate="visible"
+              custom={heroDelay(0.16)}
               className="flex items-center gap-4 w-full max-w-[280px]"
             >
               <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-300 dark:to-stone-700" />
@@ -351,8 +368,10 @@ export default function Home() {
 
             {/* Quote */}
             <motion.blockquote
-              variants={fadeUp}
-              custom={{ d: 0.22, m: isMobile }}
+              variants={heroReveal}
+              initial="hidden"
+              animate="visible"
+              custom={heroDelay(0.24)}
               className="max-w-lg mx-auto px-4"
             >
               <p
@@ -372,8 +391,10 @@ export default function Home() {
 
             {/* CTAs */}
             <motion.div
-              variants={fadeUp}
-              custom={{ d: 0.3, m: isMobile }}
+              variants={heroReveal}
+              initial="hidden"
+              animate="visible"
+              custom={heroDelay(0.32)}
               className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto pt-4 px-6 sm:px-0"
             >
               <button
@@ -398,7 +419,7 @@ export default function Home() {
                 Tìm hiểu thêm
               </Link>
             </motion.div>
-          </motion.div>
+          </div>
         </motion.div>
       </section>
 
