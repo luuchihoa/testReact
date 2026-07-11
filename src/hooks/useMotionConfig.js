@@ -1,22 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 
 export function useIsMobile() {
-  // Lazy initializer: chạy đồng bộ ngay lần render đầu, lấy đúng giá trị
-  // thật của viewport thay vì mặc định false rồi phải "sửa sai" ở effect
-  // sau đó -> loại bỏ hoàn toàn cú re-render gây race với animation.
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === "undefined") return false; // SSR-safe fallback
-    return window.matchMedia("(max-width: 767px)").matches;
-  });
-
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mql.matches);
     const handler = (e) => setIsMobile(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
   }, []);
-
   return isMobile;
 }
 
@@ -25,10 +18,7 @@ export function useMotionConfig() {
   const prefersReducedMotion = useReducedMotion();
   const reduced = prefersReducedMotion || isMobile;
 
-  // Memo hóa toàn bộ object trả về: chỉ tạo lại khi isMobile/reduced thực
-  // sự đổi (ví dụ người dùng xoay màn hình / resize qua breakpoint), không
-  // tạo mới mỗi lần component cha re-render vì lý do khác.
-  return useMemo(() => ({
+  return {
     isMobile,
     reduced,
     yOffset: reduced ? 8 : 28,
@@ -40,5 +30,5 @@ export function useMotionConfig() {
       once: true,
       margin: isMobile ? "0px" : margin,
     }),
-  }), [isMobile, reduced]);
+  };
 }
