@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Sparkles, Flame, GraduationCap, ArrowRight, Heart, Star, Globe } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -90,15 +90,23 @@ const Sections = [
 ];
 
 /* ─── Hook phát hiện Mobile ──────────────────────────────────── */
+// Khởi tạo state ngay bằng giá trị matchMedia thực tế (lazy init) thay vì
+// luôn bắt đầu bằng `false` rồi sửa lại trong useEffect — tránh việc toàn bộ
+// cây component phải re-render/đổi animation config ngay sau khi mount,
+// vốn là nguyên nhân chính gây cảm giác giật trên mobile.
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 767px)").matches;
+  });
+
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mql.matches);
     const handler = (e) => setIsMobile(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
   }, []);
+
   return isMobile;
 }
 
@@ -130,7 +138,7 @@ function WideCard({ section, isMobile }) {
   const Icon = section.icon;
   return (
     <Link to={section.path} className="group block h-full outline-none">
-      <div className={`relative h-full bg-white dark:bg-stone-900/60 backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col sm:flex-row active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
+      <div className={`relative h-full bg-white dark:bg-stone-900/95 md:dark:bg-stone-900/60 md:backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col sm:flex-row active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
         {/* Ghost numeral */}
         <span
           aria-hidden="true"
@@ -169,6 +177,8 @@ function WideCard({ section, isMobile }) {
             <img
               src={section.img}
               alt={section.title}
+              loading="eager"
+              fetchpriority="high"
               className={`max-h-full max-w-full object-contain filter drop-shadow-sm dark:brightness-90 transition-transform duration-500 ease-out ${!isMobile ? "md:group-hover:scale-105" : ""}`}
             />
           </div>
@@ -185,7 +195,7 @@ function NarrowCard({ section, isMobile }) {
   const Icon = section.icon;
   return (
     <Link to={section.path} className="group block h-full outline-none">
-      <div className={`relative h-full bg-white dark:bg-stone-900/60 backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
+      <div className={`relative h-full bg-white dark:bg-stone-900/95 md:dark:bg-stone-900/60 md:backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
         {/* Ghost numeral */}
         <span
           aria-hidden="true"
@@ -199,6 +209,8 @@ function NarrowCard({ section, isMobile }) {
           <img
             src={section.img}
             alt={section.title}
+            loading="lazy"
+            decoding="async"
             className={`h-full w-full object-contain p-5 filter drop-shadow-sm dark:brightness-90 transition-transform duration-500 ease-out ${!isMobile ? "md:group-hover:scale-105" : ""}`}
           />
         </div>
@@ -237,8 +249,21 @@ export default function Home() {
   const heroRef = useRef(null);
   const [heroHeight, setHeroHeight] = useState(600);
 
-  useEffect(() => {
-    if (heroRef.current) setHeroHeight(heroRef.current.offsetHeight);
+  // Đo chiều cao hero TRƯỚC khi trình duyệt paint (useLayoutEffect) thay vì
+  // sau khi paint (useEffect), để tránh giá trị mặc định 600 "nhảy" sang giá
+  // trị thật ngay trước mắt người dùng — đây là nguồn gây giật ở đầu trang.
+  useLayoutEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    setHeroHeight(el.offsetHeight);
+
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const h = entries[0]?.contentRect?.height;
+      if (h) setHeroHeight(h);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const { scrollY } = useScroll();
@@ -247,10 +272,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300">
-      {/* Noise overlay */}
+      {/* Noise overlay — bộ lọc feTurbulence rất tốn GPU để rasterize/composite
+          lại trên di động, đặc biệt vì layer này "fixed" và luôn nằm trên cùng.
+          Chỉ bật ở desktop (md:block), ẩn hoàn toàn trên mobile để cuộn mượt hơn. */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-50 opacity-[0.03] dark:opacity-[0.04]"
+        className="hidden md:block fixed inset-0 pointer-events-none z-50 opacity-[0.03] dark:opacity-[0.04]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           willChange: "transform",
