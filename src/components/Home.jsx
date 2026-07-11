@@ -285,28 +285,30 @@ export default function Home() {
   const heroDelay = (d) => (isMobile ? d * 0.6 : d);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300">
-      {/* Noise overlay — bộ lọc feTurbulence rất tốn GPU để rasterize/composite
-          lại trên di động, đặc biệt vì layer này "fixed" và luôn nằm trên cùng.
-          Chỉ bật ở desktop (md:block), ẩn hoàn toàn trên mobile để cuộn mượt hơn. */}
-      <div
-        aria-hidden="true"
-        className="hidden md:block fixed inset-0 pointer-events-none z-50 opacity-[0.03] dark:opacity-[0.04]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          willChange: "transform",
-          contain: "strict",
-        }}
-      />
+    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300 relative">
+      {/* Nền lưới kiểu Apple — thay cho noise feTurbulence cũ.
+          Đây chỉ là 2 linear-gradient kẻ đường 1px lặp lại (rẻ để trình duyệt
+          tile) thay vì bộ lọc nhiễu ngẫu nhiên (tốn GPU per-pixel). Dùng
+          `absolute` (cuộn theo trang) thay vì `fixed`, và mask nằm ngay trên
+          cùng phần tử — không cần div lồng, không ép will-change, nên nhẹ hơn
+          hẳn ở cả mobile lẫn desktop. */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
       
       {/* ── HERO ── */}
       <section
         ref={heroRef}
         className="relative pt-24 pb-20 sm:pt-36 sm:pb-32 overflow-hidden"
       >
-        {/* Ambient glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent dark:from-amber-900/10 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent dark:from-orange-900/10 blur-[100px] -z-10 pointer-events-none" />
+        {/* Ambient glow — blur radius lớn (100–120px) khá tốn GPU trên mobile.
+            Dùng JS conditional để KHÔNG mount phần tử này trên mobile luôn,
+            thay vì render rồi ẩn bằng class — triệt để hơn, giống kỹ thuật
+            trong các trang mượt hơn (XuDoan, TuyenSinh). */}
+        {!isMobile && (
+          <>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent dark:from-amber-900/10 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent dark:from-orange-900/10 blur-[100px] -z-10 pointer-events-none" />
+          </>
+        )}
 
         <motion.div
           style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}

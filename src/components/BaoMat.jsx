@@ -68,13 +68,19 @@ export default function BaoMat() {
       {/* 1. Ambient Glow (Giữ nguyên) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-blue-500/10 dark:bg-blue-500/15 blur-[100px] rounded-full pointer-events-none" />
       
-      {/* 2. Lưới Dot Matrix mờ dần theo chiều dọc */}
+      {/* 2. Lưới Dot Matrix mờ dần theo chiều dọc
+          Trước đây dùng `inset-0` khiến lớp này kéo dài theo TOÀN BỘ chiều cao
+          trang (kể cả phần đã bị mask làm trong suốt từ 40% trở xuống) — với
+          trang dài (nhiều section), trình duyệt vẫn phải rasterize + tạo
+          compositing layer (do có mask-image) cho cả vùng vô hình đó, lãng phí
+          paint ngay lúc tải. Giới hạn chiều cao chỉ đủ vùng thực sự hiển thị
+          giúp giảm đáng kể vùng cần vẽ trên di động. */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute top-0 inset-x-0 h-[70vh] max-h-[820px] pointer-events-none"
         style={{
-          // Lưới hiện rõ 100% từ top xuống 40%, sau đó mờ dần đến 100% (đáy trang)
-          maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)"
+          // Lưới hiện rõ 100% từ top xuống ~55% của vùng giới hạn, sau đó mờ dần
+          maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)"
         }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(#80808045_1px,transparent_1px)] bg-[size:20px_20px] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)]" />
@@ -111,7 +117,7 @@ export default function BaoMat() {
                 className="group bg-white dark:bg-[#121214] rounded-2xl border border-stone-200/60 dark:border-stone-800/80 p-4 sm:p-6 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-300 text-left flex gap-3.5 sm:gap-4 items-start"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-stone-50 dark:bg-stone-800 border border-stone-200/40 dark:border-stone-700/40 flex-shrink-0 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform duration-300">
-                  <Icon className="w-4.5 h-4.5" />
+                  <Icon className="w-[18px] h-[18px]" />
                 </div>
                 
                 <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0 pt-0.5">
