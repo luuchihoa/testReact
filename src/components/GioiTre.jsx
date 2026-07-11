@@ -1,13 +1,13 @@
-import React, { useRef } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
 import {
   Users, Music, HandHeart, Globe, Mic2,
-  Clock, CalendarDays, ArrowRight, ChevronLeft,
-  Flame, BookOpen, MapPin,
+  Flame, BookOpen, MapPin, Clock, CalendarDays,
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useLenis } from "lenis/react";
-import { useMotionConfig } from "../hooks/useMotionConfig.js";
+import { motion } from "framer-motion";
+import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import HeroSection from "./khoi/HeroSection.jsx";
+import OverviewCards from "./khoi/OverviewCards.jsx";
+import CtaSection from "./khoi/CtaSection.jsx";
 
 /* ── Dữ liệu ── */
 const OVERVIEW = [
@@ -17,7 +17,8 @@ const OVERVIEW = [
   { icon: MapPin,       label: "Địa điểm",    value: "Nhà giáo lý An Ngãi" },
 ];
 
-/* ── 4 trụ cột sinh hoạt ── */
+// 4 trụ cột sinh hoạt — đặc thù khối này (mỗi trụ cột có danh sách hoạt động riêng),
+// giữ nguyên inline vì phức tạp hơn HighlightsGrid dùng chung (chỉ nhận title + desc).
 const PILLARS = [
   {
     icon: Flame,
@@ -77,7 +78,7 @@ const PILLARS = [
   },
 ];
 
-/* ── Sự kiện thường niên ── */
+// Sự kiện thường niên — đặc thù khối này, giữ nguyên inline
 const EVENTS = [
   { month: "Th.1",  name: "Gặp gỡ đầu năm & Dâng năm mới",          tag: "Cộng đoàn" },
   { month: "Th.2",  name: "Mùa Chay — Tĩnh tâm 24 giờ",             tag: "Linh đạo" },
@@ -89,7 +90,7 @@ const EVENTS = [
   { month: "Th.12", name: "Vọng Giáng Sinh & Gala cuối năm",          tag: "Cộng đoàn" },
 ];
 
-/* ── Ban điều hành ── */
+// Ban điều hành — đặc thù khối này, giữ nguyên inline
 const ROLES = [
   { role: "Trưởng nhóm",         desc: "Điều phối chung, đại diện nhóm với giáo xứ." },
   { role: "Phó nhóm Linh đạo",   desc: "Tổ chức cầu nguyện, tĩnh tâm và sinh hoạt đức tin." },
@@ -108,6 +109,40 @@ const TAG_COLORS = {
   "Nhóm":      "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
 };
 
+// Kênh kết nối — đặc thù khối này, giữ nguyên inline
+const CHANNELS = [
+  {
+    icon: "instagram",
+    title: "Instagram",
+    desc: "Ảnh sinh hoạt, câu chuyện đức tin và khoảnh khắc cộng đoàn.",
+    link: "#",
+    label: "@giantreanngai",
+    bg: "bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-500/10 dark:to-purple-500/10",
+    border: "border-pink-200/50 dark:border-pink-500/20",
+    textHover: "text-pink-600 dark:text-pink-400",
+  },
+  {
+    icon: Globe,
+    title: "Website",
+    desc: "Bản tin, bài chia sẻ và lịch sinh hoạt cập nhật hàng tháng.",
+    link: "#",
+    label: "giantreanngai.com",
+    bg: "bg-sky-50 dark:bg-sky-500/10",
+    border: "border-sky-200/50 dark:border-sky-500/20",
+    textHover: "text-sky-600 dark:text-sky-400",
+  },
+  {
+    icon: Music,
+    title: "Podcast",
+    desc: "Câu chuyện đức tin của các bạn trẻ — mỗi tuần 1 tập.",
+    link: "#",
+    label: "Spotify / Apple Podcasts",
+    bg: "bg-green-50 dark:bg-green-500/10",
+    border: "border-green-200/50 dark:border-green-500/20",
+    textHover: "text-green-600 dark:text-green-400",
+  },
+];
+
 function InstagramIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -118,180 +153,48 @@ function InstagramIcon() {
   );
 }
 
-/* ═══════════════════════════════════════════ */
 export default function GioiTre() {
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const mc = useMotionConfig();
-  const heroY = useTransform(scrollY, [0, 500], mc.heroParallax);
-  const lenis = useLenis();
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1, y: 0,
-      transition: { duration: mc.duration(0.6), ease: [0.16, 1, 0.3, 1], delay: mc.delay(d) },
-    }),
-  };
-  const staggerContainer = { hidden: {}, visible: { transition: { staggerChildren: mc.stagger } } };
-  const vp = mc.vp();
+  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#000000] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-sky-200 selection:text-sky-900 transition-colors duration-500 relative">
-      
-      {/* Apple Premium Grid Background Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+    <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#000000] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-sky-200 selection:text-sky-900 transition-colors duration-500">
 
-      {/* ══ HERO ══ */}
-      <section
-        ref={heroRef}
-        className="relative overflow-hidden pt-12 pb-16 md:pt-24 md:pb-28 border-b border-stone-200/50 dark:border-stone-800/50"
-      >
-        {!mc.isMobile && (
-          <>
-            <div className="absolute top-0 left-0 w-[500px] h-[400px] bg-sky-400/10 dark:bg-sky-500/10 blur-[120px] rounded-full -z-10 -translate-x-1/4" />
-            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-blue-500/10 dark:bg-blue-500/10 blur-[100px] rounded-full -z-10" />
-          </>
-        )}
+      <HeroSection
+        heroRef={heroRef}
+        heroY={heroY}
+        fadeUp={fadeUp}
+        lenis={lenis}
+        sectionBgClass="bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-950 dark:via-[#000000]"
+        glowClass="bg-sky-500/10 dark:bg-sky-500/10"
+        eyebrowIcon={Users}
+        eyebrowLabel="Giới Trẻ Công Giáo"
+        eyebrowClass="bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+        titleLine1="Trẻ trung, dấn thân"
+        titleLine2="sống đức tin"
+        titleGradientClass="bg-gradient-to-r from-sky-600 to-blue-800 dark:from-sky-400 dark:to-blue-500"
+        description="Sau khi hoàn thành hành trình giáo lý, Giới Trẻ Công Giáo là nơi các bạn tiếp tục lớn lên — cùng nhau cầu nguyện, học hỏi, phục vụ và trở thành nhân chứng Tin Mừng sống động."
+        primaryCtaLabel="Khám phá nhóm"
+        primaryCtaTargetId="sinh-hoat"
+        secondaryCtaLabel="Tham gia ngay"
+        secondaryCtaTo="/liên-hệ"
+        image={{ src: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ", alt: "Giới Trẻ Công Giáo" }}
+        imageGlowClass="bg-gradient-to-tr from-sky-500/10 to-blue-500/10"
+        floatBadge={{ label: "Sau Khối Vào Đời", sub: "Giai đoạn trưởng thành", dotClass: "bg-sky-500" }}
+      />
 
-        <motion.div style={{ y: heroY }} className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: mc.isMobile ? -8 : -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: mc.duration(0.5) }}
-          >
-            <Link to="/" className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white mb-8 transition-colors bg-white/50 dark:bg-stone-900/50 px-3 py-1.5 rounded-full backdrop-blur-md border border-stone-200/50 dark:border-stone-800/50">
-              <ChevronLeft className="w-4 h-4" /> Về trang chủ
-            </Link>
-          </motion.div>
+      <OverviewCards items={OVERVIEW} />
 
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16"
-          >
-            {/* Left */}
-            <div className="flex-1">
-              <motion.div variants={fadeUp} custom={0}>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-widest mb-4 border border-sky-200/50 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 shadow-sm">
-                  <Users className="w-3.5 h-3.5" /> Giới Trẻ Công Giáo
-                </span>
-              </motion.div>
-
-              <motion.h1
-                variants={fadeUp}
-                custom={0.05}
-                className="text-4xl sm:text-5xl md:text-6xl font-serif font-black tracking-tight text-stone-900 dark:text-white leading-[1.1] mb-5"
-              >
-                Trẻ trung, dấn thân
-                <br />
-                <span className="bg-gradient-to-r from-sky-600 to-blue-800 dark:from-sky-400 dark:to-blue-500 bg-clip-text text-transparent">
-                  sống đức tin
-                </span>
-              </motion.h1>
-
-              <motion.p
-                variants={fadeUp}
-                custom={0.1}
-                className="text-sm sm:text-base md:text-lg text-stone-500 dark:text-stone-400 leading-relaxed max-w-lg mb-8 font-medium"
-              >
-                Sau khi hoàn thành hành trình giáo lý, Giới Trẻ Công Giáo là nơi các bạn tiếp tục lớn lên — cùng nhau cầu nguyện, học hỏi, phục vụ và trở thành nhân chứng Tin Mừng sống động.
-              </motion.p>
-
-              <motion.div variants={fadeUp} custom={0.15} className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => {
-                    const t = document.getElementById("sinh-hoat");
-                    if (!t) return;
-                    lenis
-                      ? lenis.scrollTo(t, { duration: mc.isMobile ? 0.8 : 1.2 })
-                      : t.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 shadow-[0_4px_20px_rgba(2,132,199,0.3)] dark:shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
-                >
-                  Khám phá nhóm <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link
-                  to="/liên-hệ"
-                  className="inline-flex items-center justify-center h-12 px-6 rounded-2xl text-sm font-semibold border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
-                >
-                  Tham gia ngay
-                </Link>
-              </motion.div>
-            </div>
-
-            {/* Right — Image Card Bento Style */}
-            <motion.div variants={fadeUp} custom={0.2} className="flex-shrink-0 w-full md:w-[320px]">
-              <div className="relative rounded-3xl overflow-hidden aspect-square w-full max-w-[280px] md:max-w-full mx-auto bg-gradient-to-br from-sky-100 to-blue-50 dark:from-sky-900/40 dark:to-blue-900/20 border border-white/50 dark:border-stone-800/50 shadow-xl dark:shadow-2xl">
-                <img
-                  src="https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ"
-                  alt="Giới Trẻ Công Giáo"
-                  className="w-full h-full object-contain p-8 mix-blend-multiply dark:mix-blend-normal dark:opacity-90"
-                  loading={mc.isMobile ? "lazy" : "eager"}
-                />
-                {/* Floating Glassy Stats */}
-                <div className="absolute bottom-4 left-4 right-4 bg-white/70 dark:bg-stone-900/70 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm border border-white/40 dark:border-stone-700/50">
-                  <div className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] sm:text-xs font-bold text-stone-900 dark:text-white">Sau Khối Vào Đời</p>
-                    <p className="text-[10px] font-medium text-stone-500 dark:text-stone-400">Giai đoạn trưởng thành</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* ══ TỔNG QUAN (Bento Row) ══ */}
-      <section className="py-10 sm:py-14 bg-white dark:bg-[#000000] border-b border-stone-200/50 dark:border-stone-800/50 relative z-10">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {OVERVIEW.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp}
-                transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.08) }}
-                className="flex flex-col gap-3 p-4 rounded-2xl bg-stone-50 dark:bg-stone-900/50 border border-stone-100 dark:border-stone-800/80"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-100/50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">{item.label}</p>
-                  <p className="text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200 leading-snug">{item.value}</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ══ 4 TRỤ CỘT SINH HOẠT ══ */}
-      <section id="sinh-hoat" className="py-16 sm:py-24 max-w-5xl mx-auto px-5 sm:px-6 scroll-mt-16">
-        <motion.div
-          initial={{ opacity: 0, y: mc.yOffset }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp}
-          transition={{ duration: mc.duration(0.7) }}
-          className="mb-10 sm:mb-14"
-        >
-          <p className="text-[11px] font-bold tracking-widest uppercase mb-3 text-sky-600 dark:text-sky-400">Sinh hoạt</p>
-          <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900 dark:text-white leading-tight">
-            Bốn trụ cột của<br />Giới Trẻ Công Giáo
-          </h2>
-          <p className="mt-4 text-stone-500 dark:text-stone-400 max-w-lg text-sm leading-relaxed font-medium">
+      {/* 4 TRỤ CỘT SINH HOẠT — đặc thù khối này, giữ nguyên vì phức tạp hơn HighlightsGrid dùng chung */}
+      <section id="sinh-hoat" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-20">
+        <div className="max-w-2xl text-left space-y-3 mb-16">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400">Sinh hoạt</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Bốn trụ cột của Giới Trẻ Công Giáo</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
             Mỗi buổi sinh hoạt đan xen cả bốn chiều kích — không chỉ nghe giảng, mà còn chia sẻ, phục vụ và kết nối với cộng đoàn rộng lớn.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
             return (
@@ -322,24 +225,16 @@ export default function GioiTre() {
         </div>
       </section>
 
-      {/* ══ SỰ KIỆN THƯỜNG NIÊN ══ */}
-      <section className="py-16 sm:py-24 border-y border-stone-200/50 dark:border-stone-800/50 bg-stone-50 dark:bg-stone-950/50">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: mc.yOffset }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp}
-            transition={{ duration: mc.duration(0.7) }}
-            className="mb-10 sm:mb-14"
-          >
-            <p className="text-[11px] font-bold tracking-widest uppercase mb-3 text-sky-600 dark:text-sky-400">Lịch trình năm</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900 dark:text-white">
-              Sự kiện thường niên
-            </h2>
-            <p className="mt-4 text-stone-500 dark:text-stone-400 max-w-lg text-sm leading-relaxed font-medium">
+      {/* SỰ KIỆN THƯỜNG NIÊN — đặc thù khối này */}
+      <section className="py-24 border-y border-stone-200/50 dark:border-stone-800/50 bg-stone-50 dark:bg-stone-950/50 relative z-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="max-w-2xl text-left space-y-3 mb-16">
+            <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400">Lịch trình năm</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Sự kiện thường niên</h2>
+            <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
               Một năm trọn vẹn với những dấu ấn không thể quên — gắn với nhịp sống Phụng vụ và hành trình đức tin cộng đoàn.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {EVENTS.map((ev, i) => (
@@ -367,23 +262,15 @@ export default function GioiTre() {
         </div>
       </section>
 
-      {/* ══ BAN ĐIỀU HÀNH ══ */}
-      <section className="py-16 sm:py-24 max-w-5xl mx-auto px-5 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: mc.yOffset }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp}
-          transition={{ duration: mc.duration(0.7) }}
-          className="mb-10 sm:mb-14"
-        >
-          <p className="text-[11px] font-bold tracking-widest uppercase mb-3 text-sky-600 dark:text-sky-400">Cơ cấu tổ chức</p>
-          <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900 dark:text-white">
-            Ban điều hành nhóm
-          </h2>
-          <p className="mt-4 text-stone-500 dark:text-stone-400 max-w-lg text-sm leading-relaxed font-medium">
+      {/* BAN ĐIỀU HÀNH — đặc thù khối này */}
+      <section className="py-24 max-w-6xl mx-auto px-6 relative z-10">
+        <div className="max-w-2xl text-left space-y-3 mb-16">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400">Cơ cấu tổ chức</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Ban điều hành nhóm</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
             Nhóm do chính các thành viên điều hành theo nhiệm kỳ 1 năm — cơ hội rèn luyện kỹ năng lãnh đạo trong tinh thần phục vụ.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
           {ROLES.map((r, i) => (
@@ -405,10 +292,10 @@ export default function GioiTre() {
         </div>
       </section>
 
-      {/* ══ QUOTE BANNER (Glassmorphism Dark Variant) ══ */}
-      <section className="py-20 relative overflow-hidden bg-stone-900 dark:bg-[#0a0a0a]">
+      {/* QUOTE BANNER — đặc thù khối này, giữ dark glassmorphism riêng vì đối lập chủ ý với phần còn lại của trang */}
+      <section className="py-20 relative overflow-hidden bg-stone-900 dark:bg-[#0a0a0a] z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-sky-900/40 to-stone-900 dark:from-sky-900/20 dark:to-black z-0" />
-        <div className="max-w-3xl mx-auto px-5 sm:px-6 text-center relative z-10">
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: mc.yOffset }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -416,7 +303,7 @@ export default function GioiTre() {
             transition={{ duration: mc.duration(0.7) }}
           >
             <Mic2 className="w-8 h-8 mx-auto mb-6 text-sky-400/50" />
-            <blockquote className="text-white text-lg sm:text-xl md:text-2xl font-serif font-medium leading-relaxed italic mb-6 drop-shadow-md">
+            <blockquote className="text-white text-lg sm:text-xl md:text-2xl font-medium leading-relaxed italic mb-6 drop-shadow-md">
               "Đừng để ai coi thường anh vì anh còn trẻ, nhưng hãy nêu gương cho các tín hữu về lời nói, về cách ăn ở, về đức ái, đức tin và lòng trong sạch."
             </blockquote>
             <cite className="text-sky-200/70 text-xs sm:text-sm font-bold not-italic tracking-widest uppercase">
@@ -426,55 +313,16 @@ export default function GioiTre() {
         </div>
       </section>
 
-      {/* ══ KẾT NỐI ══ */}
-      <section className="py-16 sm:py-24 max-w-5xl mx-auto px-5 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: mc.yOffset }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp}
-          transition={{ duration: mc.duration(0.7) }}
-          className="mb-10 sm:mb-14"
-        >
-          <p className="text-[11px] font-bold tracking-widest uppercase mb-3 text-sky-600 dark:text-sky-400">Cộng đồng</p>
-          <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900 dark:text-white">
-            Theo dõi và kết nối
-          </h2>
-        </motion.div>
+      {/* KẾT NỐI — đặc thù khối này */}
+      <section className="py-24 max-w-6xl mx-auto px-6 relative z-10">
+        <div className="max-w-2xl text-left space-y-3 mb-16">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400">Cộng đồng</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Theo dõi và kết nối</h2>
+        </div>
 
         <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
-          {[
-            {
-              icon: InstagramIcon,
-              title: "Instagram",
-              desc: "Ảnh sinh hoạt, câu chuyện đức tin và khoảnh khắc cộng đoàn.",
-              link: "#",
-              label: "@giantreanngai",
-              bg: "bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-500/10 dark:to-purple-500/10",
-              border: "border-pink-200/50 dark:border-pink-500/20",
-              textHover: "text-pink-600 dark:text-pink-400"
-            },
-            {
-              icon: Globe,
-              title: "Website",
-              desc: "Bản tin, bài chia sẻ và lịch sinh hoạt cập nhật hàng tháng.",
-              link: "#",
-              label: "giantreanngai.com",
-              bg: "bg-sky-50 dark:bg-sky-500/10",
-              border: "border-sky-200/50 dark:border-sky-500/20",
-              textHover: "text-sky-600 dark:text-sky-400"
-            },
-            {
-              icon: Music,
-              title: "Podcast",
-              desc: "Câu chuyện đức tin của các bạn trẻ — mỗi tuần 1 tập.",
-              link: "#",
-              label: "Spotify / Apple Podcasts",
-              bg: "bg-green-50 dark:bg-green-500/10",
-              border: "border-green-200/50 dark:border-green-500/20",
-              textHover: "text-green-600 dark:text-green-400"
-            },
-          ].map((ch, i) => {
-            const Icon = ch.icon;
+          {CHANNELS.map((ch, i) => {
+            const Icon = ch.icon === "instagram" ? InstagramIcon : ch.icon;
             return (
               <motion.a
                 key={i}
@@ -484,7 +332,7 @@ export default function GioiTre() {
                 viewport={vp}
                 transition={{ duration: mc.duration(0.5), delay: mc.delay(i * 0.1) }}
                 whileHover={mc.isMobile ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                className={`group rounded-3xl border p-6 flex flex-col gap-4 hover:shadow-lg dark:hover:shadow-none dark:hover:bg-opacity-80 transition-all active:scale-[0.98] bg-white dark:bg-stone-900 ${ch.border}`}
+                className={`group rounded-3xl border p-6 flex flex-col gap-4 hover:shadow-lg dark:hover:shadow-none transition-all active:scale-[0.98] bg-white dark:bg-stone-900 ${ch.border}`}
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${ch.bg} border ${ch.border}`}>
                   <Icon className={`w-6 h-6 text-stone-700 dark:text-stone-300 group-hover:${ch.textHover} transition-colors`} />
@@ -500,43 +348,20 @@ export default function GioiTre() {
         </div>
       </section>
 
-      {/* ══ CTA ══ */}
-      <section className="py-20 sm:py-28 max-w-2xl mx-auto px-5 sm:px-6 text-center border-t border-stone-200/50 dark:border-stone-800/50">
-        <motion.div
-          initial={{ opacity: 0, y: mc.yOffset }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp}
-          transition={{ duration: mc.duration(0.7) }}
-        >
-          <motion.div
-            animate={mc.reduced ? {} : { scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
-            className="w-16 h-16 rounded-full bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center mx-auto mb-6"
-          >
-            <Users className="w-8 h-8 text-sky-600 dark:text-sky-400" />
-          </motion.div>
-
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-stone-900 dark:text-white mb-4">
-            Bạn không cần đi một mình
-          </h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm sm:text-base leading-relaxed mb-8 max-w-md mx-auto font-medium">
-            Giới Trẻ Công Giáo luôn rộng cửa đón chào — hành trình trưởng thành và sống đạo sẽ đẹp hơn rất nhiều khi có bạn bè đồng hành.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              to="/liên-hệ"
-              className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-2xl text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 shadow-[0_4px_20px_rgba(2,132,199,0.3)] dark:shadow-[0_4px_20px_rgba(14,165,233,0.3)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              Tham gia nhóm <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/khối-vào-đời"
-              className="inline-flex items-center justify-center h-12 px-6 rounded-2xl text-sm font-semibold border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              Xem lại Khối Vào Đời
-            </Link>
-          </div>
-        </motion.div>
-      </section>
+      <CtaSection
+        icon={Users}
+        iconClass="text-sky-500"
+        title="Bạn không cần đi một mình"
+        description="Giới Trẻ Công Giáo luôn rộng cửa đón chào — hành trình trưởng thành và sống đạo sẽ đẹp hơn rất nhiều khi có bạn bè đồng hành."
+        primaryCtaLabel="Tham gia nhóm"
+        primaryCtaTo="/liên-hệ"
+        primaryCtaClass="bg-sky-600 hover:bg-sky-500 shadow-sky-600/10"
+        secondaryCtaLabel="Xem lại Khối Vào Đời"
+        secondaryCtaTo="/khối-vào-đời"
+        mc={mc}
+        vp={vp}
+        sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10 border-t border-stone-200/50 dark:border-stone-800/50"
+      />
     </div>
   );
 }

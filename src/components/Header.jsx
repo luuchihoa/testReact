@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "./ui/ToastContext.jsx";
 import { supabase } from "../lib/supabase.js";
 import {
-  LogIn, LogOut, ChevronDown,
+  LogIn, LogOut, ChevronDown, Church,
   BookOpen, Sparkles, Flame, Heart, Globe, Users,
   CalendarDays, FileText, Phone, Settings, ShieldCheck,
   ScrollText, User, Home, GraduationCap, Info, Menu, X,
@@ -13,13 +13,13 @@ import {
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
-  { path: "/khối-chiên-con",    label: "Chiên Con",  sub: "Mầm non – Lớp 2", icon: Heart,    accent: "#db2777", bg: "bg-pink-50 dark:bg-pink-500/10",     ring: "ring-pink-200 dark:ring-pink-500/30"     },
+  { path: "/khối-chiên-con",    label: "Chiên Con",  sub: "Lớp 1 – 2",       icon: Heart,    accent: "#db2777", bg: "bg-pink-50 dark:bg-pink-500/10",     ring: "ring-pink-200 dark:ring-pink-500/30"     },
   { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#65a30d", bg: "bg-lime-50 dark:bg-lime-500/10",     ring: "ring-lime-200 dark:ring-lime-500/30"     },
   { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Lớp 5 – 6",       icon: Flame,    accent: "#ca8a04", bg: "bg-yellow-50 dark:bg-yellow-500/10", ring: "ring-yellow-200 dark:ring-yellow-500/30" },
-  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",           icon: Sparkles, accent: "#ea580c", bg: "bg-orange-50 dark:bg-orange-500/10", ring: "ring-orange-200 dark:ring-orange-500/30" },
+  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",           icon: Church, accent: "#ea580c", bg: "bg-orange-50 dark:bg-orange-500/10", ring: "ring-orange-200 dark:ring-orange-500/30" },
   { path: "/khối-kinh-thánh",   label: "Kinh Thánh", sub: "Lớp 8 – 9",       icon: BookOpen, accent: "#dc2626", bg: "bg-red-50 dark:bg-red-500/10",       ring: "ring-red-200 dark:ring-red-500/30"       },
   { path: "/khối-vào-đời",      label: "Vào Đời",    sub: "Lớp 10 – 11",     icon: Globe,    accent: "#7c3a1e", bg: "bg-amber-50 dark:bg-amber-500/10",   ring: "ring-amber-200 dark:ring-amber-500/30"   },
-  { path: "/giới-trẻ-công-giáo", label: "Giới Trẻ", sub: "Giới trẻ Xứ Đoàn", icon: Users,    accent: "#2563eb", bg: "bg-blue-50 dark:bg-blue-500/10",     ring: "ring-blue-200 dark:ring-blue-500/30"     }
+  // { path: "/giới-trẻ-công-giáo", label: "Giới Trẻ", sub: "Giới trẻ Xứ Đoàn", icon: Users,    accent: "#2563eb", bg: "bg-blue-50 dark:bg-blue-500/10",     ring: "ring-blue-200 dark:ring-blue-500/30"     }
 ];
 
 const COMMUNITY_ITEMS = [
@@ -364,29 +364,59 @@ function KhoiSheet({ open, onClose, navigate }) {
     <AnimatePresence>
       {open && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-black/30 dark:bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
-          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-white dark:bg-stone-900 rounded-t-3xl overflow-hidden shadow-2xl dark:shadow-black/50 min-h-[70vh] max-h-[88vh] overflow-y-auto flex flex-col"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          {/* Backdrop mờ chuẩn iOS */}
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[60] bg-black/30 dark:bg-black/60 backdrop-blur-md" 
+            onClick={onClose} 
+          />
+          
+          <motion.div 
+  initial={{ y: "100%" }} 
+  animate={{ y: 0 }} 
+  exit={{ y: "100%" }} 
+  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+  className="fixed bottom-0 left-0 right-0 z-[70] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col max-h-[85vh]"
+  style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+>
+  {/* Grabber Area */}
+  <div className="flex justify-center pt-3.5 pb-5 touch-none flex-shrink-0">
+    <div className="w-10 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600" />
+  </div>
+
+  {/* Grid Content - Không còn label, tập trung vào các khối */}
+  <div className="overflow-y-auto overscroll-contain flex-1 px-2 pb-8">
+    <div className="grid grid-cols-2 gap-3.5">
+      {KHOI_ITEMS.map((k) => {
+        const Icon = k.icon;
+        return (
+          <button 
+            key={k.path} 
+            type="button" 
+            onClick={() => { navigate(k.path); onClose(); }} 
+            className="flex items-center gap-3.5 p-4 rounded-[22px] bg-stone-50 dark:bg-stone-800/40 border border-black/[0.03] dark:border-white/[0.05] active:bg-stone-100 dark:active:bg-stone-800 active:scale-[0.98] transition-all text-left group"
           >
-            <div className="flex justify-center pt-3 pb-2 flex-shrink-0"><div className="w-10 h-1 rounded-full bg-stone-200 dark:bg-stone-700" /></div>
-            <p className="text-[12px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-3 px-5 flex-shrink-0">Chọn chương trình học</p>
-            <div className="grid grid-cols-2 gap-px bg-stone-100 dark:bg-stone-800 flex-1">
-              {KHOI_ITEMS.map((k) => {
-                const Icon = k.icon;
-                return (
-                  <button key={k.path} type="button" onClick={() => { navigate(k.path); onClose(); }} className="flex items-center gap-3.5 px-4 py-6 bg-white dark:bg-stone-900 active:bg-stone-50 dark:active:bg-stone-800/70 text-left">
-                    <div className={`w-12 h-12 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}><Icon className="w-5 h-5" style={{ color: k.accent }} /></div>
-                    <div>
-                      <p className="text-[15px] font-semibold text-stone-800 dark:text-stone-100 leading-snug">{k.label}</p>
-                      <p className="text-[12px] text-stone-400 dark:text-stone-500 mt-0.5">{k.sub}</p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className={`w-11 h-11 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+              <Icon className="w-[22px] h-[22px]" style={{ color: k.accent }} />
             </div>
-            <div className="h-6 flex-shrink-0" />
-          </motion.div>
+            
+            <div className="flex-1 min-w-0"> {/* Thêm min-w-0 để ép div không bị phình ra ngoài */}
+              <p className="text-[16px] font-bold text-stone-900 dark:text-stone-100 leading-tight truncate">
+                {k.label}
+              </p>
+              <p className="text-[12px] text-stone-500 dark:text-stone-400 mt-0.5 leading-snug line-clamp-1">
+                {k.sub}
+              </p>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+</motion.div>
         </>
       )}
     </AnimatePresence>

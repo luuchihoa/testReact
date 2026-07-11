@@ -45,7 +45,7 @@ export default function HeroSection({
           <div className="md:col-span-7 space-y-6 text-left">
             <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${eyebrowClass}`}>
-                {EyebrowIcon && <EyebrowIcon className="w-3 h-3 fill-current" />} {eyebrowLabel}
+                {EyebrowIcon && <EyebrowIcon className="w-3 h-3" />} {eyebrowLabel}
               </span>
             </motion.div>
 
@@ -70,13 +70,13 @@ export default function HeroSection({
               <button
                 type="button"
                 onClick={handlePrimaryCta}
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-xs font-bold text-white shadow-lg bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white active:scale-[0.98] transition-all duration-200"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full text-md font-bold text-white shadow-lg bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white active:scale-[0.98] transition-all duration-200"
               >
                 {primaryCtaLabel} <ArrowRight className="w-4 h-4" />
               </button>
               <Link
                 to={secondaryCtaTo}
-                className="inline-flex items-center justify-center h-12 px-6 rounded-full text-xs font-bold border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/60 shadow-sm active:scale-[0.98] transition-all duration-200"
+                className="inline-flex items-center justify-center h-14 px-6 rounded-full text-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/60 shadow-sm active:scale-[0.98] transition-all duration-200"
               >
                 {secondaryCtaLabel}
               </Link>

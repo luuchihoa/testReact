@@ -1,9 +1,11 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Flame, Wind, Shield, Users, BookOpen, Clock, CalendarDays, ArrowRight, Lightbulb, Star } from "lucide-react";
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValue } from "framer-motion";
-import { useLenis } from "lenis/react";
-import { useMotionConfig } from "../hooks/useMotionConfig.js";
+import React, { useState, useEffect } from "react";
+import { Flame, Wind, Shield, Users, BookOpen, Clock, CalendarDays, Lightbulb, Star } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import HeroSection from "./khoi/HeroSection.jsx";
+import OverviewCards from "./khoi/OverviewCards.jsx";
+import HighlightsGrid from "./khoi/HighlightsGrid.jsx";
+import CtaSection from "./khoi/CtaSection.jsx";
 
 const OVERVIEW = [
   { icon: Users,        label: "Độ tuổi",    value: "Lớp 5 – Lớp 6" },
@@ -108,26 +110,25 @@ const HIGHLIGHTS = [
   { icon: Shield,   title: "Dự án phục vụ",      desc: "Mỗi em thực hiện 1 dự án phục vụ cộng đoàn như một bằng chứng sống của đức tin trưởng thành." },
 ];
 
+// Ngưỡng breakpoint md của Tailwind — dùng để đồng bộ giữa CSS và JS logic (drag/animation)
+const MOBILE_BREAKPOINT = 768;
+
 export default function KhoiThemSuc() {
   const [selectedGift, setSelectedGift] = useState(null);
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const lenis = useLenis();
+  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
   const giftSheetY = useMotionValue(0);
 
-  const systemConfig = useMotionConfig();
-  const mc = systemConfig || {
-    yOffset: 30,
-    duration: (d) => d || 0.6,
-    delay: (d) => d || 0,
-    stagger: 0.08,
-    isMobile: false,
-    reduced: false,
-    vp: () => ({ once: true, margin: "-12% 0px" }),
-    heroParallax: [0, -60]
-  };
+  // Theo dõi viewport bằng state thay vì đọc window.innerWidth trực tiếp trong JSX:
+  // tránh crash khi SSR và đảm bảo re-render đúng khi resize/xoay màn hình.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
+  );
 
-  const heroY = useTransform(scrollY, [0, 600], mc.heroParallax || [0, -60]);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleGiftDragEnd = (event, info) => {
     if (info.offset.y > 100 || info.velocity.y > 500) {
@@ -140,112 +141,62 @@ export default function KhoiThemSuc() {
   useEffect(() => {
     if (selectedGift) {
       giftSheetY.set(0);
-      if (window.innerWidth < 768) document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      lenis?.stop();
     } else {
       document.body.style.overflow = "";
+      lenis?.start();
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => { 
+      document.body.style.overflow = "";
+      lenis?.start();
+    };
   }, [selectedGift, giftSheetY]);
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 90, damping: 15, mass: 0.8, delay: mc.delay(d) }
-    }),
-  };
-
-  const vp = mc.vp();
+  // Đóng modal bằng phím Escape — cải thiện accessibility cho bottom sheet
+  useEffect(() => {
+    if (!selectedGift) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedGift(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedGift]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#09090b] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-yellow-500/20 dark:selection:bg-yellow-500/30 transition-colors duration-500">
-      
-      {/* HERO SECTION */}
-      <section ref={heroRef} className="relative overflow-hidden pt-12 pb-20 md:pt-32 md:pb-32 bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#09090b]">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        <motion.div style={{ y: heroY }} className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-12 gap-12 lg:gap-16 items-center">
-            <div className="md:col-span-7 space-y-6 text-left">
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300">
-                  <Flame className="w-3 h-3 fill-current" /> Khối Thêm Sức
-                </span>
-              </motion.div>
-              
-              <motion.h1 variants={fadeUp} initial="hidden" animate="visible" custom={0.06} className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-tight leading-[1.08]">
-                Nhận lãnh ngọn lửa<br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-700 dark:from-yellow-300 dark:via-yellow-400 dark:to-amber-400">
-                  Chúa Thánh Thần
-                </span>
-              </motion.h1>
+      <HeroSection
+        heroRef={heroRef}
+        heroY={heroY}
+        fadeUp={fadeUp}
+        lenis={lenis}
+        sectionBgClass="bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#09090b]"
+        glowClass="bg-yellow-500/5 dark:bg-yellow-500/10"
+        eyebrowIcon={Flame}
+        eyebrowLabel="Khối Thêm Sức"
+        eyebrowClass="bg-yellow-500/10 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300 border border-yellow-500/20 dark:border-yellow-500/30 shadow-sm"
+        titleLine1="Nhận lãnh ngọn lửa"
+        titleLine2="Chúa Thánh Thần"
+        titleGradientClass="bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-700 dark:from-yellow-300 dark:via-yellow-400 dark:to-amber-400"
+        description="Bí tích Thêm Sức là dấu ấn trưởng thành trong đức tin — khi Chúa Thánh Thần đổ đầy 7 ơn thiêng liêng để các em trở thành những chứng nhân dũng cảm của Tin Mừng."
+        primaryCtaLabel="Xem chương trình học"
+        primaryCtaTargetId="bay-on"
+        secondaryCtaLabel="Đăng ký Nhập Học"
+        secondaryCtaTo="/tuyển-sinh#dang-ky"
+        image={{ src: "/images/khoithemsuc.avif", alt: "Khối Thêm Sức" }}
+        imageGlowClass="bg-gradient-to-tr from-yellow-500/5 to-amber-500/5"
+        floatBadge={{ label: "Lớp 5 – 6", sub: "Ngọn lửa chứng nhân", dotClass: "bg-yellow-500" }}
+      />
 
-              <motion.p variants={fadeUp} initial="hidden" animate="visible" custom={0.12} className="text-base sm:text-lg text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl font-normal">
-                Bí tích Thêm Sức là dấu ấn trưởng thành trong đức tin — khi Chúa Thánh Thần đổ đầy 7 ơn thiêng liêng để các em trở thành những chứng nhân dũng cảm của Tin Mừng.
-              </motion.p>
+      <OverviewCards items={OVERVIEW} />
 
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0.18} className="flex flex-wrap gap-4 pt-4">
-                <button
-                  onClick={() => {
-                    const target = document.getElementById("bay-on");
-                    if (!target) return;
-                    lenis ? lenis.scrollTo(target, { duration: 1 }) : target.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-xs font-bold text-white shadow-lg bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white active:scale-[0.98] transition-all duration-200"
-                >
-                  Khám phá chương trình <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link to="/tuyển-sinh#dang-ky"
-                  className="inline-flex items-center justify-center h-12 px-6 rounded-full text-xs font-bold border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/60 shadow-sm active:scale-[0.98] transition-all duration-200">
-                  Đăng ký Nhập Học
-                </Link>
-              </motion.div>
-            </div>
-
-            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0.24} className="md:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-[340px] aspect-square rounded-[2.5rem] bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 p-8 shadow-xl dark:shadow-black/40 flex items-center justify-center group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/5 to-amber-500/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <img src="/images/khoithemsuc.avif" alt="Khối Thêm Sức" className="w-full h-full object-contain transform group-hover:scale-[1.02] transition-transform duration-500" loading="eager" />
-                
-                <div className="absolute -bottom-4 right-6 bg-white/90 dark:bg-stone-800/90 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 border border-stone-200/80 dark:border-stone-700/80 shadow-md">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-                  <div>
-                    <p className="text-xs font-bold tracking-tight">Lớp 5 – 6</p>
-                    <p className="text-[10px] text-stone-500 dark:text-stone-400 font-medium">Ngọn lửa chứng nhân</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* OVERVIEW CARDS */}
-      <section className="py-8 bg-white/60 dark:bg-stone-900/40 backdrop-blur-md border-y border-stone-200/50 dark:border-stone-800/50 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-6 scrollbar-none snap-x snap-mandatory -mx-6 px-6 md:mx-0 md:px-0">
-            {OVERVIEW.map((item, i) => { const Icon = item.icon; return (
-              <div key={i} className="flex-shrink-0 w-[240px] md:w-auto snap-center bg-stone-50 dark:bg-stone-900/60 md:bg-transparent md:dark:bg-transparent p-4 md:p-0 rounded-2xl border border-stone-200/40 dark:border-stone-800/40 md:border-none flex items-center gap-4 transition-all">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-white dark:bg-stone-800 shadow-sm border border-stone-200/40 dark:border-stone-700/40 flex-shrink-0">
-                  <Icon className="w-4 h-4 text-stone-700 dark:text-stone-300" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500">{item.label}</p>
-                  <p className="text-sm font-bold text-stone-800 dark:text-stone-200 mt-0.5 truncate">{item.value}</p>
-                </div>
-              </div>
-            ); })}
-          </div>
-        </div>
-      </section>
-
-      {/* GIFTS BENTO GRID */}
-      <section id="bay-on" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12">
+      {/* GIFTS BENTO GRID — đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
+      <section id="bay-on" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-20">
         <div className="max-w-2xl text-left space-y-3 mb-16">
           <p className="text-[11px] font-bold tracking-widest uppercase text-yellow-600 dark:text-yellow-400">Trọng tâm Đào tạo</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Bảy Ơn Chúa Thánh Thần</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Bảy Ơn Chúa Thánh Thần</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
             Mỗi ơn ban thiêng liêng được chuyển hóa qua các dụ ngôn Kinh Thánh, liên hệ trực quan giúp các em vững vàng áp dụng vào môi trường học đường và cuộc sống.
           </p>
         </div>
@@ -259,6 +210,9 @@ export default function KhoiThemSuc() {
               viewport={vp}
               transition={{ duration: 0.5, delay: i * 0.05 }}
               onClick={() => setSelectedGift(gift)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedGift(gift); }}
               className={`group text-left rounded-[1.75rem] border p-6 flex flex-col justify-between min-h-[190px] cursor-pointer transition-all duration-300 bg-white dark:bg-stone-900 hover:shadow-xl hover:shadow-stone-200/30 dark:hover:shadow-none ${gift.color}`}
             >
               <div>
@@ -298,7 +252,6 @@ export default function KhoiThemSuc() {
         <AnimatePresence>
           {selectedGift && (
             <>
-              {/* Backdrop Overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -307,51 +260,49 @@ export default function KhoiThemSuc() {
                 className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm z-50 pointer-events-auto"
               />
 
-              {/* Sheet Container */}
-              <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
+              <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center pb-16 md:p-4 pointer-events-none">
                 <motion.div
-                  drag={window.innerWidth < 768 ? "y" : false}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="khoi-gift-title"
+                  drag={isMobile ? "y" : false}
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0.1, bottom: 0.6 }}
                   onDragEnd={handleGiftDragEnd}
                   style={{ y: giftSheetY }}
-                  
-                  initial={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 30 }}
+                  initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 20 }}
+                  exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
                   transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
-                  
-                  className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
+                  className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[80vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Pull bar indicator for iOS Swipe */}
                   <div className="flex justify-center pt-3 pb-2 md:hidden touch-none">
                     <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
                   </div>
 
-                  {/* Header */}
                   <div className="flex items-start gap-4 p-6 pb-4 touch-none">
                     <div className="w-12 h-12 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center shadow-inner flex-shrink-0 text-xl select-none">
                       {selectedGift.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">Ơn {selectedGift.name}</h3>
+                      <h3 id="khoi-gift-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">Ơn {selectedGift.name}</h3>
                       <p className="text-xs text-yellow-600 dark:text-yellow-400 font-bold mt-1 tracking-wide">Món quà thiêng liêng từ Thiên Chúa</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedGift(null)}
+                      aria-label="Đóng"
                       className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                        <path d="M18 6 6 18M6 6l12 12"/>
+                        <path d="M18 6 6 18M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
 
                   <div className="h-px bg-stone-200/60 dark:bg-stone-800/60 mx-6 flex-shrink-0" />
 
-                  {/* Content (Scrollable Area) */}
                   <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 text-left">
                     <div className="space-y-5">
                       <div>
@@ -362,9 +313,9 @@ export default function KhoiThemSuc() {
                           {selectedGift.desc}
                         </p>
                       </div>
-                      
+
                       <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
-                      
+
                       <div>
                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
                           Ví dụ thực tế trong đời sống
@@ -384,13 +335,13 @@ export default function KhoiThemSuc() {
         </AnimatePresence>
       </section>
 
-      {/* TRỤ CỘT LỘ TRÌNH */}
-      <section className="py-24 bg-white/40 dark:bg-stone-900/20 border-y border-stone-200/50 dark:border-stone-800/50">
+      {/* TRỤ CỘT LỘ TRÌNH — đặc thù khối này (2 học kỳ với danh sách chủ đề), giữ dạng section riêng */}
+      <section className="py-24 bg-white/40 dark:bg-stone-900/20 border-y border-stone-200/50 dark:border-stone-800/50 relative z-10">
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-2xl text-left space-y-2 mb-16">
             <p className="text-[11px] font-bold tracking-widest uppercase text-yellow-600 dark:text-yellow-400">Khung đào tạo</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Hai Trụ Cột Chuẩn Bị Tâm Hồn</h2>
-            <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Hai Trụ Cột Chuẩn Bị Tâm Hồn</h2>
+            <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
               Chương trình một năm được xây dựng quanh hai trụ cột chính, dẫn dắt các em từ nhận biết bản thân trong Chúa Thánh Thần đến sẵn sàng dấn thân sống sứ mạng.
             </p>
           </div>
@@ -435,51 +386,34 @@ export default function KhoiThemSuc() {
         </div>
       </section>
 
-      {/* HIGHLIGHTS / METHODOLOGY */}
-      <section className="py-24 max-w-6xl mx-auto px-6">
-        <div className="max-w-2xl text-left space-y-2 mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-yellow-600 dark:text-yellow-400">Phương pháp giáo lý</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Hơn cả một lớp học thông thường</h2>
-        </div>
-        
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {HIGHLIGHTS.map((item, i) => { const Icon = item.icon; return (
-            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={vp} transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200/60 dark:border-stone-800/80 p-6 shadow-sm hover:shadow-md transition-all text-left">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-6 bg-yellow-500/10 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400">
-                <Icon className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mb-2">{item.title}</h3>
-              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-medium">{item.desc}</p>
-            </motion.div>
-          ); })}
-        </div>
-      </section>
+      <HighlightsGrid
+        items={HIGHLIGHTS}
+        eyebrowLabel="Phương pháp giáo lý"
+        title="Hơn cả một lớp học thông thường"
+        accentTextClass="text-yellow-600 dark:text-yellow-400"
+        accentIconClass="bg-yellow-500/10 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400"
+        cardClass="bg-white dark:bg-stone-900"
+        sectionClassName="py-24 max-w-6xl mx-auto px-6 relative z-10"
+        containerClassName=""
+        maskHeading={false}
+        mc={mc}
+        vp={vp}
+      />
 
-      {/* CTA SECTION */}
-      <section className="py-28 max-w-3xl mx-auto px-6 text-center">
-        <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: 0.6 }}>
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-md items-center justify-center mb-8">
-            <Flame className="w-5 h-5 text-yellow-500 fill-current" />
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">Đón Nhận Ngọn Lửa Thiêng</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm sm:text-base leading-relaxed mb-10 max-w-xl mx-auto font-medium">
-            Kính mời quý Phụ huynh đăng ký để con em được đào tạo, chuẩn bị chu đáo tâm hồn cho Bí tích Thêm Sức — bước tiến thành nhân kiên định trên hành trình sống đạo.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/tuyển-sinh#dang-ky"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full text-xs font-bold text-white shadow-lg shadow-yellow-600/10 bg-yellow-600 hover:bg-yellow-500 active:scale-[0.98] transition-all duration-200"
-            >
-              Đăng ký trực tuyến <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/liên-hệ"
-              className="w-full sm:w-auto inline-flex items-center justify-center h-12 px-6 rounded-full text-xs font-bold border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 shadow-sm active:scale-[0.98] transition-all duration-200">
-              Liên hệ Hỏi thông tin
-            </Link>
-          </div>
-        </motion.div>
-      </section>
+      <CtaSection
+        icon={Flame}
+        iconClass="text-yellow-500"
+        title="Đón Nhận Ngọn Lửa Thiêng"
+        description="Kính mời quý Phụ huynh đăng ký để con em được đào tạo, chuẩn bị chu đáo tâm hồn cho Bí tích Thêm Sức — bước tiến thành nhân kiên định trên hành trình sống đạo."
+        primaryCtaLabel="Đăng ký trực tuyến"
+        primaryCtaTo="/tuyển-sinh#dang-ky"
+        primaryCtaClass="bg-yellow-600 hover:bg-yellow-500 shadow-yellow-600/10"
+        secondaryCtaLabel="Liên hệ Văn phòng Giáo xứ"
+        secondaryCtaTo="/liên-hệ"
+        mc={mc}
+        vp={vp}
+        sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10"
+      />
     </div>
   );
 }

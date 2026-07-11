@@ -1,8 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, BookOpen, MessageSquare, ShieldCheck, Clock, CalendarDays, Users, Sparkles } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
-import PlusGrid from "./khoi/PlusGrid.jsx";
 import HeroSection from "./khoi/HeroSection.jsx";
 import OverviewCards from "./khoi/OverviewCards.jsx";
 import HighlightsGrid from "./khoi/HighlightsGrid.jsx";
@@ -136,12 +135,17 @@ export default function KhoiRuocLe() {
   useEffect(() => {
     if (selectedStep) {
       stepSheetY.set(0);
-      if (isMobile) document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      lenis?.stop();
     } else {
       document.body.style.overflow = "";
+      lenis?.start();
     }
-    return () => { document.body.style.overflow = ""; };
-  }, [selectedStep, stepSheetY, isMobile]);
+    return () => { 
+      document.body.style.overflow = "";
+      lenis?.start();
+    };
+  }, [selectedStep, stepSheetY]);
 
   // Đóng modal bằng phím Escape — cải thiện accessibility cho bottom sheet
   useEffect(() => {
@@ -165,7 +169,7 @@ export default function KhoiRuocLe() {
         glowClass="bg-lime-500/5 dark:bg-lime-500/10"
         eyebrowIcon={Star}
         eyebrowLabel="Giáo Lý Hồng Ân"
-        eyebrowClass="bg-lime-500/10 text-lime-700 dark:bg-lime-500/20 dark:text-lime-300"
+        eyebrowClass="bg-lime-500/10 text-lime-700 dark:bg-lime-500/20 dark:text-lime-300 border border-lime-500/20 dark:border-lime-500/30 shadow-sm"
         titleLine1="Bí tích Thánh Thể"
         titleLine2="Dấu ấn đầu đời"
         titleGradientClass="bg-gradient-to-r from-lime-600 via-emerald-600 to-teal-600 dark:from-lime-400 dark:via-emerald-400 dark:to-teal-400"
@@ -179,174 +183,169 @@ export default function KhoiRuocLe() {
         floatBadge={{ label: "Lớp 3 – 4", sub: "Bí tích Tình Yêu", dotClass: "bg-lime-500" }}
       />
 
-      {/* MAIN CONTENT WRAPPER WITH PLUS GRID — trước đây khối này chưa có, bổ sung để đồng bộ với KhoiChienCon */}
-      <div className="relative z-0">
-        <PlusGrid />
+      <OverviewCards items={OVERVIEW} />
 
-        <OverviewCards items={OVERVIEW} />
+      {/* JOURNEY BENTO GRID — đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
+      <section id="hanh-trinh" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-20">
+        <div className="max-w-2xl text-left space-y-3 mb-16">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-lime-600 dark:text-lime-400">Lộ trình Đào Tạo</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Hành trình Khám phá &amp; Gặp gỡ</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
+            Chương trình học gồm 6 chặng cốt lõi, chuyển hóa từ kiến thức căn bản đến thực hành nội tâm và sống chứng tá đời thường.
+          </p>
+        </div>
 
-        {/* JOURNEY BENTO GRID — đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
-        <section id="hanh-trinh" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-10">
-          <div className="max-w-2xl text-left space-y-3 mb-16">
-            <p className="text-[11px] font-bold tracking-widest uppercase text-lime-600 dark:text-lime-400">Lộ trình Đào Tạo</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-white dark:bg-[#09090b] inline-block px-1 -mx-1">Hành trình Khám phá &amp; Gặp gỡ</h2>
-            <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-sm inline-block px-1 -mx-1">
-              Chương trình học gồm 6 chặng cốt lõi, chuyển hóa từ kiến thức căn bản đến thực hành nội tâm và sống chứng tá đời thường.
-            </p>
-          </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {JOURNEY.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: mc.yOffset }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={vp}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
+              onClick={() => setSelectedStep(item)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedStep(item); }}
+              className="group text-left rounded-[1.75rem] border p-6 bg-white dark:bg-stone-900 hover:shadow-xl hover:shadow-stone-200/30 dark:hover:shadow-none transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[190px] border-stone-200/60 dark:border-stone-800/80"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-3xl font-black font-mono tracking-tight text-stone-200 dark:text-stone-800 group-hover:text-lime-500/30 dark:group-hover:text-lime-400/20 transition-colors">{item.step}</span>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${item.badge}`}>
+                    Chi tiết
+                  </span>
+                </div>
+                <h3 className="text-base font-extrabold text-stone-900 dark:text-stone-100 group-hover:text-lime-600 dark:group-hover:text-lime-400 transition-colors mb-2">{item.title}</h3>
+                <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-3">{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {JOURNEY.map((item, i) => (
+        {/* NATIVE IOS-STYLE BOTTOM SHEET MODAL */}
+        <AnimatePresence>
+          {selectedStep && (
+            <>
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                onClick={() => setSelectedStep(item)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedStep(item); }}
-                className="group text-left rounded-[1.75rem] border p-6 bg-white dark:bg-stone-900 hover:shadow-xl hover:shadow-stone-200/30 dark:hover:shadow-none transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[190px] border-stone-200/60 dark:border-stone-800/80"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-3xl font-black font-mono tracking-tight text-stone-200 dark:text-stone-800 group-hover:text-lime-500/30 dark:group-hover:text-lime-400/20 transition-colors">{item.step}</span>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${item.badge}`}>
-                      Chi tiết
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedStep(null)}
+                className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm z-50 pointer-events-auto"
+              />
+
+              <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="khoi-step-title"
+                  drag={isMobile ? "y" : false}
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0.1, bottom: 0.6 }}
+                  onDragEnd={handleStepDragEnd}
+                  style={{ y: stepSheetY }}
+                  initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
+                  className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-center pt-3 pb-2 md:hidden touch-none">
+                    <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
+                  </div>
+
+                  <div className="flex items-start gap-4 p-6 pb-4 touch-none">
+                    <div className="w-12 h-12 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center shadow-inner flex-shrink-0 text-xl font-bold font-mono text-stone-400 dark:text-stone-500 select-none">
+                      {selectedStep.step}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 id="khoi-step-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedStep.title}</h3>
+                      <p className="text-xs text-lime-600 dark:text-lime-400 font-bold mt-1 tracking-wide">{selectedStep.details.subtitle}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStep(null)}
+                      aria-label="Đóng"
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 px-6 pb-4 flex-wrap touch-none">
+                    <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+                      ⏱ Thời lượng: {selectedStep.details.duration}
                     </span>
                   </div>
-                  <h3 className="text-base font-extrabold text-stone-900 dark:text-stone-100 group-hover:text-lime-600 dark:group-hover:text-lime-400 transition-colors mb-2">{item.title}</h3>
-                  <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-3">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
 
-          {/* NATIVE IOS-STYLE BOTTOM SHEET MODAL */}
-          <AnimatePresence>
-            {selectedStep && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setSelectedStep(null)}
-                  className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm z-50 pointer-events-auto"
-                />
+                  <div className="h-px bg-stone-200/60 dark:bg-stone-800/60 mx-6 flex-shrink-0" />
 
-                <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
-                  <motion.div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="khoi-step-title"
-                    drag={isMobile ? "y" : false}
-                    dragConstraints={{ top: 0, bottom: 0 }}
-                    dragElastic={{ top: 0.1, bottom: 0.6 }}
-                    onDragEnd={handleStepDragEnd}
-                    style={{ y: stepSheetY }}
-                    initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
-                    className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-center pt-3 pb-2 md:hidden touch-none">
-                      <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
-                    </div>
-
-                    <div className="flex items-start gap-4 p-6 pb-4 touch-none">
-                      <div className="w-12 h-12 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center shadow-inner flex-shrink-0 text-xl font-bold font-mono text-stone-400 dark:text-stone-500 select-none">
-                        {selectedStep.step}
+                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 text-left">
+                    <div className="space-y-5">
+                      <div>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                          Ý nghĩa mục tiêu
+                        </h4>
+                        <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
+                          {selectedStep.details.meaning}
+                        </p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 id="khoi-step-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedStep.title}</h3>
-                        <p className="text-xs text-lime-600 dark:text-lime-400 font-bold mt-1 tracking-wide">{selectedStep.details.subtitle}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStep(null)}
-                        aria-label="Đóng"
-                        className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                          <path d="M18 6 6 18M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
 
-                    <div className="flex gap-2 px-6 pb-4 flex-wrap touch-none">
-                      <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
-                        ⏱ Thời lượng: {selectedStep.details.duration}
-                      </span>
-                    </div>
+                      <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
 
-                    <div className="h-px bg-stone-200/60 dark:bg-stone-800/60 mx-6 flex-shrink-0" />
-
-                    <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 text-left">
-                      <div className="space-y-5">
-                        <div>
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
-                            Ý nghĩa mục tiêu
-                          </h4>
-                          <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
-                            {selectedStep.details.meaning}
+                      <div>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                          Bài học &amp; Thực hành cốt lõi
+                        </h4>
+                        <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-950/40 border border-stone-200/50 dark:border-stone-800/40">
+                          <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 font-medium">
+                            {selectedStep.details.highlight}
                           </p>
                         </div>
+                      </div>
 
-                        <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
-
-                        <div>
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
-                            Bài học &amp; Thực hành cốt lõi
-                          </h4>
-                          <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-950/40 border border-stone-200/50 dark:border-stone-800/40">
-                            <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 font-medium">
-                              {selectedStep.details.highlight}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="text-center text-xl pt-4 tracking-[0.75em] select-none opacity-90">
-                          {selectedStep.details.emoji}
-                        </div>
+                      <div className="text-center text-xl pt-4 tracking-[0.75em] select-none opacity-90">
+                        {selectedStep.details.emoji}
                       </div>
                     </div>
-                  </motion.div>
-                </div>
-              </>
-            )}
-          </AnimatePresence>
-        </section>
+                  </div>
+                </motion.div>
+              </div>
+            </>
+          )}
+        </AnimatePresence>
+      </section>
 
-        <HighlightsGrid
-          items={HIGHLIGHTS}
-          eyebrowLabel="Phương pháp đào tạo"
-          title="Toàn diện tâm hồn và kỹ năng phụng vụ"
-          accentTextClass="text-lime-600 dark:text-lime-400"
-          accentIconClass="bg-lime-500/10 text-lime-600 dark:bg-lime-500/20 dark:text-lime-400"
-          cardClass="bg-stone-50 dark:bg-stone-900 backdrop-blur-md"
-          sectionClassName="py-24 bg-white dark:bg-stone-900/30 border-y border-stone-200/50 dark:border-stone-800/50 relative z-10"
-          mc={mc}
-          vp={vp}
-        />
+      <HighlightsGrid
+        items={HIGHLIGHTS}
+        eyebrowLabel="Phương pháp đào tạo"
+        title="Toàn diện tâm hồn và kỹ năng phụng vụ"
+        accentTextClass="text-lime-600 dark:text-lime-400"
+        accentIconClass="bg-lime-500/10 text-lime-600 dark:bg-lime-500/20 dark:text-lime-400"
+        cardClass="bg-stone-50 dark:bg-stone-900 backdrop-blur-md"
+        sectionClassName="py-24 bg-white dark:bg-stone-900/30 border-y border-stone-200/50 dark:border-stone-800/50 relative z-10"
+        mc={mc}
+        vp={vp}
+      />
 
-        <CtaSection
-          icon={Sparkles}
-          iconClass="text-lime-500"
-          title="Chuẩn bị cho Ngày Hồng Ân"
-          description="Kính mời quý Phụ huynh đăng ký nhập học khóa mới cho các em. Hãy để hành trình đức tin đầu đời của con được nuôi dưỡng trọn vẹn nhất trong vòng tay Giáo hội."
-          primaryCtaLabel="Đăng ký trực tuyến"
-          primaryCtaTo="/tuyển-sinh#dang-ky"
-          primaryCtaClass="bg-lime-600 hover:bg-lime-500 shadow-lime-600/10"
-          secondaryCtaLabel="Liên hệ Văn phòng Giáo xứ"
-          secondaryCtaTo="/liên-hệ"
-          mc={mc}
-          vp={vp}
-          sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10"
-        />
-      </div>
+      <CtaSection
+        icon={Sparkles}
+        iconClass="text-lime-500"
+        title="Chuẩn bị cho Ngày Hồng Ân"
+        description="Kính mời quý Phụ huynh đăng ký nhập học khóa mới cho các em. Hãy để hành trình đức tin đầu đời của con được nuôi dưỡng trọn vẹn nhất trong vòng tay Giáo hội."
+        primaryCtaLabel="Đăng ký trực tuyến"
+        primaryCtaTo="/tuyển-sinh#dang-ky"
+        primaryCtaClass="bg-lime-600 hover:bg-lime-500 shadow-lime-600/10"
+        secondaryCtaLabel="Liên hệ Văn phòng Giáo xứ"
+        secondaryCtaTo="/liên-hệ"
+        mc={mc}
+        vp={vp}
+        sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10"
+      />
     </div>
   );
 }

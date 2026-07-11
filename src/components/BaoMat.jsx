@@ -53,32 +53,46 @@ export default function BaoMat() {
     vp: () => ({ once: true, margin: "-10% 0px" })
   };
 
+  // Header: giữ animate ngay khi mount, spring nhẹ nhàng hơn 1 chút
   const fadeUp = {
     hidden: { opacity: 0, y: mc.yOffset },
     visible: (d = 0) => ({
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 100, damping: 16, mass: 0.6, delay: mc.delay(d) }
+      transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5, delay: mc.delay(d) },
     }),
+  };
+
+  // Container cho list section: MỘT observer duy nhất, staggerChildren lo
+  // việc so le -> không còn N observer lệch nhịp nhau
+  const listContainer = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: mc.stagger,
+        delayChildren: 0.05, // gần như tức thời
+      },
+    },
+  };
+
+  // Từng section: không tự set delay nữa (container lo), chỉ animate
+  const itemFadeUp = {
+    hidden: { opacity: 0, y: mc.yOffset },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 },
+    },
   };
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#09090b] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-blue-500/20 dark:selection:bg-blue-500/30 transition-colors duration-500 relative">
       
-      {/* 1. Ambient Glow (Giữ nguyên) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-blue-500/10 dark:bg-blue-500/15 blur-[100px] rounded-full pointer-events-none" />
       
-      {/* 2. Lưới Dot Matrix mờ dần theo chiều dọc
-          Trước đây dùng `inset-0` khiến lớp này kéo dài theo TOÀN BỘ chiều cao
-          trang (kể cả phần đã bị mask làm trong suốt từ 40% trở xuống) — với
-          trang dài (nhiều section), trình duyệt vẫn phải rasterize + tạo
-          compositing layer (do có mask-image) cho cả vùng vô hình đó, lãng phí
-          paint ngay lúc tải. Giới hạn chiều cao chỉ đủ vùng thực sự hiển thị
-          giúp giảm đáng kể vùng cần vẽ trên di động. */}
       <div 
         className="absolute top-0 inset-x-0 h-[70vh] max-h-[820px] pointer-events-none"
         style={{
-          // Lưới hiện rõ 100% từ top xuống ~55% của vùng giới hạn, sau đó mờ dần
           maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)"
         }}
@@ -103,17 +117,20 @@ export default function BaoMat() {
           </motion.p>
         </header>
 
-        <div className="space-y-3 sm:space-y-4">
-          {sections.map((s, i) => {
+        {/* Container duy nhất điều phối stagger cho toàn bộ list */}
+        <motion.div
+          className="space-y-3 sm:space-y-4"
+          variants={listContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={mc.vp()}
+        >
+          {sections.map((s) => {
             const Icon = s.icon;
             return (
               <motion.section
                 key={s.heading}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={mc.vp()}
-                custom={i * mc.stagger}
+                variants={itemFadeUp}
                 className="group bg-white dark:bg-[#121214] rounded-2xl border border-stone-200/60 dark:border-stone-800/80 p-4 sm:p-6 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-300 text-left flex gap-3.5 sm:gap-4 items-start"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-stone-50 dark:bg-stone-800 border border-stone-200/40 dark:border-stone-700/40 flex-shrink-0 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform duration-300">
@@ -131,7 +148,7 @@ export default function BaoMat() {
               </motion.section>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

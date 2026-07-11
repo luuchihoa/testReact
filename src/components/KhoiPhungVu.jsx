@@ -1,9 +1,11 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Sparkles, Music, BookOpen, Calendar, Clock, CalendarDays, Users, ArrowRight, ChevronLeft, Sun } from "lucide-react";
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValue } from "framer-motion";
-import { useLenis } from "lenis/react";
-import { useMotionConfig } from "../hooks/useMotionConfig.js";
+import React, { useState, useEffect } from "react";
+import { Church, Music, BookOpen, Calendar, Sun, Clock, CalendarDays, Users } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import HeroSection from "./khoi/HeroSection.jsx";
+import OverviewCards from "./khoi/OverviewCards.jsx";
+import HighlightsGrid from "./khoi/HighlightsGrid.jsx";
+import CtaSection from "./khoi/CtaSection.jsx";
 
 const OVERVIEW = [
   { icon: Users,        label: "Độ tuổi",    value: "Lớp 7" },
@@ -12,6 +14,8 @@ const OVERVIEW = [
   { icon: BookOpen,     label: "Yêu cầu",    value: "Sau Thêm Sức" },
 ];
 
+// Bento grid + bottom sheet modal — đặc thù khối này (2 bộ dữ liệu: Năm Phụng vụ & Bí tích),
+// giữ nguyên vì phức tạp hơn list thường, tương tự JOURNEY của KhoiRuocLe.
 const LITURGICAL_YEAR = [
   {
     id: "vong",
@@ -228,28 +232,27 @@ const HIGHLIGHTS = [
   { icon: BookOpen, title: "Kinh nguyện Giờ Kinh",    desc: "Giới thiệu Phụng vụ Giờ Kinh — cách Giáo Hội cầu nguyện liên tục suốt ngày." },
 ];
 
+// Ngưỡng breakpoint md của Tailwind — dùng để đồng bộ giữa CSS và JS logic (drag/animation)
+const MOBILE_BREAKPOINT = 768;
+
 export default function KhoiPhungVu() {
   const [selectedSeason, setSelectedSeason] = useState(null);
   const [selectedSacrament, setSelectedSacrament] = useState(null);
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const lenis = useLenis();
+  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
   const seasonSheetY = useMotionValue(0);
   const sacramentSheetY = useMotionValue(0);
 
-  const systemConfig = useMotionConfig();
-  const mc = systemConfig || {
-    yOffset: 30,
-    duration: (d) => d || 0.6,
-    delay: (d) => d || 0,
-    stagger: 0.08,
-    isMobile: false,
-    reduced: false,
-    vp: () => ({ once: true, margin: "-12% 0px" }),
-    heroParallax: [0, -60],
-  };
+  // Theo dõi viewport bằng state thay vì đọc window.innerWidth trực tiếp trong JSX:
+  // tránh crash khi SSR và đảm bảo re-render đúng khi resize/xoay màn hình.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
+  );
 
-  const heroY = useTransform(scrollY, [0, 600], mc.heroParallax || [0, -60]);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleSeasonDragEnd = (event, info) => {
     if (info.offset.y > 100 || info.velocity.y > 500) setSelectedSeason(null);
@@ -263,122 +266,84 @@ export default function KhoiPhungVu() {
   useEffect(() => {
     if (selectedSeason) {
       seasonSheetY.set(0);
-      if (window.innerWidth < 768) document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      lenis?.stop();
     } else if (!selectedSacrament) {
       document.body.style.overflow = "";
+      lenis?.start();
     }
-    return () => { if (!selectedSacrament) document.body.style.overflow = ""; };
-  }, [selectedSeason, seasonSheetY, selectedSacrament]);
+    return () => {
+      if (!selectedSacrament) {
+        document.body.style.overflow = "";
+        lenis?.start();
+      }
+    };
+  }, [selectedSeason, seasonSheetY, selectedSacrament, lenis]);
 
   useEffect(() => {
     if (selectedSacrament) {
       sacramentSheetY.set(0);
-      if (window.innerWidth < 768) document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      lenis?.stop();
     } else if (!selectedSeason) {
       document.body.style.overflow = "";
+      lenis?.start();
     }
-    return () => { if (!selectedSeason) document.body.style.overflow = ""; };
-  }, [selectedSacrament, sacramentSheetY, selectedSeason]);
+    return () => {
+      if (!selectedSeason) {
+        document.body.style.overflow = "";
+        lenis?.start();
+      }
+    };
+  }, [selectedSacrament, sacramentSheetY, selectedSeason, lenis]);
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 90, damping: 15, mass: 0.8, delay: mc.delay(d) },
-    }),
-  };
-
-  const vp = mc.vp();
+  // Đóng modal bằng phím Escape — cải thiện accessibility cho bottom sheet
+  useEffect(() => {
+    if (!selectedSeason && !selectedSacrament) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setSelectedSeason(null);
+        setSelectedSacrament(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedSeason, selectedSacrament]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#09090b] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-orange-500/20 dark:selection:bg-orange-500/30 transition-colors duration-500">
 
-      {/* HERO SECTION */}
-      <section ref={heroRef} className="relative overflow-hidden pt-12 pb-20 md:pt-32 md:pb-32 bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#09090b]">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      <HeroSection
+        heroRef={heroRef}
+        heroY={heroY}
+        fadeUp={fadeUp}
+        lenis={lenis}
+        sectionBgClass="bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#09090b]"
+        glowClass="bg-orange-500/5 dark:bg-orange-500/10"
+        eyebrowIcon={Church}
+        eyebrowLabel="Khối Phụng Vụ"
+        eyebrowClass="bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300 border border-orange-500/20 dark:border-orange-500/30 shadow-sm"
+        titleLine1="Cử hành đức tin"
+        titleLine2="trong Phụng vụ"
+        titleGradientClass="bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 dark:from-orange-400 dark:via-amber-400 dark:to-red-400"
+        description="Phụng vụ là đỉnh cao mà mọi hoạt động Giáo Hội hướng tới, đồng thời là nguồn mạch tuôn trào mọi sức mạnh (SC 10) — Khối Phụng Vụ giúp các em hiểu và yêu mến các cử hành thánh thiêng của Giáo Hội."
+        primaryCtaLabel="Xem chương trình học"
+        primaryCtaTargetId="noi-dung"
+        secondaryCtaLabel="Đăng ký Nhập Học"
+        secondaryCtaTo="/tuyển-sinh#dang-ky"
+        image={{ src: "/images/khoiphungvu.avif", alt: "Khối Phụng Vụ" }}
+        imageGlowClass="bg-gradient-to-tr from-orange-500/5 to-amber-500/5"
+        floatBadge={{ label: "Lớp 7", sub: "Phục vụ bàn Thánh", dotClass: "bg-orange-500" }}
+      />
 
-        <motion.div style={{ y: heroY }} className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-12 gap-12 lg:gap-16 items-center">
-            <div className="md:col-span-7 space-y-6 text-left">
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
-                  <Sparkles className="w-3 h-3" /> Khối Phụng Vụ
-                </span>
-              </motion.div>
+      <OverviewCards items={OVERVIEW} />
 
-              <motion.h1 variants={fadeUp} initial="hidden" animate="visible" custom={0.06} className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-tight leading-[1.08]">
-                Cử hành đức tin<br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 dark:from-orange-400 dark:via-amber-400 dark:to-red-400">
-                  trong Phụng vụ
-                </span>
-              </motion.h1>
-
-              <motion.p variants={fadeUp} initial="hidden" animate="visible" custom={0.12} className="text-base sm:text-lg text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl font-normal">
-                Phụng vụ là đỉnh cao mà mọi hoạt động Giáo Hội hướng tới, đồng thời là nguồn mạch tuôn trào mọi sức mạnh (SC 10) — Khối Phụng Vụ giúp các em hiểu và yêu mến các cử hành thánh thiêng của Giáo Hội.
-              </motion.p>
-
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0.18} className="flex flex-wrap gap-4 pt-4">
-                <button
-                  onClick={() => {
-                    const target = document.getElementById("noi-dung");
-                    if (!target) return;
-                    lenis ? lenis.scrollTo(target, { duration: 1 }) : target.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-xs font-bold text-white shadow-lg bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white active:scale-[0.98] transition-all duration-200"
-                >
-                  Xem nội dung <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link to="/tuyển-sinh#dang-ky"
-                  className="inline-flex items-center justify-center h-12 px-6 rounded-full text-xs font-bold border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/60 shadow-sm active:scale-[0.98] transition-all duration-200">
-                  Đăng ký Nhập Học
-                </Link>
-              </motion.div>
-            </div>
-
-            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0.24} className="md:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-[340px] aspect-square rounded-[2.5rem] bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 p-8 shadow-xl dark:shadow-black/40 flex items-center justify-center group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/5 to-amber-500/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <img src="/images/khoiphungvu.avif" alt="Khối Phụng Vụ" className="w-full h-full object-contain transform group-hover:scale-[1.02] transition-transform duration-500" loading="eager" />
-
-                <div className="absolute -bottom-4 right-6 bg-white/90 dark:bg-stone-800/90 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 border border-stone-200/80 dark:border-stone-700/80 shadow-md">
-                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                  <div>
-                    <p className="text-xs font-bold tracking-tight">Lớp 7</p>
-                    <p className="text-[10px] text-stone-500 dark:text-stone-400 font-medium">12 tuổi</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* OVERVIEW CARDS */}
-      <section className="py-8 bg-white/60 dark:bg-stone-900/40 backdrop-blur-md border-y border-stone-200/50 dark:border-stone-800/50 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-6 scrollbar-none snap-x snap-mandatory -mx-6 px-6 md:mx-0 md:px-0">
-            {OVERVIEW.map((item, i) => { const Icon = item.icon; return (
-              <div key={i} className="flex-shrink-0 w-[240px] md:w-auto snap-center bg-stone-50 dark:bg-stone-900/60 md:bg-transparent md:dark:bg-transparent p-4 md:p-0 rounded-2xl border border-stone-200/40 dark:border-stone-800/40 md:border-none flex items-center gap-4 transition-all">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-white dark:bg-stone-800 shadow-sm border border-stone-200/40 dark:border-stone-700/40 flex-shrink-0">
-                  <Icon className="w-4 h-4 text-stone-700 dark:text-stone-300" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500">{item.label}</p>
-                  <p className="text-sm font-bold text-stone-800 dark:text-stone-200 mt-0.5 truncate">{item.value}</p>
-                </div>
-              </div>
-            ); })}
-          </div>
-        </div>
-      </section>
-
-      {/* LITURGICAL YEAR — BENTO GRID */}
-      <section id="noi-dung" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12">
+      {/* LITURGICAL YEAR — BENTO GRID, đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
+      <section id="noi-dung" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-20">
         <div className="max-w-2xl text-left space-y-3 mb-16">
           <p className="text-[11px] font-bold tracking-widest uppercase text-orange-600 dark:text-orange-400">Nội dung</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Năm Phụng Vụ — Vòng Tròn Thiêng Liêng</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Năm Phụng Vụ — Vòng Tròn Thiêng Liêng</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
             Giáo Hội sống theo một nhịp thời gian riêng — mỗi mùa phụng vụ mang màu sắc, ý nghĩa và lời cầu nguyện đặc trưng.
           </p>
         </div>
@@ -392,6 +357,9 @@ export default function KhoiPhungVu() {
               viewport={vp}
               transition={{ duration: 0.5, delay: i * 0.05 }}
               onClick={() => setSelectedSeason(season)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedSeason(season); }}
               className={`group text-left rounded-[1.75rem] border p-6 flex flex-col justify-between min-h-[190px] cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-stone-200/30 dark:hover:shadow-none ${season.color}`}
             >
               <div>
@@ -421,14 +389,17 @@ export default function KhoiPhungVu() {
               />
               <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
                 <motion.div
-                  drag={window.innerWidth < 768 ? "y" : false}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="khoi-season-title"
+                  drag={isMobile ? "y" : false}
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0.1, bottom: 0.6 }}
                   onDragEnd={handleSeasonDragEnd}
                   style={{ y: seasonSheetY }}
-                  initial={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 30 }}
+                  initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 20 }}
+                  exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
                   transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
                   className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
                   onClick={(e) => e.stopPropagation()}
@@ -442,12 +413,13 @@ export default function KhoiPhungVu() {
                       {selectedSeason.symbol}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedSeason.season}</h3>
+                      <h3 id="khoi-season-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedSeason.season}</h3>
                       <p className="text-xs text-orange-600 dark:text-orange-400 font-bold mt-1 tracking-wide">{selectedSeason.desc}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedSeason(null)}
+                      aria-label="Đóng"
                       className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -477,7 +449,7 @@ export default function KhoiPhungVu() {
                       <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
 
                       <div>
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">Đặc trưng & Hoạt động</h4>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">Đặc trưng &amp; Hoạt động</h4>
                         <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-950/40 border border-stone-200/50 dark:border-stone-800/40">
                           <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 font-medium">{selectedSeason.details.highlight}</p>
                         </div>
@@ -495,8 +467,8 @@ export default function KhoiPhungVu() {
         </AnimatePresence>
       </section>
 
-      {/* SACRAMENTS — PILLAR CARDS */}
-      <section className="py-24 bg-white/40 dark:bg-stone-900/20 border-y border-stone-200/50 dark:border-stone-800/50">
+      {/* SACRAMENTS — PILLAR CARDS, đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
+      <section className="py-24 bg-white/40 dark:bg-stone-900/20 border-y border-stone-200/50 dark:border-stone-800/50 relative z-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-2xl text-left space-y-2 mb-16">
             <p className="text-[11px] font-bold tracking-widest uppercase text-orange-600 dark:text-orange-400">Bí tích học</p>
@@ -515,6 +487,9 @@ export default function KhoiPhungVu() {
                 viewport={vp}
                 transition={{ duration: 0.6, delay: i * 0.08 }}
                 onClick={() => setSelectedSacrament(s)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedSacrament(s); }}
                 className={`group cursor-pointer rounded-[1.75rem] border p-6 flex flex-col transition-all duration-300 hover:shadow-lg ${s.color}`}
               >
                 <div className="flex items-center justify-between mb-6">
@@ -548,14 +523,17 @@ export default function KhoiPhungVu() {
               />
               <div className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
                 <motion.div
-                  drag={window.innerWidth < 768 ? "y" : false}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="khoi-sacrament-title"
+                  drag={isMobile ? "y" : false}
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0.1, bottom: 0.6 }}
                   onDragEnd={handleSacramentDragEnd}
                   style={{ y: sacramentSheetY }}
-                  initial={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 30 }}
+                  initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: window.innerWidth < 768 ? "100%" : 20 }}
+                  exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
                   transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
                   className="relative w-full md:max-w-xl rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
                   onClick={(e) => e.stopPropagation()}
@@ -569,12 +547,13 @@ export default function KhoiPhungVu() {
                       {selectedSacrament.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedSacrament.name}</h3>
+                      <h3 id="khoi-sacrament-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedSacrament.name}</h3>
                       <p className="text-xs text-orange-600 dark:text-orange-400 font-bold mt-1 tracking-wide">{selectedSacrament.short}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedSacrament(null)}
+                      aria-label="Đóng"
                       className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -604,7 +583,7 @@ export default function KhoiPhungVu() {
                       <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
 
                       <div>
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">Nghi thức & Đặc trưng</h4>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">Nghi thức &amp; Đặc trưng</h4>
                         <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-950/40 border border-stone-200/50 dark:border-stone-800/40">
                           <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 font-medium">{selectedSacrament.details.highlight}</p>
                         </div>
@@ -622,51 +601,31 @@ export default function KhoiPhungVu() {
         </AnimatePresence>
       </section>
 
-      {/* HIGHLIGHTS / METHODOLOGY */}
-      <section className="py-24 max-w-6xl mx-auto px-6">
-        <div className="max-w-2xl text-left space-y-2 mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-orange-600 dark:text-orange-400">Phương pháp giáo lý</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Từ hiểu đến yêu mến</h2>
-        </div>
+      <HighlightsGrid
+        items={HIGHLIGHTS}
+        eyebrowLabel="Phương pháp giáo lý"
+        title="Từ hiểu đến yêu mến"
+        accentTextClass="text-orange-600 dark:text-orange-400"
+        accentIconClass="bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400"
+        cardClass="bg-white dark:bg-stone-900"
+        mc={mc}
+        vp={vp}
+      />
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {HIGHLIGHTS.map((item, i) => { const Icon = item.icon; return (
-            <motion.div key={i} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={vp} transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200/60 dark:border-stone-800/80 p-6 shadow-sm hover:shadow-md transition-all text-left">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-6 bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
-                <Icon className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mb-2">{item.title}</h3>
-              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-medium">{item.desc}</p>
-            </motion.div>
-          ); })}
-        </div>
-      </section>
-
-      {/* CTA SECTION */}
-      <section className="py-28 max-w-3xl mx-auto px-6 text-center">
-        <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: 0.6 }}>
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-md items-center justify-center mb-8">
-            <Sparkles className="w-5 h-5 text-orange-500" />
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">Tham Gia Cử Hành Cùng Giáo Hội</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm sm:text-base leading-relaxed mb-10 max-w-xl mx-auto font-medium">
-            Kính mời quý Phụ huynh đăng ký để con em hiểu sâu và yêu mến Thánh Lễ, Bí tích và toàn bộ đời sống Phụng vụ của Giáo Hội Công giáo.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/tuyển-sinh#dang-ky"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full text-xs font-bold text-white shadow-lg shadow-orange-600/10 bg-orange-600 hover:bg-orange-500 active:scale-[0.98] transition-all duration-200"
-            >
-              Đăng ký trực tuyến <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/liên-hệ"
-              className="w-full sm:w-auto inline-flex items-center justify-center h-12 px-6 rounded-full text-xs font-bold border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 shadow-sm active:scale-[0.98] transition-all duration-200">
-              Liên hệ Hỏi thông tin
-            </Link>
-          </div>
-        </motion.div>
-      </section>
+      <CtaSection
+        icon={Church}
+        iconClass="text-orange-500"
+        title="Tham Gia Cử Hành Cùng Giáo Hội"
+        description="Kính mời quý Phụ huynh đăng ký để con em hiểu sâu và yêu mến Thánh Lễ, Bí tích và toàn bộ đời sống Phụng vụ của Giáo Hội Công giáo."
+        primaryCtaLabel="Đăng ký trực tuyến"
+        primaryCtaTo="/tuyển-sinh#dang-ky"
+        primaryCtaClass="bg-orange-600 hover:bg-orange-500 shadow-orange-600/10"
+        secondaryCtaLabel="Liên hệ Văn phòng Giáo xứ"
+        secondaryCtaTo="/liên-hệ"
+        mc={mc}
+        vp={vp}
+        sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10"
+      />
     </div>
   );
 }

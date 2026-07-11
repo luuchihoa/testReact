@@ -19,7 +19,7 @@ export default function HighlightsGrid({
   mc,
   vp,
 }) {
-  const headingMaskClass = maskHeading ? "bg-white dark:bg-[#09090b] inline-block px-1 -mx-1" : "";
+  const headingMaskClass = maskHeading ? "inline-block px-1 -mx-1" : "";
 
   return (
     <section className={sectionClassName}>

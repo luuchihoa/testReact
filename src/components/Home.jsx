@@ -292,162 +292,168 @@ export default function Home() {
           `absolute` (cuộn theo trang) thay vì `fixed`, và mask nằm ngay trên
           cùng phần tử — không cần div lồng, không ép will-change, nên nhẹ hơn
           hẳn ở cả mobile lẫn desktop. */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      
-      {/* ── HERO ── */}
-      <section
-        ref={heroRef}
-        className="relative pt-24 pb-20 sm:pt-36 sm:pb-32 overflow-hidden"
-      >
-        {/* Ambient glow — blur radius lớn (100–120px) khá tốn GPU trên mobile.
-            Dùng JS conditional để KHÔNG mount phần tử này trên mobile luôn,
-            thay vì render rồi ẩn bằng class — triệt để hơn, giống kỹ thuật
-            trong các trang mượt hơn (XuDoan, TuyenSinh). */}
-        {!isMobile && (
-          <>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent dark:from-amber-900/10 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent dark:from-orange-900/10 blur-[100px] -z-10 pointer-events-none" />
-          </>
-        )}
+      {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" /> */}
+      {/* Đặt làm sibling đầu tiên trong thẻ div bao ngoài cùng của Home */}
+      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
-        <motion.div
-          style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
-          className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10"
+      {/* Nội dung bên dưới nhớ thêm relative z-10 */}
+      <div className="relative z-10">
+        
+        {/* ── HERO ── */}
+        <section
+          ref={heroRef}
+          className="relative pt-24 pb-20 sm:pt-24 sm:pb-32 overflow-hidden"
         >
-          <div className="flex flex-col items-center gap-5 sm:gap-7">
-            {/* Badge */}
-            <motion.div
-              variants={heroReveal}
-              initial="hidden"
-              animate="visible"
-              custom={heroDelay(0)}
-            >
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm transition-colors cursor-default">
-                <span className="relative flex h-2 w-2 flex-shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                </span>
-                <span className="text-[11px] font-bold text-stone-600 dark:text-stone-400 tracking-widest uppercase">
-                  Ban Giáo Lý · An Ngãi · {new Date().getFullYear()}
-                </span>
-              </div>
-            </motion.div>
+          {/* Ambient glow — blur radius lớn (100–120px) khá tốn GPU trên mobile.
+              Dùng JS conditional để KHÔNG mount phần tử này trên mobile luôn,
+              thay vì render rồi ẩn bằng class — triệt để hơn, giống kỹ thuật
+              trong các trang mượt hơn (XuDoan, TuyenSinh). */}
+          {!isMobile && (
+            <>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent dark:from-amber-900/10 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent dark:from-orange-900/10 blur-[100px] -z-10 pointer-events-none" />
+            </>
+          )}
 
-            {/* H1 */}
-            <motion.h1
-              variants={heroReveal}
-              initial="hidden"
-              animate="visible"
-              custom={heroDelay(0.08)}
-              className="w-full"
-              style={{ fontFamily: "'Cormorant', Georgia, serif" }}
-            >
-              <span className="block text-left text-2xl sm:text-3xl lg:text-4xl font-light italic text-stone-400 dark:text-stone-500 leading-snug tracking-wide pl-1 mb-1 sm:mb-2">
-                Ươm mầm
-              </span>
-              <span className="block text-center leading-[0.92]">
-                <span className="text-[44px] sm:text-7xl lg:text-[100px] font-semibold text-stone-900 dark:text-stone-100 tracking-tighter">
-                  Đức Tin
-                </span>
-              </span>
-              <span className="block text-right text-2xl sm:text-4xl lg:text-4xl text-amber-700 dark:text-amber-500 font-medium italic leading-snug tracking-wide pr-1 mt-2 sm:mt-4">
-                & Tri Thức
-              </span>
-            </motion.h1>
-
-            {/* Divider */}
-            <motion.div
-              variants={heroReveal}
-              initial="hidden"
-              animate="visible"
-              custom={heroDelay(0.16)}
-              className="flex items-center gap-4 w-full max-w-[280px]"
-            >
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-300 dark:to-stone-700" />
-              <div className="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700" />
-              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-300 dark:to-stone-700" />
-            </motion.div>
-
-            {/* Quote */}
-            <motion.blockquote
-              variants={heroReveal}
-              initial="hidden"
-              animate="visible"
-              custom={heroDelay(0.24)}
-              className="max-w-lg mx-auto px-4"
-            >
-              <p
-                className="text-[17px] sm:text-xl font-light italic text-stone-600 dark:text-stone-400 leading-relaxed mb-3"
-                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          <motion.div
+            style={{ opacity: heroOpacity, y: heroY, willChange: "transform, opacity" }}
+            className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10"
+          >
+            <div className="flex flex-col items-center gap-5 sm:gap-7">
+              {/* Badge */}
+              <motion.div
+                variants={heroReveal}
+                initial="hidden"
+                animate="visible"
+                custom={heroDelay(0)}
               >
-                "Tôi là ánh sáng đến thế gian, để bất cứ ai tin vào tôi thì không ở lại trong bóng
-                tối."
-              </p>
-              <cite
-                className="not-italic text-[10px] sm:text-xs font-bold tracking-[0.15em] text-stone-400 dark:text-stone-500 uppercase"
-                style={{ fontFamily: "'SF Mono', 'DM Mono', monospace" }}
-              >
-                Ga 12, 46
-              </cite>
-            </motion.blockquote>
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm transition-colors cursor-default">
+                  <span className="relative flex h-2 w-2 flex-shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                  </span>
+                  <span className="text-[11px] font-bold text-stone-600 dark:text-stone-400 tracking-widest uppercase">
+                    Ban Giáo Lý · An Ngãi · {new Date().getFullYear()}
+                  </span>
+                </div>
+              </motion.div>
 
-            {/* CTAs */}
-            <motion.div
-              variants={heroReveal}
-              initial="hidden"
-              animate="visible"
-              custom={heroDelay(0.32)}
-              className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto pt-4 px-6 sm:px-0"
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })
+              {/* H1 */}
+              <motion.h1
+                variants={heroReveal}
+                initial="hidden"
+                animate="visible"
+                custom={heroDelay(0.08)}
+                className="w-full"
+                style={{ fontFamily: "'Cormorant', Georgia, serif" }}
+              >
+                <span className="block text-left text-2xl sm:text-3xl lg:text-4xl font-light italic text-stone-400 dark:text-stone-500 leading-snug tracking-wide pl-1 mb-1 sm:mb-2">
+                  Ươm mầm
+                </span>
+                <span className="block text-center leading-[0.92]">
+                  <span className="text-[44px] sm:text-7xl lg:text-[100px] font-semibold text-stone-900 dark:text-stone-100 tracking-tighter">
+                    Đức Tin
+                  </span>
+                </span>
+                <span className="block text-right text-2xl sm:text-4xl lg:text-4xl text-amber-700 dark:text-amber-500 font-medium italic leading-snug tracking-wide pr-1 mt-2 sm:mt-4">
+                  & Tri Thức
+                </span>
+              </motion.h1>
+
+              {/* Divider */}
+              <motion.div
+                variants={heroReveal}
+                initial="hidden"
+                animate="visible"
+                custom={heroDelay(0.16)}
+                className="flex items-center gap-4 w-full max-w-[280px]"
+              >
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-300 dark:to-stone-700" />
+                <div className="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700" />
+                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-300 dark:to-stone-700" />
+              </motion.div>
+
+              {/* Quote */}
+              <motion.blockquote
+                variants={heroReveal}
+                initial="hidden"
+                animate="visible"
+                custom={heroDelay(0.24)}
+                className="max-w-lg mx-auto px-4"
+              >
+                <p
+                  className="text-[17px] sm:text-xl font-light italic text-stone-600 dark:text-stone-400 leading-relaxed mb-3"
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                >
+                  "Tôi là ánh sáng đến thế gian, để bất cứ ai tin vào tôi thì không ở lại trong bóng
+                  tối."
+                </p>
+                <cite
+                  className="not-italic text-[10px] sm:text-xs font-bold tracking-[0.15em] text-stone-400 dark:text-stone-500 uppercase"
+                  style={{ fontFamily: "'SF Mono', 'DM Mono', monospace" }}
+                >
+                  Ga 12, 46
+                </cite>
+              </motion.blockquote>
+
+              {/* CTAs */}
+              <motion.div
+                variants={heroReveal}
+                initial="hidden"
+                animate="visible"
+                custom={heroDelay(0.32)}
+                className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto pt-4 px-6 sm:px-0"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 active:scale-[0.98] ${!isMobile ? "md:hover:bg-stone-800 dark:md:hover:bg-white" : ""} transition-all duration-300 cursor-pointer shadow-sm`}
+                  style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
+                >
+                  <span className="text-[14px] font-semibold tracking-wide">
+                    Bắt đầu học hỏi
+                  </span>
+                  <ArrowRight className="w-4 h-4 opacity-80 md:group-hover:translate-x-1 transition-transform duration-200" />
+                </button>
+
+                <Link
+                  to="/giới-thiệu"
+                  className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-[14px] font-semibold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/70 backdrop-blur-md border border-stone-200 dark:border-stone-800 rounded-full active:scale-[0.98] ${!isMobile ? "md:hover:bg-white dark:md:hover:bg-stone-800 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""} transition-all duration-300 shadow-sm`}
+                  style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
+                >
+                  Tìm hiểu thêm
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </section>
+        {/* ── BENTO GRID ── */}
+        <main id="main-content" className="max-w-5xl mx-auto px-5 sm:px-6 md:pb-24 pb-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: isMobile ? "-20px" : "-100px" }}
+            variants={{ visible: { transition: { staggerChildren: isMobile ? 0.04 : 0.1 } } }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6"
+          >
+            {Sections.map((section) => (
+              <motion.div
+                key={section.path}
+                variants={fadeUp}
+                className={`${section.gridClass}`}
+              >
+                {section.isWide
+                  ? <WideCard section={section} isMobile={isMobile}/>
+                  : <NarrowCard section={section} isMobile={isMobile}/>
                 }
-                className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 active:scale-[0.98] ${!isMobile ? "md:hover:bg-stone-800 dark:md:hover:bg-white" : ""} transition-all duration-300 cursor-pointer shadow-sm`}
-                style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
-              >
-                <span className="text-[14px] font-semibold tracking-wide">
-                  Bắt đầu học hỏi
-                </span>
-                <ArrowRight className="w-4 h-4 opacity-80 md:group-hover:translate-x-1 transition-transform duration-200" />
-              </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        </main>
+      </div>
 
-              <Link
-                to="/giới-thiệu"
-                className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-[14px] font-semibold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/70 backdrop-blur-md border border-stone-200 dark:border-stone-800 rounded-full active:scale-[0.98] ${!isMobile ? "md:hover:bg-white dark:md:hover:bg-stone-800 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""} transition-all duration-300 shadow-sm`}
-                style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
-              >
-                Tìm hiểu thêm
-              </Link>
-            </motion.div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── BENTO GRID ── */}
-      <main id="main-content" className="max-w-5xl mx-auto px-5 sm:px-6 md:pb-24 pb-12">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: isMobile ? "-20px" : "-100px" }}
-          variants={{ visible: { transition: { staggerChildren: isMobile ? 0.04 : 0.1 } } }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6"
-        >
-          {Sections.map((section) => (
-            <motion.div
-              key={section.path}
-              variants={fadeUp}
-              className={`${section.gridClass}`}
-            >
-              {section.isWide
-                ? <WideCard section={section} isMobile={isMobile}/>
-                : <NarrowCard section={section} isMobile={isMobile}/>
-              }
-            </motion.div>
-          ))}
-        </motion.div>
-      </main>
     </div>
   );
 }

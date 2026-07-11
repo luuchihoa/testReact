@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useScroll, useTransform } from "framer-motion";
 import { useLenis } from "lenis/react";
+
 import { useMotionConfig } from "./useMotionConfig.js";
 
 // Fallback chuẩn Apple Motion Curves — dùng khi useMotionConfig() chưa sẵn sàng
