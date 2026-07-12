@@ -16,47 +16,47 @@ import { ACCENT, HK_INT_MAP, STATUS_CYCLE, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_K
    ============================================================ */
 function StudentListPanel({ students, loading, search, setSearch, selectedUsername, onSelect }) {
   return (
-    <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh] lg:max-h-[calc(100vh-180px)] min-h-0">
-      <div className="p-4 border-b border-stone-100">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden flex flex-col max-h-[75vh] lg:max-h-[calc(100vh-180px)] min-h-0">
+      <div className="p-4 border-b border-stone-100 dark:border-stone-800">
         <div className="relative">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên hoặc username…"
-            className="w-full rounded-xl border border-stone-200 bg-stone-50 pl-9 pr-3 py-2.5 text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+            className="w-full rounded-xl border border-stone-200 dark:border-stone-750 bg-stone-50 dark:bg-stone-800 pl-9 pr-3 py-2.5 text-sm text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
           />
         </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-10 text-stone-400 text-sm">
+          <div className="flex items-center justify-center gap-2 py-10 text-stone-400 dark:text-stone-500 text-sm">
             <Spinner className="h-4 w-4" /> Đang tải…
           </div>
         )}
 
         {!loading && students.length === 0 && (
-          <p className="text-center text-sm text-stone-400 py-10 px-4">Không tìm thấy học sinh nào.</p>
+          <p className="text-center text-sm text-stone-400 dark:text-stone-500 py-10 px-4">Không tìm thấy học sinh nào.</p>
         )}
 
         {!loading && students.map((s) => {
           const active = s.username === selectedUsername;
           return (
             <button key={s.username} type="button" onClick={() => onSelect(s.username)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b border-stone-50 transition-colors ${
-                active ? "bg-orange-50/70" : "hover:bg-stone-50"
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b border-stone-50 dark:border-stone-850 transition-colors ${
+                active ? "bg-orange-50/70 dark:bg-orange-950/20" : "hover:bg-stone-50 dark:hover:bg-stone-800/50"
               }`}
             >
-              <div className="w-9 h-9 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+              <div className="w-9 h-9 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
                 <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-[14px] font-semibold truncate ${active ? "text-[#FF6B35]" : "text-stone-800"}`}>
+                <p className={`text-[14px] font-semibold truncate ${active ? "text-[#FF6B35] dark:text-orange-400" : "text-stone-800 dark:text-stone-200"}`}>
                   {s.hoTen || s.username}
                 </p>
-                <p className="text-[11px] text-stone-400 truncate">{s.username}</p>
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate">{s.username}</p>
               </div>
             </button>
           );
@@ -159,13 +159,13 @@ function ProfileTab({ student, onSaved, showToast }) {
    ============================================================ */
 function EditableScoreCell({ label, value, onChange }) {
   return (
-    <div className="bg-white rounded-xl px-3 py-2.5 text-center flex-1 min-w-[76px] border border-stone-100">
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
+    <div className="bg-white dark:bg-stone-850 rounded-xl px-3 py-2.5 text-center flex-1 min-w-[76px] border border-stone-100 dark:border-stone-800">
+      <p className="text-[11px] text-gray-400 dark:text-stone-550 mb-1">{label}</p>
       <input
         type="number" min="0" max="10" step="0.1"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        className="w-full text-center text-[15px] font-semibold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#FF6B35] rounded-lg"
+        className="w-full text-center text-[15px] font-semibold text-gray-900 dark:text-stone-100 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#FF6B35] rounded-lg"
       />
     </div>
   );
@@ -307,18 +307,18 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
     return (
       <div className="flex items-center justify-center gap-2.5 py-14" style={{ color: ACCENT }}>
         <Spinner className="h-5 w-5" />
-        <span className="text-sm text-stone-500">Đang tải dữ liệu học kỳ…</span>
+        <span className="text-sm text-stone-500 dark:text-stone-400">Đang tải dữ liệu học kỳ…</span>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-1.5 bg-stone-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl p-1 w-fit">
         {["HK1", "HK2"].map((k) => (
           <button key={k} type="button" onClick={() => setHocKy(k)}
             className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors ${
-              hocKy === k ? "bg-white text-[#FF6B35] shadow-sm" : "text-stone-500"
+              hocKy === k ? "bg-white dark:bg-stone-700 text-[#FF6B35] dark:text-[#FF6B35] shadow-sm" : "text-stone-500 dark:text-stone-400"
             }`}>
             {k === "HK1" ? "Học kỳ I" : "Học kỳ II"}
           </button>
@@ -326,16 +326,16 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       </div>
 
       {isLocked && (
-        <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-stone-100 border border-stone-200">
-          <span className="text-[13px] text-stone-600">
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-stone-100 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-750">
+          <span className="text-[13px] text-stone-600 dark:text-stone-300">
             🔒 Học kỳ này đã được admin khóa sổ. Điểm, điểm danh và tổng kết chỉ xem được, không sửa được cho đến khi được mở khóa lại.
           </span>
         </div>
       )}
 
       {/* BẢNG ĐIỂM */}
-      <div className={`bg-[#F9F9F9] rounded-2xl border border-stone-100 p-4 ${isLocked ? "opacity-70" : ""}`}>
-        <h3 className="text-[14px] font-bold text-stone-800 mb-3">Bảng điểm</h3>
+      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
+        <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200 mb-3">Bảng điểm</h3>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {GRADE_FIELDS.map((f) => (
             <EditableScoreCell key={f.key} label={f.label} value={grades[f.key]} disabled={isLocked}
@@ -345,21 +345,21 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       </div>
 
       {/* ĐIỂM DANH */}
-      <div className={`bg-[#F9F9F9] rounded-2xl border border-stone-100 p-4 ${isLocked ? "opacity-70" : ""}`}>
+      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
         <div className="flex items-center justify-between mb-3 gap-3">
-          <h3 className="text-[14px] font-bold text-stone-800">
-            Điểm danh <span className="text-stone-400 font-normal">({attendanceList.length} tuần)</span>
+          <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200">
+            Điểm danh <span className="text-stone-400 dark:text-stone-500 font-normal">({attendanceList.length} tuần)</span>
           </h3>
           <button type="button"
             disabled={isLocked || savingAttendance || Object.keys(attendanceOverrides).length === 0}
             onClick={saveAttendance}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-[12px] font-bold hover:bg-stone-800 transition-colors disabled:opacity-40 flex-shrink-0">
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-800 text-white dark:text-stone-150 text-[12px] font-bold hover:bg-stone-800 dark:hover:bg-stone-750 transition-colors disabled:opacity-40 flex-shrink-0">
             {savingAttendance && <Spinner className="h-3.5 w-3.5" />}
             {savingAttendance ? "Đang lưu…" : "Lưu điểm danh"}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4 text-[12px] text-stone-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4 text-[12px] text-stone-500 dark:text-stone-400">
           {STATUS_CYCLE.map((k) => (
             <span key={k} className="flex items-center gap-1.5">
               <span className={`w-3 h-3 rounded-full ${ATTENDANCE_STATUS[k].color}`} />
@@ -369,12 +369,12 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         </div>
 
         {attendanceList.length === 0 ? (
-          <p className="text-[13px] text-stone-400 text-center py-6">
+          <p className="text-[13px] text-stone-400 dark:text-stone-500 text-center py-6">
             Lớp chưa có lịch điểm danh cho học kỳ này — vào tab "Điểm danh nhanh" để nhập ngày bắt đầu &amp; tổng số buổi.
           </p>
         ) : (
           <>
-            <p className="text-[11px] text-stone-400 mb-2">Bấm vào từng buổi để chuyển trạng thái.</p>
+            <p className="text-[11px] text-stone-400 dark:text-stone-500 mb-2">Bấm vào từng buổi để chuyển trạng thái.</p>
             <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1" data-lenis-prevent>
               {attendanceList.map(({ date, isoDate, trangThai }) => {
                 const status  = ATTENDANCE_STATUS[trangThai];
@@ -386,7 +386,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                       className={`w-8 h-8 rounded-full ${status.color} ring-2 ${isDirty ? "ring-[#FF6B35]" : "ring-transparent"} transition-all group-hover:scale-110`}
                       title={status.label}
                     />
-                    <span className="text-[11px] text-stone-400 whitespace-nowrap">
+                    <span className="text-[11px] text-stone-400 dark:text-stone-550 whitespace-nowrap">
                       {date.getDate()}/{date.getMonth() + 1}
                     </span>
                   </button>
@@ -398,38 +398,38 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       </div>
 
       {/* TỔNG KẾT HỌC KỲ */}
-      <div className={`bg-[#F9F9F9] rounded-2xl border border-stone-100 p-4 ${isLocked ? "opacity-70" : ""}`}>
-        <h3 className="text-[14px] font-bold text-stone-800 mb-3">Tổng kết học kỳ</h3>
+      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
+        <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200 mb-3">Tổng kết học kỳ</h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 font-medium">
+          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
             Học lực
             <select value={term.hoc_luc || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, hoc_luc: e.target.value }))}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed">
+              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800">
               <option value="">— Chưa chọn —</option>
               {HOC_LUC_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 font-medium">
+          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
             Hạnh kiểm
             <select value={term.hanh_kiem || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, hanh_kiem: e.target.value }))}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed">
+              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800">
               <option value="">— Chưa chọn —</option>
               {HANH_KIEM_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 font-medium">
+          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
             Vị thứ
             <input type="number" min="1" value={term.vi_thu ?? ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, vi_thu: e.target.value }))}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed" />
+              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800" />
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 font-medium sm:col-span-3">
+          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium sm:col-span-3">
             Ghi chú
             <textarea rows={2} value={term.ghi_chu || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, ghi_chu: e.target.value }))}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] resize-none disabled:bg-stone-100 disabled:cursor-not-allowed" />
+              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] resize-none disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800" />
           </label>
         </div>
 
@@ -453,20 +453,20 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
   const [tab, setTab] = useState("profile"); // profile | academic
 
   return (
-    <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden min-w-0">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden min-w-0">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-stone-800">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+          <div className="w-11 h-11 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
             <img src={student.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
           </div>
           <div className="min-w-0">
-            <p className="text-[15px] font-bold text-stone-900 truncate">{student.hoTen || student.username}</p>
-            <p className="text-[12px] text-stone-400">{student.username} · Lớp {lop}</p>
+            <p className="text-[15px] font-bold text-stone-900 dark:text-stone-100 truncate">{student.hoTen || student.username}</p>
+            <p className="text-[12px] text-stone-400 dark:text-stone-500">{student.username} · Lớp {lop}</p>
           </div>
         </div>
         <button type="button" onClick={onClose} aria-label="Đóng"
-          className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center flex-shrink-0">
-          <X className="w-4 h-4 text-stone-500" />
+          className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center justify-center flex-shrink-0">
+          <X className="w-4 h-4 text-stone-500 dark:text-stone-405" />
         </button>
       </div>
 
@@ -477,7 +477,7 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
         ].map((t) => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={`px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors ${
-              tab === t.id ? "bg-[#FFF0E8] text-[#FF6B35]" : "text-stone-500 hover:bg-stone-50"
+              tab === t.id ? "bg-[#FFF0E8] dark:bg-orange-950/20 text-[#FF6B35]" : "text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/50"
             }`}>
             {t.label}
           </button>
@@ -532,7 +532,7 @@ export default function RosterTab() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }} className="min-w-0">
               <button type="button" onClick={() => setSelectedUsername(null)}
-                className="lg:hidden inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 hover:text-stone-800 mb-3">
+                className="lg:hidden inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 mb-3">
                 <ArrowLeft className="w-4 h-4" /> Danh sách học sinh
               </button>
               <StudentEditPanel
@@ -546,9 +546,9 @@ export default function RosterTab() {
           ) : (
             <motion.div key="empty"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="h-full min-h-[50vh] flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-stone-100 shadow-sm text-center px-6">
-              <ClipboardList className="w-9 h-9 text-stone-300" />
-              <p className="text-sm text-stone-400 max-w-xs">
+              className="h-full min-h-[50vh] flex flex-col items-center justify-center gap-3 bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm text-center px-6">
+              <ClipboardList className="w-9 h-9 text-stone-300 dark:text-stone-700" />
+              <p className="text-sm text-stone-400 dark:text-stone-500 max-w-xs">
                 Chọn một học sinh để xem và chỉnh sửa hồ sơ, điểm số, điểm danh.
               </p>
             </motion.div>

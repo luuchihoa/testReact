@@ -102,10 +102,10 @@ export function Spinner({ className = "h-4 w-4" }) {
   );
 }
 
-export function StatCard({ label, value, colorClass = "text-gray-900" }) {
+export function StatCard({ label, value, colorClass = "text-gray-900 dark:text-stone-100" }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#F0F0F0] shadow-sm p-4">
-      <p className={`text-[12px] text-gray-400 mb-1`}>{label}</p>
+    <div className="bg-white dark:bg-stone-900 rounded-2xl border border-[#F0F0F0] dark:border-stone-800 shadow-sm p-4">
+      <p className={`text-[12px] text-gray-400 dark:text-stone-500 mb-1`}>{label}</p>
       <p className={`text-[20px] font-bold ${colorClass}`}>{value ?? "—"}</p>
     </div>
   );
@@ -113,9 +113,9 @@ export function StatCard({ label, value, colorClass = "text-gray-900" }) {
 
 export function ScoreCell({ label, value }) {
   return (
-    <div className="bg-[#F9F9F9] rounded-xl px-3 py-2.5 text-center flex-1 min-w-[64px]">
-      <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
-      <p className="text-[15px] font-semibold text-gray-900">{value ?? "—"}</p>
+    <div className="bg-[#F9F9F9] dark:bg-stone-800/40 rounded-xl px-3 py-2.5 text-center flex-1 min-w-[64px]">
+      <p className="text-[11px] text-gray-400 dark:text-stone-500 mb-0.5">{label}</p>
+      <p className="text-[15px] font-semibold text-gray-900 dark:text-stone-150">{value ?? "—"}</p>
     </div>
   );
 }
@@ -125,31 +125,31 @@ export function ScoreCell({ label, value }) {
 export function FieldRow({ icon, label, field, value, displayValue, type = "text", editingField, tempValue, setTempValue, onEdit, onBlur, options }) {
   const isEditing = editingField === field;
   return (
-    <div className="flex items-center justify-between bg-[#F9F9F9] rounded-2xl px-4 py-3.5">
+    <div className="flex items-center justify-between bg-[#F9F9F9] dark:bg-stone-850/60 rounded-2xl px-4 py-3.5">
       <div className="flex items-center gap-3.5 min-w-0">
         <span className="text-xl flex-shrink-0">{icon}</span>
         <div className="min-w-0">
-          <div className="text-[12px] text-gray-400 mb-0.5">{label}</div>
+          <div className="text-[12px] text-gray-400 dark:text-stone-500 mb-0.5">{label}</div>
           {!isEditing && (
-            <div className="text-[15px] font-semibold text-gray-900 truncate">
+            <div className="text-[15px] font-semibold text-gray-900 dark:text-stone-150 truncate">
               {displayValue ?? value ?? "—"}
             </div>
           )}
           {isEditing && options && (
             <select value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} autoFocus
-              className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] text-[15px] bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]">
+              className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] dark:border-stone-700 text-[15px] dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]">
               {options.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           )}
           {isEditing && !options && (
             <input type={type} value={tempValue} onChange={(e) => setTempValue(e.target.value)} onBlur={onBlur} autoFocus
-              className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] text-[15px] bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35] w-full" />
+              className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-[#E5E5EA] dark:border-stone-700 text-[15px] dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] w-full" />
           )}
         </div>
       </div>
       {!isEditing && (
         <motion.button {...pressable(1.15)} onClick={onEdit}
-          className="flex-shrink-0 w-8 h-8 rounded-full hover:bg-[#E5E5EA] flex items-center justify-center text-[15px]">
+          className="flex-shrink-0 w-8 h-8 rounded-full hover:bg-[#E5E5EA] dark:hover:bg-stone-800 flex items-center justify-center text-[15px]">
           ✏️
         </motion.button>
       )}

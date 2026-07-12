@@ -49,21 +49,30 @@ export default function QuyDinh() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#09090b] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-lime-500/20 dark:selection:bg-lime-500/30 transition-colors duration-500 relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-lime-500/5 dark:bg-lime-500/10 blur-[100px] rounded-full pointer-events-none" />
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 transition-colors duration-500 relative">
+      {/* Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-amber-200/30 dark:bg-amber-900/20 blur-[100px] rounded-full pointer-events-none" />
+      
+      {/* Grid Pattern */}
       <div className="absolute inset-0 pointer-events-none" style={{ maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(#80808045_1px,transparent_1px)] bg-[size:20px_20px] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#92400E12_1px,transparent_1px)] bg-[size:20px_20px] dark:bg-[radial-gradient(#FDE68A10_1px,transparent_1px)]" />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-24 relative z-10">
         <header className="mb-10 text-left space-y-3 px-1">
           <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-lime-500/10 text-lime-700 dark:bg-lime-500/20 dark:text-lime-400">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100/50 text-amber-800 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50">
               <Scale className="w-3 h-3" /> Pháp lý & Vận hành
             </span>
           </motion.div>
           
-          <motion.h1 variants={headerVariants} initial="hidden" animate="visible" custom={0.05} className="text-[32px] sm:text-4xl font-extrabold tracking-tight leading-tight">
+          <motion.h1 
+            variants={headerVariants} 
+            initial="hidden" 
+            animate="visible" 
+            custom={0.05} 
+            className="text-[32px] sm:text-4xl font-extrabold tracking-tight leading-tight text-amber-950 dark:text-amber-50 font-serif"
+          >
             Quy định sử dụng
           </motion.h1>
 
@@ -85,17 +94,17 @@ export default function QuyDinh() {
                 key={s.heading}
                 variants={itemVariants}
                 whileTap={{ scale: 0.98 }}
-                className="group bg-white dark:bg-[#121214] rounded-2xl border border-stone-200/60 dark:border-stone-800/80 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-300 text-left flex gap-3.5 sm:gap-4 items-start cursor-pointer select-none"
+                className="group bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-2xl border border-amber-900/10 dark:border-amber-100/10 p-4 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 transition-all duration-300 text-left flex gap-3.5 sm:gap-4 items-start cursor-pointer select-none"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-stone-50 dark:bg-stone-800 border border-stone-200/40 dark:border-stone-700/40 flex-shrink-0 text-lime-600 dark:text-lime-400 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/50 flex-shrink-0 text-amber-700 dark:text-amber-400 group-hover:scale-105 transition-transform duration-300">
                   <Icon className="w-4.5 h-4.5" />
                 </div>
                 
                 <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0 pt-0.5">
-                  <h2 className="text-[15px] sm:text-base font-bold text-stone-900 dark:text-stone-100 tracking-tight">
+                  <h2 className="text-[15px] sm:text-base font-bold text-amber-950 dark:text-amber-50 tracking-tight">
                     {s.heading}
                   </h2>
-                  <p className="text-[14px] sm:text-[15px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">
+                  <p className="text-[14px] sm:text-[15px] text-stone-600 dark:text-stone-400 leading-relaxed font-medium">
                     {s.body}
                   </p>
                 </div>
@@ -108,8 +117,8 @@ export default function QuyDinh() {
           variants={headerVariants} 
           initial="hidden" 
           animate="visible" 
-          custom={0.45} // Nối tiếp mượt mà ngay sau khi section cuối cùng hiện lên
-          className="text-center text-[12px] text-stone-400 dark:text-stone-500 mt-12 font-medium px-4"
+          custom={0.45}
+          className="text-center text-[12px] text-stone-500 dark:text-stone-500 mt-12 font-medium px-4"
         >
           Việc tiếp tục sử dụng nền tảng đồng nghĩa với việc bạn đã đọc và đồng ý với các quy định trên.
         </motion.p>

@@ -90,10 +90,6 @@ const Sections = [
 ];
 
 /* ─── Hook phát hiện Mobile ──────────────────────────────────── */
-// Khởi tạo state ngay bằng giá trị matchMedia thực tế (lazy init) thay vì
-// luôn bắt đầu bằng `false` rồi sửa lại trong useEffect — tránh việc toàn bộ
-// cây component phải re-render/đổi animation config ngay sau khi mount,
-// vốn là nguyên nhân chính gây cảm giác giật trên mobile.
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -111,7 +107,6 @@ function useIsMobile() {
 }
 
 /* ─── Variants ────────────────────────────────────────────────── */
-// Dùng cho bento grid bên dưới (trigger khi cuộn tới, whileInView)
 const fadeUp = {
   hidden: (c) => ({ opacity: 0, y: c?.m ? 12 : 32 }),
   visible: (c) => ({
@@ -125,12 +120,6 @@ const fadeUp = {
   }),
 };
 
-// ── Kỹ thuật Fade Up / Reveal của KhoiChienCon áp dụng cho HERO ──
-// Khác với `fadeUp` ở trên (tween + parent stagger container), mỗi phần tử
-// hero tự "initial → animate" độc lập ngay khi mount, dùng spring vật lý
-// thay vì tween cubic-bezier. Spring không cần cả cụm tính toán timeline
-// chung như stagger container, nên không còn hiện tượng cả hero "bung ra"
-// cùng một lúc trên máy yếu — mỗi phần tử tự rơi vào đúng nhịp của nó.
 const heroReveal = {
   hidden: { opacity: 0, y: 24 },
   visible: (d = 0) => ({
@@ -141,17 +130,17 @@ const heroReveal = {
 };
 
 /* ─────────────────────────────────────────────
-   WIDE CARD (col-span-2) — Thiết kế chuẩn Apple
+   WIDE CARD (col-span-2)
 ───────────────────────────────────────────── */
 function WideCard({ section, isMobile }) {
   const Icon = section.icon;
   return (
     <Link to={section.path} className="group block h-full outline-none">
-      <div className={`relative h-full bg-white dark:bg-stone-900/95 md:dark:bg-stone-900/60 md:backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col sm:flex-row active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
+      <div className={`relative h-full bg-white/90 dark:bg-stone-800/80 md:dark:bg-stone-800/50 md:backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col sm:flex-row active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-amber-900/5 dark:md:hover:shadow-black/40 md:hover:border-amber-600/30 dark:md:hover:border-amber-400/30" : ""}`}>
         {/* Ghost numeral */}
         <span
           aria-hidden="true"
-          className="absolute -right-2 -bottom-6 font-serif font-black text-[120px] leading-none text-stone-900/[0.03] dark:text-white/[0.02] select-none pointer-events-none"
+          className="absolute -right-2 -bottom-6 font-serif font-black text-[120px] leading-none text-amber-900/[0.03] dark:text-amber-100/[0.03] select-none pointer-events-none"
         >
           {section.numeral}
         </span>
@@ -160,21 +149,21 @@ function WideCard({ section, isMobile }) {
         <div className="relative w-full sm:w-[65%] flex flex-col justify-between z-10">
           <div className="p-6 md:p-8 pb-3 flex-1">
             <div className="flex items-center justify-between mb-5">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-2xl bg-amber-50/80 text-amber-700 dark:bg-amber-500/10 dark:text-amber-500 transition-colors duration-300 ease-out flex-shrink-0 ${!isMobile ? "md:group-hover:bg-amber-100 dark:md:group-hover:bg-amber-500/20" : ""}`}>
+              <div className={`flex items-center justify-center w-10 h-10 rounded-2xl bg-amber-100/50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 transition-colors duration-300 ease-out flex-shrink-0 ${!isMobile ? "md:group-hover:bg-amber-200/50 dark:md:group-hover:bg-amber-500/20" : ""}`}>
                 <Icon className="w-4.5 h-4.5 stroke-[2]" />
               </div>
-              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider bg-stone-100/80 text-stone-600 border border-stone-200/50 dark:bg-stone-800/80 dark:text-stone-400 dark:border-stone-700/50">
+              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider bg-amber-50/80 text-amber-800 border border-amber-200/50 dark:bg-stone-900/80 dark:text-amber-200/80 dark:border-amber-800/50">
                 {section.badge}
               </span>
             </div>
-            <h3 className="text-[22px] font-semibold text-stone-900 dark:text-stone-100 tracking-tight mb-2.5">
+            <h3 className="text-[22px] font-semibold text-amber-950 dark:text-stone-50 tracking-tight mb-2.5">
               {section.title}
             </h3>
-            <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+            <p className="text-[14px] text-stone-600 dark:text-stone-400 leading-relaxed font-normal">
               {section.desc}
             </p>
           </div>
-          <div className={`p-6 md:p-8 pt-0 flex items-center gap-1.5 text-[13px] font-semibold text-amber-700 dark:text-amber-500 opacity-90 transition-all duration-300 ease-out ${!isMobile ? "md:group-hover:opacity-100" : ""}`}>
+          <div className={`p-6 md:p-8 pt-0 flex items-center gap-1.5 text-[13px] font-semibold text-amber-600 dark:text-amber-400 opacity-90 transition-all duration-300 ease-out ${!isMobile ? "md:group-hover:opacity-100" : ""}`}>
             Xem chi tiết
             <ArrowRight className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${!isMobile ? "md:group-hover:translate-x-1" : ""}`} />
           </div>
@@ -182,7 +171,7 @@ function WideCard({ section, isMobile }) {
  
         {/* Image block */}
         <div className="relative w-full sm:w-[35%] p-6 pt-0 sm:pt-6 sm:pl-0 flex items-center justify-center flex-shrink-0 z-10">
-          <div className="relative flex items-center justify-center aspect-square w-full max-w-[150px] sm:max-w-full rounded-[20px] bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800/40 dark:to-stone-900/40 border border-stone-200/50 dark:border-stone-700/30 p-4 overflow-hidden shadow-inner">
+          <div className="relative flex items-center justify-center aspect-square w-full max-w-[150px] sm:max-w-full rounded-[20px] bg-gradient-to-br from-amber-50/60 to-transparent dark:from-stone-900/60 dark:to-transparent border border-amber-900/5 dark:border-amber-100/5 p-4 overflow-hidden shadow-inner">
             <img
               src={section.img}
               alt={section.title}
@@ -204,17 +193,17 @@ function NarrowCard({ section, isMobile }) {
   const Icon = section.icon;
   return (
     <Link to={section.path} className="group block h-full outline-none">
-      <div className={`relative h-full bg-white dark:bg-stone-900/95 md:dark:bg-stone-900/60 md:backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-stone-200/50 dark:md:hover:shadow-black/40 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""}`}>
+      <div className={`relative h-full bg-white/90 dark:bg-stone-800/80 md:dark:bg-stone-800/50 md:backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] transition-all duration-300 ease-out overflow-hidden flex flex-col active:scale-[0.98] ${!isMobile ? "md:hover:shadow-2xl md:hover:shadow-amber-900/5 dark:md:hover:shadow-black/40 md:hover:border-amber-600/30 dark:md:hover:border-amber-400/30" : ""}`}>
         {/* Ghost numeral */}
         <span
           aria-hidden="true"
-          className="absolute -right-1 -bottom-4 font-serif font-black text-[80px] leading-none text-stone-900/[0.03] dark:text-white/[0.02] select-none pointer-events-none"
+          className="absolute -right-1 -bottom-4 font-serif font-black text-[80px] leading-none text-amber-900/[0.03] dark:text-amber-100/[0.03] select-none pointer-events-none"
         >
           {section.numeral}
         </span>
  
         {/* Image strip */}
-        <div className="relative w-full h-[140px] bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800/40 dark:to-stone-900/40 border-b border-stone-200/40 dark:border-stone-800/60 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="relative w-full h-[140px] bg-gradient-to-br from-amber-50/60 to-transparent dark:from-stone-900/60 dark:to-transparent border-b border-amber-900/5 dark:border-amber-100/5 flex items-center justify-center overflow-hidden flex-shrink-0">
           <img
             src={section.img}
             alt={section.title}
@@ -228,21 +217,21 @@ function NarrowCard({ section, isMobile }) {
         <div className="relative flex flex-col flex-1 z-10">
           <div className="p-6 flex-1">
             <div className="flex items-center justify-between mb-4">
-              <div className={`flex items-center justify-center w-9 h-9 rounded-[14px] bg-amber-50/80 text-amber-700 dark:bg-amber-500/10 dark:text-amber-500 transition-colors duration-300 ease-out flex-shrink-0 ${!isMobile ? "md:group-hover:bg-amber-100 dark:md:group-hover:bg-amber-500/20" : ""}`}>
+              <div className={`flex items-center justify-center w-9 h-9 rounded-[14px] bg-amber-100/50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 transition-colors duration-300 ease-out flex-shrink-0 ${!isMobile ? "md:group-hover:bg-amber-200/50 dark:md:group-hover:bg-amber-500/20" : ""}`}>
                 <Icon className="w-4 h-4 stroke-[2]" />
               </div>
-              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100/80 text-stone-600 border border-stone-200/50 dark:bg-stone-800/80 dark:text-stone-400 dark:border-stone-700/50">
+              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-amber-50/80 text-amber-800 border border-amber-200/50 dark:bg-stone-900/80 dark:text-amber-200/80 dark:border-amber-800/50">
                 {section.badge}
               </span>
             </div>
-            <h3 className="text-[17px] font-semibold text-stone-900 dark:text-stone-100 tracking-tight mb-2 leading-snug">
+            <h3 className="text-[17px] font-semibold text-amber-950 dark:text-stone-50 tracking-tight mb-2 leading-snug">
               {section.title}
             </h3>
-            <p className="text-[13px] text-stone-500 dark:text-stone-400 leading-relaxed font-normal line-clamp-3">
+            <p className="text-[13px] text-stone-600 dark:text-stone-400 leading-relaxed font-normal line-clamp-3">
               {section.desc}
             </p>
           </div>
-          <div className={`px-6 pb-6 flex items-center gap-1.5 text-[12px] font-semibold text-amber-700 dark:text-amber-500 opacity-90 transition-all duration-300 ease-out ${!isMobile ? "md:group-hover:opacity-100" : ""}`}>
+          <div className={`px-6 pb-6 flex items-center gap-1.5 text-[12px] font-semibold text-amber-600 dark:text-amber-400 opacity-90 transition-all duration-300 ease-out ${!isMobile ? "md:group-hover:opacity-100" : ""}`}>
             Xem chi tiết
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-out md:group-hover:translate-x-1" />
           </div>
@@ -258,9 +247,6 @@ export default function Home() {
   const heroRef = useRef(null);
   const [heroHeight, setHeroHeight] = useState(600);
 
-  // Đo chiều cao hero TRƯỚC khi trình duyệt paint (useLayoutEffect) thay vì
-  // sau khi paint (useEffect), để tránh giá trị mặc định 600 "nhảy" sang giá
-  // trị thật ngay trước mắt người dùng — đây là nguồn gây giật ở đầu trang.
   useLayoutEffect(() => {
     const el = heroRef.current;
     if (!el) return;
@@ -279,24 +265,15 @@ export default function Home() {
   const heroOpacity = useTransform(scrollY, [heroHeight * 0.3, heroHeight * 0.85], [1, 0]);
   const heroY = useTransform(scrollY, [0, heroHeight * 0.85], [0, -60]);
 
-  // Trên mobile rút ngắn khoảng cách delay giữa các phần tử hero (nhịp nhanh
-  // hơn, tổng thời gian reveal ngắn lại) để giảm số animation chạy song song
-  // tại bất kỳ thời điểm nào — máy yếu càng ít việc cùng lúc càng mượt.
   const heroDelay = (d) => (isMobile ? d * 0.6 : d);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300 relative">
-      {/* Nền lưới kiểu Apple — thay cho noise feTurbulence cũ.
-          Đây chỉ là 2 linear-gradient kẻ đường 1px lặp lại (rẻ để trình duyệt
-          tile) thay vì bộ lọc nhiễu ngẫu nhiên (tốn GPU per-pixel). Dùng
-          `absolute` (cuộn theo trang) thay vì `fixed`, và mask nằm ngay trên
-          cùng phần tử — không cần div lồng, không ép will-change, nên nhẹ hơn
-          hẳn ở cả mobile lẫn desktop. */}
-      {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" /> */}
-      {/* Đặt làm sibling đầu tiên trong thẻ div bao ngoài cùng của Home */}
-      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 antialiased selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 overflow-x-hidden transition-colors duration-300 relative">
+      
+      {/* Background lưới mờ ấm áp (Parchment/Wood feel) */}
+      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
-      {/* Nội dung bên dưới nhớ thêm relative z-10 */}
+      {/* Nội dung bên dưới */}
       <div className="relative z-10">
         
         {/* ── HERO ── */}
@@ -304,14 +281,11 @@ export default function Home() {
           ref={heroRef}
           className="relative pt-24 pb-20 sm:pt-24 sm:pb-32 overflow-hidden"
         >
-          {/* Ambient glow — blur radius lớn (100–120px) khá tốn GPU trên mobile.
-              Dùng JS conditional để KHÔNG mount phần tử này trên mobile luôn,
-              thay vì render rồi ẩn bằng class — triệt để hơn, giống kỹ thuật
-              trong các trang mượt hơn (XuDoan, TuyenSinh). */}
+          {/* Ambient glow mang sắc Vàng Gold & Hổ phách */}
           {!isMobile && (
             <>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-100/50 to-transparent dark:from-amber-900/10 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-orange-100/30 to-transparent dark:from-orange-900/10 blur-[100px] -z-10 pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-200/40 to-transparent dark:from-amber-900/20 rounded-[100%] blur-[120px] -z-10 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-gradient-to-tl from-yellow-200/30 to-transparent dark:from-yellow-900/10 blur-[100px] -z-10 pointer-events-none" />
             </>
           )}
 
@@ -327,18 +301,18 @@ export default function Home() {
                 animate="visible"
                 custom={heroDelay(0)}
               >
-                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm transition-colors cursor-default">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-stone-800/80 backdrop-blur-md border border-amber-200/60 dark:border-amber-900/50 shadow-sm transition-colors cursor-default">
                   <span className="relative flex h-2 w-2 flex-shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                   </span>
-                  <span className="text-[11px] font-bold text-stone-600 dark:text-stone-400 tracking-widest uppercase">
+                  <span className="text-[11px] font-bold text-amber-900/80 dark:text-amber-100/80 tracking-widest uppercase">
                     Ban Giáo Lý · An Ngãi · {new Date().getFullYear()}
                   </span>
                 </div>
               </motion.div>
 
-              {/* H1 */}
+              {/* H1 Typography cổ điển, uy nghi */}
               <motion.h1
                 variants={heroReveal}
                 initial="hidden"
@@ -347,20 +321,20 @@ export default function Home() {
                 className="w-full"
                 style={{ fontFamily: "'Cormorant', Georgia, serif" }}
               >
-                <span className="block text-left text-2xl sm:text-3xl lg:text-4xl font-light italic text-stone-400 dark:text-stone-500 leading-snug tracking-wide pl-1 mb-1 sm:mb-2">
+                <span className="block text-left text-2xl sm:text-3xl lg:text-4xl font-light italic text-amber-800/70 dark:text-amber-400/60 leading-snug tracking-wide pl-1 mb-1 sm:mb-2">
                   Ươm mầm
                 </span>
                 <span className="block text-center leading-[0.92]">
-                  <span className="text-[44px] sm:text-7xl lg:text-[100px] font-semibold text-stone-900 dark:text-stone-100 tracking-tighter">
+                  <span className="text-[44px] sm:text-7xl lg:text-[100px] font-semibold text-amber-950 dark:text-stone-50 tracking-tighter drop-shadow-sm">
                     Đức Tin
                   </span>
                 </span>
-                <span className="block text-right text-2xl sm:text-4xl lg:text-4xl text-amber-700 dark:text-amber-500 font-medium italic leading-snug tracking-wide pr-1 mt-2 sm:mt-4">
+                <span className="block text-right text-2xl sm:text-4xl lg:text-4xl text-amber-600 dark:text-amber-500 font-medium italic leading-snug tracking-wide pr-1 mt-2 sm:mt-4">
                   & Tri Thức
                 </span>
               </motion.h1>
 
-              {/* Divider */}
+              {/* Divider điểm nhấn Gold */}
               <motion.div
                 variants={heroReveal}
                 initial="hidden"
@@ -368,12 +342,12 @@ export default function Home() {
                 custom={heroDelay(0.16)}
                 className="flex items-center gap-4 w-full max-w-[280px]"
               >
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-300 dark:to-stone-700" />
-                <div className="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700" />
-                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-300 dark:to-stone-700" />
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-300 dark:to-amber-800" />
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-700" />
+                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-300 dark:to-amber-800" />
               </motion.div>
 
-              {/* Quote */}
+              {/* Quote Lời Chúa */}
               <motion.blockquote
                 variants={heroReveal}
                 initial="hidden"
@@ -382,14 +356,14 @@ export default function Home() {
                 className="max-w-lg mx-auto px-4"
               >
                 <p
-                  className="text-[17px] sm:text-xl font-light italic text-stone-600 dark:text-stone-400 leading-relaxed mb-3"
+                  className="text-[17px] sm:text-xl font-light italic text-amber-900/80 dark:text-amber-100/80 leading-relaxed mb-3"
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                 >
                   "Tôi là ánh sáng đến thế gian, để bất cứ ai tin vào tôi thì không ở lại trong bóng
                   tối."
                 </p>
                 <cite
-                  className="not-italic text-[10px] sm:text-xs font-bold tracking-[0.15em] text-stone-400 dark:text-stone-500 uppercase"
+                  className="not-italic text-[10px] sm:text-xs font-bold tracking-[0.15em] text-amber-700/60 dark:text-amber-400/60 uppercase"
                   style={{ fontFamily: "'SF Mono', 'DM Mono', monospace" }}
                 >
                   Ga 12, 46
@@ -409,7 +383,7 @@ export default function Home() {
                   onClick={() =>
                     document.getElementById("main-content")?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 active:scale-[0.98] ${!isMobile ? "md:hover:bg-stone-800 dark:md:hover:bg-white" : ""} transition-all duration-300 cursor-pointer shadow-sm`}
+                  className={`group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden bg-amber-900 text-amber-50 dark:bg-amber-500 dark:text-stone-950 active:scale-[0.98] ${!isMobile ? "md:hover:bg-amber-950 dark:md:hover:bg-amber-400" : ""} transition-all duration-300 cursor-pointer shadow-sm`}
                   style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
                 >
                   <span className="text-[14px] font-semibold tracking-wide">
@@ -420,7 +394,7 @@ export default function Home() {
 
                 <Link
                   to="/giới-thiệu"
-                  className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-[14px] font-semibold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/70 backdrop-blur-md border border-stone-200 dark:border-stone-800 rounded-full active:scale-[0.98] ${!isMobile ? "md:hover:bg-white dark:md:hover:bg-stone-800 md:hover:border-stone-300 dark:md:hover:border-stone-700" : ""} transition-all duration-300 shadow-sm`}
+                  className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 text-[14px] font-semibold text-amber-900 dark:text-amber-100 bg-white/60 dark:bg-stone-800/60 backdrop-blur-md border border-amber-200/50 dark:border-amber-900/50 rounded-full active:scale-[0.98] ${!isMobile ? "md:hover:bg-white dark:md:hover:bg-stone-800 md:hover:border-amber-300 dark:md:hover:border-amber-700" : ""} transition-all duration-300 shadow-sm`}
                   style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
                 >
                   Tìm hiểu thêm
@@ -429,6 +403,7 @@ export default function Home() {
             </div>
           </motion.div>
         </section>
+        
         {/* ── BENTO GRID ── */}
         <main id="main-content" className="max-w-5xl mx-auto px-5 sm:px-6 md:pb-24 pb-12">
           <motion.div

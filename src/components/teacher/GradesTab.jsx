@@ -177,26 +177,26 @@ export default function GradesTab() {
   const scoreFields = GRADE_FIELDS.filter((f) => f.key !== "diem_tb");
 
   return (
-    <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-stone-100">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-stone-100 dark:border-stone-800">
         <button type="button" onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 hover:text-stone-800 flex-shrink-0">
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex-shrink-0">
           <ArrowLeft className="w-4 h-4" /> Quay lại
         </button>
-        <div className="hidden sm:block w-px h-5 bg-stone-200" />
+        <div className="hidden sm:block w-px h-5 bg-stone-200 dark:bg-stone-800" />
         <div className="flex flex-wrap items-center gap-2 flex-1">
           <Table className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
-          <div className="flex gap-1 bg-stone-100 rounded-xl p-1">
+          <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-xl p-1">
             {["HK1", "HK2"].map((k) => (
               <button key={k} type="button" onClick={() => setHocKy(k)}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                  hocKy === k ? "bg-white text-[#FF6B35] shadow-sm" : "text-stone-500"
+                  hocKy === k ? "bg-white dark:bg-stone-700 text-[#FF6B35] dark:text-orange-400 shadow-sm" : "text-stone-500 dark:text-stone-400"
                 }`}>
                 {k === "HK1" ? "Học Kỳ I" : "Học Kỳ II"}
               </button>
             ))}
           </div>
-          <span className="text-[11px] text-stone-400 hidden md:inline">
+          <span className="text-[11px] text-stone-400 dark:text-stone-500 hidden md:inline">
             Enter hoặc ↓ để nhảy xuống học sinh tiếp theo
           </span>
         </div>
@@ -208,7 +208,7 @@ export default function GradesTab() {
       </div>
 
       {isLocked && (
-        <div className="px-5 py-2.5 border-b border-stone-100 bg-stone-100 text-[12px] text-stone-600">
+        <div className="px-5 py-2.5 border-b border-stone-100 dark:border-stone-800 bg-stone-100 dark:bg-stone-800 text-[12px] text-stone-600 dark:text-stone-300">
           🔒 Học kỳ này đã bị khóa sổ — chỉ xem được, không nhập điểm được cho đến khi admin mở khóa lại.
         </div>
       )}
@@ -216,52 +216,52 @@ export default function GradesTab() {
       {loading ? (
         <div className="flex items-center justify-center gap-2.5 py-14" style={{ color: ACCENT }}>
           <Spinner className="h-5 w-5" />
-          <span className="text-sm text-stone-500">Đang tải bảng điểm…</span>
+          <span className="text-sm text-stone-500 dark:text-stone-400">Đang tải bảng điểm…</span>
         </div>
       ) : (
         <>
           {/* MOBILE: mỗi học sinh 1 thẻ, các ô điểm xếp lưới để chạm dễ hơn bảng ngang */}
-          <div className={`md:hidden divide-y divide-stone-50 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
+          <div className={`md:hidden divide-y divide-stone-50 dark:divide-stone-850 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
             {rosterStudents.map((s, rowIdx) => {
               const g = rows[s.username] ?? {};
               const isDirty = JSON.stringify(g) !== JSON.stringify(initial[s.username]);
               return (
-                <div key={s.username} className={`px-4 py-3.5 ${isDirty ? "bg-orange-50/30" : ""}`}>
+                <div key={s.username} className={`px-4 py-3.5 ${isDirty ? "bg-orange-50/30 dark:bg-orange-950/10" : ""}`}>
                   <div className="flex items-center gap-2.5 mb-3">
-                    <span className="text-[11px] font-medium text-stone-400 w-4 flex-shrink-0 text-center">{rowIdx + 1}</span>
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+                    <span className="text-[11px] font-medium text-stone-400 dark:text-stone-550 w-4 flex-shrink-0 text-center">{rowIdx + 1}</span>
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
                       <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                     </div>
-                    <span className="text-[13px] font-semibold text-stone-800 truncate min-w-0 flex-1">
+                    <span className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate min-w-0 flex-1">
                       {s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 pl-[42px]">
                     {scoreFields.map((f) => (
                       <label key={f.key} className="flex flex-col gap-1">
-                        <span className="text-[10px] text-stone-400 font-medium">{f.label}</span>
+                        <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium">{f.label}</span>
                         <input
                           type="number" min="0" max="10" step="0.1" inputMode="decimal"
                           value={g[f.key] ?? ""}
                           onChange={(e) => updateCell(s.username, f.key, e.target.value)}
-                          className="w-full text-center rounded-lg border border-stone-200 py-2 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+                          className="w-full text-center rounded-lg border border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 py-2 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
                         />
                       </label>
                     ))}
                     <label className="flex flex-col gap-1">
-                      <span className="text-[10px] text-stone-400 font-medium">TB</span>
+                      <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium">TB</span>
                       <div className="flex items-center gap-1">
                         <input
                           type="number" min="0" max="10" step="0.01" inputMode="decimal"
                           value={g.diem_tb ?? ""}
                           onChange={(e) => updateTBManual(s.username, e.target.value)}
                           className={`w-full text-center rounded-lg border py-2 text-[14px] font-bold focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent ${tbColorClass(g.diem_tb)} ${
-                            manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40" : "border-stone-200"
+                            manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40 dark:bg-orange-950/20" : "border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900"
                           }`}
                         />
                         {manualTB[s.username] && (
                           <button type="button" title="Tính lại tự động" onClick={() => resetTBAuto(s.username)}
-                            className="text-[13px] text-stone-400 hover:text-[#FF6B35] flex-shrink-0">↺</button>
+                            className="text-[13px] text-stone-400 dark:text-stone-505 hover:text-[#FF6B35] flex-shrink-0">↺</button>
                         )}
                       </div>
                     </label>
@@ -270,7 +270,7 @@ export default function GradesTab() {
               );
             })}
             {rosterStudents.length === 0 && (
-              <p className="text-center text-sm text-stone-400 py-10 px-4">Lớp chưa có học sinh nào.</p>
+              <p className="text-center text-sm text-stone-400 dark:text-stone-550 py-10 px-4">Lớp chưa có học sinh nào.</p>
             )}
           </div>
 
@@ -278,31 +278,31 @@ export default function GradesTab() {
           <div className={`hidden md:block overflow-auto max-h-[65vh] ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
             <table className="w-full text-sm border-collapse min-w-[760px]">
               <thead>
-                <tr className="bg-[#F9F9F9] text-[11px] text-stone-400 uppercase tracking-wide">
-                  <th className="text-center font-semibold px-3 py-3 sticky top-0 left-0 bg-[#F9F9F9] z-20 w-12">STT</th>
-                  <th className="text-left font-semibold px-4 py-3 sticky top-0 left-[48px] bg-[#F9F9F9] z-20">Họ & Tên</th>
+                <tr className="bg-[#F9F9F9] dark:bg-stone-850 text-[11px] text-stone-400 dark:text-stone-550 uppercase tracking-wide">
+                  <th className="text-center font-semibold px-3 py-3 sticky top-0 left-0 bg-[#F9F9F9] dark:bg-stone-850 z-20 w-12">STT</th>
+                  <th className="text-left font-semibold px-4 py-3 sticky top-0 left-[48px] bg-[#F9F9F9] dark:bg-stone-850 z-20">Họ & Tên</th>
                   {scoreFields.map((f) => (
-                    <th key={f.key} className="font-semibold px-2 py-3 text-center min-w-[84px] sticky top-0 bg-[#F9F9F9] z-10">{f.label}</th>
+                    <th key={f.key} className="font-semibold px-2 py-3 text-center min-w-[84px] sticky top-0 bg-[#F9F9F9] dark:bg-stone-850 z-10">{f.label}</th>
                   ))}
-                  <th className="font-semibold px-2 py-3 text-center min-w-[90px] sticky top-0 bg-[#F9F9F9] z-10">TB</th>
+                  <th className="font-semibold px-2 py-3 text-center min-w-[90px] sticky top-0 bg-[#F9F9F9] dark:bg-stone-850 z-10">TB</th>
                 </tr>
               </thead>
               <tbody>
                 {rosterStudents.map((s, rowIdx) => {
                   const g = rows[s.username] ?? {};
                   const isDirty = JSON.stringify(g) !== JSON.stringify(initial[s.username]);
-                  const rowBg   = isDirty ? "bg-orange-50/30" : "bg-white";
+                  const rowBg   = isDirty ? "bg-orange-50/30 dark:bg-orange-950/10" : "bg-white dark:bg-stone-900";
                   return (
-                    <tr key={s.username} className="border-b border-stone-50">
-                      <td className={`px-3 py-2 text-center sticky left-0 z-10 text-[12px] font-medium text-stone-400 w-12 ${rowBg}`}>
+                    <tr key={s.username} className="border-b border-stone-50 dark:border-stone-850">
+                      <td className={`px-3 py-2 text-center sticky left-0 z-10 text-[12px] font-medium text-stone-400 dark:text-stone-550 w-12 ${rowBg}`}>
                         {rowIdx + 1}
                       </td>
                       <td className={`px-4 py-2 sticky left-[48px] z-10 ${rowBg}`}>
                         <div className="flex items-center gap-2.5 min-w-[160px]">
-                          <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+                          <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
                             <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <span className="text-[13px] font-semibold text-stone-800 truncate">{s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}</span>
+                          <span className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate">{s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}</span>
                         </div>
                       </td>
                       {scoreFields.map((f) => (
@@ -313,7 +313,7 @@ export default function GradesTab() {
                             value={g[f.key] ?? ""}
                             onChange={(e) => updateCell(s.username, f.key, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIdx, f.key)}
-                            className="w-16 text-center rounded-lg border border-stone-200 py-1.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+                            className="w-16 text-center rounded-lg border border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 py-1.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
                           />
                         </td>
                       ))}
@@ -326,12 +326,12 @@ export default function GradesTab() {
                             onChange={(e) => updateTBManual(s.username, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIdx, "diem_tb")}
                             className={`w-16 text-center rounded-lg border py-1.5 text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent ${tbColorClass(g.diem_tb)} ${
-                              manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40" : "border-stone-200"
+                              manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40 dark:bg-orange-950/20" : "border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900"
                             }`}
                           />
                           {manualTB[s.username] && (
                             <button type="button" title="Tính lại tự động" onClick={() => resetTBAuto(s.username)}
-                              className="text-[11px] text-stone-400 hover:text-[#FF6B35] flex-shrink-0">↺</button>
+                              className="text-[11px] text-stone-400 dark:text-stone-505 hover:text-[#FF6B35] flex-shrink-0">↺</button>
                           )}
                         </div>
                       </td>
@@ -344,7 +344,7 @@ export default function GradesTab() {
         </>
       )}
 
-      <div className="px-5 py-3 border-t border-stone-100 bg-[#F9F9F9] text-[11px] text-stone-400">
+      <div className="px-5 py-3 border-t border-stone-100 dark:border-stone-800 bg-[#F9F9F9] dark:bg-stone-850/50 text-[11px] text-stone-400 dark:text-stone-500">
         Điểm TB tự tính theo công thức: Miệng×1, Vở×1, 15'×1, 1 Tiết×2, Thi×3 — có thể sửa tay (ô sẽ viền cam), bấm ↺ để tính lại tự động.
       </div>
     </div>

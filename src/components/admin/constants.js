@@ -37,9 +37,41 @@ export function handleAvatarError(e) {
   e.currentTarget.src = AVATAR_FALLBACK;
 }
 
+// ── Đăng ký học (tab "Đăng ký") ──
+export const DANG_KY_STATUS_TABS = ["moi", "da_lien_he", "da_xep_lop", "tu_choi"];
+
+export const DANG_KY_LABELS_VI = {
+  moi:        "Mới",
+  da_lien_he: "Đã liên hệ",
+  da_xep_lop: "Đã xếp lớp",
+  tu_choi:    "Từ chối",
+};
+
+export const DANG_KY_BADGE = {
+  moi:        "bg-red-50 text-red-600",
+  da_lien_he: "bg-blue-50 text-blue-600",
+  da_xep_lop: "bg-emerald-50 text-emerald-600",
+  tu_choi:    "bg-stone-100 text-stone-500",
+};
+
 export function getCurrentNamHoc(date = new Date()) {
   const year = date.getFullYear();
   const month = date.getMonth(); // 0-indexed, tháng 9 = 8
   const startYear = month >= 8 ? year : year - 1;
   return `${startYear}-${startYear + 1}`;
 }
+
+// ── Liên hệ / Góp ý (tab "Góp ý") ──
+export const LIEN_HE_STATUS_TABS = ["moi", "da_doc", "da_xu_ly"];
+
+export const LIEN_HE_LABELS_VI = {
+  moi:        "Mới",
+  da_doc:     "Đã đọc",
+  da_xu_ly:   "Đã giải quyết",
+};
+
+export const LIEN_HE_BADGE = {
+  moi:        "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  da_doc:     "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+  da_xu_ly:   "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+};

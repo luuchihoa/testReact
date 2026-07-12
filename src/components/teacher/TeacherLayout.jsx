@@ -63,14 +63,14 @@ const TABS = [
 
 function TeacherHeader({ lop, namHoc, studentCount, studentsInitialized }) {
   return (
-    <div className="sticky top-16 z-30 bg-[#faf8f5]/95 backdrop-blur-sm border-b border-stone-200/60 px-4 sm:px-6 py-3 sm:py-4">
+    <div className="sticky top-16 z-30 bg-[#faf8f5]/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200/60 dark:border-stone-800 px-4 sm:px-6 py-3 sm:py-4">
       <div className="max-w-6xl mx-auto flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest" style={{ color: ACCENT }}>Giáo viên chủ nhiệm</p>
-            <h1 className="text-base sm:text-xl font-bold text-stone-900 truncate">Lớp {lop} · {namHoc}</h1>
+            <h1 className="text-base sm:text-xl font-bold text-stone-900 dark:text-stone-100 truncate">Lớp {lop} · {namHoc}</h1>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 flex-shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 dark:text-stone-500 flex-shrink-0">
             <Users className="w-3.5 h-3.5" />
             {/* NÂNG CẤP: Dùng Bone mini thay cho Spinner để đồng bộ với thanh xương */}
             {studentsInitialized ? (
@@ -82,14 +82,14 @@ function TeacherHeader({ lop, namHoc, studentCount, studentsInitialized }) {
           </span>
         </div>
 
-        <nav className="tk-tabbar flex gap-1.5 bg-stone-100 rounded-xl p-1 overflow-x-auto w-full sm:w-fit" data-lenis-prevent>
+        <nav className="tk-tabbar flex gap-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl p-1 overflow-x-auto w-full sm:w-fit" data-lenis-prevent>
           {TABS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 `flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap ${
-                  isActive ? "bg-white text-[#FF6B35] shadow-sm" : "text-stone-500"
+                  isActive ? "bg-white dark:bg-stone-900 text-[#FF6B35] dark:text-[#FF6B35] shadow-sm" : "text-stone-500 dark:text-stone-400"
                 }`
               }
             >
@@ -114,8 +114,8 @@ function TeacherLayoutInner() {
   if (!context?.lop) {
     return (
       <div className="min-h-[60vh] w-full flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <GraduationCap className="w-10 h-10 text-stone-300" />
-        <p className="text-stone-500 text-sm max-w-xs">
+        <GraduationCap className="w-10 h-10 text-stone-300 dark:text-stone-700" />
+        <p className="text-stone-500 dark:text-stone-400 text-sm max-w-xs">
           Bạn chưa được phân công chủ nhiệm lớp nào trong năm học {getCurrentNamHoc()}.
         </p>
         <button type="button" onClick={() => navigate("/")}
@@ -127,7 +127,7 @@ function TeacherLayoutInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5]">
+    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950">
       <style>{`
         .tk-tabbar::-webkit-scrollbar { display: none; }
         .tk-tabbar { -ms-overflow-style: none; scrollbar-width: none; }

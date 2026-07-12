@@ -256,6 +256,42 @@ export async function fetchClassAcademicSummary(usernames, namHoc, hocKyInt) {
   return byUser;
 }
 
+/* ============================================================
+   ĐĂNG KÝ HỌC (form TuyenSinh.jsx) — cần chạy migration_dang_ky_hoc.sql
+   ============================================================ */
+
+// Danh sách hồ sơ đăng ký, lọc theo trạng thái (truyền null để lấy tất cả).
+// "moi" sắp xếp cũ -> mới (FIFO, xử lý hồ sơ chờ lâu nhất trước); các trạng
+// thái đã xử lý thì mới -> cũ (xem lại việc vừa làm trước tiên).
+export async function fetchDangKyHoc(trangThai) {
+  let query = supabase
+    .from("dang_ky_hoc")
+    .select("*")
+    .order("created_at", { ascending: trangThai === "moi" });
+  if (trangThai) query = query.eq("trang_thai", trangThai);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Đổi trạng thái xử lý 1 hồ sơ — chạy qua RPC "process_dang_ky_hoc"
+// (SECURITY DEFINER, tự kiểm tra is_admin() ở tầng DB, tự ghi xu_ly_boi/xu_ly_luc).
+export async function processDangKyHoc(id, trangThai, ghiChuAdmin) {
+  const { error } = await supabase.rpc("process_dang_ky_hoc", {
+    p_id: id,
+    p_trang_thai: trangThai,
+    p_ghi_chu_admin: ghiChuAdmin?.trim() || null,
+  });
+  if (error) throw error;
+}
+
+// Số hồ sơ đang ở trạng thái "moi" — dùng cho badge trên tab nav.
+export async function fetchPendingDangKyCount() {
+  const { data, error } = await supabase.rpc("get_pending_dang_ky_count");
+  if (error) throw error;
+  return data ?? 0;
+}
+
 // Gửi thông báo chung (broadcast) — chạy qua RPC "broadcast_notification"
 // (SECURITY DEFINER, tự kiểm tra is_admin() ở tầng DB). recipient_username
 // sẽ là NULL trong bảng notifications -> mọi tài khoản đều nhìn thấy.
@@ -279,4 +315,46 @@ export async function fetchRecentBroadcasts(limit = 20) {
     .limit(limit);
   if (error) throw error;
   return data ?? [];
+}
+
+export async function submitContactForm(hoTen, sdt, noiDung) {
+  const { data, error } = await supabase.rpc("submit_lien_he", {
+    p_ho_ten: hoTen,
+    p_sdt: sdt,
+    p_noi_dung: noiDung,
+  });
+  
+  if (error) throw error;
+  return data;
+}
+// Lấy danh sách liên hệ theo trạng thái
+export async function fetchLienHe(trangThai) {
+  let query = supabase
+    .from("lien_he")
+    .select("*")
+    .order("created_at", { ascending: trangThai === "moi" }); // Mới thì xếp cũ lên trước (FIFO)
+    
+  if (trangThai) query = query.eq("trang_thai", trangThai);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Cập nhật trạng thái
+export async function updateLienHeStatus(id, trangThai) {
+  const { error } = await supabase
+    .from("lien_he")
+    .update({ trang_thai: trangThai })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// Đếm số lượng góp ý mới (dùng cho badge đỏ trên thanh Tab)
+export async function fetchPendingLienHeCount() {
+  const { count, error } = await supabase
+    .from("lien_he")
+    .select("*", { count: "exact", head: true })
+    .eq("trang_thai", "moi");
+  if (error) throw error;
+  return count ?? 0;
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { LoadingBox, StartBox } from "./ui/Feedback.jsx";
 import { useParams, useNavigate } from "react-router-dom";
 import QuizBox from "./QuizBox.jsx";
-import DoVui from "./DoVui_cũ.jsx";
+import DoVui from "./DoVui.jsx";
 import { AnimatePresence } from "framer-motion";
 
 const quizConfig = {
@@ -69,11 +69,11 @@ export default function TestQuiz() {
 
   if (fetchError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F9F9F9]">
-        <p className="text-[17px] font-semibold text-gray-700">Không tải được dữ liệu 😕</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-[#FDFBF7] dark:bg-[#1C1917] transition-colors duration-500">
+        <p className="text-[18px] font-bold text-amber-950 dark:text-amber-50 font-serif">Không tải được dữ liệu 😕</p>
         <button
           onClick={() => navigate(-1)}
-          className="px-5 py-2.5 rounded-2xl bg-[#FF6B35] text-white text-[15px] font-semibold"
+          className="px-8 py-3.5 rounded-2xl bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[14.5px] font-bold shadow-sm md:hover:opacity-90 transition-all active:scale-[0.98]"
         >
           Quay lại
         </button>
@@ -86,7 +86,7 @@ export default function TestQuiz() {
   const QuizMap = type === "đố-vui-giáo-lý" ? DoVui : QuizBox;
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7]">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] transition-colors duration-500">
       <AnimatePresence mode="wait">
         {!started ? (
           <StartBox key="start" startQuiz={() => setStarted(true)} config={config} onClose={() => navigate(-1)}/>

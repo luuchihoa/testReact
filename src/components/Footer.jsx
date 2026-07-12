@@ -54,12 +54,12 @@ function ChevronIcon() {
 /** Cụm liên kết dạng disclosure — thu gọn trên mobile, luôn mở trên desktop (Apple footer pattern). */
 function LinkGroup({ title, links, onNavigate }) {
   return (
-    <details className="group border-b border-stone-200 py-1 md:border-none md:py-0 dark:border-stone-800" open>
+    <details className="group border-b border-amber-900/10 py-1 md:border-none md:py-0 dark:border-amber-100/10" open>
       <summary
-        className="flex cursor-pointer list-none items-center justify-between py-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400 marker:content-none md:cursor-default md:py-0 md:pb-3.5 dark:text-stone-500"
+        className="flex cursor-pointer list-none items-center justify-between py-3 text-[11px] font-bold uppercase tracking-wider text-amber-800/70 marker:content-none md:cursor-default md:py-0 md:pb-3.5 dark:text-amber-400/70"
       >
         {title}
-        <span className="md:hidden">
+        <span className="md:hidden text-amber-900/40 dark:text-amber-100/40">
           <ChevronIcon />
         </span>
       </summary>
@@ -69,7 +69,7 @@ function LinkGroup({ title, links, onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate(link.path)}
-              className="text-left text-[13px] font-medium text-stone-500 transition-colors md:hover:text-stone-800 dark:text-stone-400 dark:md:hover:text-stone-100"
+              className="text-left text-[13px] font-medium text-stone-600 transition-colors md:hover:text-amber-900 dark:text-stone-400 dark:md:hover:text-amber-100"
             >
               {link.label}
             </button>
@@ -110,31 +110,31 @@ export default function Footer() {
   const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <footer className="mt-auto border-t border-stone-200/40 bg-white/85 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 antialiased backdrop-blur-md md:pb-12 md:pt-14 dark:border-stone-800 dark:bg-stone-950/85">
+    <footer className="mt-auto border-t border-amber-900/10 bg-[#FDFBF7]/85 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 antialiased backdrop-blur-md md:pb-12 md:pt-14 dark:border-amber-100/10 dark:bg-[#1C1917]/85">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Lưới chính */}
         <div className="hidden md:grid grid-cols-1 gap-8 md:grid-cols-4 md:gap-10">
           {/* Cột 1: Thương hiệu */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3 select-none">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50 to-white shadow-sm dark:border-orange-500/30 dark:from-orange-500/10 dark:to-stone-900">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50 to-[#FDFBF7] shadow-sm dark:border-amber-800/30 dark:from-amber-900/20 dark:to-[#1C1917]">
                 <img
                   src="/images/logo_htdc.avif"
                   alt="Giáo xứ An Ngãi"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover p-1"
                 />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="text-[15px] font-extrabold tracking-tight text-stone-800 dark:text-stone-100">
+                <span className="text-[15px] font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif">
                   Ban Giáo Lý
                 </span>
-                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-stone-400 font-mono whitespace-nowrap dark:text-stone-500">
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-800/60 font-mono whitespace-nowrap dark:text-amber-200/50">
                   HTDC · Xứ đoàn Mẹ Mân Côi
                 </p>
               </div>
             </div>
 
-            <p className="max-w-xs text-[13px] font-normal leading-relaxed text-stone-500 dark:text-stone-400">
+            <p className="max-w-xs text-[13px] font-normal leading-relaxed text-stone-600 dark:text-stone-400">
               Nền tảng học hỏi và kết nối đức tin cho cộng đoàn. Luôn cập nhật và đổi mới vững vàng.
             </p>
 
@@ -143,7 +143,7 @@ export default function Footer() {
                 href="https://www.facebook.com/profile.php?id=61558564791118"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 active:bg-stone-200 dark:text-stone-400 dark:hover:bg-stone-800 dark:active:bg-stone-700"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-amber-900/5 active:bg-amber-900/10 dark:text-stone-400 dark:hover:bg-amber-100/10 dark:active:bg-amber-100/20"
                 aria-label="Facebook"
               >
                 <FacebookIcon />
@@ -151,7 +151,7 @@ export default function Footer() {
               <button
                 type="button"
                 onClick={() => showToast("Trang Instagram đang được cập nhật", "info")}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 active:bg-stone-200 dark:text-stone-400 dark:hover:bg-stone-800 dark:active:bg-stone-700"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-amber-900/5 active:bg-amber-900/10 dark:text-stone-400 dark:hover:bg-amber-100/10 dark:active:bg-amber-100/20"
                 aria-label="Instagram"
               >
                 <InstagramIcon />
@@ -171,10 +171,10 @@ export default function Footer() {
 
           {/* Cột 4: Đăng ký nhận tin */}
           <div className="space-y-3 pt-1 md:col-span-1 md:pt-0">
-            <h4 className="text-[13px] font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
               Nhận thông tin
             </h4>
-            <p className="text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">
+            <p className="text-[13px] leading-relaxed text-stone-600 dark:text-stone-400">
               Cập nhật lịch học và tài liệu mới nhất.
             </p>
             <form onSubmit={handleSubscribe} className="flex flex-col gap-2.5">
@@ -185,12 +185,12 @@ export default function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={subscribing}
                 placeholder="Email của bạn"
-                className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-[13px] font-medium text-stone-900 placeholder-stone-400 shadow-sm transition-all focus:border-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-400 disabled:opacity-60 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:placeholder-stone-500 dark:focus:border-stone-600 dark:focus:ring-stone-600"
+                className="w-full rounded-xl border border-amber-900/20 bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-amber-950 placeholder-stone-400 shadow-sm transition-all focus:border-amber-900/50 focus:outline-none focus:ring-1 focus:ring-amber-900/50 disabled:opacity-60 dark:border-amber-100/20 dark:bg-stone-900/40 dark:text-amber-50 dark:placeholder-stone-500 dark:focus:border-amber-100/50 dark:focus:ring-amber-100/50"
               />
               <button
                 type="submit"
                 disabled={subscribing}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-stone-900 px-3.5 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-colors md:hover:bg-stone-800 active:bg-stone-950 active:scale-[0.98] disabled:opacity-60 dark:bg-white dark:text-stone-900 dark:md:hover:bg-stone-100"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-900 px-3.5 py-2.5 text-[13px] font-bold text-amber-50 shadow-sm transition-colors md:hover:bg-amber-950 active:scale-[0.98] disabled:opacity-60 dark:bg-amber-100 dark:text-amber-950 dark:md:hover:bg-amber-50"
               >
                 {subscribing && (
                   <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -205,21 +205,21 @@ export default function Footer() {
         </div>
 
         {/* Bản quyền dưới cùng */}
-        <div className="md:mt-8 mb-16 md:mb-0 flex flex-col items-center justify-center gap-3 md:border-t md:border-stone-200 md:pt-6 text-center md:mt-12 md:flex-row md:justify-between md:gap-4 md:text-left dark:border-stone-800">
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold tracking-widest uppercase text-stone-400 dark:text-stone-500">
+        <div className="md:mt-8 mb-16 md:mb-0 flex flex-col items-center justify-center gap-3 border-t border-amber-900/10 md:pt-6 pt-5 text-center mt-8 md:flex-row md:justify-between md:gap-4 md:text-left dark:border-amber-100/10">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-amber-800/60 dark:text-amber-400/60">
               HTDC Xứ đoàn Mẹ Mân Côi
             </p>
-            <p className="text-[11px] font-medium text-stone-400/80 dark:text-stone-500/80">
+            <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">
               © {year} Giáo xứ An Ngãi
             </p>
           </div>
 
-          <div className="hidden md:flex justify-center gap-5 text-[11px] font-semibold text-stone-400 select-none md:justify-end dark:text-stone-500">
-            <button type="button" onClick={() => navigate("/quy-định")} className="transition-colors hover:text-stone-700 dark:hover:text-stone-300">
+          <div className="hidden md:flex justify-center gap-5 text-[11px] font-semibold text-stone-500 select-none md:justify-end dark:text-stone-500">
+            <button type="button" onClick={() => navigate("/quy-định")} className="transition-colors hover:text-amber-900 dark:hover:text-amber-100">
               Quy định
             </button>
-            <button type="button" onClick={() => navigate("/bảo-mật")} className="transition-colors hover:text-stone-700 dark:hover:text-stone-300">
+            <button type="button" onClick={() => navigate("/bảo-mật")} className="transition-colors hover:text-amber-900 dark:hover:text-amber-100">
               Bảo mật
             </button>
           </div>

@@ -231,32 +231,16 @@ export default function BroadcastTab() {
           </div>
         </div>
 
-        {/* Nút gửi: tĩnh trên desktop, dính đáy trên mobile */}
+        {/* Nút gửi */}
         <button
           type="submit" disabled={sending}
-          className="hidden sm:inline-flex items-center justify-center gap-2 rounded-full px-5 h-11 text-[13.5px]
+          className="inline-flex items-center justify-center w-full md:w-auto gap-2 rounded-full px-5 h-11 text-[13.5px]
                      font-bold text-white active:scale-[0.98] transition-all disabled:opacity-60 self-start shadow-sm"
           style={{ backgroundColor: ACCENT }}
         >
           <Send className="w-4 h-4" />
           Gửi thông báo
         </button>
-
-        {/* Sticky mobile action bar */}
-        <div className="sm:hidden fixed left-0 right-0 bottom-0 z-40 px-4 pt-3
-                         pb-[calc(env(safe-area-inset-bottom)+12px)]
-                         bg-gradient-to-t from-stone-50 via-stone-50/95 to-transparent
-                         dark:from-stone-950 dark:via-stone-950/95">
-          <button
-            type="submit" disabled={sending}
-            className="w-full h-13 rounded-2xl text-[15px] font-bold text-white shadow-lg
-                       active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{ backgroundColor: ACCENT, height: 52 }}
-          >
-            {sending ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Send className="w-4.5 h-4.5" />}
-            Gửi thông báo
-          </button>
-        </div>
       </form>
 
       {/* ---------- Lịch sử ---------- */}

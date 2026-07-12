@@ -66,6 +66,8 @@ const AdminGradesTab     = lazyWithRetry(() => import("./components/admin/Grades
 const ReportsTab      = lazyWithRetry(() => import("./components/admin/ReportsTab"));
 const BroadcastTab    = lazyWithRetry(() => import("./components/admin/BroadcastTab.jsx"));
 const ArticlesTab     = lazyWithRetry(() => import("./components/admin/ArticlesTab.jsx"));
+const DangKyTab       = lazyWithRetry(() => import("./components/admin/DangKyTab.jsx"));
+const GopYTab         = lazyWithRetry(() => import("./components/admin/GopYTab.jsx"));
 
 const TeacherSummaryTab   = lazyWithRetry(() => import("./components/teacher/SummaryTab.jsx"));
 const TeacherRosterTab    = lazyWithRetry(() => import("./components/teacher/RosterTab.jsx"));
@@ -190,6 +192,8 @@ export default function App() {
             <Route path="báo-cáo"    element={<ReportsTab />} />
             <Route path="thông-báo"  element={<BroadcastTab />} />
             <Route path="bài-viết"   element={<ArticlesTab />} />
+            <Route path="đăng-ký"    element={<DangKyTab />} />
+            <Route path="góp-ý"      element={<GopYTab />} />
           </Route>
           
           {/* Thay thế đoạn Route /quản-lý-học-sinh cũ bằng đoạn mã tối ưu này */}

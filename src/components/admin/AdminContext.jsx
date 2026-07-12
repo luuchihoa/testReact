@@ -7,6 +7,8 @@ import {
   fetchClassTeacherRows,
   fetchEnrollmentCounts,
   fetchTermLocks,
+  fetchPendingDangKyCount,
+  fetchPendingLienHeCount,
 } from "./dataLayer.js"
 
 const AdminContext = createContext(null);
@@ -31,6 +33,23 @@ export function AdminProvider({ children }) {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [pendingDangKy, setPendingDangKy] = useState(0);
+
+  const refreshPendingDangKy = useCallback(async () => {
+    try {
+      setPendingDangKy(await fetchPendingDangKyCount());
+    } catch (err) {
+      console.error("load pending dang ky count error:", err);
+    }
+  }, []);
+
+  const [pendingGopY, setPendingGopY] = useState(0);
+
+  const refreshPendingGopY = useCallback(async () => {
+    try { setPendingGopY(await fetchPendingLienHeCount()); } 
+    catch (err) { console.error("load pending gop y count error:", err); }
+  }, []);
+
   // Tải danh sách năm học 1 lần khi vào trang — không phụ thuộc namHoc đang
   // chọn, vì cần biết TẤT CẢ năm học sẵn có để hiển thị đủ trong <select>.
   useEffect(() => {
@@ -42,7 +61,9 @@ export function AdminProvider({ children }) {
         console.error("load nam hoc list error:", err);
       }
     })();
-  }, []);
+    refreshPendingDangKy();
+    refreshPendingGopY();
+  }, [refreshPendingDangKy, refreshPendingGopY]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -94,7 +115,9 @@ export function AdminProvider({ children }) {
     loading, loadAll,
     showToast,
     handleRoleChanged,
-  }), [namHoc, namHocList, users, classes, loading, loadAll, showToast, handleRoleChanged]);
+    pendingDangKy, refreshPendingDangKy,
+    pendingGopY, refreshPendingGopY,
+  }), [namHoc, namHocList, users, classes, loading, loadAll, showToast, handleRoleChanged, pendingDangKy, refreshPendingDangKy, pendingGopY, refreshPendingGopY]);
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 }

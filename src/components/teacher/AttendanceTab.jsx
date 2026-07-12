@@ -157,19 +157,19 @@ export default function AttendanceTab() {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-stone-100">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-stone-100 dark:border-stone-800">
         <button type="button" onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 hover:text-stone-800 flex-shrink-0">
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex-shrink-0">
           <ArrowLeft className="w-4 h-4" /> Quay lại
         </button>
-        <div className="hidden sm:block w-px h-5 bg-stone-200" />
+        <div className="hidden sm:block w-px h-5 bg-stone-200 dark:bg-stone-800" />
         <div className="flex flex-wrap items-center gap-2 flex-1">
           <CalendarCheck className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
           {hasSchedule ? (
             <select value={date} onChange={(e) => setDate(e.target.value)}
-              className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35]">
+              className="rounded-xl border border-stone-200 dark:border-stone-750 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-[13px] font-medium text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]">
               {currentRange.sundays.map((d, idx) => (
                 <option key={toISODate(d)} value={toISODate(d)}>
                   Buổi {idx + 1} · {formatVNDate(d)}
@@ -178,13 +178,13 @@ export default function AttendanceTab() {
             </select>
           ) : (
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-              className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35]" />
+              className="rounded-xl border border-stone-200 dark:border-stone-750 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-[13px] font-medium text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]" />
           )}
-          <div className="flex gap-1 bg-stone-100 rounded-xl p-1">
+          <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-xl p-1">
             {["HK1", "HK2"].map((k) => (
               <button key={k} type="button" onClick={() => handleHocKyChange(k)}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                  hocKy === k ? "bg-white text-[#FF6B35] shadow-sm" : "text-stone-500"
+                  hocKy === k ? "bg-white dark:bg-stone-700 text-[#FF6B35] dark:text-[#FF6B35] shadow-sm" : "text-stone-500 dark:text-stone-400"
                 }`}>
                 {k === "HK1" ? "Học Kỳ I" : "Học Kỳ II"}
               </button>
@@ -199,23 +199,23 @@ export default function AttendanceTab() {
       </div>
 
       {isLocked && (
-        <div className="px-5 py-2.5 border-b border-stone-100 bg-stone-100 text-[12px] text-stone-600">
+        <div className="px-5 py-2.5 border-b border-stone-100 dark:border-stone-800 bg-stone-100 dark:bg-stone-800 text-[12px] text-stone-600 dark:text-stone-300">
           🔒 Học kỳ này đã bị khóa sổ — chỉ xem được, không điểm danh được cho đến khi admin mở khóa lại.
         </div>
       )}
 
       {!hasSchedule && !isLocked && (
-        <div className="px-5 py-2.5 border-b border-stone-100 bg-amber-50/60 text-[12px] text-amber-700">
+        <div className="px-5 py-2.5 border-b border-stone-100 dark:border-stone-800 bg-amber-50/60 dark:bg-amber-950/20 text-[12px] text-amber-700 dark:text-amber-400">
           Chưa có lịch điểm danh cho học kỳ này — vào tab "Điểm & điểm danh" của một học sinh để nhập "Ngày bắt đầu học kỳ" &amp; "Tổng số buổi".
         </div>
       )}
 
       {/* QUICK ACTIONS */}
-      <div className={`flex flex-wrap items-center gap-2 px-5 py-3 border-b border-stone-100 bg-[#F9F9F9] ${isLocked ? "opacity-60" : ""}`}>
-        <span className="text-[12px] text-stone-400 font-medium mr-1">Đặt tất cả:</span>
+      <div className={`flex flex-wrap items-center gap-2 px-5 py-3 border-b border-stone-100 dark:border-stone-800 bg-[#F9F9F9] dark:bg-stone-850/50 ${isLocked ? "opacity-60" : ""}`}>
+        <span className="text-[12px] text-stone-400 dark:text-stone-550 font-medium mr-1">Đặt tất cả:</span>
         {STATUS_CYCLE.map((k) => (
           <button key={k} type="button" disabled={isLocked} onClick={() => setAll(k)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-[12px] font-semibold text-stone-600 hover:border-stone-300 transition-colors disabled:cursor-not-allowed">
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[12px] font-semibold text-stone-600 dark:text-stone-300 hover:border-stone-300 dark:hover:border-stone-600 transition-colors disabled:cursor-not-allowed">
             <span className={`w-2.5 h-2.5 rounded-full ${ATTENDANCE_STATUS[k].color}`} />
             {ATTENDANCE_STATUS[k].label}
           </button>
@@ -227,23 +227,23 @@ export default function AttendanceTab() {
       {loading ? (
         <div className="flex items-center justify-center gap-2.5 py-14" style={{ color: ACCENT }}>
           <Spinner className="h-5 w-5" />
-          <span className="text-sm text-stone-500">Đang tải điểm danh…</span>
+          <span className="text-sm text-stone-500 dark:text-stone-400">Đang tải điểm danh…</span>
         </div>
       ) : (
         <>
           {/* MOBILE: danh sách dạng thẻ, mỗi học sinh 1 hàng nút to dễ bấm bằng ngón tay */}
-          <div className={`md:hidden divide-y divide-stone-50 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
+          <div className={`md:hidden divide-y divide-stone-50 dark:divide-stone-850 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
             {rosterStudents.map((s, idx) => {
               const status  = statuses[s.username] ?? "co_mat";
               const isDirty = statuses[s.username] !== initial[s.username];
               return (
-                <div key={s.username} className={`px-4 py-3 ${isDirty ? "bg-orange-50/40" : ""}`}>
+                <div key={s.username} className={`px-4 py-3 ${isDirty ? "bg-orange-50/40 dark:bg-orange-950/10" : ""}`}>
                   <div className="flex items-center gap-2.5 mb-2.5">
-                    <span className="text-[11px] font-medium text-stone-400 w-4 flex-shrink-0 text-center">{idx + 1}</span>
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+                    <span className="text-[11px] font-medium text-stone-400 dark:text-stone-550 w-4 flex-shrink-0 text-center">{idx + 1}</span>
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
                       <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                     </div>
-                    <p className="text-[13px] font-semibold text-stone-800 truncate min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate min-w-0 flex-1">
                       {s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}
                     </p>
                   </div>
@@ -253,14 +253,14 @@ export default function AttendanceTab() {
                       return (
                         <button key={k} type="button" onClick={() => setOne(s.username, k)} title={ATTENDANCE_STATUS[k].label}
                           className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all ${
-                            active ? `${ATTENDANCE_STATUS[k].color} ring-2 ring-offset-1 ring-stone-300` : "bg-stone-100"
+                            active ? `${ATTENDANCE_STATUS[k].color} ring-2 ring-offset-1 ring-stone-300` : "bg-stone-100 dark:bg-stone-800"
                           }`}>
                           {active ? (
                             <Check className="w-3.5 h-3.5 text-white drop-shadow" strokeWidth={3} />
                           ) : (
                             <span className="w-3.5 h-3.5" />
                           )}
-                          <span className={`text-[9px] font-semibold leading-tight text-center ${active ? "text-white" : "text-stone-500"}`}>
+                          <span className={`text-[9px] font-semibold leading-tight text-center ${active ? "text-white" : "text-stone-500 dark:text-stone-400"}`}>
                             {ATTENDANCE_STATUS[k].label}
                           </span>
                         </button>
@@ -271,7 +271,7 @@ export default function AttendanceTab() {
               );
             })}
             {rosterStudents.length === 0 && (
-              <p className="text-center text-sm text-stone-400 py-10 px-4">Lớp chưa có học sinh nào.</p>
+              <p className="text-center text-sm text-stone-400 dark:text-stone-550 py-10 px-4">Lớp chưa có học sinh nào.</p>
             )}
           </div>
 
@@ -279,12 +279,12 @@ export default function AttendanceTab() {
           <div className={`hidden md:block overflow-auto max-h-[65vh] ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
             <table className="w-full text-sm border-collapse min-w-[640px]">
               <thead>
-                <tr className="bg-[#F9F9F9] text-[11px] text-stone-400 uppercase tracking-wide">
-                  <th className="text-center font-semibold px-3 py-3 sticky top-0 left-0 bg-[#F9F9F9] z-20 w-12">STT</th>
-                  <th className="text-left font-semibold px-4 py-3 sticky top-0 left-[48px] bg-[#F9F9F9] z-20">Họ & Tên</th>
+                <tr className="bg-[#F9F9F9] dark:bg-stone-850 text-[11px] text-stone-400 dark:text-stone-550 uppercase tracking-wide">
+                  <th className="text-center font-semibold px-3 py-3 sticky top-0 left-0 bg-[#F9F9F9] dark:bg-stone-850 z-20 w-12">STT</th>
+                  <th className="text-left font-semibold px-4 py-3 sticky top-0 left-[48px] bg-[#F9F9F9] dark:bg-stone-850 z-20">Họ & Tên</th>
                   {STATUS_CYCLE.map((k) => (
-                    <th key={k} className="font-semibold px-2 py-3 text-center min-w-[112px] sticky top-0 bg-[#F9F9F9] z-10">
-                      <span className="inline-flex items-center gap-1.5 justify-center whitespace-nowrap">
+                    <th key={k} className="font-semibold px-2 py-3 text-center min-w-[112px] sticky top-0 bg-[#F9F9F9] dark:bg-stone-850 z-10">
+                      <span className="inline-flex items-center gap-1.5 justify-center whitespace-nowrap text-stone-400 dark:text-stone-500">
                         <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${ATTENDANCE_STATUS[k].color}`} />
                         {ATTENDANCE_STATUS[k].label}
                       </span>
@@ -296,19 +296,19 @@ export default function AttendanceTab() {
                 {rosterStudents.map((s, idx) => {
                   const status  = statuses[s.username] ?? "co_mat";
                   const isDirty = statuses[s.username] !== initial[s.username];
-                  const rowBg   = isDirty ? "bg-orange-50/40" : "bg-white";
+                  const rowBg   = isDirty ? "bg-orange-50/40 dark:bg-orange-950/10" : "bg-white dark:bg-stone-900";
                   return (
-                    <tr key={s.username} className="border-b border-stone-50">
-                      <td className={`px-3 py-2 text-center sticky left-0 z-10 text-[12px] font-medium text-stone-400 w-12 ${rowBg}`}>
+                    <tr key={s.username} className="border-b border-stone-50 dark:border-stone-850">
+                      <td className={`px-3 py-2 text-center sticky left-0 z-10 text-[12px] font-medium text-stone-400 dark:text-stone-550 w-12 ${rowBg}`}>
                         {idx + 1}
                       </td>
                       <td className={`px-4 py-2 sticky left-[48px] z-10 ${rowBg}`}>
                         <div className="flex items-center gap-2.5 min-w-[170px]">
-                          <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0 bg-stone-100">
+                          <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
                             <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[13px] font-semibold text-stone-800 truncate">
+                            <p className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate">
                               {s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}
                             </p>
                           </div>
@@ -320,7 +320,7 @@ export default function AttendanceTab() {
                           <td key={k} className="px-2 py-2 text-center">
                             <button type="button" onClick={() => setOne(s.username, k)} title={ATTENDANCE_STATUS[k].label}
                               className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-all ${
-                                active ? `${ATTENDANCE_STATUS[k].color} ring-2 ring-offset-1 ring-stone-300 scale-105` : "bg-stone-100 hover:bg-stone-200"
+                                active ? `${ATTENDANCE_STATUS[k].color} ring-2 ring-offset-1 ring-stone-300 scale-105` : "bg-stone-100 dark:bg-stone-850 hover:bg-stone-200 dark:hover:bg-stone-750"
                               }`}>
                               {active && <Check className="w-4 h-4 text-white drop-shadow" strokeWidth={3} />}
                             </button>
@@ -332,7 +332,7 @@ export default function AttendanceTab() {
                 })}
                 {rosterStudents.length === 0 && (
                   <tr>
-                    <td colSpan={2 + STATUS_CYCLE.length} className="text-center text-sm text-stone-400 py-10">
+                    <td colSpan={2 + STATUS_CYCLE.length} className="text-center text-sm text-stone-400 dark:text-stone-550 py-10">
                       Lớp chưa có học sinh nào.
                     </td>
                   </tr>

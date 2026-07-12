@@ -8,7 +8,7 @@ import HighlightsGrid from "./khoi/HighlightsGrid.jsx";
 import CtaSection from "./khoi/CtaSection.jsx";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Lớp 7" },
+  { icon: Users,        label: "Độ tuổi",    value: "12 tuổi" },
   { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
   { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật" },
   { icon: BookOpen,     label: "Yêu cầu",    value: "Sau Thêm Sức" },

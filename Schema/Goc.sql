@@ -394,7 +394,7 @@ BEGIN
         'bai_viet',
         'Bài viết mới chờ duyệt',
         'Tác giả ' || NEW.author_username || ' vừa gửi bài viết: "' || NEW.title || '"',
-        '/admin/articles', 
+        '/quản-trị/bài-viết', 
         v_admin_record.username,
         NEW.author_username
       );

@@ -11,7 +11,7 @@ import CtaSection from "./khoi/CtaSection.jsx";
 import QuoteSlider from "./khoi/QuoteSlider.jsx";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Mầm non - Lớp 2" },
+  { icon: Users,        label: "Độ tuổi",    value: "6 - 7 tuổi" },
   { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
   { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật" },
   { icon: GraduationCap,label: "Sĩ số",      value: "20 em / lớp" },

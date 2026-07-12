@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard, UserCog, School, ClipboardCheck, BarChart3, Megaphone, FileCheck,
-  ChevronDown, CalendarDays, Check,
+  ChevronDown, CalendarDays, Check, UserPlus, MessageSquare,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { AuthGateSkeleton, AdminTabSkeleton } from "../ui/Skeleton.jsx";
@@ -79,6 +79,8 @@ export function RequireAdminRoute({ children }) {
    ============================================================ */
 const TABS = [
   { to: "tổng-quan",  label: "Tổng quan",  icon: LayoutDashboard },
+  { to: "đăng-ký",    label: "Đăng ký",    icon: UserPlus },
+  { to: "góp-ý",      label: "Góp ý",      icon: MessageSquare },
   { to: "thông-báo",  label: "Thông báo",  icon: Megaphone },
   { to: "người-dùng", label: "Người dùng", icon: UserCog },
   { to: "lớp-học",    label: "Lớp học",    icon: School },
@@ -181,6 +183,8 @@ function YearPicker() {
    có snap để lướt bằng ngón tay cảm giác chắc tay như segmented control
    của iOS; trên desktop thu gọn lại thành pill nhỏ gọn như cũ. */
 function TabNav() {
+  const { pendingDangKy, pendingGopY } = useAdminContext();
+
   return (
     <nav
       className="flex gap-1 bg-stone-100/80 dark:bg-white/[0.06] rounded-2xl p-1 overflow-x-auto snap-x snap-mandatory sm:snap-none w-full sm:w-fit [&::-webkit-scrollbar]:hidden"
@@ -200,6 +204,18 @@ function TabNav() {
           }
         >
           <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5 flex-shrink-0" strokeWidth={2.1} /> {label}
+          {/* Badge Đăng ký */}
+          {to === "đăng-ký" && pendingDangKy > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
+              {pendingDangKy}
+            </span>
+          )}
+          {/* Badge Góp ý */}
+          {to === "góp-ý" && pendingGopY > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
+              {pendingGopY}
+            </span>
+          )}
         </NavLink>
       ))}
     </nav>

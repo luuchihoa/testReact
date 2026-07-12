@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Clock, ChevronRight, CheckCircle, Phone } from "lucide-react";
 import { useMotionConfig } from "../hooks/useMotionConfig.js";
+import { submitContactForm } from "./admin/dataLayer.js";
 
 /* ── Dữ liệu ── */
 const CONTACTS = [
@@ -99,18 +100,25 @@ function ContactForm({ mc }) {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setDone(true);
+    
+    try {
+      await submitContactForm(form.hoTen, form.sdt, form.noiDung);
+      setDone(true);
+    } catch (error) {
+      console.error("Lỗi khi gửi liên hệ:", error);
+      alert("Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const LABEL = "block text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1.5";
+  const LABEL = "block text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1.5 ml-1";
   const fieldCls = (err) =>
-    `w-full px-4 py-3 rounded-xl text-sm bg-stone-50/60 dark:bg-stone-950/40 border backdrop-blur-sm ${
-      err ? "border-red-500/50 dark:border-red-500/40 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-          : "border-stone-200 dark:border-stone-800/80 focus:border-amber-500 dark:focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5"
-    } outline-none transition-all duration-200 text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 font-medium`;
-  const ERR = "mt-1.5 text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1";
+    `w-full px-4 py-3 rounded-xl text-[14px] font-medium bg-white/60 dark:bg-stone-900/40 border backdrop-blur-sm ${
+      err ? "border-red-500/50 dark:border-red-500/40 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 text-red-900 dark:text-red-100"
+          : "border-amber-900/20 dark:border-amber-100/10 focus:border-amber-600 dark:focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5 text-amber-950 dark:text-amber-50 placeholder:text-stone-400 dark:placeholder:text-stone-500"
+    } outline-none transition-all duration-200`;
+  const ERR = "mt-1.5 ml-1 text-[12px] font-medium text-red-600 dark:text-red-400 flex items-center gap-1";
 
   return (
     <motion.section
@@ -119,11 +127,11 @@ function ContactForm({ mc }) {
       viewport={vp}
       transition={{ type: "spring", stiffness: 90, damping: 15 }}
     >
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-4 select-none">
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none">
         Gửi tin nhắn trực tuyến
       </h2>
 
-      <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-800/80 p-5 sm:p-6 shadow-sm dark:shadow-none">
+      <div className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-5 sm:p-7 shadow-sm">
         <AnimatePresence mode="wait">
           {done ? (
             <motion.div key="done"
@@ -131,22 +139,22 @@ function ContactForm({ mc }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ type: "spring", stiffness: 100, damping: 14 }}
-              className="py-6 flex flex-col items-center text-center gap-3.5"
+              className="py-8 flex flex-col items-center text-center gap-4"
             >
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center">
+                <CheckCircle className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-bold text-stone-900 dark:text-white">Đã gửi tin nhắn thành công</p>
-                <p className="text-xs text-stone-400 dark:text-stone-500 max-w-xs leading-relaxed font-medium">
+                <p className="text-[16px] font-bold text-amber-950 dark:text-amber-50 font-serif">Đã gửi tin nhắn thành công</p>
+                <p className="text-[13px] text-stone-600 dark:text-stone-400 max-w-xs leading-relaxed font-medium">
                   Cảm ơn bạn đã liên hệ. Ban Giáo Lý sẽ phản hồi qua số điện thoại{" "}
-                  <span className="text-stone-800 dark:text-stone-200 font-bold">{form.sdt}</span> trong thời gian sớm nhất.
+                  <span className="text-amber-900 dark:text-amber-200 font-bold">{form.sdt}</span> trong thời gian sớm nhất.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => { setForm(FORM_INIT); setDone(false); }}
-                className="mt-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 md:hover:opacity-80 transition-opacity active:scale-95"
+                className="mt-3 text-[13px] font-bold text-amber-700 dark:text-amber-400 md:hover:opacity-80 transition-opacity active:scale-95 px-4 py-2 bg-amber-100/50 dark:bg-amber-900/30 rounded-xl"
               >
                 Gửi thêm tin nhắn khác
               </button>
@@ -180,7 +188,7 @@ function ContactForm({ mc }) {
               <button
                 type="submit" disabled={loading}
                 style={{ touchAction: "manipulation" }}
-                className="w-full py-3 rounded-xl text-sm font-bold bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 md:hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full mt-2 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white md:hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading ? (
                   <>
@@ -215,30 +223,30 @@ function FaqItem({ faq, index, mc, isOpen, onToggle }) {
         onClick={onToggle}
         aria-expanded={isOpen}
         style={{ touchAction: "manipulation" }}
-        className={`w-full flex items-center justify-between gap-4 p-4.5 rounded-2xl text-left transition-all duration-300 border ${
+        className={`w-full flex items-center justify-between gap-4 p-5 rounded-2xl text-left transition-all duration-300 border ${
           isOpen
-            ? "bg-amber-500/5 border-amber-500/20 dark:bg-amber-500/10 dark:border-amber-500/20 shadow-none"
-            : "bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none md:hover:border-amber-500/30"
+            ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200/50 dark:border-amber-800/30 shadow-sm"
+            : "bg-white/80 dark:bg-stone-800/40 border-amber-900/10 dark:border-amber-100/10 shadow-sm md:hover:border-amber-300 dark:md:hover:border-amber-700 backdrop-blur-sm"
         }`}
       >
-        <span className="flex items-center gap-3 min-w-0">
+        <span className="flex items-center gap-3.5 min-w-0">
           <span
-            className={`w-5.5 h-5.5 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${
+            className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${
               isOpen 
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950" 
-                : "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white" 
+                : "bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5"
             }`}
             aria-hidden="true"
           >
             {index + 1}
           </span>
-          <span className="text-sm font-bold text-stone-900 dark:text-stone-100 tracking-tight leading-snug">{faq.q}</span>
+          <span className="text-[14.5px] font-bold text-amber-950 dark:text-amber-50 tracking-tight leading-snug">{faq.q}</span>
         </span>
 
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 150, damping: 18 }}
-          className="flex-shrink-0 text-stone-300 dark:text-stone-600"
+          className="flex-shrink-0 text-stone-400 dark:text-stone-500"
           aria-hidden="true"
         >
           <ChevronRight className="w-4 h-4 rotate-90" />
@@ -255,8 +263,8 @@ function FaqItem({ faq, index, mc, isOpen, onToggle }) {
             transition={{ type: "spring", stiffness: 140, damping: 18 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-2">
-              <div className="border-l-2 border-amber-500/40 dark:border-amber-500/30 pl-4 ml-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 leading-relaxed font-medium">
+            <div className="px-5 pb-5 pt-3">
+              <div className="border-l-[3px] border-amber-400/50 dark:border-amber-500/30 pl-4 ml-2.5 text-[13.5px] sm:text-[14px] text-stone-600 dark:text-stone-400 leading-relaxed font-medium">
                 {faq.a}
               </div>
             </div>
@@ -270,88 +278,75 @@ function FaqItem({ faq, index, mc, isOpen, onToggle }) {
 const headerVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: (d = 0) => ({
-    opacity: 1,
-    y: 0,
+    opacity: 1, y: 0,
     transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5, delay: d },
   }),
 };
 
 const listVariants = {
   hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.15, // Chạy nối đuôi ngay khi header đang trượt lên
-    },
-  },
+  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.15 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 },
-  },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 } },
 };
 
 export default function Contact() {
   const systemConfig = useMotionConfig();
   
-  // Giữ nguyên config cho các section khác bên dưới (Map, Hours, Form...)
   const mc = systemConfig || {
-    yOffset: 25,
-    duration: (d) => d || 0.6,
-    delay: (d) => d || 0,
-    stagger: 0.05,
-    isMobile: false,
-    vp: () => ({ once: true, margin: "-10% 0px" })
+    yOffset: 25, duration: (d) => d || 0.6, delay: (d) => d || 0,
+    stagger: 0.05, isMobile: false, vp: () => ({ once: true, margin: "-10% 0px" })
   };
 
   const vp = mc.vp();
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-stone-900 dark:bg-[#000000] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-amber-500/20 dark:selection:bg-amber-500/30 transition-colors duration-500 relative">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-950 transition-colors duration-500 relative">
       
-      {/* Background lưới mờ tinh tế */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-      {/* ══ HERO SECTION (Sử dụng headerVariants) ══ */}
-      <section className="relative overflow-hidden pt-12 pb-10 md:pt-24 md:pb-16 bg-gradient-to-b from-white via-[#f5f5f7] to-transparent dark:from-stone-900 dark:via-[#000000]">
+      {/* ══ HERO SECTION ══ */}
+      <section className="relative overflow-hidden pt-12 pb-10 md:pt-24 md:pb-16 z-10">
+        {!mc.isMobile && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
+        )}
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
           <div className="space-y-5 text-left">
             <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0}>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 select-none">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100/50 text-amber-800 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50 select-none">
                 Trung tâm hỗ trợ Ban Giáo Lý
               </span>
             </motion.div>
 
             <motion.h1
               variants={headerVariants} initial="hidden" animate="visible" custom={0.05}
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white leading-[1.1]"
+              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 leading-[1.1] font-serif"
             >
               Kênh kết nối &<br />
-              <span className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-clip-text text-transparent dark:from-amber-400 dark:via-orange-400 dark:to-amber-500">
+              <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
                 Giải đáp thắc mắc
               </span>
             </motion.h1>
 
             <motion.p
               variants={headerVariants} initial="hidden" animate="visible" custom={0.1}
-              className="text-sm sm:text-base text-stone-500 dark:text-stone-400 leading-relaxed max-w-lg font-normal"
+              className="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed max-w-lg font-medium"
             >
               Mọi thắc mắc về quy trình đăng ký học, khung chương trình đào tạo hoặc đóng góp ý kiến xây dựng, xin vui lòng liên hệ với ban điều hành.
             </motion.p>
 
-            {/* Apple Actions Bar */}
-            <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0.15} className="flex flex-wrap gap-2.5 pt-1.5">
+            <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0.15} className="flex flex-wrap gap-3 pt-1.5">
               <a
                 href="tel:0905143643"
                 style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 text-md font-bold md:hover:opacity-90 active:scale-[0.97] transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[14px] font-bold md:hover:opacity-90 active:scale-[0.97] transition-all shadow-sm"
               >
-                <Phone size={13} strokeWidth={2.2} aria-hidden="true" />
+                <Phone size={14} strokeWidth={2.5} aria-hidden="true" />
                 Gọi Tổng đài
               </a>
               <a
@@ -362,18 +357,14 @@ export default function Contact() {
                   if (!el) return;
                   const navbar = document.querySelector("header");
                   const offset = navbar?.offsetHeight ?? 0;
-                  if (window.lenis) {
-                    window.lenis.scrollTo(el, { duration: 1.0, offset: -offset });
-                  } else {
-                    const top = el.getBoundingClientRect().top + window.scrollY - offset;
-                    window.scrollTo({ top, behavior: "smooth" });
-                  }
+                  if (window.lenis) { window.lenis.scrollTo(el, { duration: 1.0, offset: -offset }); } 
+                  else { const top = el.getBoundingClientRect().top + window.scrollY - offset; window.scrollTo({ top, behavior: "smooth" }); }
                 }}
                 style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 text-md font-bold md:hover:border-amber-500/40 active:scale-[0.97] transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 px-6 py-3.5 rounded-full bg-white/60 dark:bg-stone-800/40 backdrop-blur-sm border border-amber-900/20 dark:border-amber-100/10 text-stone-700 dark:text-stone-300 text-[14px] font-bold hover:bg-white dark:hover:bg-stone-800 active:scale-[0.97] transition-all shadow-sm"
               >
                 Gửi Form liên hệ
-                <ChevronRight className="w-3.5 h-3.5 text-stone-400" aria-hidden="true" />
+                <ChevronRight className="w-4 h-4 text-stone-400" aria-hidden="true" />
               </a>
             </motion.div>
           </div>
@@ -383,168 +374,94 @@ export default function Contact() {
       {/* ══ NỘI DUNG CHÍNH ══ */}
       <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-20 space-y-12 relative z-10">
 
-        {/* Kênh liên hệ chính (Sử dụng listVariants và itemVariants) */}
+        {/* Kênh liên hệ chính */}
         <section>
-          <motion.h2 
-            variants={headerVariants} initial="hidden" animate="visible" custom={0.2}
-            className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-4 select-none"
+          <motion.h2 variants={headerVariants} initial="hidden" animate="visible" custom={0.2}
+            className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none ml-1"
           >
             Phương thức truyền thông trực tiếp
           </motion.h2>
 
-          <motion.div 
-            className="grid gap-3"
-            variants={listVariants}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.div className="grid gap-3" variants={listVariants} initial="hidden" animate="visible">
             {CONTACTS.map((c) => (
-              <motion.a
-                key={c.id}
-                href={c.href}
-                aria-label={`${c.label}: ${c.value}`}
-                target={c.external ? "_blank" : undefined}
-                rel={c.external ? "noreferrer noopener" : undefined}
-                variants={itemVariants}
-                whileTap={{ scale: 0.98 }}
-                style={{ touchAction: "manipulation" }}
-                className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none transition-colors text-left"
+              <motion.a key={c.id} href={c.href} aria-label={`${c.label}: ${c.value}`} target={c.external ? "_blank" : undefined} rel={c.external ? "noreferrer noopener" : undefined}
+                variants={itemVariants} whileTap={{ scale: 0.98 }} style={{ touchAction: "manipulation" }}
+                className="group flex items-center gap-4 p-4 rounded-2xl bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm border border-amber-900/10 dark:border-amber-100/10 shadow-sm transition-colors text-left"
               >
-                {/* Icon Wrapper */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200/40 dark:border-stone-700/50 md:group-hover:bg-amber-500/10 md:group-hover:text-amber-600 dark:group-hover:bg-amber-500/20 dark:group-hover:text-amber-400 md:group-hover:border-transparent transition-all duration-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-stone-800 text-amber-800 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5 group-hover:bg-amber-100/50 dark:group-hover:bg-amber-500/20 transition-all duration-300">
                   {c.icon}
                 </div>
-
-                {/* Text Block */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">
-                    {c.label}
-                  </p>
-                  <p className="text-sm font-bold text-stone-900 dark:text-stone-100 md:group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
-                    {c.id === "phone" ? (
-                      <>
-                        <span className="tabular-nums">{c.value}</span>
-                        <span className="ml-1.5 text-xs font-medium text-stone-400 dark:text-stone-500">({c.note})</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="hidden sm:inline">{c.value}</span>
-                        <span className="sm:hidden">{c.valueMobile ?? c.value}</span>
-                      </>
-                    )}
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-0.5">{c.label}</p>
+                  <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">
+                    {c.id === "phone" ? (<><span className="tabular-nums">{c.value}</span><span className="ml-1.5 text-xs font-medium text-stone-400 dark:text-stone-500">({c.note})</span></>) : (<><span className="hidden sm:inline">{c.value}</span><span className="sm:hidden">{c.valueMobile ?? c.value}</span></>)}
                   </p>
                 </div>
-
-                {/* Arrow indicator */}
-                <ChevronRight
-                  className="w-4 h-4 text-stone-300 dark:text-stone-700 md:group-hover:text-amber-500 dark:group-hover:text-amber-400 transform md:group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0"
-                  aria-hidden="true"
-                />
+                <ChevronRight className="w-4 h-4 text-stone-400 dark:text-stone-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transform group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" aria-hidden="true" />
               </motion.a>
             ))}
           </motion.div>
         </section>
 
-        {/* Địa điểm & Giờ tiếp nhận (Giữ nguyên logic của bạn) */}
+        {/* Địa điểm & Giờ tiếp nhận */}
         <div className="grid md:grid-cols-2 gap-4 items-start">
-          {/* Cột 1: Địa điểm & Bản đồ hình chữ nhật bo góc */}
-          <motion.section
-            initial={{ opacity: 0, y: mc.yOffset }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp}
-            transition={{ type: "spring", stiffness: 90, damping: 15 }}
-            className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-800/80 shadow-sm dark:shadow-none overflow-hidden text-left"
+          <motion.section initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ type: "spring", stiffness: 90, damping: 15 }}
+            className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden text-left"
           >
-            <a
-              href="https://maps.app.goo.gl/FEtKEGn8V4wMXXKY6"
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label="Xem bản đồ Giáo xứ An Ngãi trên Google Maps"
-              className="block relative h-32 bg-stone-100 dark:bg-stone-950 overflow-hidden group border-b border-stone-100 dark:border-stone-800"
+            <a href="https://maps.app.goo.gl/FEtKEGn8V4wMXXKY6" target="_blank" rel="noreferrer noopener" aria-label="Xem bản đồ Giáo xứ An Ngãi trên Google Maps"
+              className="block relative h-32 bg-stone-100 dark:bg-stone-900 overflow-hidden group border-b border-amber-900/10 dark:border-amber-100/10"
             >
-              <iframe
-                title="Bản đồ Giáo xứ An Ngãi"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.0!2d108.15!3d16.07!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zR2nDoW8geOG7qyBBbiBOZ8OjaQ!5e0!3m2!1svi!2s!4v1"
-                className="w-full h-full border-0 pointer-events-none dark:opacity-70 dark:invert"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-              <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/5 dark:group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <span className="opacity-0 md:group-hover:opacity-100 transition-all duration-300 text-[11px] font-bold text-white bg-stone-900/80 dark:bg-stone-100 dark:text-stone-950 px-3 py-1.5 rounded-full backdrop-blur-md">
-                  Mở ứng dụng Bản đồ ↗
-                </span>
+              <iframe title="Bản đồ Giáo xứ An Ngãi" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.0!2d108.15!3d16.07!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zR2nDoW8geOG7qyBBbiBOZ8OjaQ!5e0!3m2!1svi!2s!4v1" className="w-full h-full border-0 pointer-events-none dark:opacity-70 dark:invert sepia-[20%] hue-rotate-15" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-[11px] font-bold text-amber-50 bg-amber-950/80 px-3 py-1.5 rounded-full backdrop-blur-md">Mở ứng dụng Bản đồ ↗</span>
               </div>
             </a>
-
-            <div className="p-5 space-y-3.5">
+            <div className="p-5 sm:p-6 space-y-4">
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center">
-                  <MapPin className="w-4 h-4" aria-hidden="true" />
+                <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-900/5 dark:border-amber-100/5">
+                  <MapPin className="w-4.5 h-4.5" aria-hidden="true" />
                 </div>
-                <h3 className="text-sm font-extrabold text-stone-900 dark:text-white tracking-tight">Địa điểm văn phòng</h3>
+                <h3 className="text-[15px] font-bold text-amber-950 dark:text-amber-50 tracking-tight font-serif">Địa điểm văn phòng</h3>
               </div>
-
-              <div className="grid grid-cols-1 gap-2.5 text-xs sm:text-sm font-medium">
+              <div className="grid grid-cols-1 gap-3 text-xs sm:text-sm font-medium">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Giáo xứ quản hạt</p>
-                  <p className="text-stone-900 dark:text-stone-200 font-bold">Giáo xứ An Ngãi</p>
+                  <p className="text-stone-800 dark:text-stone-200 font-bold">Giáo xứ An Ngãi</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Địa chỉ hành chính</p>
-                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
-                    Thôn An Ngãi Tây 2, Phường Hoà Khánh, Quận Liên Chiểu, Tp Đà Nẵng
-                  </p>
+                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">Thôn An Ngãi Tây 2, Phường Hoà Khánh, Quận Liên Chiểu, Tp Đà Nẵng</p>
                 </div>
               </div>
             </div>
           </motion.section>
 
-          {/* Cột 2: Thời gian làm việc điều hành */}
-          <motion.section
-            initial={{ opacity: 0, y: mc.yOffset }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp}
-            transition={{ type: "spring", stiffness: 90, damping: 15, delay: mc.delay(0.06) }}
-            className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-800/80 p-5 shadow-sm dark:shadow-none text-left"
+          <motion.section initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ type: "spring", stiffness: 90, damping: 15, delay: mc.delay(0.06) }}
+            className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-5 sm:p-6 shadow-sm text-left h-full flex flex-col"
           >
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center">
-                <Clock className="w-4 h-4" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-900/5 dark:border-amber-100/5">
+                <Clock className="w-4.5 h-4.5" aria-hidden="true" />
               </div>
-              <h3 className="text-sm font-extrabold text-stone-900 dark:text-white tracking-tight">Khung giờ sinh hoạt</h3>
+              <h3 className="text-[15px] font-bold text-amber-950 dark:text-amber-50 tracking-tight font-serif">Khung giờ sinh hoạt</h3>
             </div>
-
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               {HOURS.map((h) => (
-                <div
-                  key={h.day}
-                  className={`flex items-center justify-between gap-3 p-2.5 rounded-xl transition-colors border ${
-                    h.active 
-                      ? "bg-amber-500/5 border-amber-500/20 dark:bg-amber-500/10 dark:border-amber-500/20" 
-                      : "border-transparent"
-                  }`}
-                >
+                <div key={h.day} className={`flex items-center justify-between gap-3 p-3 rounded-xl transition-colors border ${h.active ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200/50 dark:border-amber-800/30" : "border-transparent"}`}>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-200 flex items-center gap-2 truncate">
+                    <p className="text-[13px] font-bold text-stone-800 dark:text-stone-200 flex items-center gap-2 truncate">
                       {h.day}
-                      {h.active && (
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-500/10 dark:text-amber-300 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">
-                          Hiện tại
-                        </span>
-                      )}
+                      {h.active && <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-200/50 dark:text-amber-300 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">Hiện tại</span>}
                     </p>
-                    <p className="text-[11px] text-stone-400 dark:text-stone-500 font-medium truncate mt-0.5">{h.note}</p>
+                    <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate mt-0.5">{h.note}</p>
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums flex-shrink-0">
-                    {h.time}
-                  </span>
+                  <span className="text-[13px] font-bold text-amber-700 dark:text-amber-400 tabular-nums flex-shrink-0">{h.time}</span>
                 </div>
               ))}
             </div>
-
-            <div className="mt-4 p-3 rounded-xl bg-stone-50 dark:bg-stone-950/60 border border-stone-200/40 dark:border-stone-800/60">
+            <div className="mt-4 p-3 rounded-xl bg-stone-50/80 dark:bg-stone-900/50 border border-stone-200/40 dark:border-stone-800/60">
               <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">
-                <span className="font-bold text-stone-700 dark:text-stone-300">Lưu ý hành chính:</span> Nhằm chuẩn bị chu đáo cho công tác tiếp đón, vui lòng liên hệ hẹn trước ít nhất 24 giờ qua Hotline nếu cần làm việc trực tiếp ngoài giờ Thánh Lễ.
+                <span className="font-bold text-stone-700 dark:text-stone-300">Lưu ý hành chính:</span> Nhằm chuẩn bị chu đáo, vui lòng liên hệ hẹn trước ít nhất 24h nếu cần làm việc ngoài giờ Thánh Lễ.
               </p>
             </div>
           </motion.section>
@@ -557,20 +474,12 @@ export default function Contact() {
 
         {/* Cụm câu hỏi thường gặp FAQ */}
         <section>
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-4 select-none">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none ml-1">
             Giải đáp thắc mắc thường gặp
           </h2>
-
           <div className="grid gap-2">
             {FAQS.map((faq, i) => (
-              <FaqItem
-                key={faq.q}
-                faq={faq}
-                index={i}
-                mc={mc}
-                isOpen={openFaq === i}
-                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
-              />
+              <FaqItem key={faq.q} faq={faq} index={i} mc={mc} isOpen={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
             ))}
           </div>
         </section>

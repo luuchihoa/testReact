@@ -8,7 +8,7 @@ import CtaSection from "./khoi/CtaSection.jsx";
 import QuoteSlider from "./khoi/QuoteSlider.jsx";
 
 const OVERVIEW = [
-  { icon: Users,        label: "Độ tuổi",    value: "Từ 16 tuổi trở lên" },
+  { icon: Users,        label: "Độ tuổi",    value: "15 – 16 tuổi" },
   { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
   { icon: CalendarDays, label: "Lịch học",   value: "Chúa Nhật sau Thánh lễ" },
   { icon: ShieldCheck,  label: "Yêu cầu",    value: "Đã lãnh Bí tích Khai tâm" },
