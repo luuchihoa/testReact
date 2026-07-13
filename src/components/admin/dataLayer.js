@@ -6,13 +6,42 @@
 import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../ui/StudentShared.jsx";
 
-export async function fetchAllUsers() {
+// Thay thế hàm fetchAllUsers() cũ bằng 2 hàm sau:
+
+// 1. Chỉ lấy danh sách giáo viên/admin để map tên vào danh sách lớp
+export async function fetchAllTeachers() {
   const { data, error } = await supabase
     .from("users")
-    .select("username, ho_va_ten, ten_thanh, avatar, role, trang_thai")
-    .order("ho_va_ten", { ascending: true });
+    .select("username, ho_va_ten, ten_thanh, avatar, sdt")
+    .in("role", ["teacher", "admin"]);
+    
   if (error) throw error;
-  return (data ?? []).map((u) => ({
+  return data ?? [];
+}
+
+// 2. Lấy người dùng theo trang và hỗ trợ tìm kiếm/lọc trực tiếp từ DB
+export async function fetchUsersPaginated(page = 1, pageSize = 50, searchQuery = "", roleFilter = "all") {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("users")
+    .select("username, ho_va_ten, ten_thanh, avatar, role, trang_thai", { count: "exact" })
+    .order("ho_va_ten", { ascending: true })
+    .range(from, to);
+
+  if (searchQuery) {
+    query = query.or(`ho_va_ten.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`);
+  }
+  
+  if (roleFilter && roleFilter !== "all") {
+    query = query.eq("role", roleFilter);
+  }
+
+  const { data, count, error } = await query;
+  if (error) throw error;
+
+  const users = (data ?? []).map((u) => ({
     username:  u.username,
     hoTen:     u.ho_va_ten || "",
     tenThanh:  u.ten_thanh || "",
@@ -20,6 +49,8 @@ export async function fetchAllUsers() {
     role:      u.role || "user",
     trangThai: u.trang_thai || "Đang học",
   }));
+
+  return { users, totalCount: count };
 }
 
 // Chỉ lấy học sinh, filter ngay trong query thay vì kéo hết bảng users
@@ -357,4 +388,52 @@ export async function fetchPendingLienHeCount() {
     .eq("trang_thai", "moi");
   if (error) throw error;
   return count ?? 0;
+}
+
+// Đếm số lượng bài viết đang chờ duyệt (dùng cho badge đỏ trên thanh Tab)
+export async function fetchPendingArticlesCount() {
+  const { count, error } = await supabase
+    .from("articles")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pending");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// Đếm số lượng người dùng nhóm theo role, xử lý trực tiếp bằng rpc hoặc truy vấn
+export async function fetchRoleCounts() {
+  const { data, error } = await supabase
+    .from("users")
+    .select("role", { count: 'exact' }); // Mặc định Supabase limit 1000 dòng nếu ko pagination, nhưng count exact trả về tổng số thực
+
+  if (error) {
+    console.error("fetchRoleCounts error:", error);
+    return { admin: 0, teacher: 0, student: 0, user: 0 };
+  }
+
+  // Tối ưu hóa: Thay vì select toàn bộ, nên gọi API đếm từng loại nếu dữ liệu cực lớn,
+  // Hoặc với quy mô vừa, đếm bằng array.reduce:
+  const counts = { admin: 0, teacher: 0, student: 0, user: 0 };
+  (data ?? []).forEach(u => {
+    counts[u.role] = (counts[u.role] || 0) + 1;
+  });
+  
+  return counts;
+}
+
+// CÁCH TỐI ƯU NHẤT (Nếu > 1000 users): Tạo 1 file RPC trên DB hoặc query Count riêng biệt:
+export async function fetchExactRoleCounts() {
+  const roles = ['admin', 'teacher', 'student', 'user'];
+  const counts = { admin: 0, teacher: 0, student: 0, user: 0 };
+  
+  await Promise.all(roles.map(async (role) => {
+    const { count, error } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', role);
+      
+    if (!error) counts[role] = count || 0;
+  }));
+  
+  return counts;
 }

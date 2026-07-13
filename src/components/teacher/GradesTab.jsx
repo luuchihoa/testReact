@@ -1,19 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Table, ArrowLeft } from "lucide-react";
+import { Table, ArrowLeft, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
 import { Spinner } from "../ui/StudentShared.jsx";
 import { useTeacherContext } from "./TeacherContext.jsx";
 import { fetchClassTermRanges, fetchTermLocks } from "./api.js";
 import { sortStudentsByTen, mostRecentSunday, resolveActiveHocKy, computeDiemTB, tbColorClass } from "./utils.js";
-import { ACCENT, HK_INT_MAP, GRADE_FIELDS } from "./constants.js";
+import { HK_INT_MAP, GRADE_FIELDS } from "./constants.js";
 
-/* ============================================================
-   NHẬP ĐIỂM NHANH — dạng bảng tính, Enter/↓ nhảy xuống học sinh kế
-   tiếp trong cùng cột, tự động tính điểm TB theo công thức nhưng vẫn
-   cho phép sửa tay (ô sẽ viền cam khi đã override).
-   ============================================================ */
+// Hằng số Easing chuẩn của Design System
+const APPLE_EASE = [0.16, 1, 0.3, 1];
+
 export default function GradesTab() {
   const { students, context } = useTeacherContext();
   const namHoc = context.namHoc;
@@ -24,21 +23,22 @@ export default function GradesTab() {
 
   const [hocKy, setHocKy] = useState("HK1");
   const hocKyInt           = HK_INT_MAP[hocKy];
-  const [rows,    setRows]    = useState({}); // username -> { diem_mieng, ..., diem_tb }
+  const [rows,    setRows]    = useState({}); 
   const [initial, setInitial] = useState({});
-  const [manualTB, setManualTB] = useState({}); // username -> true nếu điểm TB đã bị sửa tay
+  const [manualTB, setManualTB] = useState({}); 
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
-  // Trạng thái khóa sổ theo học kỳ.
+  
   const [termLocks, setTermLocks] = useState({});
   const isLocked = !!termLocks[hocKyInt];
   const cellRefs = useRef({});
   const didAutoSelectHocKy = useRef(false);
 
-  // Danh sách cố định, xếp theo Tên (không theo Họ) — cùng thứ tự với bảng điểm danh nhanh
+  // Hook giả lập kiểm tra Mobile 
+  const isMobile = window.innerWidth < 768;
+
   const rosterStudents = useMemo(() => sortStudentsByTen(students), [students]);
 
-  // Tự chọn học kỳ hiện tại dựa trên ngày bắt đầu HK2 của lớp (giống Điểm danh nhanh)
   useEffect(() => {
     if (didAutoSelectHocKy.current) return;
     let cancelled = false;
@@ -55,7 +55,6 @@ export default function GradesTab() {
     return () => { cancelled = true; };
   }, [lop, namHoc]);
 
-  // Tải trạng thái khóa sổ của lớp (cả HK1 + HK2) 1 lần, không phụ thuộc hocKy đang chọn.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -90,8 +89,6 @@ export default function GradesTab() {
             diem_thi:     g.diem_thi     ?? null,
             diem_tb:      g.diem_tb      ?? null,
           };
-          // Nếu điểm TB đã lưu khác với công thức tự tính -> coi như giáo viên
-          // từng sửa tay, giữ nguyên khi vừa tải để không âm thầm ghi đè.
           const auto = computeDiemTB(full[s.username]);
           if (g.diem_tb != null && auto != null && Number(g.diem_tb) !== auto) manual[s.username] = true;
         });
@@ -177,176 +174,228 @@ export default function GradesTab() {
   const scoreFields = GRADE_FIELDS.filter((f) => f.key !== "diem_tb");
 
   return (
-    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-stone-100 dark:border-stone-800">
-        <button type="button" onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex-shrink-0">
-          <ArrowLeft className="w-4 h-4" /> Quay lại
-        </button>
-        <div className="hidden sm:block w-px h-5 bg-stone-200 dark:bg-stone-800" />
-        <div className="flex flex-wrap items-center gap-2 flex-1">
-          <Table className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
-          <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-xl p-1">
+    <motion.div 
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: APPLE_EASE }}
+      className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden"
+    >
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5 border-b border-amber-900/10 dark:border-amber-100/10">
+        
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button type="button" onClick={onBack}
+            className="inline-flex items-center justify-center gap-2 p-2 rounded-xl text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 flex-shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight">
+                Bảng điểm
+            </h2>
+        </div>
+
+        <div className="hidden sm:block w-px h-6 bg-stone-200 dark:bg-stone-800 mx-2" />
+        
+        <div className="flex flex-wrap items-center gap-3 flex-1">
+          <Table className="w-5 h-5 flex-shrink-0 text-amber-800 dark:text-amber-400" />
+          <div className="flex gap-1 bg-stone-100/80 dark:bg-stone-800/80 rounded-xl p-1 backdrop-blur-sm">
             {["HK1", "HK2"].map((k) => (
               <button key={k} type="button" onClick={() => setHocKy(k)}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
-                  hocKy === k ? "bg-white dark:bg-stone-700 text-[#FF6B35] dark:text-orange-400 shadow-sm" : "text-stone-500 dark:text-stone-400"
+                className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
+                  hocKy === k 
+                    ? "bg-white dark:bg-stone-700 text-amber-900 dark:text-amber-400 shadow-sm" 
+                    : "text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
                 }`}>
                 {k === "HK1" ? "Học Kỳ I" : "Học Kỳ II"}
               </button>
             ))}
           </div>
-          <span className="text-[11px] text-stone-400 dark:text-stone-500 hidden md:inline">
-            Enter hoặc ↓ để nhảy xuống học sinh tiếp theo
+          <span className="text-[12px] font-medium text-stone-400 dark:text-stone-500 hidden md:inline ml-2">
+            Enter hoặc ↓ để nhảy ô tiếp theo
           </span>
         </div>
+
+        {/* Nút Bấm Chính */}
         <button type="button" disabled={isLocked || saving || changedCount === 0} onClick={save}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] text-white text-[13px] font-bold hover:bg-[#E85E28] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 w-full sm:w-auto">
+          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 w-full sm:w-auto">
           {saving && <Spinner className="h-4 w-4" />}
-          {saving ? "Đang lưu…" : changedCount > 0 ? `Lưu (${changedCount} thay đổi)` : "Lưu bảng điểm"}
+          {saving ? "Đang lưu…" : changedCount > 0 ? `Lưu (${changedCount})` : "Lưu bảng điểm"}
         </button>
       </div>
 
-      {isLocked && (
-        <div className="px-5 py-2.5 border-b border-stone-100 dark:border-stone-800 bg-stone-100 dark:bg-stone-800 text-[12px] text-stone-600 dark:text-stone-300">
-          🔒 Học kỳ này đã bị khóa sổ — chỉ xem được, không nhập điểm được cho đến khi admin mở khóa lại.
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {isLocked && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: "auto", opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }} 
+            transition={{ duration: 0.35, ease: APPLE_EASE }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-stone-100/50 dark:bg-stone-800/50 text-[13px] font-medium text-stone-600 dark:text-stone-300 flex items-center gap-2">
+              <span className="text-lg">🔒</span> Học kỳ này đã bị khóa sổ — chỉ xem được, không nhập điểm được cho đến khi Admin mở khóa lại.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      <AnimatePresence mode="wait">
       {loading ? (
-        <div className="flex items-center justify-center gap-2.5 py-14" style={{ color: ACCENT }}>
-          <Spinner className="h-5 w-5" />
-          <span className="text-sm text-stone-500 dark:text-stone-400">Đang tải bảng điểm…</span>
-        </div>
+        <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex items-center justify-center gap-3 py-20 text-amber-900 dark:text-amber-500"
+        >
+          <Spinner className="h-6 w-6" />
+          <span className="text-[14px] font-medium font-sans">Đang tải bảng điểm…</span>
+        </motion.div>
       ) : (
-        <>
-          {/* MOBILE: mỗi học sinh 1 thẻ, các ô điểm xếp lưới để chạm dễ hơn bảng ngang */}
-          <div className={`md:hidden divide-y divide-stone-50 dark:divide-stone-850 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
+        <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: APPLE_EASE }}>
+          
+          {/* MOBILE LIST */}
+          <div className={`md:hidden divide-y divide-amber-900/5 dark:divide-amber-100/5 ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
             {rosterStudents.map((s, rowIdx) => {
               const g = rows[s.username] ?? {};
               const isDirty = JSON.stringify(g) !== JSON.stringify(initial[s.username]);
               return (
-                <div key={s.username} className={`px-4 py-3.5 ${isDirty ? "bg-orange-50/30 dark:bg-orange-950/10" : ""}`}>
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <span className="text-[11px] font-medium text-stone-400 dark:text-stone-550 w-4 flex-shrink-0 text-center">{rowIdx + 1}</span>
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
+                <motion.div 
+                  initial={{ opacity: 0, y: isMobile ? 16 : 0 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true, margin: isMobile ? "-20px" : "0px" }}
+                  transition={{ duration: 0.5, delay: rowIdx * 0.05, ease: APPLE_EASE }}
+                  key={s.username} 
+                  className={`px-5 py-4 transition-colors duration-500 ${isDirty ? "bg-amber-50/60 dark:bg-amber-900/20" : ""}`}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[12px] font-bold text-amber-800/50 dark:text-amber-400/50 w-5 text-center">{rowIdx + 1}</span>
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white dark:border-stone-800 flex-shrink-0 bg-stone-100 shadow-sm">
                       <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                     </div>
-                    <span className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate min-w-0 flex-1">
-                      {s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}
-                    </span>
+                    <p className="text-[15px] font-bold text-stone-800 dark:text-stone-200 truncate flex-1">
+                      {s.tenThanh ? <span className="text-stone-500 font-medium mr-1">{s.tenThanh}</span> : ""}{s.hoTen}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 pl-[42px]">
+                  <div className="grid grid-cols-3 gap-3 pl-[52px]">
                     {scoreFields.map((f) => (
-                      <label key={f.key} className="flex flex-col gap-1">
-                        <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium">{f.label}</span>
+                      <label key={f.key} className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">{f.label}</span>
                         <input
                           type="number" min="0" max="10" step="0.1" inputMode="decimal"
                           value={g[f.key] ?? ""}
                           onChange={(e) => updateCell(s.username, f.key, e.target.value)}
-                          className="w-full text-center rounded-lg border border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 py-2 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+                          className="w-full text-center rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 text-stone-900 dark:text-stone-100 py-2.5 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 transition-shadow"
                         />
                       </label>
                     ))}
-                    <label className="flex flex-col gap-1">
-                      <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium">TB</span>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">TB</span>
                       <div className="flex items-center gap-1">
                         <input
                           type="number" min="0" max="10" step="0.01" inputMode="decimal"
                           value={g.diem_tb ?? ""}
                           onChange={(e) => updateTBManual(s.username, e.target.value)}
-                          className={`w-full text-center rounded-lg border py-2 text-[14px] font-bold focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent ${tbColorClass(g.diem_tb)} ${
-                            manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40 dark:bg-orange-950/20" : "border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900"
+                          className={`w-full text-center rounded-xl border py-2.5 text-[14px] font-bold focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 transition-shadow ${tbColorClass(g.diem_tb)} ${
+                            manualTB[s.username] ? "border-amber-600 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-950/20" : "border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50"
                           }`}
                         />
                         {manualTB[s.username] && (
                           <button type="button" title="Tính lại tự động" onClick={() => resetTBAuto(s.username)}
-                            className="text-[13px] text-stone-400 dark:text-stone-505 hover:text-[#FF6B35] flex-shrink-0">↺</button>
+                            className="text-[13px] text-stone-400 dark:text-stone-500 hover:text-amber-800 dark:text-amber-400 flex-shrink-0">↺</button>
                         )}
                       </div>
                     </label>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
             {rosterStudents.length === 0 && (
-              <p className="text-center text-sm text-stone-400 dark:text-stone-550 py-10 px-4">Lớp chưa có học sinh nào.</p>
+              <p className="text-center text-[14px] text-stone-500 dark:text-stone-400 py-12 px-5">Lớp chưa có học sinh nào.</p>
             )}
           </div>
 
-          {/* DESKTOP: bảng tính, Enter/↓ nhảy dòng */}
-          <div className={`hidden md:block overflow-auto max-h-[65vh] ${isLocked ? "opacity-60 pointer-events-none" : ""}`} data-lenis-prevent>
-            <table className="w-full text-sm border-collapse min-w-[760px]">
+          {/* DESKTOP TABLE */}
+          <div className={`hidden md:block overflow-auto max-h-[65vh] ${isLocked ? "opacity-60" : ""}`} data-lenis-prevent>
+            <table className={`w-full text-sm border-collapse min-w-[760px] ${isLocked ? "pointer-events-none" : ""}`}>
               <thead>
-                <tr className="bg-[#F9F9F9] dark:bg-stone-850 text-[11px] text-stone-400 dark:text-stone-550 uppercase tracking-wide">
-                  <th className="text-center font-semibold px-3 py-3 sticky top-0 left-0 bg-[#F9F9F9] dark:bg-stone-850 z-20 w-12">STT</th>
-                  <th className="text-left font-semibold px-4 py-3 sticky top-0 left-[48px] bg-[#F9F9F9] dark:bg-stone-850 z-20">Họ & Tên</th>
+                <tr className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+                  <th className="text-center px-3 py-4 sticky top-0 left-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-20 w-14 border-b border-amber-900/10 dark:border-amber-100/10">STT</th>
+                  <th className="text-left px-4 py-4 sticky top-0 left-[56px] bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-20 border-b border-amber-900/10 dark:border-amber-100/10">Họ & Tên</th>
                   {scoreFields.map((f) => (
-                    <th key={f.key} className="font-semibold px-2 py-3 text-center min-w-[84px] sticky top-0 bg-[#F9F9F9] dark:bg-stone-850 z-10">{f.label}</th>
+                    <th key={f.key} className="px-2 py-4 text-center min-w-[90px] sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10">{f.label}</th>
                   ))}
-                  <th className="font-semibold px-2 py-3 text-center min-w-[90px] sticky top-0 bg-[#F9F9F9] dark:bg-stone-850 z-10">TB</th>
+                  <th className="px-2 py-4 text-center min-w-[100px] sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10">TB</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-amber-900/5 dark:divide-amber-100/5">
                 {rosterStudents.map((s, rowIdx) => {
                   const g = rows[s.username] ?? {};
                   const isDirty = JSON.stringify(g) !== JSON.stringify(initial[s.username]);
-                  const rowBg   = isDirty ? "bg-orange-50/30 dark:bg-orange-950/10" : "bg-white dark:bg-stone-900";
+                  const rowBg   = isDirty ? "bg-amber-50/60 dark:bg-amber-900/20" : "bg-transparent hover:bg-stone-50 dark:hover:bg-stone-800/50";
                   return (
-                    <tr key={s.username} className="border-b border-stone-50 dark:border-stone-850">
-                      <td className={`px-3 py-2 text-center sticky left-0 z-10 text-[12px] font-medium text-stone-400 dark:text-stone-550 w-12 ${rowBg}`}>
+                    <motion.tr 
+                      initial={{ opacity: 0 }} 
+                      whileInView={{ opacity: 1 }} 
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: rowIdx * 0.02, ease: APPLE_EASE }}
+                      key={s.username} 
+                      className={`transition-colors duration-300 ${rowBg}`}
+                    >
+                      <td className={`px-3 py-3 text-center sticky left-0 z-10 text-[12px] font-bold text-amber-800/50 dark:text-amber-400/50 w-14 ${isDirty ? "bg-amber-50 dark:bg-[#2A2318]" : "bg-white dark:bg-[#1C1917]"}`}>
                         {rowIdx + 1}
                       </td>
-                      <td className={`px-4 py-2 sticky left-[48px] z-10 ${rowBg}`}>
-                        <div className="flex items-center gap-2.5 min-w-[160px]">
-                          <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
+                      <td className={`px-4 py-3 sticky left-[56px] z-10 ${isDirty ? "bg-amber-50 dark:bg-[#2A2318]" : "bg-white dark:bg-[#1C1917]"}`}>
+                        <div className="flex items-center gap-3 min-w-[180px]">
+                          <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 dark:border-stone-700 flex-shrink-0 bg-stone-100">
                             <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <span className="text-[13px] font-semibold text-stone-800 dark:text-stone-200 truncate">{s.tenThanh ? `${s.tenThanh} ` : ""}{s.hoTen}</span>
+                          <span className="text-[14px] font-bold text-stone-800 dark:text-stone-100 truncate">{s.tenThanh ? <span className="text-stone-500 font-medium mr-1">{s.tenThanh}</span> : ""}{s.hoTen}</span>
                         </div>
                       </td>
                       {scoreFields.map((f) => (
-                        <td key={f.key} className="px-2 py-2 text-center">
+                        <td key={f.key} className="px-2 py-3 text-center">
                           <input
                             ref={(el) => { cellRefs.current[`${s.username}-${f.key}`] = el; }}
                             type="number" min="0" max="10" step="0.1"
                             value={g[f.key] ?? ""}
                             onChange={(e) => updateCell(s.username, f.key, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIdx, f.key)}
-                            className="w-16 text-center rounded-lg border border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 py-1.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+                            className="w-16 text-center rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 text-stone-900 dark:text-stone-100 py-2 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 transition-shadow"
                           />
                         </td>
                       ))}
-                      <td className="px-2 py-2 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="px-2 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
                           <input
                             ref={(el) => { cellRefs.current[`${s.username}-diem_tb`] = el; }}
                             type="number" min="0" max="10" step="0.01"
                             value={g.diem_tb ?? ""}
                             onChange={(e) => updateTBManual(s.username, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIdx, "diem_tb")}
-                            className={`w-16 text-center rounded-lg border py-1.5 text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent ${tbColorClass(g.diem_tb)} ${
-                              manualTB[s.username] ? "border-[#FF6B35] bg-orange-50/40 dark:bg-orange-950/20" : "border-stone-200 dark:border-stone-750 bg-white dark:bg-stone-900"
+                            className={`w-16 text-center rounded-xl border py-2 text-[14px] font-bold focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 transition-shadow ${tbColorClass(g.diem_tb)} ${
+                              manualTB[s.username] ? "border-amber-600 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-950/20" : "border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50"
                             }`}
                           />
                           {manualTB[s.username] && (
                             <button type="button" title="Tính lại tự động" onClick={() => resetTBAuto(s.username)}
-                              className="text-[11px] text-stone-400 dark:text-stone-505 hover:text-[#FF6B35] flex-shrink-0">↺</button>
+                              className="text-[12px] font-bold text-stone-400 dark:text-stone-500 hover:text-amber-800 dark:text-amber-400 flex-shrink-0 transition-colors">↺</button>
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-        </>
+        </motion.div>
       )}
+      </AnimatePresence>
 
-      <div className="px-5 py-3 border-t border-stone-100 dark:border-stone-800 bg-[#F9F9F9] dark:bg-stone-850/50 text-[11px] text-stone-400 dark:text-stone-500">
-        Điểm TB tự tính theo công thức: Miệng×1, Vở×1, 15'×1, 1 Tiết×2, Thi×3 — có thể sửa tay (ô sẽ viền cam), bấm ↺ để tính lại tự động.
+      <div className="px-5 py-3.5 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/50 dark:bg-stone-900/50 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0 mt-0.5" />
+        <span className="text-[12px] font-medium text-stone-500 dark:text-stone-400">
+          Điểm TB tự tính theo công thức: Miệng×1, Vở×1, 15'×1, 1 Tiết×2, Thi×3 — có thể sửa tay (ô sẽ viền cam), bấm ↺ để tính lại tự động.
+        </span>
       </div>
-    </div>
+    </motion.div>
   );
 }

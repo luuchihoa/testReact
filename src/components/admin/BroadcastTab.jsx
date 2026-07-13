@@ -1,8 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Megaphone, Link2, Loader2, Send, History, X, CheckCircle2, Inbox } from "lucide-react";
+import { Megaphone, Link2, Send, History, Clock, CheckCircle2, Inbox, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAdminContext } from "./AdminContext.jsx";
-import { ACCENT } from "./constants.js";
 import { sendBroadcastNotification, fetchRecentBroadcasts } from "./dataLayer.js";
+import { Spinner } from "../ui/StudentShared.jsx";
+
+// Hằng số Easing chuẩn của Design System
+const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 const TITLE_MAX = 120;
 const MESSAGE_MAX = 1000;
@@ -17,63 +21,69 @@ function relativeTime(iso) {
   if (hr < 24) return `${hr} giờ trước`;
   const day = Math.round(hr / 24);
   if (day < 7) return `${day} ngày trước`;
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-/* ---------- Confirm sheet: bottom sheet trên mobile, modal giữa màn hình trên desktop ---------- */
+/* ============================================================
+   MODAL XÁC NHẬN (BOTTOM SHEET TRÊN MOBILE)
+   ============================================================ */
 function ConfirmSheet({ open, title, onCancel, onConfirm, busy }) {
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div
-        className="absolute inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-[fadeIn_.18s_ease-out]"
-        onClick={busy ? undefined : onCancel}
-      />
-      <div
-        className="relative w-full sm:w-[420px] sm:mx-4 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl rounded-t-[28px] sm:rounded-[28px]
-                   shadow-[0_-8px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_20px_60px_rgba(0,0,0,0.18)]
-                   dark:shadow-[0_-8px_40px_rgba(0,0,0,0.5)] dark:sm:shadow-[0_20px_60px_rgba(0,0,0,0.6)]
-                   dark:ring-1 dark:ring-stone-800
-                   pb-[calc(env(safe-area-inset-bottom)+20px)] sm:pb-6 pt-2.5 sm:pt-6 px-6
-                   animate-[slideUp_.22s_cubic-bezier(0.32,0.72,0,1)]"
-      >
-        <div className="sm:hidden mx-auto mb-4 h-1.5 w-10 rounded-full bg-stone-200 dark:bg-stone-700" />
-        <div className="flex flex-col items-center text-center gap-3 sm:gap-2.5 pt-2 sm:pt-0">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${ACCENT}14` }}
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm"
+            onClick={busy ? undefined : onCancel}
+          />
+          <motion.div
+            initial={{ y: "100%", opacity: 0.5 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ duration: 0.4, ease: APPLE_EASE }}
+            className="relative w-full sm:w-[440px] sm:mx-4 bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl rounded-t-[32px] sm:rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pb-[calc(env(safe-area-inset-bottom)+24px)] sm:pb-6 pt-3 sm:pt-7 px-6"
           >
-            <Megaphone className="w-5 h-5" style={{ color: ACCENT }} />
-          </div>
-          <h4 className="text-[16px] font-bold text-stone-900 dark:text-stone-100">Gửi cho tất cả mọi người?</h4>
-          <p className="text-[13.5px] text-stone-500 dark:text-stone-400 leading-relaxed px-1">
-            Thông báo <span className="font-semibold text-stone-700 dark:text-stone-200">"{title}"</span> sẽ hiển thị ngay cho toàn bộ học sinh, giáo viên và quản trị viên.
-          </p>
+            <div className="sm:hidden mx-auto mb-5 h-1.5 w-12 rounded-full bg-stone-300 dark:bg-stone-700" />
+            <div className="flex flex-col items-center text-center gap-4 pt-2 sm:pt-0">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/30">
+                <Megaphone className="w-6 h-6 text-amber-700 dark:text-amber-400" />
+              </div>
+              <div>
+                <h4 className="text-[20px] font-extrabold text-amber-950 dark:text-amber-50 font-serif mb-2">Gửi cho toàn bộ hệ thống?</h4>
+                <p className="text-[14px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed px-2">
+                  Thông báo <span className="font-bold text-amber-900 dark:text-amber-200">"{title}"</span> sẽ hiển thị ngay lập tức trong chuông thông báo của tất cả Học sinh, Giáo viên và Quản trị viên.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row gap-3 mt-8">
+              {/* Nút Phụ */}
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={busy}
+                className="inline-flex flex-1 items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
+              >
+                Huỷ bỏ
+              </button>
+              {/* Nút Chính */}
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={busy}
+                className="inline-flex flex-1 items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {busy && <Spinner className="w-4 h-4" />}
+                {busy ? "Đang gửi…" : "Phát thông báo"}
+              </button>
+            </div>
+          </motion.div>
         </div>
-        <div className="flex flex-col-reverse sm:flex-row gap-2.5 mt-6">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            className="flex-1 h-12 rounded-2xl text-[14.5px] font-semibold text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800
-                       hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            Huỷ
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={busy}
-            className="flex-1 h-12 rounded-2xl text-[14.5px] font-bold text-white
-                       active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2 shadow-sm"
-            style={{ backgroundColor: ACCENT }}
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {busy ? "Đang gửi…" : "Gửi ngay"}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -91,6 +101,7 @@ export default function BroadcastTab() {
   const [justSentId, setJustSentId] = useState(null);
 
   const messageRef = useRef(null);
+  const isMobile = window.innerWidth < 768;
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -106,7 +117,6 @@ export default function BroadcastTab() {
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
-  // auto-grow textarea, cảm giác mượt như ghi chú trên iOS
   useEffect(() => {
     const el = messageRef.current;
     if (!el) return;
@@ -126,7 +136,7 @@ export default function BroadcastTab() {
     setSending(true);
     try {
       await sendBroadcastNotification(title.trim(), message.trim(), link.trim());
-      showToast("Đã gửi thông báo chung", "success");
+      showToast("Đã gửi thông báo chung thành công", "success");
       setTitle(""); setMessage(""); setLink("");
       setConfirmOpen(false);
       await loadHistory();
@@ -143,160 +153,142 @@ export default function BroadcastTab() {
   const msgLeft = MESSAGE_MAX - message.length;
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5 pb-24 sm:pb-0">
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(24px); opacity: .6 } to { transform: translateY(0); opacity: 1 } }
-        @media (prefers-reduced-motion: reduce) {
-          .animate-\\[fadeIn_\\.18s_ease-out\\], .animate-\\[slideUp_\\.22s_cubic-bezier\\(0\\.32\\,0\\.72\\,0\\,1\\)\\] { animation: none !important; }
-        }
-      `}</style>
-
+    <motion.div 
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: APPLE_EASE }}
+      className="flex flex-col gap-6 pb-24 sm:pb-0"
+    >
       {/* ---------- Form soạn thông báo ---------- */}
       <form
         onSubmit={requestSend}
-        className="bg-white dark:bg-stone-900 rounded-[28px] border border-stone-100 dark:border-stone-800
-                   shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)] p-5 sm:p-6 flex flex-col gap-5"
+        className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm p-6 sm:p-7 flex flex-col gap-6"
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${ACCENT}14` }}
-          >
-            <Megaphone className="w-4 h-4" style={{ color: ACCENT }} />
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-amber-50 dark:bg-stone-800 border border-amber-900/5 dark:border-amber-100/5 shadow-sm">
+            <Megaphone className="w-5 h-5 text-amber-800 dark:text-amber-400" />
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-stone-900 dark:text-stone-100 tracking-tight">Soạn thông báo chung</h3>
-            <p className="text-[12.5px] text-stone-400 dark:text-stone-500 mt-0.5">
-              Hiển thị cho <span className="font-semibold text-stone-500 dark:text-stone-400">tất cả tài khoản</span> ở chuông thông báo
+            <h3 className="text-xl sm:text-2xl font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight">Soạn thông báo khẩn</h3>
+            <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400 mt-0.5">
+              Phát đi toàn hệ thống, ai cũng có thể đọc được.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[12.5px] font-semibold text-stone-500 dark:text-stone-400">Tiêu đề</label>
-              <span className={`text-[11px] tabular-nums ${titleLeft < 15 ? "text-orange-500 dark:text-orange-400" : "text-stone-300 dark:text-stone-600"}`}>
+        <div className="flex flex-col gap-5 mt-2">
+          {/* Tiêu đề */}
+          <label className="flex flex-col gap-2">
+            <div className="flex items-center justify-between ml-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">Tiêu đề thông báo</span>
+              <span className={`text-[11px] font-bold tabular-nums ${titleLeft < 15 ? "text-red-500" : "text-stone-400"}`}>
                 {titleLeft}
               </span>
             </div>
             <input
               type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: Nghỉ học tuần này"
+              placeholder="VD: Thông báo nghỉ học tuần này do thời tiết xấu"
               maxLength={TITLE_MAX}
-              className="w-full h-12 rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/70 px-4 text-[15px]
-                         text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 outline-none transition-all
-                         focus:bg-white dark:focus:bg-stone-800 focus:ring-[3px] focus:border-transparent"
-              style={{ "--tw-ring-color": `${ACCENT}33` }}
-              onFocus={(e) => (e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT}33`)}
-              onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+              className="w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 px-4 py-3.5 text-[14px] font-medium text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-600/50 transition-shadow"
             />
-          </div>
+          </label>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[12.5px] font-semibold text-stone-500 dark:text-stone-400">Nội dung</label>
-              <span className={`text-[11px] tabular-nums ${msgLeft < 80 ? "text-orange-500 dark:text-orange-400" : "text-stone-300 dark:text-stone-600"}`}>
+          {/* Nội dung */}
+          <label className="flex flex-col gap-2">
+            <div className="flex items-center justify-between ml-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">Nội dung chi tiết</span>
+              <span className={`text-[11px] font-bold tabular-nums ${msgLeft < 80 ? "text-red-500" : "text-stone-400"}`}>
                 {msgLeft}
               </span>
             </div>
             <textarea
               ref={messageRef}
               value={message} onChange={(e) => setMessage(e.target.value)}
-              placeholder="Nội dung chi tiết của thông báo…"
+              placeholder="Nội dung rõ ràng, ngắn gọn và đầy đủ ý..."
               rows={4} maxLength={MESSAGE_MAX}
-              className="w-full rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/70 px-4 py-3 text-[15px] leading-relaxed
-                         text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 resize-none outline-none transition-all min-h-[104px]
-                         focus:bg-white dark:focus:bg-stone-800"
-              onFocus={(e) => (e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT}33`)}
-              onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+              className="w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 px-4 py-3.5 text-[14px] font-medium leading-relaxed text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 resize-none outline-none focus:ring-2 focus:ring-amber-600/50 transition-shadow min-h-[104px]"
             />
-          </div>
+          </label>
 
-          <div>
-            <label className="flex items-center gap-1.5 text-[12.5px] font-semibold text-stone-500 dark:text-stone-400 mb-1.5">
-              <Link2 className="w-3.5 h-3.5" /> Đường dẫn <span className="font-normal text-stone-300 dark:text-stone-600">· tuỳ chọn</span>
-            </label>
+          {/* Đường dẫn */}
+          <label className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 ml-1">
+              <Link2 className="w-3.5 h-3.5" /> Đường dẫn đính kèm <span className="normal-case tracking-normal font-medium text-stone-400 dark:text-stone-500 ml-1">(Tuỳ chọn)</span>
+            </div>
             <input
               type="text" value={link} onChange={(e) => setLink(e.target.value)}
-              placeholder="VD: /lịch-sinh-hoạt"
-              className="w-full h-12 rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/70 px-4 text-[15px]
-                         text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 outline-none transition-all
-                         focus:bg-white dark:focus:bg-stone-800"
-              onFocus={(e) => (e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT}33`)}
-              onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+              placeholder="VD: /lịch-sinh-hoạt hoặc URL bài viết"
+              className="w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 px-4 py-3.5 text-[14px] font-medium text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-600/50 transition-shadow"
             />
-            <p className="text-[11.5px] text-stone-400 dark:text-stone-500 mt-1.5">Bấm vào thông báo sẽ điều hướng tới đường dẫn này, nếu có.</p>
-          </div>
+            <div className="flex items-center gap-1.5 text-[12px] font-medium text-stone-400 dark:text-stone-500 mt-1 ml-1">
+              <AlertCircle className="w-3.5 h-3.5" /> Người đọc có thể bấm vào thông báo để chuyển hướng tới đường dẫn này.
+            </div>
+          </label>
         </div>
 
-        {/* Nút gửi */}
         <button
           type="submit" disabled={sending}
-          className="inline-flex items-center justify-center w-full md:w-auto gap-2 rounded-full px-5 h-11 text-[13.5px]
-                     font-bold text-white active:scale-[0.98] transition-all disabled:opacity-60 self-start shadow-sm"
-          style={{ backgroundColor: ACCENT }}
+          className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed self-start w-full md:w-auto mt-2"
         >
           <Send className="w-4 h-4" />
-          Gửi thông báo
+          Phát thông báo ngay
         </button>
       </form>
 
       {/* ---------- Lịch sử ---------- */}
-      <div className="bg-white dark:bg-stone-900 rounded-[28px] border border-stone-100 dark:border-stone-800
-                       shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)] overflow-hidden">
-        <div className="flex items-center gap-2.5 px-5 sm:px-6 py-4 border-b border-stone-100 dark:border-stone-800">
-          <History className="w-4 h-4 text-stone-400 dark:text-stone-500" />
-          <h3 className="text-[13.5px] font-bold text-stone-800 dark:text-stone-100">Đã gửi gần đây</h3>
+      <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-50/50 dark:bg-stone-900/50">
+          <History className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+          <h3 className="text-[12px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-wider">Lịch sử đã gửi</h3>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto" data-lenis-prevent>
-          {historyLoading && (
-            <div className="flex flex-col items-center justify-center gap-2.5 py-14 text-stone-400 dark:text-stone-500">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-[12.5px]">Đang tải…</span>
-            </div>
-          )}
-
-          {!historyLoading && history.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 py-14 px-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-stone-50 dark:bg-stone-800 flex items-center justify-center">
-                <Inbox className="w-5 h-5 text-stone-300 dark:text-stone-600" />
-              </div>
-              <p className="text-[13px] text-stone-400 dark:text-stone-500">Chưa gửi thông báo chung nào.</p>
-            </div>
-          )}
-
-          {!historyLoading && history.map((h, i) => (
-            <div
-              key={h.id}
-              className={`px-5 sm:px-6 py-4 flex items-start gap-3 ${i !== history.length - 1 ? "border-b border-stone-50 dark:border-stone-800/70" : ""}`}
-            >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ backgroundColor: `${ACCENT}0F` }}
-              >
-                {justSentId === h.id
-                  ? <CheckCircle2 className="w-4 h-4" style={{ color: ACCENT }} />
-                  : <Megaphone className="w-3.5 h-3.5" style={{ color: ACCENT }} />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-[13.5px] font-semibold text-stone-800 dark:text-stone-100 leading-snug">{h.title}</p>
-                  <span className="text-[11px] text-stone-400 dark:text-stone-500 flex-shrink-0 whitespace-nowrap mt-0.5">
-                    {relativeTime(h.created_at)}
-                  </span>
+          <AnimatePresence mode="wait">
+            {historyLoading ? (
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center gap-3 py-16 text-amber-900 dark:text-amber-500">
+                <Spinner className="w-5 h-5" />
+                <span className="text-[14px] font-medium">Đang tải lịch sử…</span>
+              </motion.div>
+            ) : history.length === 0 ? (
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center border border-black/5 dark:border-white/5">
+                  <Inbox className="w-6 h-6 text-stone-400 dark:text-stone-500" />
                 </div>
-                <p className="text-[12.5px] text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">{h.message}</p>
-                {h.link && (
-                  <p className="text-[11.5px] font-medium mt-1.5 truncate" style={{ color: ACCENT }}>
-                    ↳ {h.link}
-                  </p>
-                )}
+                <p className="text-[14px] font-medium text-stone-500 dark:text-stone-400">Hệ thống chưa ghi nhận thông báo chung nào.</p>
+              </motion.div>
+            ) : (
+              <div className="divide-y divide-amber-900/5 dark:divide-amber-100/5">
+                {history.map((h, i) => (
+                  <motion.div
+                    key={h.id}
+                    initial={{ opacity: 0, y: isMobile ? 16 : 0 }} 
+                    whileInView={{ opacity: 1, y: 0 }} 
+                    viewport={{ once: true, margin: isMobile ? "-20px" : "0px" }}
+                    transition={{ duration: 0.5, delay: i * 0.05, ease: APPLE_EASE }}
+                    className="px-6 py-5 flex items-start gap-4 transition-colors duration-300 hover:bg-amber-50/40 dark:hover:bg-amber-900/10"
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-white dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 shadow-sm mt-0.5">
+                      {justSentId === h.id ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Megaphone className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 mb-2">
+                        <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 leading-snug truncate">{h.title}</p>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0 whitespace-nowrap bg-stone-100 dark:bg-stone-800 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 w-fit">
+                          <Clock className="w-3.5 h-3.5" /> {relativeTime(h.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-[13.5px] text-stone-600 dark:text-stone-300 font-medium leading-relaxed">{h.message}</p>
+                      {h.link && (
+                        <p className="text-[12.5px] font-bold mt-2.5 truncate text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          <Link2 className="w-3.5 h-3.5" /> <span className="underline underline-offset-2 opacity-90">{h.link}</span>
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
-          ))}
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -307,6 +299,6 @@ export default function BroadcastTab() {
         onCancel={() => !sending && setConfirmOpen(false)}
         onConfirm={handleConfirmSend}
       />
-    </div>
+    </motion.div>
   );
 }

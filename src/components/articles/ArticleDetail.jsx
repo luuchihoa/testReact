@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "../../lib/supabase.js";
@@ -29,6 +30,20 @@ function formatDateVi(dateStr) {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
+
+// Danh sách kênh chia sẻ dùng chung cho cả popover desktop và bottom sheet
+// mobile — tránh lặp lại markup 2 lần khi chỉ khác nhau về kích thước/bố cục.
+const SHARE_CHANNELS = [
+  { key: "facebook",  label: "Facebook",       Icon: FacebookIcon,  color: "#1877F2" },
+  { key: "messenger", label: "Messenger",      Icon: MessengerIcon, color: "#0084FF" },
+  { key: "zalo",      label: "Zalo",           Icon: ZaloIcon,      color: "#0068FF" },
+  { key: "copy",      label: "Sao chép liên kết", Icon: Link2,      color: "#92400E" },
+];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function ArticleDetail() {
   const { slug } = useParams();
@@ -70,7 +85,6 @@ export default function ArticleDetail() {
     setIsShareOpen(false);
     const url = window.location.href;
     
-    // Cảnh báo link localhost đối với các nền tảng mạng xã hội cần crawl metadata
     const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
     if ((channel === "facebook" || channel === "messenger" || channel === "zalo") && isLocal) {
       showToast("Lưu ý: Link localhost không hiển thị được nội dung xem trước trên mạng xã hội.", "info");
@@ -100,207 +114,210 @@ export default function ArticleDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 flex items-center justify-center gap-2.5 py-24 text-stone-400 dark:text-stone-500">
-        <Loader2 className="w-5 h-5 animate-spin text-amber-700 dark:text-amber-500" />
-        <span className="text-sm font-medium">Đang tải nội dung…</span>
+      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex items-center justify-center gap-2.5 py-24 text-stone-500">
+        <Loader2 className="w-6 h-6 animate-spin text-amber-900 dark:text-amber-500" />
+        <span className="text-sm font-bold">Đang tải nội dung…</span>
       </div>
     );
   }
 
   if (notFound || !article) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 flex flex-col items-center justify-center gap-4 text-center px-6 py-20">
-        <p className="text-xl font-bold text-stone-850 dark:text-stone-150">Không tìm thấy bài viết</p>
-        <p className="text-sm text-stone-400 dark:text-stone-500 max-w-xs">Bài viết có thể đã bị gỡ hoặc chưa được duyệt bởi ban quản trị.</p>
-        <Link to="/bài-viết" className="text-sm font-bold text-amber-800 dark:text-amber-500 hover:underline">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex flex-col items-center justify-center gap-4 text-center px-6 py-20"
+      >
+        <p className="text-xl font-bold font-serif text-amber-950 dark:text-amber-50">Không tìm thấy bài viết</p>
+        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 max-w-xs">Bài viết có thể đã bị gỡ hoặc chưa được duyệt bởi ban quản trị.</p>
+        <Link to="/bài-viết" className="text-sm font-bold text-amber-900 dark:text-amber-500 md:hover:underline">
           ← Quay lại danh sách bài viết
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
-  // Tính toán thời gian đọc thực tế từ markdown content
   const wordCount = (article.content || "").trim().split(/\s+/).filter(Boolean).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-300 overflow-x-hidden">
-      
-      {/* Keyframe CSS inline cho menu chia sẻ mượt mà */}
-      <style>{`
-        @keyframes slideUpShare {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-        @keyframes fadeInShare {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 transition-colors duration-500 overflow-x-hidden">
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+        className="max-w-3xl mx-auto px-5 sm:px-6 py-8 sm:py-12"
+      >
         
-        {/* Nút quay lại thiết kế capsule cao cấp */}
-        <div className="mb-8">
-          <Link to="/bài-viết" className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-[12px] font-bold text-stone-600 dark:text-stone-300 shadow-2xs hover:bg-stone-50 dark:hover:bg-stone-850 hover:text-amber-800 dark:hover:text-amber-500 hover:border-amber-700/30 dark:hover:border-amber-600/30 transition-all duration-200 group">
-            <ArrowLeft className="w-3.5 h-3.5 transform group-hover:-translate-x-0.5 transition-transform text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-500" />
-            Tất cả bài viết
+        {/* Nút quay lại (Secondary Button) */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="mb-8">
+          <Link to="/bài-viết" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13.5px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700">
+            <ArrowLeft className="w-4 h-4" /> Tất cả bài viết
           </Link>
-        </div>
+        </motion.div>
 
-        {/* Chuyên mục bài viết */}
+        {/* Chuyên mục bài viết (Nhãn phụ) */}
         {article.category && (
-          <span className="px-2.5 py-1 rounded-md bg-amber-50 dark:bg-stone-900 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-550 border border-amber-200/30 dark:border-stone-800">
+          <motion.span
+            variants={fadeUp}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-block mb-4 px-3 py-1.5 rounded-lg bg-amber-50/80 dark:bg-amber-900/20 text-[11px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 border border-amber-200/50 dark:border-amber-800/30"
+          >
             {article.category}
-          </span>
+          </motion.span>
         )}
 
-        {/* Tiêu đề bài viết - Font Serif chuyên nghiệp */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold font-serif text-stone-900 dark:text-stone-100 tracking-tight leading-tight mt-4 mb-4">
+        {/* Tiêu đề bài viết */}
+        <motion.h1
+          variants={fadeUp}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold font-serif text-amber-950 dark:text-amber-50 tracking-tight leading-tight mb-6"
+        >
           {article.title}
-        </h1>
+        </motion.h1>
 
         {/* Meta thông tin chi tiết */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200/60 dark:border-stone-800 pb-5 mb-8 text-[12px] sm:text-[13px] text-stone-400 dark:text-stone-500 font-medium">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-            <span className="inline-flex items-center gap-1.5"><User className="w-4 h-4 text-stone-400 dark:text-stone-500" /> {article.author_username}</span>
-            <span className="inline-flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-stone-400 dark:text-stone-500" /> {formatDateVi(article.published_at || article.updated_at)}</span>
-            <span className="inline-flex items-center gap-1.5"><Clock className="w-4 h-4 text-stone-400 dark:text-stone-500" /> {readingTime} phút đọc</span>
+        <motion.div
+          variants={fadeUp}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-900/10 dark:border-amber-100/10 pb-5 mb-8 text-[13px] text-stone-500 dark:text-stone-400 font-medium"
+        >
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <span className="inline-flex items-center gap-1.5 text-amber-950 dark:text-amber-50 font-bold"><User className="w-4 h-4 text-stone-400" /> {article.author_username}</span>
+            <span className="inline-flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-stone-400" /> {formatDateVi(article.published_at || article.updated_at)}</span>
+            <span className="inline-flex items-center gap-1.5"><Clock className="w-4 h-4 text-stone-400" /> {readingTime} phút đọc</span>
           </div>
 
           <div className="relative">
-            <button
+            <motion.button
               type="button"
               onClick={() => setIsShareOpen(!isShareOpen)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-[12px] text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-900 active:scale-95 transition-all font-bold shadow-2xs"
+              whileTap={{ scale: 0.96 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/40 text-[13px] font-bold text-stone-700 dark:text-stone-200 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 transition-colors shadow-sm backdrop-blur-sm"
               title="Chia sẻ bài viết này"
             >
-              <Share2 className="w-3.5 h-3.5" /> Chia sẻ
-            </button>
+              <Share2 className="w-4 h-4 text-amber-900 dark:text-amber-500" /> Chia sẻ
+            </motion.button>
 
-            {/* Popover Dropdown cho Desktop (md:block hidden) */}
-            {isShareOpen && (
-              <>
-                <div className="md:block hidden absolute right-0 mt-2 w-52 bg-white dark:bg-stone-900 border border-stone-150 dark:border-stone-800 rounded-2xl shadow-xl py-2.5 z-50">
-                  <div className="px-4 py-1 border-b border-stone-100 dark:border-stone-800/80 mb-2">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">Chia sẻ bài viết</span>
-                  </div>
-                  <button type="button" onClick={() => shareTo("facebook")} className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/60 flex items-center gap-3 transition-colors">
-                    <div className="w-6 h-6 rounded-lg bg-[#1877F2]/10 dark:bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2] flex-shrink-0">
-                      <FacebookIcon className="w-3.5 h-3.5" />
+            {/* Popover Dropdown cho Desktop */}
+            <AnimatePresence>
+              {isShareOpen && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ transformOrigin: "top right" }}
+                    className="md:block hidden absolute right-0 mt-3 w-56 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-2xl shadow-lg py-3 z-50"
+                  >
+                    <div className="px-4 py-1.5 mb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">Chia sẻ bài viết</span>
                     </div>
-                    Facebook
-                  </button>
-                  <button type="button" onClick={() => shareTo("messenger")} className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/60 flex items-center gap-3 transition-colors">
-                    <div className="w-6 h-6 rounded-lg bg-[#0084FF]/10 dark:bg-[#0084FF]/20 flex items-center justify-center text-[#0084FF] flex-shrink-0">
-                      <MessengerIcon className="w-3.5 h-3.5" />
-                    </div>
-                    Messenger
-                  </button>
-                  <button type="button" onClick={() => shareTo("zalo")} className="w-full text-left px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/60 flex items-center gap-3 transition-colors">
-                    <div className="w-6 h-6 rounded-lg bg-[#0068FF]/10 dark:bg-[#0068FF]/20 flex items-center justify-center text-[#0068FF] flex-shrink-0">
-                      <ZaloIcon className="w-3.5 h-3.5" />
-                    </div>
-                    Zalo
-                  </button>
-                  <div className="border-t border-stone-100 dark:border-stone-800/80 my-1.5"></div>
-                  <button type="button" onClick={() => shareTo("copy")} className="w-full text-left px-4 py-2 text-xs font-semibold text-amber-850 dark:text-amber-500 hover:bg-stone-50 dark:hover:bg-stone-800/60 flex items-center gap-3 transition-colors">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-800 dark:text-amber-500 flex-shrink-0">
-                      <Link2 className="w-3.5 h-3.5" />
-                    </div>
-                    Sao chép liên kết
-                  </button>
-                </div>
-                {/* Backdrop để close dropdown khi click ra ngoài */}
-                <div className="md:block hidden fixed inset-0 z-40" onClick={() => setIsShareOpen(false)}></div>
-              </>
-            )}
+                    {SHARE_CHANNELS.slice(0, 3).map(({ key, label, Icon, color }) => (
+                      <button key={key} type="button" onClick={() => shareTo(key)} className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-stone-700 dark:text-stone-300 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 flex items-center gap-3 transition-colors">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1A`, color }}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        {label}
+                      </button>
+                    ))}
+                    <div className="border-t border-amber-900/5 dark:border-amber-100/5 my-2"></div>
+                    <button type="button" onClick={() => shareTo("copy")} className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-amber-900 dark:text-amber-500 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 flex items-center gap-3 transition-colors">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-900 dark:text-amber-500 flex-shrink-0">
+                        <Link2 className="w-4 h-4" />
+                      </div>
+                      Sao chép liên kết
+                    </button>
+                  </motion.div>
+                  <div className="md:block hidden fixed inset-0 z-40" onClick={() => setIsShareOpen(false)}></div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
 
         {/* Ảnh bìa bài viết */}
         {article.cover_image && (
-          <div className="w-full rounded-3xl overflow-hidden shadow-xs dark:shadow-stone-950/40 mb-8 max-h-[460px] border border-stone-200/30 dark:border-stone-900">
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full rounded-[28px] overflow-hidden shadow-sm mb-10 max-h-[460px] border border-amber-900/5 dark:border-amber-100/5 bg-white/50 dark:bg-stone-900/30"
+          >
             <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
-          </div>
+          </motion.div>
         )}
 
-        {/* Nội dung bài viết Markdown - Thêm w-full, overflow và word-break để chống tràn trên mobile */}
-        <div className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-bold prose-headings:font-serif prose-a:text-amber-700 dark:prose-a:text-amber-500 prose-img:rounded-2xl prose-blockquote:border-l-amber-700 dark:prose-blockquote:border-l-amber-600 prose-blockquote:bg-stone-50 dark:prose-blockquote:bg-stone-900/30 prose-blockquote:py-1 prose-blockquote:pr-4 w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto">
+        {/* Nội dung bài viết Markdown */}
+        <motion.div
+          variants={fadeUp}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-bold prose-headings:font-serif prose-headings:text-amber-950 dark:prose-headings:text-amber-50 prose-a:text-amber-900 dark:prose-a:text-amber-500 prose-img:rounded-3xl prose-blockquote:border-l-amber-900 dark:prose-blockquote:border-l-amber-600 prose-blockquote:bg-amber-50/30 dark:prose-blockquote:bg-amber-900/10 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
+        >
           <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
             {article.content}
           </ReactMarkdown>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Mobile Bottom Sheet Menu chia sẻ - Định vị FIXED hoàn toàn theo khung nhìn di động để chống lệch khi cuộn */}
-      {isShareOpen && (
-        <div className="md:hidden block fixed inset-0 z-50">
-          {/* Backdrop làm mờ có animation fadeInShare */}
-          <div 
-            className="fixed inset-0 z-10 bg-black/60 backdrop-blur-xs" 
-            style={{ animation: "fadeInShare 0.25s ease-out forwards" }}
-            onClick={() => setIsShareOpen(false)}
-          ></div>
-          
-          {/* Khung trượt bottom sheet có animation slideUpShare và z-20 */}
-          <div 
-            className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-stone-900 rounded-t-[2.2rem] border-t border-stone-200/50 dark:border-stone-800/60 px-6 pt-4 pb-10 shadow-2xl flex flex-col gap-4"
-            style={{ animation: "slideUpShare 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}
-          >
-            {/* Drag handle nhỏ nhắn */}
-            <div className="w-12 h-1 bg-stone-200 dark:bg-stone-850 rounded-full mx-auto mb-1"></div>
+      {/* Mobile Bottom Sheet Menu chia sẻ */}
+      <AnimatePresence>
+        {isShareOpen && (
+          <div className="md:hidden block fixed inset-0 z-50">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-10 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm" 
+              onClick={() => setIsShareOpen(false)}
+            />
             
-            <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
-              <div>
-                <h3 className="text-[13px] font-black text-stone-800 dark:text-stone-200 uppercase tracking-wider">Chia sẻ bài viết</h3>
-                <p className="text-[10px] text-stone-400 dark:text-stone-500 font-medium mt-0.5">Lựa chọn nền tảng bạn muốn chia sẻ</p>
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl rounded-t-[32px] border-t border-amber-900/10 dark:border-amber-100/10 px-6 pt-4 pb-12 shadow-2xl flex flex-col gap-5"
+            >
+              <div className="w-12 h-1.5 bg-stone-200 dark:bg-stone-800 rounded-full mx-auto mb-1"></div>
+              
+              <div className="flex items-center justify-between border-b border-amber-900/10 dark:border-amber-100/10 pb-4">
+                <div>
+                  <h3 className="text-[14px] font-bold text-amber-950 dark:text-amber-50 uppercase tracking-wider">Chia sẻ bài viết</h3>
+                  <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium mt-1">Lựa chọn nền tảng bạn muốn chia sẻ</p>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setIsShareOpen(false)} 
+                  className="text-[12px] font-bold text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-4 py-2 rounded-xl active:scale-95 transition-all"
+                >
+                  Đóng
+                </button>
               </div>
-              <button 
-                type="button" 
-                onClick={() => setIsShareOpen(false)} 
-                className="text-[11px] font-bold text-stone-500 dark:text-stone-450 bg-stone-105 dark:bg-stone-800 px-3.5 py-1.5 rounded-xl active:scale-95 transition-all"
-              >
-                Đóng
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-4 py-2 text-center">
-              {/* Nút Facebook */}
-              <button type="button" onClick={() => shareTo("facebook")} className="flex flex-col items-center gap-2 active:scale-95 transition-transform group">
-                <div className="w-14 h-14 rounded-2xl bg-[#1877F2]/10 dark:bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2] shadow-2xs transition-transform group-hover:scale-105">
-                  <FacebookIcon className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-bold text-stone-600 dark:text-stone-400">Facebook</span>
-              </button>
               
-              {/* Nút Messenger */}
-              <button type="button" onClick={() => shareTo("messenger")} className="flex flex-col items-center gap-2 active:scale-95 transition-transform group">
-                <div className="w-14 h-14 rounded-2xl bg-[#0084FF]/10 dark:bg-[#0084FF]/20 flex items-center justify-center text-[#0084FF] shadow-2xs transition-transform group-hover:scale-105">
-                  <MessengerIcon className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-bold text-stone-600 dark:text-stone-400">Messenger</span>
-              </button>
-              
-              {/* Nút Zalo */}
-              <button type="button" onClick={() => shareTo("zalo")} className="flex flex-col items-center gap-2 active:scale-95 transition-transform group">
-                <div className="w-14 h-14 rounded-2xl bg-[#0068FF]/10 dark:bg-[#0068FF]/20 flex items-center justify-center text-[#0068FF] shadow-2xs transition-transform group-hover:scale-105">
-                  <div className="w-6 h-6 rounded-lg bg-[#0068FF] text-white flex items-center justify-center font-black text-xs">Z</div>
-                </div>
-                <span className="text-[10px] font-bold text-stone-600 dark:text-stone-400">Zalo</span>
-              </button>
-              
-              {/* Nút Copy */}
-              <button type="button" onClick={() => shareTo("copy")} className="flex flex-col items-center gap-2 active:scale-95 transition-transform group">
-                <div className="w-14 h-14 rounded-2xl bg-amber-800/10 dark:bg-amber-600/20 flex items-center justify-center text-amber-800 dark:text-amber-500 shadow-2xs transition-transform group-hover:scale-105">
-                  <Link2 className="w-6 h-6 stroke-[2.5px]" />
-                </div>
-                <span className="text-[10px] font-bold text-stone-600 dark:text-stone-400">Sao chép</span>
-              </button>
-            </div>
+              <div className="grid grid-cols-4 gap-4 py-2 text-center">
+                {SHARE_CHANNELS.map(({ key, label, Icon, color }) => (
+                  <motion.button
+                    key={key}
+                    type="button"
+                    onClick={() => shareTo(key)}
+                    whileTap={{ scale: 0.9 }}
+                    className="flex flex-col items-center gap-2.5"
+                  >
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${color}1A`, color }}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11.5px] font-bold text-stone-700 dark:text-stone-300">{label}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

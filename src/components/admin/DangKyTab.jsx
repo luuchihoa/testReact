@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  UserPlus, Phone, MapPin, Calendar, Loader2, Check, X, Inbox,
+  UserPlus, Phone, MapPin, Calendar, Check, X, Inbox, Info,
   Clock, ChevronLeft, GraduationCap, PhoneCall, RotateCcw,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAdminContext } from "./AdminContext.jsx";
 import { DANG_KY_STATUS_TABS, DANG_KY_LABELS_VI, DANG_KY_BADGE } from "./constants.js";
 import { fetchDangKyHoc, processDangKyHoc } from "./dataLayer.js";
 import { SidebarDetailSkeleton } from "../ui/Skeleton.jsx";
+import { Spinner } from "../ui/StudentShared.jsx";
+
+// Hằng số Easing chuẩn của Design System
+const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 function relativeTime(iso) {
   const d = new Date(iso);
@@ -18,22 +23,19 @@ function relativeTime(iso) {
   if (hr < 24) return `${hr} giờ trước`;
   const day = Math.round(hr / 24);
   if (day < 7) return `${day} ngày trước`;
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-// Từ 1 trạng thái, các bước tiếp theo hợp lý để hiển thị làm nút hành động.
-// "moi" không hiện lại chính nó; đã xử lý thì luôn cho phép đưa về "moi"
-// (RotateCcw) đề phòng admin bấm nhầm.
 function nextActions(current) {
   if (current === "moi") return ["da_lien_he", "da_xep_lop", "tu_choi"];
   return ["moi", "da_lien_he", "da_xep_lop", "tu_choi"].filter((s) => s !== current);
 }
 
 const ACTION_STYLE = {
-  moi:        { icon: RotateCcw,  cls: "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700" },
-  da_lien_he: { icon: PhoneCall,  cls: "bg-blue-500 text-white md:hover:bg-blue-600" },
-  da_xep_lop: { icon: Check,      cls: "bg-emerald-500 text-white md:hover:bg-emerald-600" },
-  tu_choi:    { icon: X,          cls: "bg-red-500 text-white md:hover:bg-red-600" },
+  moi:        { icon: RotateCcw,  cls: "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 md:hover:bg-stone-200 dark:md:hover:bg-stone-700" },
+  da_lien_he: { icon: PhoneCall,  cls: "bg-blue-600 text-white md:hover:bg-blue-700 border-transparent" },
+  da_xep_lop: { icon: Check,      cls: "bg-emerald-600 text-white md:hover:bg-emerald-700 border-transparent" },
+  tu_choi:    { icon: X,          cls: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 md:hover:bg-red-100 dark:md:hover:bg-red-500/20 border-transparent" },
 };
 
 export default function DangKyTab() {
@@ -44,8 +46,10 @@ export default function DangKyTab() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [ghiChuAdmin, setGhiChuAdmin] = useState("");
-  const [processing, setProcessing] = useState(null); // trạng thái đích đang gửi lên, để disable đúng nút
+  const [processing, setProcessing] = useState(null); 
   const [mobileView, setMobileView] = useState("list");
+
+  const isMobile = window.innerWidth < 1024; // lg breakpoint
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,7 +70,7 @@ export default function DangKyTab() {
   const openRow = (r) => {
     setSelected(r);
     setGhiChuAdmin(r.ghi_chu_admin || "");
-    setMobileView("detail");
+    if (isMobile) setMobileView("detail");
   };
 
   const handleProcess = async (trangThaiMoi) => {
@@ -86,10 +90,30 @@ export default function DangKyTab() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5">
+    <motion.div 
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: APPLE_EASE }}
+      className="flex flex-col gap-5 sm:gap-6"
+    >
+      {/* Banner thông báo tự động xóa sau 7 ngày */}
+      <div className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 p-4 rounded-[24px] backdrop-blur-md shadow-sm flex items-start gap-4 transition-all duration-300">
+        <div className="mt-0.5 w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 bg-white/50 dark:bg-stone-800/50 shadow-sm border border-black/5 dark:border-white/5">
+          <Info className="w-4.5 h-4.5 text-amber-800/70 dark:text-amber-400/70" strokeWidth={2.5} />
+        </div>
+        <div className="flex-1 mt-0.5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-1.5">
+            Dọn dẹp hồ sơ định kỳ
+          </p>
+          <div className="text-[14px] font-medium text-amber-950 dark:text-amber-50 leading-relaxed">
+            Hệ thống sẽ <strong className="font-bold text-red-600 dark:text-red-400">tự động xóa</strong> các hồ sơ đăng ký ở trạng thái <strong className="font-bold">Đã xếp lớp</strong> hoặc <strong className="font-bold">Từ chối</strong> sau 7 ngày.
+          </div>
+        </div>
+      </div>
+
       {/* ---------- Bộ lọc trạng thái ---------- */}
       <div
-        className="flex gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+        className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         data-lenis-prevent
       >
@@ -97,11 +121,14 @@ export default function DangKyTab() {
           <button
             key={s}
             type="button"
-            onClick={() => setStatusFilter(s)}
-            className={`flex-shrink-0 px-3.5 py-2 rounded-full text-[12.5px] font-semibold transition-all active:scale-[0.97] ${
+            onClick={() => {
+              setStatusFilter(s);
+              if (isMobile) setMobileView("list");
+            }}
+            className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-300 active:scale-[0.97] ${
               statusFilter === s
-                ? "bg-stone-900 dark:bg-white text-white dark:text-stone-900"
-                : "bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-800"
+                ? "bg-amber-900 dark:bg-amber-600 text-white shadow-sm"
+                : "bg-white/60 dark:bg-stone-900/40 text-stone-500 dark:text-stone-400 border border-amber-900/10 dark:border-amber-100/10 md:hover:bg-white dark:md:hover:bg-stone-800"
             }`}
           >
             {DANG_KY_LABELS_VI[s]}
@@ -109,160 +136,167 @@ export default function DangKyTab() {
         ))}
       </div>
 
+      <AnimatePresence mode="wait">
       {loading ? (
-        <SidebarDetailSkeleton items={4} />
+        <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <SidebarDetailSkeleton items={4} />
+        </motion.div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
-            <Inbox className="h-6 w-6 text-stone-400 dark:text-stone-500" strokeWidth={1.75} />
+        <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center gap-4 py-24 text-center bg-white/60 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5">
+            <Inbox className="h-7 w-7 text-stone-400 dark:text-stone-500" strokeWidth={2} />
           </div>
           <div>
-            <p className="text-[15px] font-semibold text-stone-700 dark:text-stone-200">
+            <p className="text-[16px] font-bold text-amber-950 dark:text-amber-50 font-serif">
               Không có hồ sơ nào ở trạng thái "{DANG_KY_LABELS_VI[statusFilter]}"
             </p>
-            <p className="text-[13px] text-stone-400 dark:text-stone-500 mt-0.5">Danh sách sẽ tự cập nhật khi có đăng ký mới</p>
+            <p className="text-[14px] font-medium text-stone-500 dark:text-stone-400 mt-1">Danh sách sẽ tự cập nhật khi có đăng ký mới.</p>
           </div>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-          {/* ------- Danh sách ------- */}
-          <div className={`${mobileView === "detail" ? "hidden lg:flex" : "flex"} flex-col gap-1.5`}>
-            <div className="flex items-center justify-between px-1 pb-1">
-              <h3 className="text-[13px] font-semibold text-stone-400 dark:text-stone-500 tracking-wide">
-                {DANG_KY_LABELS_VI[statusFilter].toUpperCase()}
+        <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: APPLE_EASE }} className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 lg:gap-6">
+          
+          {/* ------- Danh sách (Trái) ------- */}
+          <div className={`${mobileView === "detail" ? "hidden lg:flex" : "flex"} flex-col gap-3`}>
+            <div className="flex items-center justify-between px-2 pb-1">
+              <h3 className="text-[12px] font-bold text-amber-800/70 dark:text-amber-400/70 tracking-widest uppercase ml-1">
+                {DANG_KY_LABELS_VI[statusFilter]}
               </h3>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-[11px] font-semibold tabular-nums">
+              <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-amber-100/80 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 text-[12px] font-bold tabular-nums shadow-sm">
                 {rows.length}
               </span>
             </div>
 
-            <div className="flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto" data-lenis-prevent>
-              {rows.map((r) => {
+            <div className="flex flex-col gap-2.5 max-h-[70vh] overflow-y-auto" data-lenis-prevent>
+              {rows.map((r, i) => {
                 const isActive = selected?.id === r.id;
                 return (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: i * 0.05, ease: APPLE_EASE }}
                     key={r.id}
                     type="button"
                     onClick={() => openRow(r)}
-                    className={`group text-left rounded-2xl px-3.5 py-3 transition-all duration-200 ease-out active:scale-[0.985] ${
+                    className={`text-left rounded-[20px] px-5 py-4 border-l-[4px] transition-all duration-300 ease-out active:scale-[0.98] border ${
                       isActive
-                        ? "bg-stone-900 dark:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                        : "bg-white dark:bg-stone-900 md:hover:bg-stone-50 dark:md:hover:bg-stone-800/70 border border-stone-100 dark:border-stone-800"
+                        ? "bg-amber-50/80 dark:bg-amber-900/20 border-l-amber-700 dark:border-l-amber-400 border-y-amber-900/10 border-r-amber-900/10 dark:border-y-amber-100/10 dark:border-r-amber-100/10 shadow-sm"
+                        : "bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-l-transparent border-amber-900/10 dark:border-amber-100/10 shadow-sm"
                     }`}
                   >
-                    <p className={`text-[14px] font-semibold truncate leading-snug ${isActive ? "text-white dark:text-stone-900" : "text-stone-900 dark:text-stone-100"}`}>
+                    <p className={`text-[15px] font-bold truncate leading-snug ${isActive ? "text-amber-950 dark:text-amber-50" : "text-stone-800 dark:text-stone-200"}`}>
                       {r.ho_ten}
                     </p>
-                    <p className={`text-[12px] truncate mt-0.5 ${isActive ? "text-stone-300 dark:text-stone-500" : "text-stone-500 dark:text-stone-400"}`}>
+                    <p className={`text-[13.5px] truncate mt-1.5 ${isActive ? "text-stone-600 dark:text-stone-300" : "text-stone-500 dark:text-stone-400"}`}>
                       {r.khoi_dang_ky}
                     </p>
-                    <div className={`flex items-center gap-1.5 mt-1 text-[12px] ${isActive ? "text-stone-300 dark:text-stone-500" : "text-stone-400 dark:text-stone-500"}`}>
-                      <span className="truncate">{r.sdt}</span>
-                      <span className="opacity-50">·</span>
+                    <div className={`flex items-center gap-1.5 mt-2.5 text-[12px] font-medium ${isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}>
+                      <span className="truncate tabular-nums">{r.sdt}</span>
+                      <span className="opacity-40">•</span>
                       <span className="inline-flex items-center gap-1 shrink-0">
-                        <Clock className="w-3 h-3" strokeWidth={2} />
+                        <Clock className="w-3.5 h-3.5" strokeWidth={2} />
                         {relativeTime(r.created_at)}
                       </span>
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
           </div>
 
-          {/* ------- Chi tiết ------- */}
+          {/* ------- Chi tiết (Phải) ------- */}
           {selected && (
-            <div className={`${mobileView === "list" ? "hidden lg:block" : "block"}`}>
-              <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-[28px] p-5 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+            <div className={`${mobileView === "list" ? "hidden lg:block" : "block"} lg:h-fit sticky top-24`}>
+              <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] p-6 sm:p-8 shadow-sm">
 
                 <button
                   type="button"
                   onClick={() => setMobileView("list")}
-                  className="lg:hidden inline-flex items-center gap-1 text-[13px] font-medium text-stone-500 dark:text-stone-400 mb-4 -ml-1 px-1 py-1 active:opacity-60"
+                  className="lg:hidden inline-flex items-center gap-1.5 text-[14px] font-bold text-stone-500 dark:text-stone-400 mb-6 -ml-1 px-3 py-2 active:scale-95 transition-all bg-white dark:bg-stone-800 rounded-xl border border-black/5 dark:border-white/5 shadow-sm"
                 >
-                  <ChevronLeft className="w-4 h-4" strokeWidth={2.25} />
-                  Danh sách
+                  <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
+                  Quay lại danh sách
                 </button>
 
-                <div className="flex items-start justify-between gap-4 mb-1.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center flex-shrink-0">
-                      <UserPlus className="w-5 h-5 text-stone-400 dark:text-stone-500" strokeWidth={2} />
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-amber-100/80 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-800/30">
+                      <UserPlus className="w-6 h-6 text-amber-700 dark:text-amber-400" strokeWidth={2} />
                     </div>
                     <div>
-                      <h2 className="text-[18px] sm:text-[20px] font-bold text-stone-900 dark:text-stone-100 leading-tight tracking-[-0.01em]">
+                      <h2 className="text-[22px] sm:text-[26px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight">
                         {selected.ho_ten}
                       </h2>
-                      <p className="text-[12.5px] text-stone-400 dark:text-stone-500">Sinh năm {selected.nam_sinh}</p>
+                      <p className="text-[13.5px] font-semibold text-stone-500 dark:text-stone-400 mt-1">Sinh năm {selected.nam_sinh}</p>
                     </div>
                   </div>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold flex-shrink-0 ${DANG_KY_BADGE[selected.trang_thai]}`}>
+                  <span className={`inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex-shrink-0 shadow-sm ${DANG_KY_BADGE[selected.trang_thai]}`}>
                     {DANG_KY_LABELS_VI[selected.trang_thai]}
                   </span>
                 </div>
 
-                {/* Thông tin liên hệ */}
-                <div className="grid sm:grid-cols-2 gap-3 mt-5">
+                {/* Thông tin liên hệ dạng lưới Card */}
+                <div className="grid sm:grid-cols-2 gap-3 mt-6">
                   <a
                     href={`tel:${selected.sdt}`}
-                    className="flex items-center gap-3 rounded-2xl bg-stone-50/70 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 px-4 py-3 md:hover:bg-stone-100 dark:md:hover:bg-stone-800 transition-colors"
+                    className="flex items-center gap-3.5 rounded-2xl bg-white/50 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 px-4 py-3.5 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/10 transition-all duration-300 shadow-sm active:scale-[0.98]"
                   >
-                    <Phone className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0" strokeWidth={2} />
+                    <Phone className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />
                     <div className="min-w-0">
-                      <p className="text-[11px] text-stone-400 dark:text-stone-500">SĐT phụ huynh</p>
-                      <p className="text-[14px] font-semibold text-stone-800 dark:text-stone-100 truncate">{selected.sdt}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">SĐT phụ huynh</p>
+                      <p className="text-[14px] font-bold text-stone-800 dark:text-stone-200 truncate tabular-nums tracking-wide">{selected.sdt}</p>
                     </div>
                   </a>
-                  <div className="flex items-center gap-3 rounded-2xl bg-stone-50/70 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 px-4 py-3">
-                    <MapPin className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0" strokeWidth={2} />
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-white/50 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 px-4 py-3.5 shadow-sm">
+                    <MapPin className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />
                     <div className="min-w-0">
-                      <p className="text-[11px] text-stone-400 dark:text-stone-500">Giáo xóm</p>
-                      <p className="text-[14px] font-semibold text-stone-800 dark:text-stone-100 truncate">{selected.giao_xom}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Giáo xóm</p>
+                      <p className="text-[14px] font-bold text-stone-800 dark:text-stone-200 truncate">{selected.giao_xom}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl bg-stone-50/70 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 px-4 py-3">
-                    <GraduationCap className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0" strokeWidth={2} />
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-white/50 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 px-4 py-3.5 shadow-sm">
+                    <GraduationCap className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />
                     <div className="min-w-0">
-                      <p className="text-[11px] text-stone-400 dark:text-stone-500">Khối đăng ký</p>
-                      <p className="text-[14px] font-semibold text-stone-800 dark:text-stone-100 truncate">{selected.khoi_dang_ky}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Khối đăng ký</p>
+                      <p className="text-[14px] font-bold text-stone-800 dark:text-stone-200 truncate">{selected.khoi_dang_ky}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl bg-stone-50/70 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 px-4 py-3">
-                    <Calendar className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0" strokeWidth={2} />
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-white/50 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 px-4 py-3.5 shadow-sm">
+                    <Calendar className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />
                     <div className="min-w-0">
-                      <p className="text-[11px] text-stone-400 dark:text-stone-500">Nộp hồ sơ</p>
-                      <p className="text-[14px] font-semibold text-stone-800 dark:text-stone-100 truncate">{relativeTime(selected.created_at)}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Nộp hồ sơ</p>
+                      <p className="text-[14px] font-bold text-stone-800 dark:text-stone-200 truncate">{relativeTime(selected.created_at)}</p>
                     </div>
                   </div>
                 </div>
 
                 {selected.ghi_chu && (
-                  <div className="mt-4 rounded-2xl bg-amber-50/60 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/15 px-4 py-3.5">
-                    <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-1">Ghi chú từ phụ huynh</p>
-                    <p className="text-[13.5px] text-stone-700 dark:text-stone-300 leading-relaxed">{selected.ghi_chu}</p>
+                  <div className="mt-5 rounded-[20px] bg-white/50 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 px-5 py-4 shadow-sm">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1.5 ml-1">Ghi chú từ phụ huynh</p>
+                    <p className="text-[14px] font-medium text-amber-950 dark:text-amber-50 leading-relaxed">{selected.ghi_chu}</p>
                   </div>
                 )}
 
                 {selected.xu_ly_boi && (
-                  <p className="text-[12px] text-stone-400 dark:text-stone-500 mt-3">
-                    Xử lý lần cuối bởi <span className="font-semibold text-stone-500 dark:text-stone-400">{selected.xu_ly_boi}</span> · {relativeTime(selected.xu_ly_luc)}
+                  <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium mt-4 border-t border-amber-900/10 dark:border-amber-100/10 pt-4 ml-1">
+                    Xử lý lần cuối bởi <span className="font-bold text-stone-700 dark:text-stone-300">{selected.xu_ly_boi}</span> · {relativeTime(selected.xu_ly_luc)}
                   </p>
                 )}
 
                 {/* Ghi chú nội bộ của admin */}
-                <div className="mt-5">
-                  <label className="text-[12px] font-semibold text-stone-500 dark:text-stone-400">Ghi chú nội bộ (tuỳ chọn)</label>
+                <div className="mt-6">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 ml-1">Ghi chú nội bộ (Tùy chọn)</label>
                   <textarea
                     value={ghiChuAdmin}
                     onChange={(e) => setGhiChuAdmin(e.target.value)}
                     rows={2}
-                    placeholder="VD: Đã gọi 2 lần chưa bắt máy, hẹn gọi lại chiều thứ 7…"
-                    className="mt-1.5 w-full rounded-2xl border border-stone-200 dark:border-stone-700 px-3.5 py-3 text-[14px] bg-stone-50/50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900/10 dark:focus:ring-white/10 focus:border-stone-300 dark:focus:border-stone-600 resize-none transition-colors"
+                    placeholder="VD: Đã gọi trao đổi với phụ huynh, xếp vào lớp Thêm Sức 1..."
+                    className="mt-2.5 w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 px-4 py-3.5 text-[14px] font-medium text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-600/50 transition-shadow resize-none shadow-inner"
                   />
                 </div>
 
                 {/* Hành động */}
-                <div className="flex flex-col sm:flex-row gap-2.5 mt-5 pb-[env(safe-area-inset-bottom)]">
+                <div className="flex flex-col sm:flex-row gap-3 mt-8 border-t border-amber-900/10 dark:border-amber-100/10 pt-6">
                   {nextActions(selected.trang_thai).map((s) => {
                     const { icon: Icon, cls } = ACTION_STYLE[s];
                     const busy = processing === s;
@@ -272,10 +306,10 @@ export default function DangKyTab() {
                         type="button"
                         onClick={() => handleProcess(s)}
                         disabled={!!processing}
-                        className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 rounded-full text-[14px] font-semibold transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 shadow-[0_1px_2px_rgba(0,0,0,0.08)] ${cls}`}
+                        className={`flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shadow-sm ${cls}`}
                       >
-                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" strokeWidth={2.5} />}
-                        {DANG_KY_LABELS_VI[s]}
+                        {busy ? <Spinner className="w-4.5 h-4.5" /> : <Icon className="w-4.5 h-4.5" strokeWidth={2.5} />}
+                        {busy ? "Đang xử lý…" : DANG_KY_LABELS_VI[s]}
                       </button>
                     );
                   })}
@@ -283,8 +317,9 @@ export default function DangKyTab() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }

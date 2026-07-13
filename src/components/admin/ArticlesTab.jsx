@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
+import { useAdminContext } from "./AdminContext.jsx";
 import { Loader2, Check, X, Inbox, Clock, ChevronLeft } from "lucide-react";
 import { SidebarDetailSkeleton } from "../ui/Skeleton.jsx";
 
@@ -13,6 +14,7 @@ function formatDateVi(dateStr) {
 
 export default function ArticlesTab() {
   const { showToast } = useToast();
+  const { refreshPendingBaiViet } = useAdminContext();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -54,6 +56,7 @@ export default function ArticlesTab() {
     showToast("Đã duyệt và đăng bài viết", "success");
     setMobileView("list");
     fetchPending();
+    refreshPendingBaiViet();
   };
 
   const handleReject = async () => {
@@ -68,40 +71,42 @@ export default function ArticlesTab() {
     setReason("");
     setMobileView("list");
     fetchPending();
+    refreshPendingBaiViet();
   };
 
-  if (loading) {
-    return <SidebarDetailSkeleton items={4} />;
-  }
+  if (loading) return <SidebarDetailSkeleton items={4} />;
 
   if (articles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
-          <Inbox className="h-6 w-6 text-stone-400 dark:text-stone-500" strokeWidth={1.75} />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100/50 dark:bg-amber-900/20">
+          <Inbox className="h-7 w-7 text-amber-600/70 dark:text-amber-500/70" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-[15px] font-semibold text-stone-700 dark:text-stone-200">Không có bài viết chờ duyệt</p>
-          <p className="text-[13px] text-stone-400 dark:text-stone-500 mt-0.5">Danh sách sẽ tự cập nhật khi có bài mới</p>
+          <p className="text-[16px] font-bold text-amber-950 dark:text-amber-50 font-serif">Không có bài viết chờ duyệt</p>
+          <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5">Danh sách sẽ tự cập nhật khi có bài mới</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
-      {/* ------- Danh sách bài chờ duyệt ------- */}
+    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 w-full min-w-0">
+      {/* ------- Danh sách bài chờ duyệt -------
+          Chỉ giới hạn chiều cao + tự cuộn ở desktop (lg), nơi cột này đứng
+          cạnh cột chi tiết cao hơn. Trên mobile để cuộn tự nhiên theo trang,
+          tránh 1 vùng cuộn con lồng trong trang đang cuộn (khó thao tác tay). */}
       <div className={`${mobileView === "detail" ? "hidden lg:flex" : "flex"} flex-col gap-1.5`}>
         <div className="flex items-center justify-between px-1 pb-1">
-          <h3 className="text-[13px] font-semibold text-stone-400 dark:text-stone-500 tracking-wide">
+          <h3 className="text-[12px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-widest">
             CHỜ DUYỆT
           </h3>
-          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-[11px] font-semibold tabular-nums">
+          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 text-[11px] font-bold tabular-nums">
             {articles.length}
           </span>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 lg:max-h-[70vh] lg:overflow-y-auto" data-lenis-prevent>
           {articles.map((a) => {
             const isActive = selected?.id === a.id;
             return (
@@ -109,16 +114,16 @@ export default function ArticlesTab() {
                 key={a.id}
                 type="button"
                 onClick={() => openArticle(a)}
-                className={`group text-left rounded-2xl px-3.5 py-3 transition-all duration-200 ease-out active:scale-[0.985] ${
+                className={`text-left rounded-2xl pl-3.5 pr-4 py-3 border-l-[2px] border transition-all duration-200 ease-out active:scale-[0.985] ${
                   isActive
-                    ? "bg-stone-900 dark:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                    : "bg-white dark:bg-stone-900 md:hover:bg-stone-50 dark:md:hover:bg-stone-800/70 border border-stone-100 dark:border-stone-800"
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-l-amber-600 dark:border-l-amber-400 border-y-amber-900/10 border-r-amber-900/10 dark:border-y-amber-100/10 dark:border-r-amber-100/10 shadow-sm"
+                    : "bg-white/60 dark:bg-stone-900/40 border-l-transparent border-black/[0.06] dark:border-white/[0.08] md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/10 md:hover:border-black/10 dark:md:hover:border-white/[0.12]"
                 }`}
               >
-                <p className={`text-[14px] font-semibold truncate leading-snug ${isActive ? "text-white dark:text-stone-900" : "text-stone-900 dark:text-stone-100"}`}>
+                <p className={`text-[14px] font-bold truncate leading-snug ${isActive ? "text-amber-950 dark:text-amber-50" : "text-stone-800 dark:text-stone-200"}`}>
                   {a.title}
                 </p>
-                <div className={`flex items-center gap-1.5 mt-1 text-[12px] ${isActive ? "text-stone-300 dark:text-stone-500" : "text-stone-400 dark:text-stone-500"}`}>
+                <div className={`flex items-center gap-1.5 mt-1.5 text-[11.5px] font-medium ${isActive ? "text-amber-800/70 dark:text-amber-400/70" : "text-stone-500 dark:text-stone-400"}`}>
                   <span className="truncate">{a.author_username}</span>
                   <span className="opacity-50">·</span>
                   <span className="inline-flex items-center gap-1 shrink-0">
@@ -132,30 +137,33 @@ export default function ArticlesTab() {
         </div>
       </div>
 
-      {/* ------- Chi tiết bài đang chọn ------- */}
+      {/* ------- Chi tiết bài đang chọn -------
+          Toàn bộ phần chi tiết chỉ còn ĐÚNG 1 khung ngoài cùng. Các khu vực
+          bên trong (ảnh bìa, nội dung, nút hành động) dùng khoảng cách +
+          đường kẻ phân cách thay vì mỗi khu vực 1 khung/bóng/viền riêng. */}
       {selected && (
-        <div className={`${mobileView === "list" ? "hidden lg:block" : "block"}`}>
-          <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-[28px] p-5 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+        <div className={`${mobileView === "list" ? "hidden lg:block" : "block"} min-w-0 w-full`}>
+          <div className="bg-white/90 dark:bg-[#1C1917]/90 border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] p-4 sm:p-7 shadow-sm">
 
             {/* Mobile back control */}
             <button
               type="button"
               onClick={() => setMobileView("list")}
-              className="lg:hidden inline-flex items-center gap-1 text-[13px] font-medium text-stone-500 dark:text-stone-400 mb-4 -ml-1 px-1 py-1 active:opacity-60"
+              className="lg:hidden inline-flex items-center gap-1 text-[13px] font-bold text-stone-500 dark:text-stone-400 mb-4 -ml-1 px-1 py-1 active:opacity-60"
             >
-              <ChevronLeft className="w-4 h-4" strokeWidth={2.25} />
+              <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
               Danh sách
             </button>
 
-            <div className="flex items-start justify-between gap-4 mb-1.5">
-              <h2 className="text-[19px] sm:text-[21px] font-bold text-stone-900 dark:text-stone-100 leading-tight tracking-[-0.01em]">
-                {selected.title}
-              </h2>
-            </div>
-            <p className="text-[13px] text-stone-400 dark:text-stone-500 mb-5">
-              {selected.author_username} · gửi lúc {formatDateVi(selected.submitted_at)}
+            <h2 className="text-[20px] sm:text-[22px] font-bold text-amber-950 dark:text-amber-50 font-serif leading-tight tracking-[-0.01em] break-words">
+              {selected.title}
+            </h2>
+            <p className="text-[13px] text-stone-500 dark:text-stone-400 font-medium mt-1.5 mb-5 flex flex-wrap items-center gap-2">
+              <span className="font-bold text-stone-700 dark:text-stone-300 truncate max-w-[160px]">{selected.author_username}</span>
+              <span className="opacity-50">·</span>
+              <span className="shrink-0">gửi lúc {formatDateVi(selected.submitted_at)}</span>
               {selected.category && (
-                <span className="inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-[11px] font-medium align-middle">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wider">
                   {selected.category}
                 </span>
               )}
@@ -169,62 +177,70 @@ export default function ArticlesTab() {
               />
             )}
 
+            {/* Nội dung markdown: chỉ tự cuộn ở desktop (lg); trên mobile
+                để dài bao nhiêu hiện bấy nhiêu, cuộn chung theo trang. */}
             <div
               data-lenis-prevent
-              className="prose prose-stone dark:prose-invert prose-sm max-w-none bg-stone-50/60 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-800 rounded-2xl px-4 sm:px-5 py-4 max-h-[420px] overflow-y-auto"
+              className="prose prose-stone dark:prose-invert prose-sm max-w-none bg-stone-50/80 dark:bg-stone-900/50 rounded-2xl px-4 sm:px-6 py-5 overflow-x-hidden break-words [word-break:break-word] lg:max-h-[380px] lg:overflow-y-auto [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_code]:whitespace-pre-wrap [&_code]:break-all"
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>{selected.content}</ReactMarkdown>
             </div>
 
-            {!rejecting ? (
-              <div className="flex flex-col sm:flex-row gap-2.5 mt-6 sticky bottom-0 pb-[env(safe-area-inset-bottom)]">
-                <button
-                  type="button"
-                  onClick={handleApprove}
-                  disabled={processing}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 rounded-full bg-emerald-500 text-white text-[14px] font-semibold transition-all duration-150 active:scale-[0.97] md:hover:bg-emerald-600 disabled:opacity-50 disabled:active:scale-100 shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-                >
-                  {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={2.5} />}
-                  Duyệt & đăng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRejecting(true)}
-                  disabled={processing}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-[14px] font-semibold transition-all duration-150 active:scale-[0.97] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50 disabled:active:scale-100"
-                >
-                  <X className="w-4 h-4" strokeWidth={2.5} /> Từ chối
-                </button>
-              </div>
-            ) : (
-              <div className="mt-6">
-                <label className="text-[12px] font-semibold text-stone-500 dark:text-stone-400">Lý do từ chối (gửi cho tác giả)</label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                  placeholder="VD: Cần bổ sung nguồn tham khảo, chỉnh lại văn phong…"
-                  className="mt-1.5 w-full rounded-2xl border border-stone-200 dark:border-stone-700 px-3.5 py-3 text-[14px] bg-stone-50/50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900/10 dark:focus:ring-white/10 focus:border-stone-300 dark:focus:border-stone-600 resize-none transition-colors"
-                />
-                <div className="flex gap-2.5 mt-3 pb-[env(safe-area-inset-bottom)]">
+            {/* Hành động: nằm trong luồng nội dung bình thường, KHÔNG sticky
+                — trang đã có tab bar riêng ở đáy, tránh chồng 2 thanh nổi. */}
+            <div className="mt-6 pt-5 border-t border-amber-900/10 dark:border-amber-100/10">
+              {!rejecting ? (
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
-                    onClick={() => setRejecting(false)}
-                    className="px-4 py-3 sm:py-2.5 rounded-full bg-stone-100 dark:bg-stone-800 text-[14px] font-semibold text-stone-600 dark:text-stone-300 transition-all active:scale-[0.97] md:hover:bg-stone-200 dark:md:hover:bg-stone-700"
+                    onClick={handleApprove}
+                    disabled={processing}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-emerald-600 text-white text-[14px] font-bold transition-all duration-150 active:scale-[0.98] md:hover:bg-emerald-700 disabled:opacity-50 disabled:active:scale-100"
                   >
-                    Huỷ
+                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={2.5} />}
+                    Duyệt & đăng
                   </button>
                   <button
                     type="button"
-                    onClick={handleReject}
+                    onClick={() => setRejecting(true)}
                     disabled={processing}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2.5 rounded-full bg-red-500 text-white text-[14px] font-semibold transition-all active:scale-[0.97] md:hover:bg-red-600 disabled:opacity-50 disabled:active:scale-100 shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-[14px] font-bold transition-all duration-150 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50 disabled:active:scale-100"
                   >
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận từ chối"}
+                    <X className="w-4 h-4" strokeWidth={2.5} /> Từ chối
                   </button>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div>
+                  <label className="text-[12px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+                    Lý do từ chối (gửi cho tác giả)
+                  </label>
+                  <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    rows={3}
+                    placeholder="VD: Cần bổ sung nguồn tham khảo, chỉnh lại văn phong…"
+                    className="mt-2 w-full rounded-xl border border-amber-900/20 dark:border-amber-100/20 px-4 py-3 text-[14px] font-medium bg-white/80 dark:bg-stone-900/60 text-amber-950 dark:text-amber-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none transition-shadow"
+                  />
+                  <div className="flex gap-2.5 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setRejecting(false)}
+                      className="px-5 py-3 rounded-xl bg-stone-100 dark:bg-stone-800 text-[14px] font-bold text-stone-600 dark:text-stone-300 transition-all active:scale-[0.97] md:hover:bg-stone-200 dark:md:hover:bg-stone-700"
+                    >
+                      Huỷ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReject}
+                      disabled={processing}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-600 text-white text-[14px] font-bold transition-all active:scale-[0.98] md:hover:bg-red-700 disabled:opacity-50 disabled:active:scale-100"
+                    >
+                      {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận từ chối"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

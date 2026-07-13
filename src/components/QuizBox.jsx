@@ -3,6 +3,7 @@
  * Đã gộp toàn bộ logic của QuizContent vào file này.
  * Giao diện được tối ưu hoá theo hướng full-screen (iOS-like),
  * loại bỏ modal/backdrop cũ.
+ * Nâng cấp Design System: Uy nghi & Truyền thống (Trắng Ngà, Vàng Gold & Nâu Gỗ).
  */
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
@@ -17,7 +18,7 @@ function getRandomItems(arr, n) {
 }
 
 function burstConfetti(x, y) {
-  const colors = ["#FF6B35", "#007AFF", "#34C759", "#FFD60A", "#FF375F", "#AF52DE"];
+  const colors = ["#D97706", "#B45309", "#F59E0B", "#FCD34D", "#78350F", "#92400E"];
   const els = [];
   Array.from({ length: 14 }).forEach((_, i) => {
     const el = document.createElement("span");
@@ -44,7 +45,6 @@ function burstConfetti(x, y) {
     );
   });
   
-  // Cleanup sau 600ms dù component unmount
   const t = setTimeout(() => els.forEach((el) => el.remove()), 600);
   return () => { 
     clearTimeout(t); 
@@ -55,17 +55,17 @@ function burstConfetti(x, y) {
 // ====================== OPTION BUTTON =========================
 function OptionButton({ label, text, state, onClick, onMouseEnter, disabled }) {
   const variants = {
-    idle: "bg-white border border-[#E5E5EA] text-gray-800 active:scale-[0.98]",
-    correct: "bg-[#D1FAE5] border border-[#34C759] text-[#065F46] font-semibold",
-    wrong: "bg-[#FFE4E6] border border-[#FF375F] text-[#7F1D1D] font-semibold",
-    reveal: "bg-[#EFF6FF] border border-[#007AFF] text-[#1D4ED8]",
+    idle: "bg-white/80 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 text-stone-800 dark:text-stone-200 active:scale-[0.98] shadow-sm backdrop-blur-sm hover:border-amber-900/20 dark:hover:border-amber-100/20",
+    correct: "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500 text-emerald-800 dark:text-emerald-400 font-semibold shadow-sm",
+    wrong: "bg-red-50 dark:bg-red-500/10 border border-red-500 text-red-800 dark:text-red-400 font-semibold shadow-sm",
+    reveal: "bg-amber-50 dark:bg-amber-500/10 border border-amber-500 text-amber-800 dark:text-amber-400 font-semibold shadow-sm",
   };
   
   const circleVariants = {
-    idle: "bg-[#F2F2F7] text-gray-500 border border-[#E5E5EA]",
-    correct: "bg-[#34C759] text-white border-transparent",
-    wrong: "bg-[#FF375F] text-white border-transparent",
-    reveal: "bg-[#007AFF] text-white border-transparent",
+    idle: "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border border-amber-900/5 dark:border-amber-100/5",
+    correct: "bg-emerald-500 text-white border-transparent",
+    wrong: "bg-red-500 text-white border-transparent",
+    reveal: "bg-amber-500 text-white border-transparent",
   };
 
   const handleClick = useCallback((e) => {
@@ -150,8 +150,8 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
 
   if (!q) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <span className="text-4xl">📭</span>
-      <p className="text-gray-400 font-medium">Không có câu hỏi trắc nghiệm</p>
+      <span className="text-4xl opacity-50">📭</span>
+      <p className="text-stone-500 font-bold">Không có câu hỏi trắc nghiệm</p>
     </div>
   );
 
@@ -166,14 +166,14 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
     <div className="flex flex-col gap-5">
       {/* Progress */}
       <div className="space-y-1.5">
-        <div className="flex justify-between text-[13px] text-gray-400 font-medium">
+        <div className="flex justify-between text-[13px] text-amber-900/60 dark:text-amber-100/60 font-bold uppercase tracking-wider">
           <span>Câu {current + 1} / {totalQ}</span>
           <span className="tabular-nums">{Math.round(progress)}%</span>
         </div>
-        <div className="h-1.5 bg-[#E5E5EA] rounded-full overflow-hidden">
+        <div className="h-1.5 bg-amber-900/10 dark:bg-amber-100/10 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
           <motion.div
             className="h-full rounded-full"
-            style={{ background: "linear-gradient(90deg, #FF6B35, #FF375F)" }}
+            style={{ background: "linear-gradient(90deg, #D97706, #B45309)" }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           />
@@ -188,17 +188,17 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -40, opacity: 0 }}
           transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-          className="bg-white rounded-3xl p-5 shadow-sm border border-[#F0F0F0]"
+          className="bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm rounded-3xl p-5 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
         >
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35]/10 text-[#FF6B35] text-[11px] font-bold">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 text-[11px] font-bold border border-amber-900/5 dark:border-amber-100/5">
               {current + 1}
             </span>
-            <span className="text-[11px] font-semibold text-gray-300 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
               Trắc nghiệm
             </span>
           </div>
-          <h2 className="text-[17px] font-semibold text-gray-900 leading-snug">{q.text}</h2>
+          <h2 className="text-[17px] font-bold text-amber-950 dark:text-amber-50 leading-snug">{q.text}</h2>
         </motion.div>
       </AnimatePresence>
 
@@ -240,7 +240,7 @@ function Mcq({ setMcqScore, mcq, setType, config, setUserAnswers }) {
         onClick={() => handleAnswer(null)}
         disabled={submitted}
         whileTap={{ scale: 0.97 }}
-        className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-gray-400 bg-[#F2F2F7] disabled:opacity-40 transition-colors hover:bg-[#E5E5EA] active:bg-[#D1D1D6]"
+        className="w-full py-3.5 rounded-2xl text-[14px] font-bold text-stone-500 dark:text-stone-400 bg-amber-900/5 dark:bg-stone-800 disabled:opacity-40 transition-colors md:hover:bg-amber-900/10 dark:md:hover:bg-stone-700 shadow-sm"
       >
         Bỏ qua câu này →
       </motion.button>
@@ -288,28 +288,28 @@ function Essay({ essay, setType, setEssayScore, config, setUserEssayAns }) {
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="flex flex-col gap-4"
     >
-      <div className="bg-white rounded-2xl px-4 py-3 border border-[#F0F0F0] shadow-sm flex items-center gap-2">
-        <span className="text-lg">✍️</span>
+      <div className="bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm rounded-2xl px-5 py-4 border border-amber-900/10 dark:border-amber-100/10 shadow-sm flex items-center gap-3">
+        <span className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-100/50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 text-lg border border-amber-900/5 dark:border-amber-100/5">✍️</span>
         <div>
-          <p className="text-[13px] font-bold text-gray-800">Phần tự luận</p>
-          <p className="text-[11px] text-gray-400">{essay.length} câu · Trả lời bằng từ khoá</p>
+          <p className="text-[14.5px] font-bold text-amber-950 dark:text-amber-50">Phần tự luận</p>
+          <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium">{essay.length} câu · Trả lời bằng từ khoá</p>
         </div>
       </div>
 
       {essay.map((q, i) => (
-        <div key={i} className="bg-white rounded-3xl p-5 border border-[#F0F0F0] shadow-sm">
+        <div key={i} className="bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm rounded-3xl p-5 border border-amber-900/10 dark:border-amber-100/10 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#007AFF]/10 text-[#007AFF] text-[11px] font-bold">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 text-[11px] font-bold border border-amber-900/5 dark:border-amber-100/5">
               {i + 1}
             </span>
-            <span className="text-[11px] font-semibold text-gray-300 uppercase tracking-wider">Tự luận</span>
+            <span className="text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">Tự luận</span>
           </div>
-          <h3 className="text-[16px] font-semibold text-gray-900 leading-snug mb-3">{q.text}</h3>
+          <h3 className="text-[16px] font-bold text-amber-950 dark:text-amber-50 leading-snug mb-4">{q.text}</h3>
           <textarea
             ref={(el) => (ansRefs.current[`essay${i}`] = el)}
             rows={4}
             placeholder="Nhập câu trả lời của bạn…"
-            className="w-full resize-none rounded-2xl border border-[#E5E5EA] bg-[#F9F9F9] px-4 py-3 text-[15px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:border-transparent transition"
+            className="w-full resize-none rounded-2xl border border-amber-900/20 dark:border-amber-100/20 bg-white/50 dark:bg-stone-950/50 px-4 py-3.5 text-[15px] text-amber-950 dark:text-amber-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all font-medium shadow-inner"
           />
         </div>
       ))}
@@ -317,8 +317,8 @@ function Essay({ essay, setType, setEssayScore, config, setUserEssayAns }) {
       <motion.button
         onClick={checkEssay}
         whileTap={{ scale: 0.97 }}
-        className="w-full py-4 rounded-2xl text-[16px] font-bold text-white shadow-sm transition-colors"
-        style={{ background: "linear-gradient(135deg, #007AFF 0%, #0055D4 100%)" }}
+        className="w-full py-4 mt-2 rounded-2xl text-[16px] font-bold text-white shadow-sm transition-colors border border-transparent"
+        style={{ background: "linear-gradient(135deg, #D97706 0%, #92400E 100%)" }}
       >
         Nộp bài ✓
       </motion.button>
@@ -349,10 +349,10 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
   useEffect(() => { sendData(); }, []);
 
   const grade =
-    parseFloat(total) >= 8 ? { label: "Xuất sắc", emoji: "🎉", color: "text-[#34C759]", bg: "bg-[#D1FAE5]" }
-    : parseFloat(total) >= 6 ? { label: "Tốt", emoji: "👍", color: "text-[#007AFF]", bg: "bg-[#EFF6FF]" }
-    : parseFloat(total) >= 4 ? { label: "Cần cố gắng", emoji: "📚", color: "text-[#FF9500]", bg: "bg-[#FFF7ED]" }
-    : { label: "Cần ôn thêm", emoji: "💪", color: "text-[#FF375F]", bg: "bg-[#FFE4E6]" };
+    parseFloat(total) >= 8 ? { label: "Xuất sắc", emoji: "🎉", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/50 dark:border-emerald-500/20" }
+    : parseFloat(total) >= 6 ? { label: "Tốt", emoji: "👍", color: "text-blue-700 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10 border-blue-200/50 dark:border-blue-500/20" }
+    : parseFloat(total) >= 4 ? { label: "Cần cố gắng", emoji: "📚", color: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/10 border-orange-200/50 dark:border-orange-500/20" }
+    : { label: "Cần ôn thêm", emoji: "💪", color: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10 border-red-200/50 dark:border-red-500/20" };
 
   return (
     <motion.div
@@ -362,17 +362,17 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
       className="flex flex-col gap-5"
     >
       {/* Score card */}
-      <div className="bg-white rounded-3xl p-6 border border-[#F0F0F0] shadow-sm text-center">
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Kết quả của bạn</p>
+      <div className="bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm rounded-3xl p-6 border border-amber-900/10 dark:border-amber-100/10 shadow-sm text-center">
+        <p className="text-[13px] font-bold text-amber-950 dark:text-amber-50 font-serif mb-5">Kết quả của bạn</p>
 
         {/* Circular indicator */}
-        <div className="relative mx-auto w-32 h-32 mb-4">
+        <div className="relative mx-auto w-32 h-32 mb-5">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#F2F2F7" strokeWidth="7" />
+            <circle cx="50" cy="50" r="42" fill="none" className="stroke-amber-900/5 dark:stroke-amber-100/5" strokeWidth="7" />
             <motion.circle
               cx="50" cy="50" r="42"
               fill="none"
-              stroke={pct >= 80 ? "#34C759" : pct >= 60 ? "#007AFF" : pct >= 40 ? "#FF9500" : "#FF375F"}
+              stroke={pct >= 80 ? "#10B981" : pct >= 60 ? "#3B82F6" : pct >= 40 ? "#F59E0B" : "#EF4444"}
               strokeWidth="7"
               strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 42}`}
@@ -383,33 +383,33 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.span
-              className="text-3xl font-extrabold text-gray-900 tabular-nums"
+              className="text-3xl font-extrabold text-amber-950 dark:text-amber-50 tabular-nums"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
             >
               {total}
             </motion.span>
-            <span className="text-xs text-gray-400 font-medium">/10</span>
+            <span className="text-xs text-stone-400 font-bold">/10</span>
           </div>
         </div>
 
         {/* Grade badge */}
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${grade.bg} mb-4`}>
-          <span>{grade.emoji}</span>
-          <span className={`text-sm font-bold ${grade.color}`}>{grade.label}</span>
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${grade.bg} mb-5 shadow-sm`}>
+          <span className="text-[15px]">{grade.emoji}</span>
+          <span className={`text-[14px] font-bold ${grade.color}`}>{grade.label}</span>
         </div>
 
         {/* Score breakdown */}
-        <div className="flex justify-center gap-8 mt-2">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900 tabular-nums">{mcqScore}</p>
-            <p className="text-[11px] text-gray-400 font-medium mt-0.5">Trắc nghiệm</p>
+        <div className="flex justify-center gap-8 mt-2 bg-white/50 dark:bg-stone-950/50 rounded-2xl py-3 border border-amber-900/5 dark:border-amber-100/5 shadow-inner">
+          <div className="text-center w-20">
+            <p className="text-2xl font-bold text-amber-950 dark:text-amber-50 tabular-nums">{mcqScore}</p>
+            <p className="text-[11px] text-stone-500 font-bold mt-1 uppercase tracking-wider">Trắc nghiệm</p>
           </div>
-          <div className="w-px bg-[#F2F2F7]" />
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900 tabular-nums">{essayScore}</p>
-            <p className="text-[11px] text-gray-400 font-medium mt-0.5">Tự luận</p>
+          <div className="w-px bg-amber-900/10 dark:bg-amber-100/10" />
+          <div className="text-center w-20">
+            <p className="text-2xl font-bold text-amber-950 dark:text-amber-50 tabular-nums">{essayScore}</p>
+            <p className="text-[11px] text-stone-500 font-bold mt-1 uppercase tracking-wider">Tự luận</p>
           </div>
         </div>
       </div>
@@ -426,14 +426,14 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
               <ReviewRow
                 label="Bạn chọn"
                 value={isSkip ? "Không trả lời" : q.choices[sel]}
-                color={isCorrect ? "text-[#34C759]" : isSkip ? "text-gray-400" : "text-[#FF375F]"}
+                color={isCorrect ? "text-emerald-600 dark:text-emerald-400" : isSkip ? "text-stone-400" : "text-red-600 dark:text-red-400"}
                 icon={isCorrect ? "✓" : isSkip ? "–" : "✗"}
               />
               {!isCorrect && !isSkip && (
-                <ReviewRow label="Đáp án đúng" value={q.choices[q.correct]} color="text-[#34C759]" icon="✓" />
+                <ReviewRow label="Đáp án đúng" value={q.choices[q.correct]} color="text-emerald-600 dark:text-emerald-400" icon="✓" />
               )}
               {isSkip && (
-                <ReviewRow label="Đáp án đúng" value={q.choices[q.correct]} color="text-[#34C759]" icon="✓" />
+                <ReviewRow label="Đáp án đúng" value={q.choices[q.correct]} color="text-emerald-600 dark:text-emerald-400" icon="✓" />
               )}
             </ReviewCard>
           );
@@ -447,14 +447,14 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
           return (
             <ReviewCard key={i} index={i + 1} question={q.text}>
               {q.sample && (
-                <div className="mb-2 p-2.5 bg-[#F0FDF4] rounded-xl">
-                  <p className="text-[11px] font-bold text-[#16A34A] mb-1 uppercase tracking-wide">Gợi ý đáp án</p>
-                  <p className="text-[13px] text-[#15803D] leading-relaxed whitespace-pre-line">{q.sample}</p>
+                <div className="mb-2.5 p-3.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 rounded-xl">
+                  <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1.5 uppercase tracking-wider">Gợi ý đáp án</p>
+                  <p className="text-[13.5px] text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed whitespace-pre-line">{q.sample}</p>
                 </div>
               )}
-              <div className="p-2.5 bg-[#F9F9F9] rounded-xl">
-                <p className="text-[11px] font-bold text-gray-400 mb-1 uppercase tracking-wide">Câu trả lời của bạn</p>
-                <p className="text-[13px] text-gray-700 leading-relaxed">{ans || "—"}</p>
+              <div className="p-3.5 bg-white/50 dark:bg-stone-950/50 rounded-xl shadow-inner border border-amber-900/5 dark:border-amber-100/5">
+                <p className="text-[11px] font-bold text-stone-400 mb-1.5 uppercase tracking-wider">Câu trả lời của bạn</p>
+                <p className="text-[13.5px] text-stone-700 dark:text-stone-300 font-medium leading-relaxed">{ans || "—"}</p>
               </div>
             </ReviewCard>
           );
@@ -464,7 +464,7 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
       <motion.button
         onClick={handleReset}
         whileTap={{ scale: 0.97 }}
-        className="w-full py-4 rounded-2xl text-[15px] font-semibold text-gray-600 bg-[#F2F2F7] hover:bg-[#E5E5EA] transition-colors"
+        className="w-full py-4 mt-2 rounded-2xl text-[15px] font-bold text-stone-600 dark:text-stone-300 bg-amber-900/5 dark:bg-stone-800 md:hover:bg-amber-900/10 dark:md:hover:bg-stone-700 transition-colors border border-amber-900/10 dark:border-white/5 shadow-sm"
       >
         Làm lại từ đầu ↺
       </motion.button>
@@ -476,30 +476,30 @@ function Result({ mcq, essay, mcqScore, essayScore, userAnswers, handleReset, us
 function ReviewSection({ title, icon, children }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <span>{icon}</span>
-        <p className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">{title}</p>
+      <div className="flex items-center gap-2 mb-3.5 px-2">
+        <span className="text-[16px]">{icon}</span>
+        <p className="text-[12px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-widest">{title}</p>
       </div>
-      <div className="flex flex-col gap-2.5">{children}</div>
+      <div className="flex flex-col gap-3">{children}</div>
     </div>
   );
 }
 function ReviewCard({ index, question, children }) {
   return (
-    <div className="bg-white rounded-2xl p-4 border border-[#F0F0F0] shadow-sm">
-      <p className="text-[14px] font-semibold text-gray-800 mb-3 leading-snug">
-        <span className="text-[#FF6B35] mr-1.5 font-bold">{index}.</span>{question}
+    <div className="bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm rounded-2xl p-5 border border-amber-900/10 dark:border-amber-100/10 shadow-sm">
+      <p className="text-[14.5px] font-bold text-amber-950 dark:text-amber-50 mb-3.5 leading-relaxed">
+        <span className="text-amber-600 dark:text-amber-500 mr-2 font-black">{index}.</span>{question}
       </p>
-      <div className="flex flex-col gap-1.5">{children}</div>
+      <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
 }
 function ReviewRow({ label, value, color, icon }) {
   return (
-    <div className="flex items-start gap-2 text-[13px]">
-      <span className={`font-bold mt-0.5 flex-shrink-0 ${color}`}>{icon}</span>
-      <span className="text-gray-400 shrink-0 flex-shrink-0">{label}:</span>
-      <span className={`font-medium ${color} flex-1 leading-snug`}>{value}</span>
+    <div className="flex items-start gap-2.5 text-[13.5px]">
+      <span className={`font-black mt-[1px] flex-shrink-0 ${color}`}>{icon}</span>
+      <span className="text-stone-400 font-medium shrink-0 flex-shrink-0">{label}:</span>
+      <span className={`font-bold ${color} flex-1 leading-relaxed`}>{value}</span>
     </div>
   );
 }
@@ -528,7 +528,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
 
   const autoSubmit = useCallback(() => {
     if (type === "mcq") {
-      setMcqScore(0); // chấp nhận 0 điểm MCQ khi hết giờ
+      setMcqScore(0);
       setType("essay");
     } else if (type === "essay") {
       setEssayScore(0);
@@ -561,7 +561,9 @@ export default function QuizBox({ handleExit, config, quizData }) {
   const phaseNum = { mcq: "I", essay: "II", result: null }[type];
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7]">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] transition-colors duration-500 relative">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+      
       <AnimatePresence>
         {isOpenExit && <ExitButton handleExit={handleExit} handleClose={() => setIsOpenExit(false)} />}
       </AnimatePresence>
@@ -570,32 +572,32 @@ export default function QuizBox({ handleExit, config, quizData }) {
       </AnimatePresence>
 
       <div
-        className="flex flex-col min-h-screen max-w-md mx-auto w-full px-4"
+        className="flex flex-col min-h-screen max-w-md mx-auto w-full px-4 relative z-10"
         style={{
           paddingTop: "max(env(safe-area-inset-top), 16px)",
           paddingBottom: "max(env(safe-area-inset-bottom), 24px)",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-2 mb-4 pt-1">
+        <div className="flex items-center justify-between gap-2 mb-5 pt-2">
           <div className="min-w-0 flex-1">
-            <h1 className="text-[19px] font-extrabold text-[#FF6B35] tracking-tight truncate leading-tight">
+            <h1 className="text-[20px] font-extrabold text-amber-900 dark:text-amber-500 tracking-tight truncate leading-tight font-serif">
               {config.title}
             </h1>
             {phaseNum && (
-              <p className="text-[12px] font-medium text-gray-400 mt-0.5">
+              <p className="text-[12px] font-bold text-amber-800/60 dark:text-amber-200/50 mt-1 tracking-wider uppercase">
                 Phần {phaseNum} · {phaseLabel}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2.5 flex-shrink-0">
             {type !== "result" && (
-              <div className="flex items-center gap-1.5 bg-white border border-[#F0F0F0] rounded-full pl-2.5 pr-3 py-1.5 shadow-sm">
-                <span className="text-[12px]">⏱</span>
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm border border-amber-900/10 dark:border-amber-100/10 rounded-full pl-3 pr-3.5 py-1.5 shadow-sm">
+                <span className="text-[12px] opacity-70">⏱</span>
                 <QuizTimer
                   duration={config.time}
                   onTimeUp={autoSubmit}
-                  className="text-[13px] font-bold text-[#FF375F] tabular-nums"
+                  className="text-[13px] font-black text-red-600 dark:text-red-400 tabular-nums tracking-wide"
                 />
               </div>
             )}
@@ -603,7 +605,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
               <button
                 onClick={() => setShowGuide(true)}
                 aria-label="Hướng dẫn"
-                className="w-9 h-9 rounded-full bg-[#FF6B35] text-white text-[14px] font-bold flex items-center justify-center shadow-sm hover:bg-[#E85E28] transition-colors active:scale-95"
+                className="w-9 h-9 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 text-[14px] font-bold flex items-center justify-center shadow-sm border border-amber-900/5 dark:border-amber-100/5 hover:bg-amber-200/80 dark:hover:bg-amber-500/30 transition-colors active:scale-95"
               >
                 ?
               </button>
@@ -611,7 +613,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
             <button
               onClick={() => setIsOpenExit(true)}
               aria-label="Thoát"
-              className="w-9 h-9 rounded-full bg-white shadow-sm border border-[#F0F0F0] flex items-center justify-center text-gray-400 hover:text-gray-600 active:scale-95 transition text-[13px]"
+              className="w-9 h-9 rounded-full bg-white/80 dark:bg-stone-900/60 shadow-sm border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center text-stone-500 hover:text-red-600 dark:hover:text-red-400 active:scale-95 transition-all text-[13px] font-bold"
             >
               ✕
             </button>
@@ -619,13 +621,13 @@ export default function QuizBox({ handleExit, config, quizData }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1">
+        <div className="flex-1 mt-2">
           <AnimatePresence mode="wait">
             <motion.div
               key={type}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
               {type === "mcq" && (
@@ -654,8 +656,8 @@ export default function QuizBox({ handleExit, config, quizData }) {
           </AnimatePresence>
         </div>
 
-        <p className="text-center text-[11px] text-[#C7C7CC] font-medium tracking-wide py-4">
-          Design by Khối Phụng Vụ Gx An Ngãi
+        <p className="text-center text-[10px] font-bold text-amber-900/40 dark:text-amber-100/40 tracking-widest uppercase py-6 select-none">
+          Ban Giáo Lý · Gx An Ngãi
         </p>
       </div>
     </div>

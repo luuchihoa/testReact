@@ -110,7 +110,7 @@ export default function Footer() {
   const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <footer className="mt-auto border-t border-amber-900/10 bg-[#FDFBF7]/85 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 antialiased backdrop-blur-md md:pb-12 md:pt-14 dark:border-amber-100/10 dark:bg-[#1C1917]/85">
+    <footer className="mt-auto border-t border-amber-900/10 bg-[#FDFBF7]/85 pb-[max(1.5rem,env(safe-area-inset-bottom))] antialiased backdrop-blur-md md:pb-12 md:pt-14 dark:border-amber-100/10 dark:bg-[#1C1917]/85">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Lưới chính */}
         <div className="hidden md:grid grid-cols-1 gap-8 md:grid-cols-4 md:gap-10">
@@ -205,7 +205,7 @@ export default function Footer() {
         </div>
 
         {/* Bản quyền dưới cùng */}
-        <div className="md:mt-8 mb-16 md:mb-0 flex flex-col items-center justify-center gap-3 border-t border-amber-900/10 md:pt-6 pt-5 text-center mt-8 md:flex-row md:justify-between md:gap-4 md:text-left dark:border-amber-100/10">
+        <div className="md:mt-8 mb-16 md:mb-0 flex flex-col items-center justify-center gap-3 border-t border-amber-900/10 md:pt-6 pt-5 text-center md:flex-row md:justify-between md:gap-4 md:text-left dark:border-amber-100/10">
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold tracking-widest uppercase text-amber-800/60 dark:text-amber-400/60">
               HTDC Xứ đoàn Mẹ Mân Côi

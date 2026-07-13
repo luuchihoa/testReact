@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ClipboardList, X, ArrowLeft } from "lucide-react";
+import { Search, ClipboardList, X, ArrowLeft, AlertCircle } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
 import {
@@ -9,65 +9,70 @@ import {
 } from "../ui/StudentShared.jsx";
 import { useTeacherContext } from "./TeacherContext.jsx";
 import { fetchStudentAcademic, fetchClassTermRanges, fetchTermLocks } from "./api.js";
-import { ACCENT, HK_INT_MAP, STATUS_CYCLE, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_KIEM_OPTIONS } from "./constants.js";
+import { HK_INT_MAP, STATUS_CYCLE, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_KIEM_OPTIONS } from "./constants.js";
+
+// Hằng số Easing chuẩn của Design System
+const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 /* ============================================================
    STUDENT LIST PANEL
    ============================================================ */
 function StudentListPanel({ students, loading, search, setSearch, selectedUsername, onSelect }) {
   return (
-    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden flex flex-col max-h-[75vh] lg:max-h-[calc(100vh-180px)] min-h-0">
-      <div className="p-4 border-b border-stone-100 dark:border-stone-800">
+    <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden flex flex-col max-h-[75vh] lg:max-h-[calc(100vh-180px)] min-h-0">
+      <div className="p-5 border-b border-amber-900/10 dark:border-amber-100/10">
         <div className="relative">
-          <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-5 h-5 text-amber-800/50 dark:text-amber-400/50 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tên hoặc username…"
-            className="w-full rounded-xl border border-stone-200 dark:border-stone-750 bg-stone-50 dark:bg-stone-800 pl-9 pr-3 py-2.5 text-sm text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
+            placeholder="Tìm tên hoặc username…"
+            className="w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 pl-11 pr-4 py-3 text-[14px] font-medium text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 transition-shadow"
           />
         </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-10 text-stone-400 dark:text-stone-500 text-sm">
-            <Spinner className="h-4 w-4" /> Đang tải…
+          <div className="flex items-center justify-center gap-3 py-16 text-amber-800 dark:text-amber-500 text-[14px] font-medium">
+            <Spinner className="h-5 w-5" /> Đang tải danh sách…
           </div>
         )}
 
         {!loading && students.length === 0 && (
-          <p className="text-center text-sm text-stone-400 dark:text-stone-500 py-10 px-4">Không tìm thấy học sinh nào.</p>
+          <p className="text-center text-[14px] text-stone-500 dark:text-stone-400 py-16 px-4">Không tìm thấy học sinh nào.</p>
         )}
 
-        {!loading && students.map((s) => {
-          const active = s.username === selectedUsername;
-          return (
-            <button key={s.username} type="button" onClick={() => onSelect(s.username)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b border-stone-50 dark:border-stone-850 transition-colors ${
-                active ? "bg-orange-50/70 dark:bg-orange-950/20" : "hover:bg-stone-50 dark:hover:bg-stone-800/50"
-              }`}
-            >
-              <div className="w-9 h-9 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
-                <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className={`text-[14px] font-semibold truncate ${active ? "text-[#FF6B35] dark:text-orange-400" : "text-stone-800 dark:text-stone-200"}`}>
-                  {s.hoTen || s.username}
-                </p>
-                <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate">{s.username}</p>
-              </div>
-            </button>
-          );
-        })}
+        <div className="divide-y divide-amber-900/5 dark:divide-amber-100/5">
+          {!loading && students.map((s) => {
+            const active = s.username === selectedUsername;
+            return (
+              <button key={s.username} type="button" onClick={() => onSelect(s.username)}
+                className={`flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors duration-300 ${
+                  active ? "bg-amber-50/70 dark:bg-amber-900/20" : "hover:bg-stone-50 dark:hover:bg-stone-800/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full overflow-hidden border-2 flex-shrink-0 transition-colors ${active ? "border-amber-600/30 dark:border-amber-400/30 shadow-sm" : "border-white dark:border-stone-800 bg-stone-100"}`}>
+                  <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[14px] font-bold truncate transition-colors ${active ? "text-amber-950 dark:text-amber-400" : "text-stone-800 dark:text-stone-200"}`}>
+                    {s.tenThanh ? <span className="font-medium text-stone-500 mr-1">{s.tenThanh}</span> : ""}{s.hoTen || s.username}
+                  </p>
+                  <p className="text-[12px] text-stone-400 dark:text-stone-500 truncate mt-0.5">{s.username}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
 /* ============================================================
-   PROFILE TAB — tái dùng FieldRow từ StudentShared.jsx
+   PROFILE TAB
    ============================================================ */
 function ProfileTab({ student, onSaved, showToast }) {
   const [form,         setForm]         = useState(student);
@@ -124,7 +129,7 @@ function ProfileTab({ student, onSaved, showToast }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {rows.map((r) => (
         <FieldRow
           key={r.field}
@@ -143,9 +148,10 @@ function ProfileTab({ student, onSaved, showToast }) {
         />
       ))}
 
-      <div className="md:col-span-2 flex justify-end mt-2">
+      <div className="md:col-span-2 flex justify-end mt-4">
+        {/* Nút Bấm Chính Snippet */}
         <button type="button" disabled={!dirty || saving} onClick={save}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#FF6B35] text-white text-[15px] font-bold hover:bg-[#E85E28] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed w-full md:w-auto">
           {saving && <Spinner className="h-4 w-4" />}
           {saving ? "Đang lưu…" : "💾 Lưu hồ sơ"}
         </button>
@@ -155,17 +161,17 @@ function ProfileTab({ student, onSaved, showToast }) {
 }
 
 /* ============================================================
-   ACADEMIC TAB — điểm số + tổng kết học kỳ + điểm danh của 1 học sinh
+   ACADEMIC TAB
    ============================================================ */
-function EditableScoreCell({ label, value, onChange }) {
+function EditableScoreCell({ label, value, onChange, disabled }) {
   return (
-    <div className="bg-white dark:bg-stone-850 rounded-xl px-3 py-2.5 text-center flex-1 min-w-[76px] border border-stone-100 dark:border-stone-800">
-      <p className="text-[11px] text-gray-400 dark:text-stone-550 mb-1">{label}</p>
+    <div className="bg-white/60 dark:bg-stone-900/60 rounded-xl px-3 py-3 text-center flex-1 min-w-[80px] border border-amber-900/10 dark:border-amber-100/10 transition-colors focus-within:border-amber-600/50 dark:focus-within:border-amber-500/50">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1.5">{label}</p>
       <input
-        type="number" min="0" max="10" step="0.1"
+        type="number" min="0" max="10" step="0.1" disabled={disabled}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        className="w-full text-center text-[15px] font-semibold text-gray-900 dark:text-stone-100 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#FF6B35] rounded-lg"
+        className="w-full text-center text-[15px] font-extrabold text-stone-900 dark:text-stone-100 bg-transparent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
       />
     </div>
   );
@@ -178,17 +184,12 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
   const [loading, setLoading] = useState(true);
   const [grades,  setGrades]  = useState({});
   const [term,    setTerm]    = useState({});
-  const [baseAttendance,      setBaseAttendance]      = useState({}); // isoDate -> trang_thai (đã lưu trong DB)
-  const [attendanceOverrides, setAttendanceOverrides] = useState({}); // isoDate -> trang_thai (đang sửa, chưa lưu)
+  const [baseAttendance,      setBaseAttendance]      = useState({}); 
+  const [attendanceOverrides, setAttendanceOverrides] = useState({}); 
   const [savingGrades,     setSavingGrades]     = useState(false);
   const [savingAttendance, setSavingAttendance] = useState(false);
 
-  // Lịch điểm danh (ngày bắt đầu + tổng số buổi) dùng CHUNG cho cả lớp —
-  // quản lý tập trung ở tab "Điểm danh nhanh", tab này chỉ đọc để hiển thị,
-  // không cho sửa ở đây để tránh 2 nơi lệch nhau.
   const [classRanges, setClassRanges] = useState({ HK1: { start: null, sundays: [] }, HK2: { start: null, sundays: [] } });
-
-  // Trạng thái khóa sổ theo học kỳ — tải cùng lúc với dữ liệu học tập.
   const [termLocks, setTermLocks] = useState({});
   const isLocked = !!termLocks[hocKyInt];
 
@@ -255,8 +256,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         .upsert(gradesPayload, { onConflict: "username,nam_hoc,hoc_ky" });
       if (gradesErr) throw gradesErr;
 
-      // Không gửi ngay_bat_dau / tong_buoi ở đây — lịch điểm danh được quản lý
-      // tập trung ở tab "Điểm danh nhanh", tránh ghi đè lệch dữ liệu.
       const termPayload = {
         username: student.username, nam_hoc: namHoc, lop, hoc_ky: hocKyInt,
         hoc_luc:      term.hoc_luc   || null,
@@ -268,7 +267,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         .upsert(termPayload, { onConflict: "username,nam_hoc,hoc_ky" });
       if (termErr) throw termErr;
 
-      showToast("Đã lưu điểm & tổng kết học kỳ", "success");
+      showToast("Đã lưu điểm & tổng kết", "success");
     } catch (err) {
       console.error("saveGradesAndTerm error:", err);
       showToast("Lưu điểm thất bại", "error");
@@ -280,7 +279,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
   const saveAttendance = async () => {
     if (isLocked) return;
     const changedDates = Object.keys(attendanceOverrides);
-    if (changedDates.length === 0) { showToast("Không có thay đổi điểm danh", "warning"); return; }
+    if (changedDates.length === 0) { showToast("Không có thay đổi", "warning"); return; }
 
     setSavingAttendance(true);
     try {
@@ -305,38 +304,50 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2.5 py-14" style={{ color: ACCENT }}>
-        <Spinner className="h-5 w-5" />
-        <span className="text-sm text-stone-500 dark:text-stone-400">Đang tải dữ liệu học kỳ…</span>
+      <div className="flex items-center justify-center gap-3 py-20 text-amber-900 dark:text-amber-500">
+        <Spinner className="h-6 w-6" />
+        <span className="text-[14px] font-medium font-sans">Đang tải dữ liệu học tập…</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex gap-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl p-1 w-fit">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: APPLE_EASE }} className="flex flex-col gap-6">
+      
+      <div className="flex gap-1 bg-stone-100/80 dark:bg-stone-800/80 rounded-xl p-1 w-fit backdrop-blur-sm">
         {["HK1", "HK2"].map((k) => (
           <button key={k} type="button" onClick={() => setHocKy(k)}
-            className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors ${
-              hocKy === k ? "bg-white dark:bg-stone-700 text-[#FF6B35] dark:text-[#FF6B35] shadow-sm" : "text-stone-500 dark:text-stone-400"
+            className={`px-5 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
+              hocKy === k ? "bg-white dark:bg-stone-700 text-amber-900 dark:text-amber-400 shadow-sm" : "text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
             }`}>
             {k === "HK1" ? "Học kỳ I" : "Học kỳ II"}
           </button>
         ))}
       </div>
 
-      {isLocked && (
-        <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-stone-100 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-750">
-          <span className="text-[13px] text-stone-600 dark:text-stone-300">
-            🔒 Học kỳ này đã được admin khóa sổ. Điểm, điểm danh và tổng kết chỉ xem được, không sửa được cho đến khi được mở khóa lại.
-          </span>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {isLocked && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: "auto", opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }} 
+            transition={{ duration: 0.35, ease: APPLE_EASE }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-start gap-3 px-5 py-3.5 rounded-2xl bg-stone-100/80 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-750">
+              <AlertCircle className="w-5 h-5 text-stone-500 flex-shrink-0" />
+              <span className="text-[13px] font-medium text-stone-600 dark:text-stone-300 leading-relaxed">
+                Học kỳ này đã được Admin khóa sổ. Điểm, điểm danh và tổng kết chỉ xem được, không sửa được cho đến khi mở khóa lại.
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* BẢNG ĐIỂM */}
-      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
-        <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200 mb-3">Bảng điểm</h3>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className={`bg-[#FDFBF7]/50 dark:bg-stone-850/40 rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-5 ${isLocked ? "opacity-70" : ""}`}>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-4">Bảng điểm</h3>
+        <div className="flex gap-2.5 overflow-x-auto pb-1" data-lenis-prevent>
           {GRADE_FIELDS.map((f) => (
             <EditableScoreCell key={f.key} label={f.label} value={grades[f.key]} disabled={isLocked}
               onChange={(v) => setGrades((prev) => ({ ...prev, [f.key]: v }))} />
@@ -345,48 +356,47 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       </div>
 
       {/* ĐIỂM DANH */}
-      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
-        <div className="flex items-center justify-between mb-3 gap-3">
-          <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200">
-            Điểm danh <span className="text-stone-400 dark:text-stone-500 font-normal">({attendanceList.length} tuần)</span>
+      <div className={`bg-[#FDFBF7]/50 dark:bg-stone-850/40 rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-5 ${isLocked ? "opacity-70" : ""}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+            Điểm danh <span className="text-stone-400 dark:text-stone-500 font-normal normal-case tracking-normal ml-1">({attendanceList.length} tuần)</span>
           </h3>
           <button type="button"
             disabled={isLocked || savingAttendance || Object.keys(attendanceOverrides).length === 0}
             onClick={saveAttendance}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-800 text-white dark:text-stone-150 text-[12px] font-bold hover:bg-stone-800 dark:hover:bg-stone-750 transition-colors disabled:opacity-40 flex-shrink-0">
-            {savingAttendance && <Spinner className="h-3.5 w-3.5" />}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-40 flex-shrink-0 w-full sm:w-auto">
+            {savingAttendance && <Spinner className="h-4 w-4" />}
             {savingAttendance ? "Đang lưu…" : "Lưu điểm danh"}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4 text-[12px] text-stone-500 dark:text-stone-400">
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-[13px] font-medium text-stone-600 dark:text-stone-300">
           {STATUS_CYCLE.map((k) => (
-            <span key={k} className="flex items-center gap-1.5">
-              <span className={`w-3 h-3 rounded-full ${ATTENDANCE_STATUS[k].color}`} />
+            <span key={k} className="flex items-center gap-2">
+              <span className={`w-3.5 h-3.5 rounded-full shadow-sm ${ATTENDANCE_STATUS[k].color}`} />
               {ATTENDANCE_STATUS[k].label}
             </span>
           ))}
         </div>
 
         {attendanceList.length === 0 ? (
-          <p className="text-[13px] text-stone-400 dark:text-stone-500 text-center py-6">
-            Lớp chưa có lịch điểm danh cho học kỳ này — vào tab "Điểm danh nhanh" để nhập ngày bắt đầu &amp; tổng số buổi.
+          <p className="text-[14px] text-stone-500 dark:text-stone-400 text-center py-8">
+            Lớp chưa có lịch điểm danh cho học kỳ này — vào tab "Điểm danh nhanh" để thiết lập.
           </p>
         ) : (
           <>
-            <p className="text-[11px] text-stone-400 dark:text-stone-500 mb-2">Bấm vào từng buổi để chuyển trạng thái.</p>
-            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1" data-lenis-prevent>
+            <div className="flex gap-3 overflow-x-auto pb-2 px-1" data-lenis-prevent>
               {attendanceList.map(({ date, isoDate, trangThai }) => {
                 const status  = ATTENDANCE_STATUS[trangThai];
                 const isDirty = isoDate in attendanceOverrides;
                 return (
                   <button key={isoDate} type="button" disabled={isLocked} onClick={() => cycleStatus(isoDate, trangThai)}
-                    className="flex flex-col items-center gap-1.5 flex-shrink-0 w-12 group disabled:cursor-not-allowed">
+                    className="flex flex-col items-center gap-2 flex-shrink-0 w-12 group disabled:cursor-not-allowed transition-transform active:scale-[0.9]">
                     <span
-                      className={`w-8 h-8 rounded-full ${status.color} ring-2 ${isDirty ? "ring-[#FF6B35]" : "ring-transparent"} transition-all group-hover:scale-110`}
+                      className={`w-10 h-10 rounded-full shadow-sm ${status.color} ring-2 ring-offset-2 dark:ring-offset-[#1C1917] ${isDirty ? "ring-amber-600 dark:ring-amber-500" : "ring-transparent"} transition-all duration-300 md:group-hover:scale-105`}
                       title={status.label}
                     />
-                    <span className="text-[11px] text-stone-400 dark:text-stone-550 whitespace-nowrap">
+                    <span className="text-[12px] font-medium text-stone-500 dark:text-stone-400 whitespace-nowrap">
                       {date.getDate()}/{date.getMonth() + 1}
                     </span>
                   </button>
@@ -398,50 +408,50 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       </div>
 
       {/* TỔNG KẾT HỌC KỲ */}
-      <div className={`bg-[#F9F9F9] dark:bg-stone-800/40 rounded-2xl border border-stone-100 dark:border-stone-800 p-4 ${isLocked ? "opacity-70" : ""}`}>
-        <h3 className="text-[14px] font-bold text-stone-800 dark:text-stone-200 mb-3">Tổng kết học kỳ</h3>
+      <div className={`bg-[#FDFBF7]/50 dark:bg-stone-850/40 rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-5 ${isLocked ? "opacity-70" : ""}`}>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-4">Tổng kết học kỳ</h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
-            Học lực
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <label className="flex flex-col gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1">Học lực</span>
             <select value={term.hoc_luc || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, hoc_luc: e.target.value }))}
-              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800">
+              className="rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/60 text-stone-900 dark:text-stone-100 px-4 py-3 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 disabled:opacity-60 transition-shadow">
               <option value="">— Chưa chọn —</option>
               {HOC_LUC_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
-            Hạnh kiểm
+          <label className="flex flex-col gap-2">
+             <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1">Hạnh kiểm</span>
             <select value={term.hanh_kiem || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, hanh_kiem: e.target.value }))}
-              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800">
+              className="rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/60 text-stone-900 dark:text-stone-100 px-4 py-3 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 disabled:opacity-60 transition-shadow">
               <option value="">— Chưa chọn —</option>
               {HANH_KIEM_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium">
-            Vị thứ
+          <label className="flex flex-col gap-2">
+             <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1">Vị thứ</span>
             <input type="number" min="1" value={term.vi_thu ?? ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, vi_thu: e.target.value }))}
-              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800" />
+              className="rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/60 text-stone-900 dark:text-stone-100 px-4 py-3 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 disabled:opacity-60 transition-shadow" />
           </label>
 
-          <label className="flex flex-col gap-1 text-[12px] text-stone-500 dark:text-stone-400 font-medium sm:col-span-3">
-            Ghi chú
+          <label className="flex flex-col gap-2 sm:col-span-3">
+             <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1">Ghi chú</span>
             <textarea rows={2} value={term.ghi_chu || ""} disabled={isLocked} onChange={(e) => setTerm((p) => ({ ...p, ghi_chu: e.target.value }))}
-              className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] resize-none disabled:bg-stone-100 disabled:cursor-not-allowed dark:disabled:bg-stone-800" />
+              className="rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/60 text-stone-900 dark:text-stone-100 px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-amber-600/50 dark:focus:ring-amber-500/50 resize-none disabled:opacity-60 transition-shadow" />
           </label>
         </div>
 
-        <div className="flex justify-end mt-3">
+        <div className="flex justify-end mt-5">
           <button type="button" disabled={isLocked || savingGrades} onClick={saveGradesAndTerm}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] text-white text-[13px] font-bold hover:bg-[#E85E28] transition-colors disabled:opacity-60">
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed w-full md:w-auto">
             {savingGrades && <Spinner className="h-4 w-4" />}
             {savingGrades ? "Đang lưu…" : "Lưu điểm & tổng kết"}
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -453,47 +463,61 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
   const [tab, setTab] = useState("profile"); // profile | academic
 
   return (
-    <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm overflow-hidden min-w-0">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-stone-800">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 flex-shrink-0 bg-stone-100 dark:bg-stone-800">
+    <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden min-w-0">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-amber-900/10 dark:border-amber-100/10">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white dark:border-stone-800 flex-shrink-0 bg-stone-100 shadow-sm">
             <img src={student.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
           </div>
           <div className="min-w-0">
-            <p className="text-[15px] font-bold text-stone-900 dark:text-stone-100 truncate">{student.hoTen || student.username}</p>
-            <p className="text-[12px] text-stone-400 dark:text-stone-500">{student.username} · Lớp {lop}</p>
+            <p className="text-[20px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight truncate">
+              {student.hoTen || student.username}
+            </p>
+            <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400 mt-1">
+              {student.username} <span className="mx-1.5 opacity-50">•</span> Lớp {lop}
+            </p>
           </div>
         </div>
         <button type="button" onClick={onClose} aria-label="Đóng"
-          className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center justify-center flex-shrink-0">
-          <X className="w-4 h-4 text-stone-500 dark:text-stone-405" />
+          className="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center justify-center flex-shrink-0 transition-colors">
+          <X className="w-5 h-5 text-stone-500" />
         </button>
       </div>
 
-      <div className="flex gap-1 px-5 pt-4">
+      <div className="flex gap-2 px-6 pt-5">
         {[
-          { id: "profile",  label: "Hồ sơ" },
-          { id: "academic", label: "Điểm & điểm danh" },
+          { id: "profile",  label: "Hồ sơ cá nhân" },
+          { id: "academic", label: "Điểm & Điểm danh" },
         ].map((t) => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors ${
-              tab === t.id ? "bg-[#FFF0E8] dark:bg-orange-950/20 text-[#FF6B35]" : "text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/50"
+            className={`px-5 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-300 ${
+              tab === t.id ? "bg-amber-50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-400 shadow-sm" : "text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/50 hover:text-stone-800 dark:hover:text-stone-200"
             }`}>
             {t.label}
           </button>
         ))}
       </div>
 
-      <div className="p-5">
-        {tab === "profile"  && <ProfileTab  student={student} onSaved={onSaved} showToast={showToast} />}
-        {tab === "academic" && <AcademicTab student={student} namHoc={namHoc} lop={lop} showToast={showToast} />}
+      <div className="p-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: APPLE_EASE }}
+          >
+            {tab === "profile"  && <ProfileTab  student={student} onSaved={onSaved} showToast={showToast} />}
+            {tab === "academic" && <AcademicTab student={student} namHoc={namHoc} lop={lop} showToast={showToast} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
 /* ============================================================
-   ROOT — danh sách học sinh + panel xem/sửa hồ sơ, điểm, điểm danh
+   ROOT 
    ============================================================ */
 export default function RosterTab() {
   const { students, context, loadingStudents, handleStudentSaved } = useTeacherContext();
@@ -512,8 +536,8 @@ export default function RosterTab() {
   const selectedStudent = students.find((s) => s.username === selectedUsername) || null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-5">
-      {/* Trên mobile: chỉ hiện danh sách HOẶC hồ sơ đang chọn, không hiện cùng lúc để tránh cuộn dài */}
+    <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] gap-6">
+      
       <div className={selectedStudent ? "hidden lg:block" : "block"}>
         <StudentListPanel
           students={filteredStudents}
@@ -529,10 +553,13 @@ export default function RosterTab() {
         <AnimatePresence mode="wait">
           {selectedStudent ? (
             <motion.div key={selectedStudent.username}
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }} className="min-w-0">
+              initial={{ opacity: 0, scale: 0.98 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4, ease: APPLE_EASE }} 
+              className="min-w-0">
               <button type="button" onClick={() => setSelectedUsername(null)}
-                className="lg:hidden inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 mb-3">
+                className="lg:hidden inline-flex items-center gap-2 p-2 rounded-xl text-[14px] font-bold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 bg-white/50 dark:bg-stone-800/50 backdrop-blur-md border border-amber-900/10 mb-4 transition-all active:scale-[0.98]">
                 <ArrowLeft className="w-4 h-4" /> Danh sách học sinh
               </button>
               <StudentEditPanel
@@ -545,11 +572,14 @@ export default function RosterTab() {
             </motion.div>
           ) : (
             <motion.div key="empty"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="h-full min-h-[50vh] flex flex-col items-center justify-center gap-3 bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm text-center px-6">
-              <ClipboardList className="w-9 h-9 text-stone-300 dark:text-stone-700" />
-              <p className="text-sm text-stone-400 dark:text-stone-500 max-w-xs">
-                Chọn một học sinh để xem và chỉnh sửa hồ sơ, điểm số, điểm danh.
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: APPLE_EASE }}
+              className="h-full min-h-[50vh] flex flex-col items-center justify-center gap-4 bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm text-center px-6">
+              <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-2">
+                 <ClipboardList className="w-8 h-8 text-amber-800/50 dark:text-amber-500/50" />
+              </div>
+              <h3 className="text-[16px] font-bold text-stone-800 dark:text-stone-200">Bắt đầu quản lý</h3>
+              <p className="text-[14px] text-stone-500 dark:text-stone-400 max-w-sm">
+                Chọn một học sinh từ danh sách bên trái để xem và chỉnh sửa hồ sơ, điểm số cũng như điểm danh.
               </p>
             </motion.div>
           )}

@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  School, Search, ChevronLeft, FileSpreadsheet, Printer, Users, Lock, Eye,
-} from "lucide-react";
+import { School, Search, ChevronLeft, FileSpreadsheet, Printer, Users, Lock, Eye, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAdminContext } from "./AdminContext.jsx";
-import { ACCENT, AVATAR_FALLBACK, handleAvatarError } from "./constants.js";
+import { AVATAR_FALLBACK, handleAvatarError } from "./constants.js";
 import { fetchClassRoster, fetchGradesMap, fetchClassAcademicSummary } from "./dataLayer.js";
 import { CardsGridSkeleton, TableSkeleton } from "../ui/Skeleton.jsx";
 import { HK_INT_MAP, GRADE_FIELDS, sortStudentsByTen, tbColorClass } from "./gradeUtils.js";
 
+// Hằng số Easing chuẩn
+const APPLE_EASE = [0.16, 1, 0.3, 1];
+
 /* ============================================================
    TAB: BẢNG ĐIỂM (module Grades)
-   Logic giữ nguyên 100%. UI nâng cấp theo phong cách Apple
-   (glass, bo góc lớn, motion mượt) + hỗ trợ Dark Mode đầy đủ.
    ============================================================ */
 
 function ClassPicker({ classes, loading, onPick }) {
@@ -24,64 +24,72 @@ function ClassPicker({ classes, loading, onPick }) {
   }, [classes, search]);
 
   return (
-    <div
-      className="rounded-[26px] border border-black/5 dark:border-white/10
-        bg-white/80 dark:bg-white/[0.04] backdrop-blur-xl
-        shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-16px_rgba(0,0,0,0.10)]
-        dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_12px_32px_-16px_rgba(0,0,0,0.5)]
-        overflow-hidden"
+    <motion.div 
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: APPLE_EASE }}
+      className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden"
     >
-      <div className="px-4 sm:px-5 py-4 border-b border-black/5 dark:border-white/10">
+      <div className="px-5 py-5 border-b border-amber-900/10 dark:border-amber-100/10">
         <div className="relative">
-          <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-5 h-5 text-amber-900/50 dark:text-amber-100/50 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
-            type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm lớp…"
-            className="w-full rounded-2xl border border-black/5 dark:border-white/10
-              bg-stone-100/80 dark:bg-white/[0.06] pl-10 pr-3.5 py-2.5 text-[14px]
-              text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500
-              focus:outline-none focus:ring-2 focus:ring-red-500/60 focus:bg-white dark:focus:bg-white/[0.08]
-              transition-colors duration-200"
+            type="text" 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm lớp..."
+            className="w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white/50 dark:bg-stone-900/50 pl-11 pr-4 py-3.5 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 transition-shadow shadow-sm"
           />
         </div>
       </div>
 
-      {loading ? (
-        <CardsGridSkeleton count={6} />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
-          {filtered.map((c) => {
-            const anyLocked = c.locks?.[1] || c.locks?.[2];
-            return (
-              <button key={c.lop} type="button" onClick={() => onPick(c.lop)}
-                className="text-left rounded-2xl border border-black/5 dark:border-white/10
-                  bg-white dark:bg-white/[0.03]
-                  active:scale-[0.97] active:bg-red-50/60 dark:active:bg-red-500/[0.08]
-                  transition-all duration-200 ease-out p-4 flex flex-col gap-2
-                  shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[14px] font-bold text-stone-800 dark:text-white truncate">{c.lop}</span>
-                  {anyLocked && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-white/10 rounded-full px-2 py-0.5 flex-shrink-0">
-                      <Lock className="w-2.5 h-2.5" /> Đã khóa
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5">
+             <CardsGridSkeleton count={6} />
+          </motion.div>
+        ) : (
+          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: APPLE_EASE }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+            {filtered.map((c, i) => {
+              const anyLocked = c.locks?.[1] || c.locks?.[2];
+              return (
+                <motion.button 
+                  key={c.lop} 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: i * 0.05, ease: APPLE_EASE }}
+                  type="button" 
+                  onClick={() => onPick(c.lop)}
+                  className="group w-full flex flex-col text-left px-5 py-4.5 rounded-2xl transition-all duration-300 ease-out active:scale-[0.98] md:hover:-translate-y-0.5 border bg-white/60 dark:bg-stone-900/40 border-amber-900/10 dark:border-amber-100/10 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/10 shadow-sm backdrop-blur-sm"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <span className="text-[17px] font-bold text-amber-950 dark:text-amber-50 truncate font-serif">
+                      {c.lop}
                     </span>
-                  )}
-                </div>
-                <p className="text-[12px] text-stone-400 dark:text-stone-500 truncate">
-                  GVCN: {c.teacherName || "— Chưa có —"}
-                </p>
-                <p className="text-[12px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {c.studentCount} học sinh
-                </p>
-              </button>
-            );
-          })}
-          {filtered.length === 0 && (
-            <p className="col-span-full text-center text-sm text-stone-400 dark:text-stone-500 py-10">Không tìm thấy lớp nào.</p>
-          )}
-        </div>
-      )}
-    </div>
+                    {anyLocked && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 bg-amber-100/50 dark:bg-amber-900/30 rounded-full px-2.5 py-1 flex-shrink-0 shadow-sm">
+                        <Lock className="w-3 h-3" /> Đã khóa
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400 truncate mb-1.5">
+                    GVCN: <span className="text-stone-700 dark:text-stone-300 font-bold">{c.teacherTenThanh} {c.teacherName || "— Chưa có —"}</span>
+                  </p>
+                  <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400 flex items-center gap-1.5">
+                    <Users className="w-4 h-4" /> Sĩ số: <span className="font-bold text-stone-700 dark:text-stone-300">{c.studentCount}</span>
+                  </p>
+                </motion.button>
+              );
+            })}
+            {filtered.length === 0 && (
+              <p className="col-span-full text-center text-[14px] font-medium text-stone-500 dark:text-stone-400 py-12">
+                Không tìm thấy lớp nào phù hợp.
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -90,9 +98,10 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
   const hocKyInt = HK_INT_MAP[hocKy];
 
   const [students,  setStudents]  = useState([]);
-  const [gradeRows, setGradeRows] = useState({}); // username -> { diem_*, hocLuc, hanhKiem, vangCoPhep, vangKhongPhep }
+  const [gradeRows, setGradeRows] = useState({});
   const [loading,   setLoading]   = useState(true);
 
+  const isMobile = window.innerWidth < 768;
   const rosterStudents = useMemo(() => sortStudentsByTen(students), [students]);
 
   const load = useCallback(async () => {
@@ -186,12 +195,12 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
   };
 
   return (
-    <div
-      className="rounded-[26px] border border-black/5 dark:border-white/10
-        bg-white/80 dark:bg-white/[0.04] backdrop-blur-xl
-        shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-16px_rgba(0,0,0,0.10)]
-        dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_12px_32px_-16px_rgba(0,0,0,0.5)]
-        overflow-hidden print:overflow-visible print:bg-white print:shadow-none print:border-0 print:rounded-none print:backdrop-blur-none"
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.4, ease: APPLE_EASE }}
+      className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden print:overflow-visible print:bg-white print:shadow-none print:border-0 print:rounded-none print:backdrop-blur-none flex flex-col"
     >
       <style>{`
         @media print {
@@ -202,185 +211,243 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
         }
       `}</style>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-black/5 dark:border-white/10 ag-no-print">
-        <button type="button" onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 dark:text-stone-400
-            hover:text-stone-800 dark:hover:text-white active:scale-95 transition-all duration-200 flex-shrink-0">
-          <ChevronLeft className="w-4 h-4" /> Đổi lớp
-        </button>
-        <div className="hidden sm:block w-px h-5 bg-stone-200 dark:bg-white/10" />
-        <h3 className="text-[14px] font-bold text-stone-800 dark:text-white flex-shrink-0">Lớp {lop}</h3>
+      {/* Header Actions */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 px-5 sm:px-6 py-5 border-b border-amber-900/10 dark:border-amber-100/10 ag-no-print">
+        
+        <div className="flex flex-wrap items-center gap-4">
+          <button 
+            type="button" 
+            onClick={onBack}
+            className="inline-flex items-center justify-center gap-2 p-2 rounded-xl text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 flex-shrink-0"
+          >
+            <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+          </button>
+          
+          <h2 className="text-xl sm:text-2xl font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-none tracking-tight">
+            Lớp {lop}
+          </h2>
 
-        <div className="flex flex-wrap items-center gap-2 flex-1">
-          <div className="flex gap-1 bg-stone-100 dark:bg-white/[0.06] rounded-xl p-1">
+          <div className="hidden sm:block w-px h-6 bg-amber-900/10 dark:bg-amber-100/10" />
+
+          {isLocked && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 bg-amber-100/50 dark:bg-amber-900/30 rounded-full px-3 py-1 flex-shrink-0 ml-2 shadow-sm">
+              <Lock className="w-3.5 h-3.5" strokeWidth={2.5} /> Đã khóa sổ
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+          {/* Tabs Học kỳ */}
+          <div className="flex gap-1 bg-stone-100/80 dark:bg-stone-800/80 p-1 rounded-xl backdrop-blur-sm">
             {["HK1", "HK2"].map((k) => (
-              <button key={k} type="button" onClick={() => setHocKy(k)}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-200 ${
+              <button 
+                key={k} 
+                type="button" 
+                onClick={() => setHocKy(k)}
+                className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ease-out active:scale-[0.97] ${
                   hocKy === k
-                    ? "bg-white dark:bg-white/95 text-red-600 shadow-sm"
-                    : "text-stone-500 dark:text-stone-400"
-                }`}>
+                    ? "bg-white text-amber-900 dark:bg-stone-700 dark:text-amber-400 shadow-sm"
+                    : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
+                }`}
+              >
                 {k === "HK1" ? "Học Kỳ I" : "Học Kỳ II"}
               </button>
             ))}
           </div>
-          {isLocked && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-white/10 rounded-full px-2.5 py-1">
-              <Lock className="w-3 h-3" /> Học kỳ đã khóa sổ
-            </span>
-          )}
-          <span className="text-[11px] text-stone-400 dark:text-stone-500 hidden lg:inline-flex items-center gap-1">
-            <Eye className="w-3 h-3" /> Chỉ xem — sửa điểm & khóa sổ ở tab Lớp học
-          </span>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto flex-shrink-0">
-          <button type="button" disabled={exporting || loading} onClick={exportExcel}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl
-              bg-emerald-600 dark:bg-emerald-500 text-white text-[12px] font-bold
-              active:scale-95 hover:bg-emerald-700 dark:hover:bg-emerald-600
-              transition-all duration-200 disabled:opacity-50">
-            <FileSpreadsheet className="w-4 h-4" /> Xuất Excel
-          </button>
-          <button type="button" disabled={exporting || loading} onClick={exportPDF}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl
-              bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-[12px] font-bold
-              active:scale-95 hover:bg-stone-800 dark:hover:bg-stone-100
-              transition-all duration-200 disabled:opacity-50">
-            <Printer className="w-4 h-4" /> In / PDF
-          </button>
+          <div className="flex items-center gap-2 ml-auto xl:ml-0">
+            <button 
+              type="button" 
+              disabled={exporting || loading} 
+              onClick={exportExcel}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-emerald-600 text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:bg-emerald-700 disabled:opacity-50"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Xuất Excel</span>
+            </button>
+            <button 
+              type="button" 
+              disabled={exporting || loading} 
+              onClick={exportPDF}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
+            >
+              <Printer className="w-4 h-4" /> <span className="hidden sm:inline">In / PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {isLocked && (
-        <div className="px-4 sm:px-5 py-2.5 border-b border-black/5 dark:border-white/10 bg-stone-100/70 dark:bg-white/[0.05] text-[12px] text-stone-600 dark:text-stone-300 ag-no-print">
-          🔒 Học kỳ này đang bị khóa sổ — giáo viên không sửa được điểm/điểm danh cho đến khi được mở khóa lại.
-        </div>
-      )}
-
+      <AnimatePresence mode="wait">
       {loading ? (
-        <div className="ag-no-print px-0 sm:px-0 pb-1">
+        <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="ag-no-print p-5">
           <TableSkeleton rows={8} columns={6} />
-        </div>
+        </motion.div>
       ) : (
-        <div id="admin-grades-print">
-          <div className="hidden print:block px-5 pt-5">
-            <h2 className="text-base font-bold text-stone-900">
+        <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: APPLE_EASE }} id="admin-grades-print">
+          <div className="hidden print:block px-5 pt-5 pb-3">
+            <h2 className="text-xl font-bold text-stone-900 font-serif">
               Bảng điểm lớp {lop} — {hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II"} — {namHoc}
             </h2>
           </div>
 
-          {/* MOBILE */}
-          <div className="md:hidden print:hidden divide-y divide-stone-100 dark:divide-white/[0.06]" data-lenis-prevent>
+          {/* ----- GIAO DIỆN MOBILE ----- */}
+          <div className="md:hidden print:hidden divide-y divide-amber-900/5 dark:divide-amber-100/5" data-lenis-prevent>
             {rowsWithWarning.map((r, idx) => (
-              <div key={r.student.username}
-                className={`px-4 py-3.5 transition-colors duration-200 ${
-                  r.warning ? "bg-red-50/60 dark:bg-red-500/[0.06]" : ""
-                }`}>
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <span className="text-[11px] font-medium text-stone-400 dark:text-stone-500 w-4 flex-shrink-0 text-center">{idx + 1}</span>
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 dark:border-white/10 flex-shrink-0 bg-stone-100 dark:bg-white/10">
+              <motion.div 
+                initial={{ opacity: 0, y: isMobile ? 16 : 0 }} 
+                whileInView={{ opacity: 1, y: 0 }} 
+                viewport={{ once: true, margin: isMobile ? "-20px" : "0px" }}
+                transition={{ duration: 0.5, delay: idx * 0.05, ease: APPLE_EASE }}
+                key={r.student.username}
+                className={`px-5 py-5 transition-colors duration-500 ${
+                  r.warning ? "bg-red-50/60 dark:bg-red-950/20" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-[12px] font-bold text-stone-400 w-5 text-center flex-shrink-0">{idx + 1}</span>
+                  <div className={`w-10 h-10 rounded-full overflow-hidden border-2 flex-shrink-0 shadow-sm ${r.warning ? "border-red-200 dark:border-red-900" : "border-white dark:border-stone-800 bg-stone-100"}`}>
                     <img src={r.student.avatar || AVATAR_FALLBACK} alt="" className="w-full h-full object-cover" onError={handleAvatarError} />
                   </div>
-                  <span className="text-[13px] font-semibold text-stone-800 dark:text-white truncate min-w-0 flex-1">
-                    {r.student.tenThanh ? `${r.student.tenThanh} ` : ""}{r.student.hoTen || r.student.username}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 leading-snug break-words">
+                      {r.student.tenThanh ? <span className="font-medium text-stone-500 mr-1">{r.student.tenThanh}</span> : ""}{r.student.hoTen || r.student.username}
+                    </p>
+                  </div>
                   {r.warning ? (
-                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400 text-[10px] font-bold whitespace-nowrap">
-                      ⚠️ Theo dõi
+                    <span className="flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-[10px] font-bold tracking-wider uppercase">
+                      ⚠️ Cảnh báo
                     </span>
                   ) : (
-                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold whitespace-nowrap">
+                    <span className="flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold tracking-wider uppercase">
                       ✓ Ổn định
                     </span>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-2 pl-[42px] text-center">
+                
+                {/* Lưới điểm mobile */}
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pl-[52px]">
                   {scoreFields.map((f) => (
-                    <div key={f.key} className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                      <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">{f.label}</p>
-                      <p className="text-[13px] font-semibold text-stone-700 dark:text-stone-200">{r[f.key] ?? "—"}</p>
+                    <div key={f.key} className="bg-white/50 dark:bg-stone-900/50 border border-amber-900/10 dark:border-amber-100/10 rounded-xl py-2.5 text-center shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1">{f.label}</p>
+                      <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50">{r[f.key] ?? "—"}</p>
                     </div>
                   ))}
-                  <div className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                    <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">TB</p>
-                    <p className={`text-[13px] font-bold ${tbColorClass(r.diem_tb)}`}>{r.diem_tb ?? "—"}</p>
+                  <div className="bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-800/50 rounded-xl py-2.5 text-center shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 mb-1">Điểm TB</p>
+                    <p className={`text-[15px] font-extrabold ${tbColorClass(r.diem_tb)}`}>{r.diem_tb ?? "—"}</p>
                   </div>
-                  <div className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                    <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">Học Lực</p>
-                    <p className="text-[12px] font-medium text-stone-600 dark:text-stone-300">{r.hocLuc || "—"}</p>
+                  <div className="bg-white/50 dark:bg-stone-900/50 border border-amber-900/10 dark:border-amber-100/10 rounded-xl py-2.5 text-center shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1">Học Lực</p>
+                    <p className="text-[13px] font-semibold text-stone-700 dark:text-stone-300">{r.hocLuc || "—"}</p>
                   </div>
-                  <div className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                    <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">Hạnh Kiểm</p>
-                    <p className="text-[12px] font-medium text-stone-600 dark:text-stone-300">{r.hanhKiem || "—"}</p>
+                  <div className="bg-white/50 dark:bg-stone-900/50 border border-amber-900/10 dark:border-amber-100/10 rounded-xl py-2.5 text-center shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1">Hạnh Kiểm</p>
+                    <p className="text-[13px] font-semibold text-stone-700 dark:text-stone-300">{r.hanhKiem || "—"}</p>
                   </div>
-                  <div className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                    <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">Vắng CP</p>
-                    <p className="text-[13px] font-medium text-stone-600 dark:text-stone-300">{r.vangCoPhep}</p>
-                  </div>
-                  <div className="bg-stone-50 dark:bg-white/[0.05] rounded-lg py-1.5">
-                    <p className="text-[9px] text-stone-400 dark:text-stone-500 mb-0.5">Vắng KP</p>
-                    <p className="text-[13px] font-medium text-stone-600 dark:text-stone-300">{r.vangKhongPhep}</p>
+                  <div className="col-span-3 sm:col-span-4 grid grid-cols-2 gap-3 mt-1">
+                     <div className="bg-white/50 dark:bg-stone-900/50 border border-amber-900/10 dark:border-amber-100/10 rounded-xl py-2.5 text-center shadow-sm flex items-center justify-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Vắng CP:</span>
+                        <span className="text-[14px] font-bold text-stone-700 dark:text-stone-200">{r.vangCoPhep}</span>
+                     </div>
+                     <div className="bg-white/50 dark:bg-stone-900/50 border border-amber-900/10 dark:border-amber-100/10 rounded-xl py-2.5 text-center shadow-sm flex items-center justify-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Vắng KP:</span>
+                        <span className={`text-[14px] font-bold ${r.vangKhongPhep > 0 ? "text-amber-600 dark:text-amber-500" : "text-stone-700 dark:text-stone-200"}`}>{r.vangKhongPhep}</span>
+                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
             {rowsWithWarning.length === 0 && (
-              <p className="text-center text-sm text-stone-400 dark:text-stone-500 py-10 px-4">Lớp chưa có học sinh nào.</p>
+              <p className="text-center text-[14px] font-medium text-stone-500 dark:text-stone-400 py-12">Lớp chưa có học sinh nào.</p>
             )}
           </div>
 
-          {/* DESKTOP + IN/PDF */}
-          <div className="overflow-auto max-h-[65vh] p-2" data-lenis-prevent>
-            <table className="w-full border-separate border-spacing-y-1.5">
+          {/* ----- GIAO DIỆN DESKTOP + IN ----- */}
+          <div className="hidden md:block overflow-auto max-h-[65vh] p-4" data-lenis-prevent>
+            <table className="w-full border-separate border-spacing-y-2">
               <thead>
-                <tr className="text-[11px] uppercase tracking-wider text-stone-400 dark:text-stone-500 font-bold">
-                  <th className="px-4 py-3 text-left">STT</th>
-                  <th className="px-4 py-3 text-left">Tên Thánh, Họ & Tên</th>
+                <tr className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+                  <th className="px-4 py-3 text-left w-14">STT</th>
+                  <th className="px-4 py-3 text-left">Học sinh</th>
                   {scoreFields.map((f) => <th key={f.key} className="px-2 py-3 text-center">{f.label}</th>)}
-                  <th className="px-2 py-3 text-center">TB</th>
+                  <th className="px-3 py-3 text-center text-amber-900 dark:text-amber-400">TB</th>
                   <th className="px-2 py-3 text-center">Học Lực</th>
                   <th className="px-2 py-3 text-center">Hạnh Kiểm</th>
-                  <th className="px-4 py-3 text-center">Vắng</th>
+                  <th className="px-4 py-3 text-center">Vắng CP</th>
+                  <th className="px-4 py-3 text-center">Vắng KP</th>
                 </tr>
               </thead>
-              <tbody className="text-[13px]">
+              <tbody className="text-[13.5px] font-medium">
                 {rowsWithWarning.map((r, idx) => (
-                  <tr key={r.student.username} 
-                      className="group bg-white dark:bg-[#1c1c1e] shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] 
-                      hover:shadow-[0_8px_16px_-4px_rgba(0,0,0,0.1)] transition-all duration-300 rounded-2xl overflow-hidden">
-                    <td className="px-4 py-4 rounded-l-2xl font-medium text-stone-400">{idx + 1}</td>
-                    <td className="px-4 py-4 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-stone-100 dark:bg-white/5 overflow-hidden">
+                  <motion.tr 
+                    initial={{ opacity: 0 }} 
+                    whileInView={{ opacity: 1 }} 
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: idx * 0.02, ease: APPLE_EASE }}
+                    key={r.student.username} 
+                    className={`group transition-all duration-300 md:hover:-translate-y-0.5 shadow-sm md:hover:shadow-md rounded-2xl overflow-hidden ${
+                      r.warning 
+                        ? "bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50" 
+                        : "bg-white/60 dark:bg-stone-900/40 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 border border-amber-900/5 dark:border-amber-100/5"
+                    }`}
+                  >
+                    <td className="px-4 py-4 rounded-l-2xl text-stone-400 font-bold">{idx + 1}</td>
+                    <td className="px-4 py-3.5 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden border-2 border-white dark:border-stone-700 flex-shrink-0 shadow-sm">
                         <img src={r.student.avatar || AVATAR_FALLBACK} className="w-full h-full object-cover" />
                       </div>
-                      <span className="font-semibold text-stone-800 dark:text-stone-200">
-                        {r.student.tenThanh} {r.student.hoTen}
+                      <span className="font-bold text-amber-950 dark:text-amber-50">
+                        {r.student.tenThanh ? <span className="font-medium text-stone-500 mr-1">{r.student.tenThanh}</span> : ""}{r.student.hoTen}
                       </span>
                     </td>
                     {scoreFields.map((f) => (
-                      <td key={f.key} className="px-2 py-4 text-center text-stone-600 dark:text-stone-400">{r[f.key] ?? "—"}</td>
+                      <td key={f.key} className="px-2 py-4 text-center font-bold text-stone-700 dark:text-stone-300">
+                        {r[f.key] ?? "—"}
+                      </td>
                     ))}
-                    <td className={`px-2 py-4 text-center font-bold ${tbColorClass(r.diem_tb)}`}>{r.diem_tb ?? "—"}</td>
-                    <td className="px-2 py-4 text-center text-stone-600 dark:text-stone-400">{r.hocLuc === "Trung Bình" ? "TB" : r.hocLuc || "—"}</td>
-                    <td className="px-2 py-4 text-center text-stone-600 dark:text-stone-400">{r.hanhKiem === "Trung Bình" ? "TB" : r.hanhKiem || "—"}</td>
-                    <td className="px-4 py-4 rounded-r-2xl text-center">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${r.tongVang > 3 ? "bg-red-50 text-red-600 dark:bg-red-500/10" : "bg-stone-50 text-stone-500 dark:bg-white/5"}`}>
-                        {r.tongVang}
+                    <td className={`px-3 py-4 text-center font-extrabold text-[15px] ${tbColorClass(r.diem_tb)}`}>
+                      {r.diem_tb ?? "—"}
+                    </td>
+                    <td className="px-2 py-4 text-center font-semibold text-stone-600 dark:text-stone-400">
+                      {r.hocLuc === "Trung Bình" ? "TB" : r.hocLuc || "—"}
+                    </td>
+                    <td className="px-2 py-4 text-center font-semibold text-stone-600 dark:text-stone-400">
+                      {r.hanhKiem === "Trung Bình" ? "TB" : r.hanhKiem || "—"}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-[12px] font-bold bg-stone-200/50 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+                        {r.vangCoPhep}
                       </span>
                     </td>
-                  </tr>
+                    <td className="px-4 py-4 rounded-r-2xl text-center">
+                      <span className={`inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-[12px] font-bold shadow-sm ${r.vangKhongPhep > 0 ? "bg-amber-100/50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-stone-200/50 dark:bg-stone-800 text-stone-600 dark:text-stone-400"}`}>
+                        {r.vangKhongPhep}
+                      </span>
+                    </td>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
-      <p className="px-4 sm:px-5 py-3 border-t border-black/5 dark:border-white/10 bg-stone-50 dark:bg-white/[0.03] text-[11px] text-stone-400 dark:text-stone-500 ag-no-print">
-        Chỉ xem — dòng đỏ: Điểm TB &lt; 5 hoặc vắng &gt; 3 buổi. Muốn sửa điểm, vào tài khoản giáo viên chủ nhiệm lớp này. Khóa/mở sổ học kỳ nằm ở tab "Lớp học".
-      </p>
-    </div>
+      {/* Cảnh báo / Ghi chú Footer */}
+      <div className="mt-auto p-4 sm:p-5 ag-no-print border-t border-amber-900/10 dark:border-amber-100/10">
+        <div className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 p-4 rounded-2xl backdrop-blur-sm flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-800/70 dark:text-amber-400/70 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1">
+              Chế độ chỉ xem
+            </p>
+            <p className="text-[13.5px] font-medium text-amber-950 dark:text-amber-50 leading-relaxed">
+              Dòng cảnh báo biểu thị học sinh có Điểm TB &lt; 5 hoặc vắng &gt; 3 buổi. Để chỉnh sửa điểm hoặc mở/khóa sổ học kỳ, vui lòng truy cập qua tài khoản Giáo viên chủ nhiệm hoặc cấu hình tại tab <strong>Lớp học</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </motion.div>
   );
 }
 
@@ -401,10 +468,19 @@ export default function GradesTab() {
 
   if (!selectedLop) {
     return (
-      <div className="flex flex-col gap-4 fade-in-up">
-        <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
-          <School className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
-          <p className="text-[13px]">Chọn 1 lớp để xem điểm & chuyên cần, hoặc xuất file — năm học {namHoc}.</p>
+      <div className="flex flex-col gap-6 fade-in-up">
+        <div className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 p-5 rounded-2xl backdrop-blur-sm flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 border border-amber-200/50 dark:border-amber-800/50">
+             <School className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+          </div>
+          <div className="mt-0.5">
+            <p className="text-[13px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1">
+              Tra cứu bảng điểm
+            </p>
+            <p className="text-[14px] font-medium text-amber-950 dark:text-amber-50 leading-relaxed">
+              Chọn một lớp bên dưới để theo dõi chi tiết điểm số, chuyên cần và học lực của học sinh trong năm học {namHoc}.
+            </p>
+          </div>
         </div>
         <ClassPicker classes={classes} loading={loading} onPick={setSelectedLop} />
       </div>

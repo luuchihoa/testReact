@@ -1,11 +1,11 @@
 -- ============================================================
---  MIGRATION: Đăng ký học (form TuyenSinh.jsx) + Admin xử lý
+--  MIGRATION COMPLETE: Đăng ký học (form TuyenSinh.jsx) + Admin xử lý
 --  Chạy sau khi đã có schema.sql gốc (cần các hàm is_admin(),
 --  my_username(), current_nam_hoc() và bảng notifications, users)
 -- ============================================================
 
 -- ============================================================
--- BLOCK 1: Bảng dữ liệu
+-- BLOCK 1: Bảng dữ liệu và Bảo mật
 -- ============================================================
 
 CREATE TABLE public.dang_ky_hoc (
@@ -43,14 +43,12 @@ CREATE INDEX idx_dang_ky_hoc_nam_hoc    ON public.dang_ky_hoc(nam_hoc, khoi_dang
 
 ALTER TABLE public.dang_ky_hoc ENABLE ROW LEVEL SECURITY;
 
--- Chỉ admin được đọc/sửa trực tiếp qua bảng. Người ngoài KHÔNG được insert
--- trực tiếp — bắt buộc đi qua hàm submit_dang_ky_hoc() bên dưới để kiểm soát
--- input và không cho tự set trang_thai lúc nộp form.
+-- Chỉ admin được đọc/sửa trực tiếp qua bảng.
 CREATE POLICY "dang_ky_hoc: admin all" ON public.dang_ky_hoc
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ============================================================
--- BLOCK 2: Hàm nộp form (gọi từ trang public, không cần đăng nhập)
+-- BLOCK 2: Hàm nộp form công khai (Khách vãng lai gọi)
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.submit_dang_ky_hoc(
@@ -89,11 +87,10 @@ BEGIN
 END;
 $$;
 
--- anon = khách chưa đăng nhập trên web; authenticated = đã đăng nhập cũng gọi được
 GRANT EXECUTE ON FUNCTION public.submit_dang_ky_hoc TO anon, authenticated;
 
 -- ============================================================
--- BLOCK 3: Hàm admin xử lý / đổi trạng thái hồ sơ
+-- BLOCK 3: Hàm xử lý hồ sơ và Đếm số lượng (Dành cho Admin)
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.process_dang_ky_hoc(
@@ -125,10 +122,6 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.process_dang_ky_hoc TO authenticated;
 
--- ============================================================
--- BLOCK 4: Hàm đếm số hồ sơ chưa xử lý (badge trên UI admin)
--- ============================================================
-
 CREATE OR REPLACE FUNCTION public.get_pending_dang_ky_count()
 RETURNS BIGINT
 LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
@@ -136,3 +129,27 @@ LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_pending_dang_ky_count TO authenticated;
+
+-- ============================================================
+-- BLOCK 4: Tự động dọn dẹp hệ thống ngầm (Chạy hằng đêm)
+-- ============================================================
+
+-- Kích hoạt bộ đặt lịch của PostgreSQL
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Tạo hàm quét và xóa hồ sơ 'da_xep_lop' hoặc 'tu_choi' sau 7 ngày
+CREATE OR REPLACE FUNCTION public.cleanup_processed_dang_ky_hoc()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.dang_ky_hoc 
+  WHERE trang_thai IN ('da_xep_lop', 'tu_choi') 
+    AND created_at < NOW() - INTERVAL '7 days';
+END;
+$$;
+
+-- Đặt lịch chạy hàm này đều đặn vào lúc 2 giờ 30 phút sáng mỗi ngày
+SELECT cron.schedule('cleanup-dang-ky-hoc', '30 2 * * *', 'SELECT public.cleanup_processed_dang_ky_hoc()');

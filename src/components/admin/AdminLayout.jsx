@@ -1,27 +1,19 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
-import { Navigate, NavLink, Outlet } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, UserCog, School, ClipboardCheck, BarChart3, Megaphone, FileCheck,
-  ChevronDown, CalendarDays, Check, UserPlus, MessageSquare,
+  ChevronDown, CalendarDays, Check, UserPlus, MessageSquare, MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { AuthGateSkeleton, AdminTabSkeleton } from "../ui/Skeleton.jsx";
 import { AdminProvider, useAdminContext } from "./AdminContext.jsx";
-import { ACCENT, getCurrentNamHoc } from "./constants.js";
+import { getCurrentNamHoc } from "./constants.js";
 
-// San Francisco / Apple system font stack — falls back gracefully on
-// non-Apple platforms to each OS's native system UI face.
 const SYSTEM_FONT =
   "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif";
 
-// ACCENT đến từ constants.js dưới dạng hex tĩnh, gán qua inline style nên
-// không thể ăn theo class `dark:` của Tailwind. Class filter dưới đây bù lại
-// bằng cách tăng sáng/tương phản nhẹ khi ở dark mode để chấm/nhãn accent vẫn
-// nổi rõ trên nền tối, mà không cần đổi giá trị màu gốc.
-const ACCENT_DARK_FILTER = "dark:brightness-125 dark:contrast-125";
-
 export function RequireAdminRoute({ children }) {
-  const [status, setStatus] = useState("checking"); // checking | ok | denied
+  const [status, setStatus] = useState("checking"); 
 
   useEffect(() => {
     let cancelled = false;
@@ -60,23 +52,11 @@ export function RequireAdminRoute({ children }) {
     return () => { cancelled = true; };
   }, []);
 
-  if (status === "checking") {
-    return <AuthGateSkeleton />;
-  }
+  if (status === "checking") return <AuthGateSkeleton />;
   if (status === "denied") return <Navigate to="/" replace />;
   return children;
 }
 
-/* ============================================================
-   TABBAR — mỗi mục là 1 route con thật (NavLink), thay cho useState("tab")
-   cũ. Giúp bookmark / back-forward / refresh đều giữ đúng tab đang xem.
-
-   Trang đã có nav riêng của site cố định ở ĐÁY màn hình trên mobile,
-   nên KHÔNG đặt thêm thanh tab thứ hai ở đáy (sẽ chồng/che nhau).
-   Thay vào đó dùng chung MỘT thanh segmented-pill cuộn ngang, dính
-   ngay dưới tiêu đề trang — cho cả desktop lẫn mobile — với vùng
-   chạm được nới rộng (44pt) ở màn hình nhỏ.
-   ============================================================ */
 const TABS = [
   { to: "tổng-quan",  label: "Tổng quan",  icon: LayoutDashboard },
   { to: "đăng-ký",    label: "Đăng ký",    icon: UserPlus },
@@ -89,13 +69,6 @@ const TABS = [
   { to: "bài-viết",   label: "Duyệt bài",  icon: FileCheck },
 ];
 
-/* ------------------------------------------------------------
-   YearPicker — dropdown kiểu Apple: nút kính-mờ mở menu nổi tự
-   xây dựng (không dùng <select> gốc của trình duyệt), có dấu tick
-   cho năm đang chọn và chấm nhỏ đánh dấu năm học hiện tại. Chiều
-   cao nút đạt chuẩn 44pt để bấm chính xác trên di động, tự đóng
-   khi bấm ra ngoài hoặc nhấn Esc.
-------------------------------------------------------------- */
 function YearPicker() {
   const { namHoc, setNamHoc, namHocList } = useAdminContext();
   const [open, setOpen] = useState(false);
@@ -125,24 +98,23 @@ function YearPicker() {
         title="Chọn năm học — mặc định là năm học hiện tại"
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`inline-flex items-center gap-2 h-11 sm:h-9 pl-3.5 pr-3 rounded-full border text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-neutral-900 ${
+        className={`inline-flex items-center gap-2 h-11 sm:h-9 pl-3.5 pr-3 rounded-full border text-[13px] font-bold transition-all duration-150 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500/50 dark:focus-visible:ring-offset-[#1C1917] ${
           open
-            ? "border-transparent bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-            : "border-stone-200/70 dark:border-white/10 bg-white/80 dark:bg-white/[0.06] text-stone-700 dark:text-neutral-200 shadow-sm dark:shadow-none backdrop-blur-sm md:hover:bg-white dark:md:hover:bg-white/10"
+            ? "border-transparent bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 shadow-[0_2px_8px_rgba(146,64,14,0.2)]"
+            : "border-amber-900/10 dark:border-amber-100/10 bg-white/80 dark:bg-stone-800/40 text-stone-700 dark:text-stone-300 shadow-sm backdrop-blur-sm hover:bg-amber-50 dark:hover:bg-stone-800/80"
         }`}
-        style={{ "--tw-ring-color": `${ACCENT}b3` }}
       >
-        <CalendarDays className={`w-3.5 h-3.5 ${open ? "text-white dark:text-stone-900" : "text-stone-400 dark:text-neutral-500"}`} strokeWidth={2.25} />
+        <CalendarDays className={`w-3.5 h-3.5 ${open ? "text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`} strokeWidth={2.25} />
         <span className="whitespace-nowrap">{namHoc}</span>
         <ChevronDown
-          className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180 text-white dark:text-stone-900" : "text-stone-400 dark:text-neutral-500"}`}
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180 text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`}
         />
       </button>
 
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-2xl border border-stone-100 dark:border-white/10 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-xl p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.14)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
         >
           {namHocList.map((nh) => {
             const active = nh === namHoc;
@@ -153,21 +125,20 @@ function YearPicker() {
                 role="option"
                 aria-selected={active}
                 onClick={() => { setNamHoc(nh); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-left transition-colors ${
-                  active ? "bg-stone-100 dark:bg-white/10 text-stone-900 dark:text-neutral-50" : "text-stone-600 dark:text-neutral-300 md:hover:bg-stone-50 dark:md:hover:bg-white/[0.06]"
+                className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-bold text-left transition-colors ${
+                  active ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50" : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
                 }`}
               >
                 <span className="flex items-center gap-2">
                   {nh}
                   {isCurrent(nh) && (
                     <span
-                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ACCENT_DARK_FILTER}`}
-                      style={{ backgroundColor: ACCENT }}
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-amber-600 dark:bg-amber-400"
                       title="Năm học hiện tại"
                     />
                   )}
                 </span>
-                {active && <Check className="w-3.5 h-3.5 text-stone-500 dark:text-neutral-400 flex-shrink-0" strokeWidth={2.5} />}
+                {active && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />}
               </button>
             );
           })}
@@ -177,47 +148,146 @@ function YearPicker() {
   );
 }
 
-/* Segmented pill nav — MỘT thanh duy nhất dùng chung cho mọi kích thước
-   màn hình, dính ngay dưới large title (không fixed đáy để không đụng
-   nav riêng của site). Trên mobile cuộn ngang, mỗi pill cao đủ 44pt và
-   có snap để lướt bằng ngón tay cảm giác chắc tay như segmented control
-   của iOS; trên desktop thu gọn lại thành pill nhỏ gọn như cũ. */
+// Số tab hiển thị thẳng trên thanh (desktop) trước khi gom phần còn lại vào
+// nút "Thêm". Khi danh sách TABS mở rộng thêm trong tương lai, tab mới chỉ
+// đơn giản rơi vào menu "Thêm" — không cần sửa gì ở đây.
+const MAX_VISIBLE_DESKTOP_TABS = 6;
+
+function tabPendingCount(to, { pendingDangKy, pendingGopY, pendingBaiViet }) {
+  if (to === "đăng-ký") return pendingDangKy;
+  if (to === "góp-ý") return pendingGopY;
+  if (to === "bài-viết") return pendingBaiViet;
+  return 0;
+}
+
+function TabBadge({ count }) {
+  if (!count) return null;
+  return (
+    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
+      {count}
+    </span>
+  );
+}
+
+const tabItemClass = ({ isActive, compact }) =>
+  `snap-start flex-shrink-0 inline-flex items-center gap-1.5 h-11 sm:h-auto px-4 sm:px-3.5 sm:py-1.5 rounded-xl text-[13px] ${compact ? "sm:text-[12.5px]" : ""} font-bold whitespace-nowrap transition-all duration-200 motion-reduce:transition-none active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
+    isActive
+      ? "bg-white dark:bg-stone-800 text-amber-700 dark:text-amber-400 shadow-sm"
+      : "text-stone-500 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-300"
+  }`;
+
 function TabNav() {
-  const { pendingDangKy, pendingGopY } = useAdminContext();
+  const pending = useAdminContext();
+  const location = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onClickOutside = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+    };
+    const onKey = (e) => { if (e.key === "Escape") setMoreOpen(false); };
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [moreOpen]);
+
+  const visibleTabs = TABS.slice(0, MAX_VISIBLE_DESKTOP_TABS);
+  const overflowTabs = TABS.slice(MAX_VISIBLE_DESKTOP_TABS);
+
+  // Slug hiện tại (đoạn cuối URL) để biết tab nào trong menu "Thêm" đang active,
+  // vì NavLink tự lo việc này cho các tab hiển thị trực tiếp, còn nút "Thêm"
+  // (không phải NavLink) thì phải tự so sánh route.
+  const currentSlug = decodeURIComponent(location.pathname.split("/").filter(Boolean).pop() || "");
+  const activeOverflowTab = overflowTabs.find((t) => t.to === currentSlug);
+  const overflowBadgeTotal = overflowTabs.reduce((sum, t) => sum + tabPendingCount(t.to, pending), 0);
 
   return (
     <nav
-      className="flex gap-1 bg-stone-100/80 dark:bg-white/[0.06] rounded-2xl p-1 overflow-x-auto snap-x snap-mandatory sm:snap-none w-full sm:w-fit [&::-webkit-scrollbar]:hidden"
+      className="flex items-center gap-1 bg-amber-900/5 dark:bg-amber-100/5 rounded-2xl p-1 overflow-x-auto sm:overflow-visible max-w-full snap-x snap-mandatory sm:snap-none w-full sm:w-fit [&::-webkit-scrollbar]:hidden touch-pan-x"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       data-lenis-prevent
     >
-      {TABS.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          className={({ isActive }) =>
-            `snap-start flex-shrink-0 inline-flex items-center gap-1.5 h-11 sm:h-auto px-4 sm:px-3.5 sm:py-1.5 rounded-xl text-[13px] sm:text-[12.5px] font-semibold whitespace-nowrap transition-all duration-200 motion-reduce:transition-none active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 dark:focus-visible:ring-red-400/70 ${
-              isActive
-                ? "bg-white dark:bg-neutral-800 text-red-600 dark:text-red-400 shadow-[0_1px_3px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
-                : "text-stone-500 dark:text-neutral-400 md:hover:text-stone-700 dark:md:hover:text-neutral-100"
-            }`
-          }
-        >
-          <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5 flex-shrink-0" strokeWidth={2.1} /> {label}
-          {/* Badge Đăng ký */}
-          {to === "đăng-ký" && pendingDangKy > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
-              {pendingDangKy}
-            </span>
-          )}
-          {/* Badge Góp ý */}
-          {to === "góp-ý" && pendingGopY > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold tabular-nums">
-              {pendingGopY}
-            </span>
-          )}
-        </NavLink>
-      ))}
+      {/* Mobile: tất cả các tab, cuộn ngang — không gian rộng theo chiều dọc
+          nên gom vào "Thêm" không cần thiết, cuộn ngón tay vẫn thoải mái hơn. */}
+      <div className="flex sm:hidden gap-1">
+        {TABS.map(({ to, label, icon: Icon }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => tabItemClass({ isActive })}>
+            <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={2.1} /> {label}
+            <TabBadge count={tabPendingCount(to, pending)} />
+          </NavLink>
+        ))}
+      </div>
+
+      {/* Desktop: chỉ hiện tối đa MAX_VISIBLE_DESKTOP_TABS tab, phần còn lại
+          gom vào menu thả xuống "Thêm" — tránh thanh tab bị bể hàng hoặc quá
+          chật khi có nhiều mục, và vẫn ổn định khi thêm tab mới sau này. */}
+      <div className="hidden sm:flex items-center gap-1">
+        {visibleTabs.map(({ to, label, icon: Icon }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => tabItemClass({ isActive, compact: true })}>
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.1} /> {label}
+            <TabBadge count={tabPendingCount(to, pending)} />
+          </NavLink>
+        ))}
+
+        {overflowTabs.length > 0 && (
+          <div className="relative flex-shrink-0" ref={moreRef}>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={moreOpen}
+              className={tabItemClass({ isActive: moreOpen || !!activeOverflowTab, compact: true })}
+            >
+              {activeOverflowTab ? (
+                <activeOverflowTab.icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.1} />
+              ) : (
+                <MoreHorizontal className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.1} />
+              )}
+              {activeOverflowTab ? activeOverflowTab.label : "Thêm"}
+              {activeOverflowTab?.label === "Duyệt bài" && <TabBadge count={overflowBadgeTotal} />}
+              <ChevronDown
+                className={`w-3 h-3 flex-shrink-0 transition-transform duration-200 ${moreOpen ? "rotate-180" : ""} ${
+                  moreOpen || activeOverflowTab ? "" : "opacity-60"
+                }`}
+                strokeWidth={2.5}
+              />
+            </button>
+
+            {moreOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 z-50 mt-2 min-w-[200px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+              >
+                {overflowTabs.map(({ to, label, icon: Icon }) => {
+                  const active = to === currentSlug;
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      onClick={() => setMoreOpen(false)}
+                      className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-bold transition-colors ${
+                        active
+                          ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50"
+                          : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.1} /> {label}
+                      </span>
+                      <TabBadge count={tabPendingCount(to, pending)} />
+                    </NavLink>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
@@ -225,8 +295,6 @@ function TabNav() {
 function AdminHeader() {
   const [scrolled, setScrolled] = useState(false);
 
-  // "Large title" kiểu iOS: to & đậm khi ở đầu trang, tự thu gọn thành 1
-  // dòng tiêu đề nhỏ khi cuộn xuống — cùng logic co giãn của UINavigationBar.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     onScroll();
@@ -236,22 +304,21 @@ function AdminHeader() {
 
   return (
     <div
-      className="sticky top-16 z-30 bg-[#faf8f5]/90 dark:bg-neutral-950/90 backdrop-blur-xl border-b border-stone-200/60 dark:border-white/10 transition-colors"
+      className="sticky top-16 z-30 bg-[#FDFBF7]/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 transition-colors"
       style={{ fontFamily: SYSTEM_FONT }}
     >
       <div className={`max-w-6xl mx-auto px-4 sm:px-6 transition-all duration-300 motion-reduce:transition-none ${scrolled ? "py-2.5" : "py-4"}`}>
         <div className="flex items-start sm:items-end justify-between gap-3">
           <div className="min-w-0">
             <p
-              className={`font-bold uppercase tracking-widest overflow-hidden transition-all duration-300 motion-reduce:transition-none ${ACCENT_DARK_FILTER} ${
+              className={`font-bold uppercase tracking-widest overflow-hidden transition-all duration-300 motion-reduce:transition-none text-amber-800/70 dark:text-amber-400/70 text-[11px] ${
                 scrolled ? "max-h-0 opacity-0" : "max-h-5 opacity-100 mb-0.5"
               }`}
-              style={{ color: ACCENT, fontSize: "11px" }}
             >
               Quản trị hệ thống
             </p>
             <h1
-              className={`font-bold text-stone-900 dark:text-neutral-50 tracking-tight truncate transition-all duration-300 motion-reduce:transition-none ${
+              className={`font-bold text-amber-950 dark:text-amber-50 tracking-tight truncate transition-all duration-300 font-serif ${
                 scrolled ? "text-lg" : "text-2xl sm:text-[28px]"
               }`}
             >
@@ -275,11 +342,8 @@ function AdminHeader() {
 function AdminLayoutInner() {
   const { loading } = useAdminContext();
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-neutral-950 transition-colors" style={{ fontFamily: SYSTEM_FONT }}>
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] transition-colors" style={{ fontFamily: SYSTEM_FONT }}>
       <AdminHeader />
-      {/* Không còn tab bar riêng ở đáy trên mobile — nav đáy của site đã lo
-          phần đó, nên chỉ cần padding thường, không phải chừa chỗ cho tab bar
-          thứ hai nữa. */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         {loading ? (
           <AdminTabSkeleton />

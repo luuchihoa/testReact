@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
 import { slugify } from "../../lib/slugify.js";
 import { 
-  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft 
+  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft, AlertCircle
 } from "lucide-react";
 
 const MAX_TITLE = 200;
 const MAX_SUMMARY = 300;
 
 export default function ArticleEditor() {
-  const { id } = useParams(); // undefined = tạo mới
+  const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const username = localStorage.getItem("username") || "";
@@ -21,7 +22,7 @@ export default function ArticleEditor() {
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState("edit"); // 'edit' | 'preview'
+  const [tab, setTab] = useState("edit");
 
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
@@ -82,7 +83,7 @@ export default function ArticleEditor() {
       if (id) {
         const { error } = await supabase.from("articles").update(buildPayload()).eq("id", id);
         if (error) throw error;
-        showToast("Đã lưu thay đổi", "success");
+        showToast("Đã lưu bản thay đổi", "success");
       } else {
         const { data, error } = await supabase
           .from("articles")
@@ -133,7 +134,6 @@ export default function ArticleEditor() {
     }
   };
 
-  // Helper chèn Markdown nhanh vào textarea
   const insertMarkdown = (syntax, placeholder = "văn bản") => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -155,7 +155,6 @@ export default function ArticleEditor() {
     const newText = currentText.substring(0, start) + replacement + currentText.substring(end);
     setContent(newText);
 
-    // Đưa con trỏ chuột về vị trí hợp lý sau khi chèn
     setTimeout(() => {
       textarea.focus();
       const newCursorPos = start + replacement.length;
@@ -163,171 +162,280 @@ export default function ArticleEditor() {
     }, 0);
   };
 
-  // Bộ đếm từ và ký tự
   const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = content.length;
 
+  const toolbarButtons = [
+    { syntax: "bold",    title: "In đậm",       Icon: Bold },
+    { syntax: "italic",  title: "In nghiêng",   Icon: Italic },
+    { syntax: "heading", title: "Tiêu đề H3",   Icon: Heading },
+    { syntax: "quote",   title: "Trích dẫn",    Icon: Quote },
+    { syntax: "link",    title: "Chèn liên kết", Icon: Link2 },
+    { syntax: "list",    title: "Danh sách buột", Icon: List },
+    { syntax: "code",    title: "Mã nguồn",     Icon: CodeIcon },
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 flex items-center justify-center gap-2 py-24 text-stone-400 dark:text-stone-555">
-        <Loader2 className="w-5 h-5 animate-spin text-amber-700 dark:text-amber-500" />
-        <span className="text-sm font-medium">Đang tải biểu mẫu…</span>
+      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex items-center justify-center gap-2.5 py-24 text-stone-500">
+        <Loader2 className="w-6 h-6 animate-spin text-amber-900 dark:text-amber-500" />
+        <span className="text-[14px] font-bold">Đang tải biểu mẫu…</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 px-6 py-10 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 px-5 sm:px-6 py-8 sm:py-10 transition-colors duration-500">
       <div className="max-w-3xl mx-auto">
         
         {/* Nút quay lại */}
-        <button
+        <motion.button
           type="button"
           onClick={() => navigate("/bài-viết-của-tôi")}
-          className="inline-flex items-center gap-1.5 text-[13px] font-bold text-stone-500 hover:text-stone-855 dark:hover:text-stone-200 mb-6 transition-colors group"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          whileTap={{ scale: 0.97 }}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13.5px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-colors duration-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 mb-8"
         >
-          <ArrowLeft className="w-3.5 h-3.5 transform group-hover:-translate-x-0.5 transition-transform" /> Bài viết của tôi
-        </button>
+          <ArrowLeft className="w-4 h-4" strokeWidth={2.5} /> Bài viết của tôi
+        </motion.button>
 
-        <h1 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight mb-1">
-          {id ? "Chỉnh sửa bài viết" : "Soạn thảo bài viết mới"}
-        </h1>
-        <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">
-          Hệ thống hỗ trợ hoàn toàn định dạng văn bản Markdown chuẩn để trình bày bài viết phong phú.
-        </p>
+        {/* Tiêu đề trang */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-6"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-2 ml-1">
+            Editor
+          </p>
+          <h1 className="text-2xl sm:text-[28px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight">
+            {id ? "Chỉnh sửa bài viết" : "Soạn thảo bài viết mới"}
+          </h1>
+          <p className="text-[13.5px] font-medium text-stone-500 dark:text-stone-400 mt-1.5 leading-relaxed">
+            Hệ thống hỗ trợ định dạng Markdown chuẩn. Bạn có thể sử dụng giao diện trực quan hoặc tự gõ cú pháp.
+          </p>
+        </motion.div>
 
-        {status === "rejected" && rejectionReason && (
-          <div className="mb-6 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 px-4 py-3.5 text-[13px] text-red-700 dark:text-red-400">
-            <span className="font-bold">Bài viết đã bị từ chối duyệt:</span> {rejectionReason}
-          </div>
-        )}
+        {/* Khung cảnh báo (nếu bị từ chối) */}
+        <AnimatePresence initial={false}>
+          {status === "rejected" && rejectionReason && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl backdrop-blur-sm flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                <div className="flex-1">
+                  <p className="text-[12px] font-bold uppercase tracking-wider text-red-700/80 dark:text-red-400/80 mb-1 ml-0.5">
+                    Đã bị từ chối duyệt
+                  </p>
+                  <div className="text-[13.5px] font-medium text-red-950 dark:text-red-50 leading-relaxed ml-0.5">
+                    {rejectionReason}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="flex flex-col gap-5 bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-2xl p-5 sm:p-6 shadow-xs">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col gap-5 sm:gap-6 bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] p-6 sm:p-8 shadow-sm"
+        >
           
           {/* Nhập tiêu đề */}
           <div>
-            <label className="text-[12px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-450">Tiêu đề bài viết</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Tiêu đề bài viết</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))}
-              placeholder="Nhập tiêu đề ấn tượng..."
-              className="mt-1.5 w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-2.5 text-[14px] text-stone-850 dark:text-stone-150 placeholder-stone-450 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 transition-all"
+              placeholder="VD: Cảm nhận sau thánh lễ Giáng Sinh..."
+              className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3.5 text-[14.5px] font-bold text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
             />
           </div>
 
           {/* Chuyên mục & Ảnh bìa */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="text-[12px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-450">Chuyên mục</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Chuyên mục</label>
               <input
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="VD: Chia sẻ, Sự kiện, Thông báo..."
-                className="mt-1.5 w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-2.5 text-[14px] text-stone-850 dark:text-stone-150 placeholder-stone-450 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 transition-all"
+                placeholder="VD: Chia sẻ, Sự kiện..."
+                className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
               />
             </div>
             <div>
-              <label className="text-[12px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-450">Ảnh bìa (Liên kết URL)</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Ảnh bìa (Liên kết URL)</label>
               <input
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://image-url.com/path.jpg"
-                className="mt-1.5 w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-2.5 text-[14px] text-stone-850 dark:text-stone-150 placeholder-stone-450 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 transition-all"
+                placeholder="https://imgur.com/your-image.jpg"
+                className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
               />
             </div>
           </div>
 
           {/* Tóm tắt bài viết */}
           <div>
-            <label className="text-[12px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-450">Tóm tắt ngắn</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Tóm tắt ngắn</label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value.slice(0, MAX_SUMMARY))}
               rows={2}
-              placeholder="Một vài câu mô tả ngắn gọn hiển thị ở danh mục bài viết chính..."
-              className="mt-1.5 w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-2.5 text-[14px] text-stone-850 dark:text-stone-150 placeholder-stone-450 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 transition-all resize-none"
+              placeholder="Hiển thị tại trang danh sách chính thay cho nội dung..."
+              className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm resize-none"
             />
-            <div className="flex justify-end text-[10px] text-stone-400 dark:text-stone-500 mt-1 font-medium">
+            <div className="flex justify-end text-[11px] font-bold text-stone-400 dark:text-stone-500 mt-1.5 mr-1">
               {summary.length}/{MAX_SUMMARY} ký tự
             </div>
           </div>
 
           {/* Nội dung soạn thảo */}
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-2.5 mb-3.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Nội dung bài viết</label>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-amber-900/10 dark:border-amber-100/10 pb-3 mb-4">
               {/* Tab điều hướng */}
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => setTab("edit")}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === "edit" ? "bg-stone-900 dark:bg-stone-800 text-white shadow-xs" : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-750"}`}>
-                  <Pencil className="w-3.5 h-3.5" /> Soạn thảo
+              <div className="flex w-full items-center gap-1.5 bg-stone-100/80 dark:bg-stone-900/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
+                {/* Nút Soạn thảo */}
+                <button 
+                  type="button" 
+                  onClick={() => setTab("edit")}
+                  className={`relative flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-bold transition-colors duration-300 active:scale-[0.97] ${
+                    tab === "edit" 
+                      ? "text-amber-50 dark:text-white" 
+                      : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
+                  }`}
+                >
+                  {tab === "edit" && (
+                    <motion.div
+                      layoutId="active-tab-bg"
+                      className="absolute inset-0 bg-amber-900 dark:bg-amber-600 rounded-lg shadow-sm -z-10"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Pencil className="w-3.5 h-3.5 relative z-10" /> 
+                  <span className="relative z-10">Soạn thảo</span>
                 </button>
-                <button type="button" onClick={() => setTab("preview")}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === "preview" ? "bg-stone-900 dark:bg-stone-800 text-white shadow-xs" : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-750"}`}>
-                  <Eye className="w-3.5 h-3.5" /> Xem trước
+                
+                {/* Nút Xem trước */}
+                <button 
+                  type="button" 
+                  onClick={() => setTab("preview")}
+                  className={`relative flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-bold transition-colors duration-300 active:scale-[0.97] ${
+                    tab === "preview" 
+                      ? "text-white dark:text-stone-900" 
+                      : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
+                  }`}
+                >
+                  {tab === "preview" && (
+                    <motion.div
+                      layoutId="active-tab-bg"
+                      className="absolute inset-0 bg-stone-900 dark:bg-white rounded-lg shadow-sm -z-10"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Eye className="w-3.5 h-3.5 relative z-10" /> 
+                  <span className="relative z-10">Xem trước</span>
                 </button>
               </div>
 
-              {/* Helper Bar chỉ hiện khi ở tab soạn thảo */}
+              {/* Helper Bar */}
               {tab === "edit" && (
-                <div className="flex flex-wrap items-center gap-1 bg-stone-100 dark:bg-stone-800 rounded-xl p-1">
-                  <button type="button" onClick={() => insertMarkdown("bold")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="In đậm"><Bold className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("italic")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="In nghiêng"><Italic className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("heading")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="Tiêu đề H3"><Heading className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("quote")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="Trích dẫn"><Quote className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("link")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="Chèn liên kết"><Link2 className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("list")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="Danh sách buột"><List className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={() => insertMarkdown("code")} className="p-1.5 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 hover:shadow-xs transition-all" title="Mã nguồn"><CodeIcon className="w-3.5 h-3.5" /></button>
+                <div className="flex flex-wrap items-center gap-1 bg-stone-100/80 dark:bg-stone-900/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
+                  {toolbarButtons.map(({ syntax, title, Icon }) => (
+                    <motion.button
+                      key={syntax}
+                      type="button"
+                      onClick={() => insertMarkdown(syntax)}
+                      whileTap={{ scale: 0.85 }}
+                      className="p-2 rounded-lg text-stone-600 dark:text-stone-300 md:hover:bg-white dark:md:hover:bg-stone-700 hover:shadow-sm transition-colors"
+                      title={title}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </motion.button>
+                  ))}
                 </div>
               )}
             </div>
 
-            {tab === "edit" ? (
-              <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={16}
-                  placeholder="Nội dung bài viết (hỗ trợ Markdown). Bạn có thể viết tiêu đề bằng dấu #, in đậm bằng **, chèn danh sách bằng dấu - ..."
-                  className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-[14px] font-mono leading-relaxed text-stone-850 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 transition-all resize-y"
-                  data-lenis-prevent
-                />
-                <div className="flex justify-end text-[10px] text-stone-400 dark:text-stone-500 mt-1.5 font-semibold">
-                  TỔNG CỘNG: {wordCount} từ · {charCount} ký tự
-                </div>
-              </div>
-            ) : (
-              <div className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert border border-stone-200 dark:border-stone-800 rounded-xl px-5 py-4 min-h-[360px] bg-stone-50/30 dark:bg-stone-900/20 overflow-y-auto">
-                {content.trim() ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>{content}</ReactMarkdown>
-                ) : (
-                  <p className="text-stone-300 dark:text-stone-700 text-sm font-medium text-center py-20">Nội dung xem trước hiển thị tại đây khi bạn viết bài.</p>
-                )}
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {tab === "edit" ? (
+                <motion.div
+                  key="edit"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative"
+                >
+                  <textarea
+                    ref={textareaRef}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={16}
+                    placeholder="Bắt đầu soạn thảo ở đây... Hệ thống tự động nhận diện cú pháp Markdown."
+                    className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-4 text-[14.5px] font-medium leading-relaxed text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm resize-y"
+                    data-lenis-prevent
+                  />
+                  <div className="flex justify-end text-[11px] font-bold text-stone-400 dark:text-stone-500 mt-2 mr-1">
+                    TỔNG CỘNG: {wordCount} TỪ · {charCount} KÝ TỰ
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="preview"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert rounded-[20px] bg-white/60 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 shadow-inner px-6 py-6 min-h-[380px] overflow-y-auto font-medium"
+                >
+                  {content.trim() ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>{content}</ReactMarkdown>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-stone-400 py-24">
+                      <Eye className="w-8 h-8 mb-3 opacity-50" />
+                      <p className="text-[13px] font-bold">Trống! Chưa có nội dung nào.</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-stone-100 dark:border-stone-800 mt-2">
-            <button 
+          <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-amber-900/10 dark:border-amber-100/10 mt-3">
+            <motion.button 
               type="button" 
               onClick={handleSaveDraft} 
               disabled={saving}
-              className="flex-1 px-5 py-3 rounded-xl border border-stone-300 dark:border-stone-700 text-sm font-bold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-850 active:scale-98 transition-all disabled:opacity-50"
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-colors duration-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
             >
-              {saving ? "Đang lưu..." : "Lưu bản nháp"}
-            </button>
-            <button 
+              {saving ? "Đang xử lý..." : "Lưu bản nháp"}
+            </motion.button>
+            <motion.button 
               type="button" 
               onClick={handleSubmitForReview} 
               disabled={saving}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl bg-amber-800 hover:bg-amber-900 dark:bg-amber-700 dark:hover:bg-amber-600 text-white text-sm font-bold shadow-xs active:scale-98 transition-all disabled:opacity-50"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-shadow duration-300 disabled:opacity-50"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" strokeWidth={2.5} />}
               Gửi kiểm duyệt
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

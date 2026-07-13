@@ -2,13 +2,15 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { useToast } from "../ui/ToastContext.jsx";
 import { getCurrentNamHoc } from "./constants.js";
 import {
-  fetchAllUsers,
+  fetchAllTeachers,
   fetchAvailableNamHocList,
   fetchClassTeacherRows,
   fetchEnrollmentCounts,
   fetchTermLocks,
   fetchPendingDangKyCount,
   fetchPendingLienHeCount,
+  fetchPendingArticlesCount,
+  fetchExactRoleCounts,
 } from "./dataLayer.js"
 
 const AdminContext = createContext(null);
@@ -24,16 +26,14 @@ export function useAdminContext() {
 export function AdminProvider({ children }) {
   const { showToast } = useToast();
 
-  // Mặc định luôn ưu tiên năm học hiện tại (getCurrentNamHoc), nhưng admin có
-  // thể chuyển sang năm khác nếu DB có nhiều năm học.
   const [namHoc, setNamHoc] = useState(() => getCurrentNamHoc());
   const [namHocList, setNamHocList] = useState([]);
 
-  const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [pendingDangKy, setPendingDangKy] = useState(0);
+  const [roleCounts, setRoleCounts] = useState({ admin: 0, teacher: 0, student: 0, user: 0 });
 
   const refreshPendingDangKy = useCallback(async () => {
     try {
@@ -50,8 +50,13 @@ export function AdminProvider({ children }) {
     catch (err) { console.error("load pending gop y count error:", err); }
   }, []);
 
-  // Tải danh sách năm học 1 lần khi vào trang — không phụ thuộc namHoc đang
-  // chọn, vì cần biết TẤT CẢ năm học sẵn có để hiển thị đủ trong <select>.
+  const [pendingBaiViet, setPendingBaiViet] = useState(0);
+
+  const refreshPendingBaiViet = useCallback(async () => {
+    try { setPendingBaiViet(await fetchPendingArticlesCount()); }
+    catch (err) { console.error("load pending bai viet count error:", err); }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -63,24 +68,28 @@ export function AdminProvider({ children }) {
     })();
     refreshPendingDangKy();
     refreshPendingGopY();
-  }, [refreshPendingDangKy, refreshPendingGopY]);
+    refreshPendingBaiViet();
+  }, [refreshPendingDangKy, refreshPendingGopY, refreshPendingBaiViet]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [userList, ctRows, enrollCounts, termLocks] = await Promise.all([
-        fetchAllUsers(),
+      const [teacherList, ctRows, enrollCounts, termLocks, counts] = await Promise.all([
+        fetchAllTeachers(),
         fetchClassTeacherRows(namHoc),
         fetchEnrollmentCounts(namHoc),
         fetchTermLocks(namHoc),
+        fetchExactRoleCounts(),
       ]);
-      setUsers(userList);
+
+      setRoleCounts(counts);
 
       const teacherByLop = {};
       ctRows.forEach((r) => { teacherByLop[r.lop] = r.teacher_username; });
 
       const lopSet = new Set([...Object.keys(teacherByLop), ...Object.keys(enrollCounts), ...Object.keys(termLocks)]);
-      const teacherName = (username) => userList.find((u) => u.username === username)?.hoTen || username;
+      const teacherName = (username) => teacherList.find((u) => u.username === username)?.hoTen || username;
+      const teacherTenThanh = (username) => teacherList.find((u) => u.username === username)?.tenThanh || "";
 
       const classList = Array.from(lopSet)
         .sort((a, b) => a.localeCompare(b, "vi"))
@@ -88,6 +97,7 @@ export function AdminProvider({ children }) {
           lop,
           teacherUsername: teacherByLop[lop] || null,
           teacherName:     teacherByLop[lop] ? teacherName(teacherByLop[lop]) : null,
+          teacherTenThanh: teacherByLop[lop] ? teacherTenThanh(teacherByLop[lop]) : null,
           studentCount:    enrollCounts[lop] || 0,
           locks:           termLocks[lop] || {},
         }));
@@ -102,22 +112,21 @@ export function AdminProvider({ children }) {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // Cập nhật lạc quan sau khi đổi role 1 user tại UsersTab — tránh phải
-  // loadAll() lại toàn bộ chỉ vì đổi 1 dòng.
   const handleRoleChanged = useCallback((username, role) => {
     setUsers((prev) => prev.map((u) => (u.username === username ? { ...u, role } : u)));
   }, []);
 
   const value = useMemo(() => ({
     namHoc, setNamHoc, namHocList,
-    users, setUsers,
+    roleCounts,
     classes, setClasses,
     loading, loadAll,
     showToast,
     handleRoleChanged,
     pendingDangKy, refreshPendingDangKy,
     pendingGopY, refreshPendingGopY,
-  }), [namHoc, namHocList, users, classes, loading, loadAll, showToast, handleRoleChanged, pendingDangKy, refreshPendingDangKy, pendingGopY, refreshPendingGopY]);
+    pendingBaiViet, refreshPendingBaiViet,
+  }), [namHoc, namHocList, roleCounts, classes, loading, loadAll, showToast, handleRoleChanged, pendingDangKy, refreshPendingDangKy, pendingGopY, refreshPendingGopY, pendingBaiViet, refreshPendingBaiViet]);
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 }

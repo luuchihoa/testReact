@@ -7,7 +7,6 @@ import { supabase } from "../../lib/supabase.js";
 // Thay đổi import: lấy thêm Bone và TableSkeleton
 import { AuthGateSkeleton, TableSkeleton, Bone } from "../ui/Skeleton.jsx";
 import { TeacherProvider, useTeacherContext } from "./TeacherContext.jsx";
-import { ACCENT } from "./constants.js";
 import { getCurrentNamHoc } from "./utils.js";
 
 export function RequireTeacherRoute({ children }) {
@@ -63,12 +62,12 @@ const TABS = [
 
 function TeacherHeader({ lop, namHoc, studentCount, studentsInitialized }) {
   return (
-    <div className="sticky top-16 z-30 bg-[#faf8f5]/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200/60 dark:border-stone-800 px-4 sm:px-6 py-3 sm:py-4">
+    <div className="sticky top-16 z-30 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-sm border-b border-amber-900/10 dark:border-amber-100/10 px-4 sm:px-6 py-3 sm:py-4">
       <div className="max-w-6xl mx-auto flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest" style={{ color: ACCENT }}>Giáo viên chủ nhiệm</p>
-            <h1 className="text-base sm:text-xl font-bold text-stone-900 dark:text-stone-100 truncate">Lớp {lop} · {namHoc}</h1>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70">Giáo viên chủ nhiệm</p>
+            <h1 className="font-serif text-base sm:text-xl font-bold text-amber-950 dark:text-amber-50 truncate">Lớp {lop} · {namHoc}</h1>
           </div>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 dark:text-stone-500 flex-shrink-0">
             <Users className="w-3.5 h-3.5" />
@@ -89,7 +88,7 @@ function TeacherHeader({ lop, namHoc, studentCount, studentsInitialized }) {
               to={to}
               className={({ isActive }) =>
                 `flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap ${
-                  isActive ? "bg-white dark:bg-stone-900 text-[#FF6B35] dark:text-[#FF6B35] shadow-sm" : "text-stone-500 dark:text-stone-400"
+                  isActive ? "bg-white dark:bg-stone-900 text-amber-800 dark:text-amber-400 shadow-sm" : "text-stone-500 dark:text-stone-400"
                 }`
               }
             >
@@ -119,7 +118,7 @@ function TeacherLayoutInner() {
           Bạn chưa được phân công chủ nhiệm lớp nào trong năm học {getCurrentNamHoc()}.
         </p>
         <button type="button" onClick={() => navigate("/")}
-          className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline" style={{ color: ACCENT }}>
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-800 dark:text-amber-400 hover:underline">
           <ChevronLeft className="w-4 h-4" /> Về trang chủ
         </button>
       </div>
@@ -127,7 +126,7 @@ function TeacherLayoutInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] dark:bg-stone-950">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917]">
       <style>{`
         .tk-tabbar::-webkit-scrollbar { display: none; }
         .tk-tabbar { -ms-overflow-style: none; scrollbar-width: none; }
