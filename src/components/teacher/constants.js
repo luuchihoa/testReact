@@ -1,6 +1,6 @@
 export const ACCENT = "#FF6B35";
 
-export const HK_INT_MAP = { HK1: 1, HK2: 2 };
+export const HK_INT_MAP = { HK1: 1, HK2: 2, CN: 0 };
 
 export const HOC_LUC_OPTIONS   = ["Giỏi", "Khá", "Trung Bình", "Yếu", "Kém"];
 export const HANH_KIEM_OPTIONS = ["Tốt", "Khá", "Trung Bình", "Yếu"];

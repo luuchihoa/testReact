@@ -1,18 +1,24 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
+const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 export default function QuoteSlider({ quotes }) {
   const [cur, setCur] = useState(0);
   const [dir, setDir] = useState(1);
   const timerRef = useRef(null);
 
+  // Hàm tự động chuyển slide sau mỗi 6 giây
+  const nextQuote = useCallback(() => {
+    setDir(1);
+    setCur((p) => (p + 1) % quotes.length);
+  }, [quotes.length]);
+
   const resetTimer = useCallback(() => {
     clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setDir(1);
-      setCur((p) => (p + 1) % quotes.length);
-    }, 6000);
-  }, [quotes.length]);
+    timerRef.current = setInterval(nextQuote, 6000);
+  }, [nextQuote]);
 
   useEffect(() => {
     resetTimer();
@@ -20,24 +26,28 @@ export default function QuoteSlider({ quotes }) {
   }, [resetTimer]);
 
   const variants = {
-    enter: (d) => ({ x: d > 0 ? "20%" : "-20%", opacity: 0, scale: 0.95 }),
-    center: { x: "0%", opacity: 1, scale: 1 },
-    exit: (d) => ({ x: d > 0 ? "-20%" : "20%", opacity: 0, scale: 0.95 }),
+    enter: (d) => ({ 
+      x: d > 0 ? "12%" : "-12%", 
+      opacity: 0, 
+      scale: 0.96 
+    }),
+    center: { 
+      x: "0%", 
+      opacity: 1, 
+      scale: 1 
+    },
+    exit: (d) => ({ 
+      x: d > 0 ? "-12%" : "12%", 
+      opacity: 0, 
+      scale: 0.96 
+    }),
   };
 
   if (!quotes || quotes.length === 0) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 relative">
-      {/* Khối ẩn để giữ chiều cao cố định */}
-      <div className="invisible pointer-events-none select-none aria-hidden relative w-full" style={{ visibility: 'hidden' }}>
-        <div className="p-8 flex flex-col">
-          <p className="text-lg md:text-xl font-medium leading-relaxed italic">"{quotes[0].text}"</p>
-          <p className="text-xs font-bold pt-2 mt-2">({quotes[0].src})</p>
-        </div>
-      </div>
-      
-    <div className="absolute -inset-y-10 inset-x-0 overflow-hidden px-6 py-10">
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
+      <div className="overflow-hidden py-4">
         <AnimatePresence initial={false} custom={dir} mode="wait">
           <motion.div
             key={cur}
@@ -46,16 +56,17 @@ export default function QuoteSlider({ quotes }) {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            // SỬA TẠI ĐÂY: Đổi nền thành trắng ở light mode, xám đen ở dark mode và thêm viền nhẹ
-            className="w-full h-full bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-[2rem] shadow-xl p-8 flex flex-col justify-center text-center touch-pan-y"
+            transition={{ duration: 0.5, ease: APPLE_EASE }}
+            // Đồng bộ Glassmorphism, bo góc chuẩn hệ thống và hỗ trợ vuốt chạm mượt mà
+            className="w-full bg-white/90 dark:bg-[#1C1917]/90 border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] sm:rounded-[32px] shadow-sm p-6 sm:p-10 flex flex-col justify-center text-center backdrop-blur-xl touch-pan-y"
           >
-            {/* SỬA TẠI ĐÂY: Đổi màu chữ chính thành màu tối ở light mode, màu sáng ở dark mode */}
-            <p className="text-stone-800 dark:text-stone-100 text-lg md:text-xl font-medium leading-relaxed italic select-none">
+            {/* Sử dụng font Serif uy nghi, đồng bộ tone màu Amber/Stone */}
+            <p className="text-amber-950 dark:text-amber-50 text-[17px] sm:text-[20px] md:text-[22px] font-medium font-serif leading-relaxed italic select-none">
               "{quotes[cur].text}"
             </p>
-            {/* SỬA TẠI ĐÂY: Đổi màu chữ phụ thành màu xám trung tính */}
-            <p className="text-stone-500 dark:text-stone-400 text-xs font-bold tracking-widest uppercase mt-6 select-none">
+            
+            {/* Nhãn nguồn trích dẫn dạng in hoa cách điệu */}
+            <p className="text-amber-800/60 dark:text-amber-400/60 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase mt-6 sm:mt-8 select-none">
               — {quotes[cur].src} —
             </p>
           </motion.div>

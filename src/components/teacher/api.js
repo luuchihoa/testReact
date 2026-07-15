@@ -154,3 +154,45 @@ export async function fetchClassSummary(usernames, namHoc, hocKyInt) {
 
   return byUser;
 }
+
+// Tổng hợp dữ liệu cho Bảng Tổng Kết Cả Năm: điểm TB cả năm + học lực +
+// hạnh kiểm + vị thứ + ghi chú từ bảng year_summary, cộng tổng vắng cả năm.
+export async function fetchYearSummary(usernames, namHoc) {
+  if (!usernames.length) return {};
+
+  const [yearRes, attendanceRes] = await Promise.all([
+    supabase.from("year_summary").select("username, diem_tb, hoc_luc, hanh_kiem, vi_thu, ghi_chu")
+      .eq("nam_hoc", namHoc).in("username", usernames),
+    // Tổng hợp điểm danh cả năm (không filter hoc_ky)
+    supabase.from("attendance").select("username, trang_thai")
+      .eq("nam_hoc", namHoc).in("username", usernames),
+  ]);
+
+  [yearRes, attendanceRes].forEach((r, i) => {
+    if (r.error) console.error(`fetchYearSummary[${i}] error:`, r.error);
+  });
+
+  const byUser = {};
+  usernames.forEach((u) => {
+    byUser[u] = { diemTB: null, hocLuc: null, hanhKiem: null, viThu: null, ghiChu: "", vangCoPhep: 0, vangKhongPhep: 0 };
+  });
+
+  (yearRes.data ?? []).forEach((y) => {
+    if (byUser[y.username]) {
+      byUser[y.username].diemTB   = y.diem_tb;
+      byUser[y.username].hocLuc   = y.hoc_luc;
+      byUser[y.username].hanhKiem = y.hanh_kiem;
+      byUser[y.username].viThu    = y.vi_thu;
+      byUser[y.username].ghiChu   = y.ghi_chu || "";
+    }
+  });
+
+  (attendanceRes.data ?? []).forEach((a) => {
+    const u = byUser[a.username];
+    if (!u) return;
+    if (a.trang_thai === "nghi_phep")       u.vangCoPhep    += 1;
+    if (a.trang_thai === "nghi_khong_phep") u.vangKhongPhep += 1;
+  });
+
+  return byUser;
+}

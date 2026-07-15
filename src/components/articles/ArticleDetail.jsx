@@ -256,7 +256,11 @@ export default function ArticleDetail() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-bold prose-headings:font-serif prose-headings:text-amber-950 dark:prose-headings:text-amber-50 prose-a:text-amber-900 dark:prose-a:text-amber-500 prose-img:rounded-3xl prose-blockquote:border-l-amber-900 dark:prose-blockquote:border-l-amber-600 prose-blockquote:bg-amber-50/30 dark:prose-blockquote:bg-amber-900/10 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            skipHtml
+            components={{ a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" /> }}
+          >
             {article.content}
           </ReactMarkdown>
         </motion.div>

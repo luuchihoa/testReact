@@ -3,15 +3,16 @@ import { Megaphone, Link2, Send, History, Clock, CheckCircle2, Inbox, AlertCircl
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminContext } from "./AdminContext.jsx";
 import { sendBroadcastNotification, fetchRecentBroadcasts } from "./dataLayer.js";
-import { Spinner } from "../ui/StudentShared.jsx";
+import { Spinner } from "../ui/Skeleton.jsx";
 
-// Hằng số Easing chuẩn của Design System
+// Hằng số Easing chuẩn
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 const TITLE_MAX = 120;
 const MESSAGE_MAX = 1000;
 
 function relativeTime(iso) {
+  if (!iso) return "Không xác định";
   const d = new Date(iso);
   const diffMs = Date.now() - d.getTime();
   const min = Math.round(diffMs / 60000);
@@ -27,7 +28,8 @@ function relativeTime(iso) {
 /* ============================================================
    MODAL XÁC NHẬN (BOTTOM SHEET TRÊN MOBILE)
    ============================================================ */
-function ConfirmSheet({ open, title, onCancel, onConfirm, busy }) {
+// Bọc bằng React.memo để tránh re-render khi gõ phím ở form bên ngoài
+const ConfirmSheet = React.memo(({ open, title, onCancel, onConfirm, busy }) => {
   return (
     <AnimatePresence>
       {open && (
@@ -60,16 +62,14 @@ function ConfirmSheet({ open, title, onCancel, onConfirm, busy }) {
               </div>
             </div>
             <div className="flex flex-col-reverse sm:flex-row gap-3 mt-8">
-              {/* Nút Phụ */}
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={busy}
-                className="inline-flex flex-1 items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50"
               >
                 Huỷ bỏ
               </button>
-              {/* Nút Chính */}
               <button
                 type="button"
                 onClick={onConfirm}
@@ -85,38 +85,55 @@ function ConfirmSheet({ open, title, onCancel, onConfirm, busy }) {
       )}
     </AnimatePresence>
   );
-}
+});
 
 export default function BroadcastTab() {
   const { showToast } = useAdminContext();
 
-  const [title,   setTitle]   = useState("");
+  const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [link,    setLink]    = useState("");
+  const [link, setLink] = useState("");
+  
   const [sending, setSending] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const [history,        setHistory]        = useState([]);
+  const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  
+  // Sửa lỗi State không được sử dụng
   const [justSentId, setJustSentId] = useState(null);
 
   const messageRef = useRef(null);
-  const isMobile = window.innerWidth < 768;
+  
+  // Khắc phục lỗi Responsive bằng State động
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      setHistory(await fetchRecentBroadcasts());
+      const data = await fetchRecentBroadcasts();
+      setHistory(data);
+      return data; // Trả về data để dùng ngay lập tức
     } catch (err) {
       console.error("load broadcast history error:", err);
       showToast("Không tải được lịch sử thông báo", "error");
+      return [];
     } finally {
       setHistoryLoading(false);
     }
   }, [showToast]);
 
-  useEffect(() => { loadHistory(); }, [loadHistory]);
+  useEffect(() => { 
+    loadHistory(); 
+  }, [loadHistory]);
 
+  // Tự động điều chỉnh chiều cao textarea
   useEffect(() => {
     const el = messageRef.current;
     if (!el) return;
@@ -124,22 +141,36 @@ export default function BroadcastTab() {
     el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
   }, [message]);
 
-  const requestSend = (e) => {
+  // Bọc useCallback để tối ưu bộ nhớ
+  const requestSend = useCallback((e) => {
     e.preventDefault();
-    const t = title.trim();
-    const m = message.trim();
-    if (!t || !m) { showToast("Cần nhập đủ tiêu đề và nội dung", "warning"); return; }
+    if (!title.trim() || !message.trim()) { 
+      showToast("Cần nhập đủ tiêu đề và nội dung", "warning"); 
+      return; 
+    }
     setConfirmOpen(true);
-  };
+  }, [title, message, showToast]);
 
-  const handleConfirmSend = async () => {
+  // Bọc useCallback và bổ sung logic hiển thị hiệu ứng thành công
+  const handleConfirmSend = useCallback(async () => {
     setSending(true);
     try {
       await sendBroadcastNotification(title.trim(), message.trim(), link.trim());
       showToast("Đã gửi thông báo chung thành công", "success");
-      setTitle(""); setMessage(""); setLink("");
+      
+      setTitle(""); 
+      setMessage(""); 
+      setLink("");
       setConfirmOpen(false);
-      await loadHistory();
+      
+      // Load lại lịch sử và lấy ID mới nhất để tạo hiệu ứng
+      const newData = await loadHistory();
+      if (newData.length > 0) {
+        setJustSentId(newData[0].id);
+        // Tự động tắt hiệu ứng CheckCircle sau 4 giây
+        setTimeout(() => setJustSentId(null), 4000);
+      }
+      
     } catch (err) {
       console.error("send broadcast error:", err);
       showToast(err?.message || "Gửi thông báo thất bại", "error");
@@ -147,7 +178,7 @@ export default function BroadcastTab() {
     } finally {
       setSending(false);
     }
-  };
+  }, [title, message, link, loadHistory, showToast]);
 
   const titleLeft = TITLE_MAX - title.length;
   const msgLeft = MESSAGE_MAX - message.length;
@@ -157,7 +188,7 @@ export default function BroadcastTab() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: APPLE_EASE }}
-      className="flex flex-col gap-6 pb-24 sm:pb-0"
+      className="flex flex-col gap-6 pb-24 sm:pb-0 relative"
     >
       {/* ---------- Form soạn thông báo ---------- */}
       <form
@@ -265,10 +296,14 @@ export default function BroadcastTab() {
                     whileInView={{ opacity: 1, y: 0 }} 
                     viewport={{ once: true, margin: isMobile ? "-20px" : "0px" }}
                     transition={{ duration: 0.5, delay: i * 0.05, ease: APPLE_EASE }}
-                    className="px-6 py-5 flex items-start gap-4 transition-colors duration-300 hover:bg-amber-50/40 dark:hover:bg-amber-900/10"
+                    className={`px-6 py-5 flex items-start gap-4 transition-colors duration-300 md:hover:bg-amber-50/40 dark:hover:bg-amber-900/10 ${justSentId === h.id ? "bg-emerald-50/30 dark:bg-emerald-900/10" : ""}`}
                   >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-white dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 shadow-sm mt-0.5">
-                      {justSentId === h.id ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Megaphone className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-white dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 shadow-sm mt-0.5 transition-colors duration-300">
+                      {justSentId === h.id ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Megaphone className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 mb-2">

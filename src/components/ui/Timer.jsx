@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 export function formatTime(sec) {
   const m = Math.floor(sec / 60);
@@ -7,26 +7,18 @@ export function formatTime(sec) {
 }
 
 /**
- * QuizTimer — đếm ngược dạng chữ (mm:ss), dùng cho QuizContent.jsx
- * (đếm ngược tổng thời gian làm bài). API giữ NGUYÊN như cũ:
- *   <QuizTimer duration={config.time} onTimeUp={autoSubmit} />
- * `running` là tùy chọn mới, mặc định true => hành vi y hệt bản cũ
- * (chạy liên tục từ lúc mount tới khi hết giờ).
+ * QuizTimer — Đếm ngược dạng chữ
  */
 export function QuizTimer({
   duration,
   onTimeUp,
   running = true,
-  className = "text-2xl font-extrabold text-red-600 tracking-wider",
+  // Đổi sang font-serif và màu amber/red chuẩn hệ thống
+  className = "text-[22px] sm:text-[24px] font-extrabold font-serif text-amber-700 dark:text-amber-500 tracking-wider tabular-nums",
 }) {
   const [timeLeft, setTimeLeft] = useState(duration);
   const timerRef = useRef(null);
 
-  // Luôn giữ bản mới nhất của onTimeUp trong ref, KHÔNG đưa onTimeUp vào
-  // dependency của effect chạy interval bên dưới. Nếu không, mỗi lần
-  // component cha re-render (vd: khi chọn đáp án) tạo ra 1 hàm onTimeUp
-  // mới => effect bị huỷ + setInterval mới được tạo lại từ đầu chu kỳ
-  // 1 giây => đồng hồ bị khựng đúng lúc người dùng thao tác.
   const onTimeUpRef = useRef(onTimeUp);
   useEffect(() => {
     onTimeUpRef.current = onTimeUp;
@@ -46,24 +38,13 @@ export function QuizTimer({
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-    // chỉ phụ thuộc `running` — interval chạy liên tục xuyên suốt,
-    // không bị ảnh hưởng bởi việc component cha re-render
   }, [running]);
 
   return <span className={className}>{formatTime(timeLeft)}</span>;
 }
 
 /**
- * QuizTimerBar — thanh tiến trình đếm ngược theo TỪNG CÂU HỎI, dùng cho DoVui.jsx.
- * Dùng requestAnimationFrame để mượt, hỗ trợ pause/resume (vd khi guide-modal mở).
- *
- * Props:
- *  - duration: tổng thời gian 1 câu (ms), mặc định 30000
- *  - running: đang chạy hay tạm dừng
- *  - resetKey: đổi giá trị (vd index câu hỏi hiện tại) để timer reset về đầu
- *  - onTimeUp: hết giờ
- *  - onFinalRush: gọi mỗi giây trong `warnAtMs` cuối (để phát tick)
- *  - warnAtMs: ngưỡng tính là "sắp hết giờ", mặc định 3000ms
+ * QuizTimerBar — Thanh tiến trình đếm ngược
  */
 export function QuizTimerBar({
   duration = 30_000,
@@ -87,7 +68,6 @@ export function QuizTimerBar({
     }
   };
 
-  // Reset mỗi khi resetKey đổi (sang câu hỏi mới)
   useEffect(() => {
     stop();
     remainingRef.current = duration;
@@ -95,12 +75,11 @@ export function QuizTimerBar({
     lastSecRef.current = null;
     if (barRef.current) {
       barRef.current.style.width = "0%";
-      barRef.current.className = "h-full rounded-full bg-green-400 transition-none";
+      // Đồng bộ màu thanh an toàn
+      barRef.current.className = "h-full rounded-full bg-emerald-500 transition-none";
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
-  // Chạy / tạm dừng theo `running`, tiếp tục từ điểm dừng (không reset)
   useEffect(() => {
     if (!running) {
       stop();
@@ -119,8 +98,8 @@ export function QuizTimerBar({
         barRef.current.style.width = `${progress * 100}%`;
         if (remaining <= warnAtMs && !warnedRef.current) {
           warnedRef.current = true;
-          barRef.current.className =
-            "h-full rounded-full bg-red-500 animate-pulse transition-none";
+          // Đồng bộ màu thanh cảnh báo
+          barRef.current.className = "h-full rounded-full bg-red-500 animate-pulse transition-none";
         }
       }
 
@@ -144,14 +123,13 @@ export function QuizTimerBar({
 
     rafRef.current = requestAnimationFrame(tick);
     return stop;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
   return (
-    <div className="w-full h-2 my-3 rounded-full bg-black/20 overflow-hidden">
+    <div className="w-full h-2 my-3 rounded-full bg-stone-200 dark:bg-stone-800 overflow-hidden shadow-inner">
       <div
         ref={barRef}
-        className="h-full rounded-full bg-green-400 transition-none"
+        className="h-full rounded-full bg-emerald-500 transition-none"
         style={{ width: "0%" }}
       />
     </div>
@@ -159,12 +137,7 @@ export function QuizTimerBar({
 }
 
 /**
- * QuizTimerRing — đồng hồ đếm ngược dạng VÒNG TRÒN (kiểu Apple Watch ring /
- * iOS Clock), dùng cho DoVui bản UI mới. Đổi màu theo mức độ khẩn cấp:
- * xanh lá (an toàn) → cam (sắp hết) → đỏ + nhấp nháy (nguy cấp).
- *
- * Props giống QuizTimerBar (duration, running, resetKey, onTimeUp, onFinalRush)
- * + warnAtMs/dangerAtMs để chỉnh ngưỡng đổi màu, size/strokeWidth để chỉnh kích thước.
+ * QuizTimerRing — Đồng hồ đếm ngược dạng vòng tròn
  */
 export function QuizTimerRing({
   duration = 30_000,
@@ -176,7 +149,7 @@ export function QuizTimerRing({
   dangerAtMs = 5_000,
   rushAtMs = 3_000,
   size = 52,
-  strokeWidth = 4,
+  strokeWidth = 4.5,
 }) {
   const rafRef = useRef(null);
   const circleRef = useRef(null);
@@ -197,7 +170,6 @@ export function QuizTimerRing({
     }
   };
 
-  // Reset khi sang câu mới (resetKey đổi)
   useEffect(() => {
     stop();
     remainingRef.current = duration;
@@ -206,10 +178,8 @@ export function QuizTimerRing({
     setLabel(Math.ceil(duration / 1000));
     setStage("safe");
     if (circleRef.current) circleRef.current.style.strokeDashoffset = "0";
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
-  // Chạy / tạm dừng, tiếp tục từ điểm dừng
   useEffect(() => {
     if (!running) {
       stop();
@@ -255,10 +225,14 @@ export function QuizTimerRing({
 
     rafRef.current = requestAnimationFrame(tick);
     return stop;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
-  const stageColor = { safe: "#34C759", warn: "#FF9500", danger: "#FF375F" }[stage];
+  // Sử dụng class Tailwind để tận dụng Dark Mode thay vì mã HEX cứng
+  const stageClass = { 
+    safe: "text-emerald-500", 
+    warn: "text-amber-500", 
+    danger: "text-red-500" 
+  }[stage];
 
   return (
     <div
@@ -268,24 +242,28 @@ export function QuizTimerRing({
       aria-label={`Còn ${label} giây`}
     >
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#F2F2F7" strokeWidth={strokeWidth} />
+        <circle 
+          cx={size / 2} cy={size / 2} r={radius} 
+          fill="none" 
+          className="stroke-stone-200 dark:stroke-stone-800" 
+          strokeWidth={strokeWidth} 
+        />
         <circle
           ref={circleRef}
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
+          cx={size / 2} cy={size / 2} r={radius} 
           fill="none"
-          stroke={stageColor}
+          stroke="currentColor"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={0}
-          style={{ transition: "stroke 0.25s ease" }}
+          className={`${stageClass}`}
+          style={{ transition: "stroke-dashoffset 0.1s linear, color 0.3s ease" }}
         />
       </svg>
       <div
-        className={`absolute inset-0 flex items-center justify-center text-[13px] font-bold tabular-nums ${
-          stage === "danger" ? "text-[#FF375F] animate-pulse" : "text-gray-700"
+        className={`absolute inset-0 flex items-center justify-center text-[14px] font-bold tabular-nums font-serif transition-colors ${
+          stage === "danger" ? "text-red-500 animate-pulse" : "text-amber-950 dark:text-amber-50"
         }`}
       >
         {label}
@@ -294,5 +272,4 @@ export function QuizTimerRing({
   );
 }
 
-// Giữ nguyên cách import cũ: `import QuizTimer from "./ui/Timer.jsx"`
 export default QuizTimer;

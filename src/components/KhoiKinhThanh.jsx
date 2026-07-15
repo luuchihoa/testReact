@@ -7,25 +7,27 @@ import OverviewCards from "./khoi/OverviewCards.jsx";
 import HighlightsGrid from "./khoi/HighlightsGrid.jsx";
 import CtaSection from "./khoi/CtaSection.jsx";
 
+// Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
+const APPLE_EASE = [0.16, 1, 0.3, 1];
+
 const OVERVIEW = [
   { icon: Users,        label: "Độ tuổi",    value: "13 – 14 tuổi" },
   { icon: Clock,        label: "Thời lượng", value: "45 phút / buổi" },
-  { icon: CalendarDays, label: "Lịch học",   value: "Chủ Nhật sau Thánh Lễ" },
+  { icon: CalendarDays, label: "Lịch học",   value: "Chủ Nhật sau Lễ" },
   { icon: BookOpen,     label: "Giáo trình", value: "Kinh Thánh trọn bộ" },
 ];
 
-// Bento grid + bottom sheet modal — đặc thù khối này (danh mục 73 quyển sách Cựu/Tân Ước),
-// giữ nguyên vì phức tạp hơn list thường, tương tự JOURNEY của KhoiRuocLe.
 const TESTAMENT = [
   {
     id: "cuu-uoc",
     name: "Cựu Ước",
     icon: "📜",
     count: "46 Quyển",
-    color: "bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-800/80 hover:border-red-500/50 dark:hover:border-red-500/50",
-    badge: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/30",
-    iconBg: "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400",
-    dot: "bg-red-500",
+    // Đồng bộ Glassmorphism & Hover states[cite: 16]
+    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-red-500/40 dark:md:hover:border-red-500/40 shadow-sm",
+    badge: "text-red-700 bg-red-100/80 dark:text-red-400 dark:bg-red-900/30 border border-red-200/50 dark:border-red-800/30",
+    iconBg: "bg-red-100/80 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-800/30",
+    dot: "bg-red-500 shadow-sm",
     desc: "Hành trình từ tạo dựng đến lời hứa cứu độ — giao ước giữa Thiên Chúa và dân Người qua các thời đại.",
     books: [
       { group: "Ngũ Thư", items: ["Sáng Thế (St)", "Xuất Hành (Xh)", "Lêvi (Lv)", "Dân Số (Ds)", "Đệ Nhị Luật (Đnl)"] },
@@ -50,10 +52,10 @@ const TESTAMENT = [
     name: "Tân Ước",
     icon: "✝️",
     count: "27 Quyển",
-    color: "bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-800/80 hover:border-rose-500/50 dark:hover:border-rose-500/50",
-    badge: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-950/30",
-    iconBg: "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400",
-    dot: "bg-rose-500",
+    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-rose-500/40 dark:md:hover:border-rose-500/40 shadow-sm",
+    badge: "text-rose-700 bg-rose-100/80 dark:text-rose-400 dark:bg-rose-900/30 border border-rose-200/50 dark:border-rose-800/30",
+    iconBg: "bg-rose-100/80 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/30",
+    dot: "bg-rose-500 shadow-sm",
     desc: "Tin Mừng Đức Giêsu Kitô — Ngôi Lời nhập thể, chịu chết và phục sinh để cứu chuộc nhân loại.",
     books: [
       { group: "Tin Mừng", items: ["Mát-thêu (Mt)", "Mác-cô (Mc)", "Lu-ca (Lc)", "Gio-an (Ga)"] },
@@ -74,12 +76,11 @@ const TESTAMENT = [
 
 const METHODS = [
   { icon: Map,      title: "Bản đồ Kinh Thánh",      desc: "Học qua bản đồ địa lý Thánh Kinh — các em nhìn thấy hành trình của dân Chúa bằng mắt." },
-  { icon: Scroll,   title: "Kể chuyện sáng tạo",     desc: "Đóng vai, vẽ tranh hoặc viết tiếp câu chuyện Kinh Thánh từ góc nhìn của một nhân vật." },
-  { icon: Layers,   title: "Kinh Thánh & cuộc sống", desc: "Mỗi câu chuyện gắn với 1 tình huống thực tế — giúp các em áp dụng Lời Chúa vào đời thường." },
-  { icon: BookOpen, title: "Ghi nhớ Lời Chúa",       desc: "Học thuộc lòng một câu Kinh Thánh mỗi buổi — tạo kho tàng Lời Chúa trong trí nhớ suốt đời." },
+  { icon: Scroll,   title: "Kể chuyện sáng tạo",     desc: "Đóng vai, vẽ tranh hoặc viết tiếp câu chuyện từ góc nhìn của một nhân vật." },
+  { icon: Layers,   title: "Kinh Thánh & cuộc sống", desc: "Mỗi câu chuyện gắn với 1 tình huống thực tế — giúp áp dụng Lời Chúa vào đời thường." },
+  { icon: BookOpen, title: "Ghi nhớ Lời Chúa",       desc: "Học thuộc lòng một câu Kinh Thánh mỗi buổi — tạo kho tàng Lời Chúa trong trí nhớ." },
 ];
 
-// Ngưỡng breakpoint md của Tailwind — dùng để đồng bộ giữa CSS và JS logic (drag/animation)
 const MOBILE_BREAKPOINT = 768;
 
 export default function KhoiKinhThanh() {
@@ -87,8 +88,6 @@ export default function KhoiKinhThanh() {
   const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
   const sheetY = useMotionValue(0);
 
-  // Theo dõi viewport bằng state thay vì đọc window.innerWidth trực tiếp trong JSX:
-  // tránh crash khi SSR và đảm bảo re-render đúng khi resize/xoay màn hình.
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
   );
@@ -122,7 +121,6 @@ export default function KhoiKinhThanh() {
     };
   }, [selectedTestament, sheetY, lenis]);
 
-  // Đóng modal bằng phím Escape — cải thiện accessibility cho bottom sheet
   useEffect(() => {
     if (!selectedTestament) return;
     const handleKeyDown = (e) => {
@@ -133,24 +131,26 @@ export default function KhoiKinhThanh() {
   }, [selectedTestament]);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 dark:bg-stone-950 dark:text-stone-50 antialiased overflow-x-hidden selection:bg-red-500/20 dark:selection:bg-red-500/30 transition-colors duration-500">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-900 dark:bg-[#1C1917] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-red-500/20 dark:selection:bg-red-500/30 transition-colors duration-500">
 
       <HeroSection
         heroRef={heroRef}
         heroY={heroY}
         fadeUp={fadeUp}
         lenis={lenis}
-        sectionBgClass="bg-gradient-to-b from-white via-[#faf8f5] to-transparent dark:from-stone-900 dark:via-stone-950"
+        sectionBgClass="bg-gradient-to-b from-white via-[#FDFBF7] to-[#FDFBF7] dark:from-[#1C1917] dark:via-[#191614] dark:to-[#191614]"
         glowClass="bg-red-500/5 dark:bg-red-500/10"
         eyebrowIcon={BookOpen}
         eyebrowLabel="Khối Kinh Thánh"
-        eyebrowClass="bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-300 border border-red-500/20 dark:border-red-500/30 shadow-sm"
+        eyebrowClass="bg-red-100/80 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200/50 dark:border-red-800/30 shadow-sm"
         titleLine1="Lời Chúa —"
         titleLine2="nền tảng đức tin"
         titleGradientClass="bg-gradient-to-r from-red-600 via-rose-600 to-red-800 dark:from-red-400 dark:via-rose-400 dark:to-red-300"
         description="Kinh Thánh không chỉ là một cuốn sách cổ — đó là thư tình Thiên Chúa gửi cho con người qua mọi thời đại. Khối Kinh Thánh dẫn các em vào hành trình khám phá 73 quyển sách thiêng liêng đầy sống động."
         primaryCtaLabel="Xem chương trình học"
         primaryCtaTargetId="noi-dung"
+        // Chỉnh màu nút bấm theo Theme Khối
+        primaryCtaClass="bg-red-600 md:hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-400"
         secondaryCtaLabel="Đăng ký Nhập Học"
         secondaryCtaTo="/tuyển-sinh#dang-ky"
         image={{ src: "/images/khoikinhthanh.avif", alt: "Khối Kinh Thánh" }}
@@ -160,12 +160,12 @@ export default function KhoiKinhThanh() {
 
       <OverviewCards items={OVERVIEW} />
 
-      {/* TESTAMENT BENTO GRID — đặc thù khối này, giữ nguyên vì phức tạp hơn list thường */}
-      <section id="noi-dung" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-12 relative z-20">
-        <div className="max-w-2xl text-left space-y-3 mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-red-600 dark:text-red-400">Chương trình</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight inline-block px-1 -mx-1">Hành trình qua 73 quyển sách</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed inline-block px-1 -mx-1">
+      {/* TESTAMENT BENTO GRID */}
+      <section id="noi-dung" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
+        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-red-600 dark:text-red-400 ml-1">Chương trình</p>
+          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Hành trình qua 73 quyển sách</h2>
+          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
             Từ "Khởi đầu Thiên Chúa sáng tạo" đến lời kết "Amen" của sách Khải Huyền — một dòng chảy cứu độ trải dài hàng ngàn năm lịch sử, được các em khám phá theo từng quyển sách.
           </p>
         </div>
@@ -177,45 +177,50 @@ export default function KhoiKinhThanh() {
               initial={{ opacity: 0, y: mc.yOffset }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={vp}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
+              transition={{ duration: 0.5, delay: i * 0.05, ease: APPLE_EASE }}
               onClick={() => setSelectedTestament(t)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedTestament(t); }}
-              className={`group text-left rounded-[1.75rem] border p-6 flex flex-col justify-between min-h-[190px] cursor-pointer transition-all duration-300 bg-white dark:bg-stone-900 hover:shadow-xl hover:shadow-stone-200/30 dark:hover:shadow-none ${t.color}`}
+              className={`group text-left rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col justify-between min-h-[220px] cursor-pointer transition-all duration-300 md:hover:shadow-lg active:scale-[0.98] ${t.color}`}
             >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl select-none">{t.icon}</span>
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${t.badge}`}>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[28px] select-none filter drop-shadow-sm">{t.icon}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${t.badge}`}>
                     {t.count}
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-stone-900 dark:text-stone-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors mb-2">{t.name}</h3>
-                <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-3">{t.desc}</p>
+                <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hoverhover:text-red-600 dark:group-hover:text-red-400 transition-colors mb-2.5">{t.name}</h3>
+                <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium line-clamp-3">{t.desc}</p>
               </div>
-              <span className={`self-start mt-4 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${t.badge}`}>
-                Xem danh mục
-              </span>
+              
+              <div className="mt-5 flex items-center gap-2">
+                <span className={`text-[11px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full ${t.badge}`}>
+                  Xem danh mục
+                </span>
+              </div>
             </motion.div>
           ))}
 
-          {/* Lời Chúa Quote Card tích hợp Bento — đặc thù khối này */}
+          {/* Lời Chúa Quote Card tích hợp Bento */}
           <motion.div
             initial={{ opacity: 0, y: mc.yOffset }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={vp}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="rounded-[1.75rem] border p-6 flex flex-col justify-between bg-red-500/5 dark:bg-red-500/10 border-red-500/20 text-left sm:col-span-2"
+            transition={{ duration: 0.5, delay: 0.3, ease: APPLE_EASE }}
+            className="rounded-[24px] sm:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 p-6 sm:p-8 flex flex-col justify-between bg-red-50/50 dark:bg-red-900/10 text-left sm:col-span-2 shadow-sm"
           >
             <div className="flex items-start gap-4">
-              <Flame className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-1 fill-current" />
-              <p className="text-sm font-semibold leading-relaxed italic text-stone-800 dark:text-stone-200">
+              <div className="w-10 h-10 rounded-full bg-red-100/80 dark:bg-red-900/40 border border-red-200/50 dark:border-red-800/30 flex items-center justify-center flex-shrink-0 shadow-sm mt-1">
+                <Flame className="w-5 h-5 text-red-600 dark:text-red-400 fill-current" />
+              </div>
+              <p className="text-[16px] sm:text-[18px] font-medium font-serif leading-relaxed italic text-amber-950 dark:text-amber-50 mt-1.5">
                 "Lời Thiên Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường con đi."
               </p>
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-red-600/80 dark:text-red-400/80 mt-4 text-right">
-              Thánh Vịnh 119,105
+            <p className="text-[11px] font-bold uppercase tracking-widest text-red-700/80 dark:text-red-400/80 mt-6 text-right">
+              — Thánh Vịnh 119,105
             </p>
           </motion.div>
         </div>
@@ -224,48 +229,51 @@ export default function KhoiKinhThanh() {
         <AnimatePresence>
           {selectedTestament && (
             <>
+              {/* Lớp nền đen kính mờ */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: APPLE_EASE }}
                 onClick={() => setSelectedTestament(null)}
-                className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm z-50 pointer-events-auto"
+                className="fixed inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm z-50 pointer-events-auto"
               />
 
               <div data-lenis-prevent className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
                 <motion.div
                   role="dialog"
                   aria-modal="true"
-                  aria-labelledby="khoi-testament-title"
                   drag={isMobile ? "y" : false}
                   dragConstraints={{ top: 0, bottom: 0 }}
                   dragElastic={{ top: 0.1, bottom: 0.6 }}
                   onDragEnd={handleDragEnd}
                   style={{ y: sheetY }}
-                  initial={{ opacity: 0, y: isMobile ? "100%" : 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: isMobile ? "100%" : 20 }}
-                  transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
-                  className="relative w-full md:max-w-xl pb-16 md:pb-0 rounded-t-[2.5rem] md:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-2xl pointer-events-auto max-h-[88vh] md:max-h-[80vh] flex flex-col overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl text-stone-900 dark:text-stone-50"
+                  initial={{ opacity: 0, y: isMobile ? "100%" : 30, scale: isMobile ? 1 : 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: isMobile ? "100%" : 20, scale: isMobile ? 1 : 0.95 }}
+                  transition={{ duration: 0.4, ease: APPLE_EASE }}
+                  // Đồng bộ Glassmorphism vào Panel Modal
+                  className="relative w-full md:max-w-xl pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex justify-center pt-3 pb-2 md:hidden touch-none">
+                  {/* Thanh kéo pull-tab trên Mobile */}
+                  <div className="flex justify-center pt-4 pb-2 md:hidden touch-none active:cursor-grabbing">
                     <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
                   </div>
 
-                  <div className="flex items-start gap-4 p-6 pb-4 touch-none">
-                    <div className="w-12 h-12 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center shadow-inner flex-shrink-0 text-xl select-none">
+                  {/* Header của Modal */}
+                  <div className="flex items-center gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl select-none ${selectedTestament.iconBg}`}>
                       {selectedTestament.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 id="khoi-testament-title" className="font-extrabold text-xl tracking-tight text-stone-900 dark:text-white leading-tight">{selectedTestament.name}</h3>
-                      <p className="text-xs text-red-600 dark:text-red-400 font-bold mt-1 tracking-wide">{selectedTestament.count}</p>
+                      <h3 className="font-extrabold font-serif text-[22px] tracking-tight leading-tight truncate">{selectedTestament.name}</h3>
+                      <p className="text-[12px] text-red-600 dark:text-red-400 font-bold uppercase tracking-widest mt-1.5">{selectedTestament.count}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedTestament(null)}
-                      aria-label="Đóng"
-                      className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90"
+                      className="flex-shrink-0 w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-colors md:hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-90 text-stone-500"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
@@ -273,31 +281,28 @@ export default function KhoiKinhThanh() {
                     </button>
                   </div>
 
-                  <div className="h-px bg-stone-200/60 dark:bg-stone-800/60 mx-6 flex-shrink-0" />
-
-                  <div className="p-6 pt-4 space-y-5 overflow-y-auto overscroll-contain flex-1 text-left">
+                  {/* Nội dung danh sách */}
+                  <div className="p-6 sm:p-8 pt-4 space-y-6 overflow-y-auto overscroll-contain flex-1 text-left">
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
                         Ý nghĩa cốt lõi
                       </h4>
-                      <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
+                      <p className="text-[14.5px] leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
                         {selectedTestament.desc}
                       </p>
                     </div>
 
-                    <div className="h-px bg-stone-100 dark:bg-stone-800/50" />
-
-                    <div className="space-y-5">
+                    <div className="space-y-6">
                       {selectedTestament.books.map((group, j) => (
-                        <div key={j}>
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                        <div key={j} className="bg-stone-50/50 dark:bg-stone-900/30 p-4 sm:p-5 rounded-2xl border border-amber-900/5 dark:border-amber-100/5">
+                          <h4 className="text-[12px] font-bold uppercase tracking-widest text-amber-900 dark:text-amber-500 mb-3.5">
                             {group.group}
                           </h4>
-                          <ul className="space-y-1.5">
+                          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 gap-x-4">
                             {group.items.map((item, k) => (
-                              <li key={k} className="flex items-start gap-2.5 text-sm text-stone-700 dark:text-stone-300 font-medium leading-relaxed">
-                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2 ${selectedTestament.dot}`} />
-                                {item}
+                              <li key={k} className="flex items-center gap-3 text-[14px] text-stone-700 dark:text-stone-300 font-medium">
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${selectedTestament.dot}`} />
+                                <span className="truncate">{item}</span>
                               </li>
                             ))}
                           </ul>
@@ -317,9 +322,9 @@ export default function KhoiKinhThanh() {
         eyebrowLabel="Phương pháp giáo lý"
         title="Kinh Thánh sống động, không khô khan"
         accentTextClass="text-red-600 dark:text-red-400"
-        accentIconClass="bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400"
-        cardClass="bg-white dark:bg-stone-900"
-        sectionClassName="py-24 bg-white/40 dark:bg-stone-900/20 border-y border-stone-200/50 dark:border-stone-800/50 relative z-10"
+        accentIconClass="bg-red-100/80 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200/50 dark:border-red-800/30 shadow-sm"
+        cardClass="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10"
+        sectionClassName="py-20 relative z-10"
         mc={mc}
         vp={vp}
       />
@@ -331,12 +336,12 @@ export default function KhoiKinhThanh() {
         description="Kính mời quý Phụ huynh đăng ký để con em bước vào hành trình khám phá Lời Chúa — nền tảng vững chắc nhất cho một đời sống đức tin trường tồn."
         primaryCtaLabel="Đăng ký trực tuyến"
         primaryCtaTo="/tuyển-sinh#dang-ky"
-        primaryCtaClass="bg-red-600 hover:bg-red-500 shadow-red-600/10"
-        secondaryCtaLabel="Liên hệ Văn phòng Giáo xứ"
+        primaryCtaClass="bg-red-600 text-white md:hover:bg-red-500 shadow-sm"
+        secondaryCtaLabel="Liên hệ Văn phòng"
         secondaryCtaTo="/liên-hệ"
         mc={mc}
         vp={vp}
-        sectionClassName="py-28 max-w-3xl mx-auto px-6 text-center relative z-10"
+        sectionClassName="pt-20 pb-32 max-w-3xl mx-auto px-4 sm:px-6 text-center border-t border-amber-900/5 dark:border-amber-100/5 relative z-10"
       />
     </div>
   );

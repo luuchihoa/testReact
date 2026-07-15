@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
+import { useToast } from "../ui/ToastContext.jsx";
 import ArticleCard from "./ArticleCard.jsx";
 import { Loader2, Newspaper, Search, X, SlidersHorizontal } from "lucide-react";
 
 const PAGE_SIZE = 12;
 
 export default function ArticleList() {
+  const { showToast } = useToast();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
@@ -14,6 +16,18 @@ export default function ArticleList() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+
+  // Dùng lại role đã cache ở localStorage giống RequireAdminRoute — cho phép
+  // admin xoá nhanh 1 bài ngay trên trang công khai, không cần vào khu quản trị.
+  const isAdmin = localStorage.getItem("role") === "admin";
+
+  const handleAdminDelete = async (id) => {
+    if (!window.confirm("Xoá vĩnh viễn bài viết này? Hành động không thể hoàn tác.")) return;
+    const { error } = await supabase.from("articles").delete().eq("id", id);
+    if (error) { showToast(error.message || "Không xoá được bài viết", "error"); return; }
+    showToast("Đã xoá bài viết", "success");
+    setArticles((prev) => prev.filter((a) => a.id !== id));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -193,7 +207,13 @@ export default function ArticleList() {
             <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredArticles.map((a, i) => (
-                  <ArticleCard key={a.id} article={a} linkTo={`/bài-viết/${a.slug}`} index={i} />
+                  <ArticleCard
+                    key={a.id}
+                    article={a}
+                    linkTo={`/bài-viết/${a.slug}`}
+                    index={i}
+                    onDelete={isAdmin ? handleAdminDelete : undefined}
+                  />
                 ))}
               </AnimatePresence>
             </motion.div>

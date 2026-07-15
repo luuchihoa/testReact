@@ -1,24 +1,42 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "@tiptap/markdown";
+import { Placeholder } from "@tiptap/extensions";
+import TiptapImage from "@tiptap/extension-image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
 import { slugify } from "../../lib/slugify.js";
 import { 
-  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft, AlertCircle
+  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft, AlertCircle, Image as ImageIcon
 } from "lucide-react";
 
 const MAX_TITLE = 200;
 const MAX_SUMMARY = 300;
+
+// CSS tối thiểu bắt buộc phải có cho placeholder của TipTap — trình duyệt
+// không có cách nào thuần Tailwind để tham chiếu attr(data-placeholder) một
+// cách gọn gàng, nên giữ 1 khối <style> nhỏ, gói gọn trong class riêng
+// (.article-editor-content) để không ảnh hưởng phần nào khác của trang.
+const EDITOR_PLACEHOLDER_CSS = `
+  .article-editor-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: rgb(168 162 158 / 0.8);
+  }
+`;
 
 export default function ArticleEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const username = localStorage.getItem("username") || "";
-  const textareaRef = useRef(null);
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
@@ -32,8 +50,39 @@ export default function ArticleEditor() {
   const [status, setStatus] = useState("draft");
   const [rejectionReason, setRejectionReason] = useState(null);
 
+  // Trình soạn thảo WYSIWYG — người dùng gõ/định dạng trực quan như Word,
+  // TipTap tự chuyển đổi 2 chiều sang Markdown ở phía dưới để lưu trữ và
+  // hiển thị (ArticleDetail/ArticleCard không cần đổi gì, vẫn render
+  // Markdown qua ReactMarkdown với skipHtml như cũ — an toàn không đổi).
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        // Không cho click vào link để điều hướng ngay trong lúc soạn thảo —
+        // tránh việc gõ bài đang dở lại bị nhảy trang do lỡ tay bấm vào link.
+        link: { openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } },
+      }),
+      Markdown,
+      TiptapImage.configure({
+        HTMLAttributes: { class: "rounded-2xl" },
+      }),
+      Placeholder.configure({
+        placeholder: "Bắt đầu soạn thảo ở đây… gõ tự nhiên như Word, không cần nhớ cú pháp.",
+      }),
+    ],
+    content: "",
+    shouldRerenderOnTransaction: true,
+    editorProps: {
+      attributes: {
+        class: "article-editor-content prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-img:rounded-2xl focus:outline-none min-h-[360px]",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      setContent(editor.getMarkdown());
+    },
+  });
+
   useEffect(() => {
-    if (!id) return;
+    if (!id || !editor) return;
     let cancelled = false;
 
     (async () => {
@@ -54,13 +103,14 @@ export default function ArticleEditor() {
       setCategory(data.category || "");
       setCoverImage(data.cover_image || "");
       setContent(data.content);
+      editor.commands.setContent(data.content || "", { contentType: "markdown" });
       setStatus(data.status);
       setRejectionReason(data.rejection_reason);
       setLoading(false);
     })();
 
     return () => { cancelled = true; };
-  }, [id, navigate, showToast]);
+  }, [id, editor, navigate, showToast]);
 
   const validate = () => {
     if (title.trim().length < 3) { showToast("Tiêu đề cần ít nhất 3 ký tự", "error"); return false; }
@@ -134,46 +184,43 @@ export default function ArticleEditor() {
     }
   };
 
-  const insertMarkdown = (syntax, placeholder = "văn bản") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  // Chèn liên kết cần hỏi URL qua prompt (giữ tối giản, không thêm modal
+  // riêng) — Cancel sẽ không làm gì, còn để trống sẽ gỡ liên kết đang chọn.
+  const insertLink = () => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt("Nhập liên kết URL", previousUrl || "https://");
+    if (url === null) return;
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  };
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const currentText = textarea.value;
-    const selectedText = currentText.substring(start, end) || placeholder;
-
-    let replacement = "";
-    if (syntax === "bold") replacement = `**${selectedText}**`;
-    else if (syntax === "italic") replacement = `*${selectedText}*`;
-    else if (syntax === "heading") replacement = `\n### ${selectedText}\n`;
-    else if (syntax === "quote") replacement = `\n> ${selectedText}\n`;
-    else if (syntax === "link") replacement = `[${selectedText}](https://)`;
-    else if (syntax === "list") replacement = `\n- ${selectedText}`;
-    else if (syntax === "code") replacement = `\`${selectedText}\``;
-
-    const newText = currentText.substring(0, start) + replacement + currentText.substring(end);
-    setContent(newText);
-
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + replacement.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
+  // Chèn ảnh trực tiếp vào vị trí con trỏ — dùng URL (giống cách ảnh bìa
+  // đang nhập ở trên), không cần build tính năng tải file lên riêng.
+  const insertImage = () => {
+    if (!editor) return;
+    const url = window.prompt("Nhập liên kết ảnh (URL)");
+    if (!url) return;
+    const alt = window.prompt("Mô tả ảnh (không bắt buộc, giúp SEO)", "") || "";
+    editor.chain().focus().setImage({ src: url, alt }).run();
   };
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = content.length;
 
-  const toolbarButtons = [
-    { syntax: "bold",    title: "In đậm",       Icon: Bold },
-    { syntax: "italic",  title: "In nghiêng",   Icon: Italic },
-    { syntax: "heading", title: "Tiêu đề H3",   Icon: Heading },
-    { syntax: "quote",   title: "Trích dẫn",    Icon: Quote },
-    { syntax: "link",    title: "Chèn liên kết", Icon: Link2 },
-    { syntax: "list",    title: "Danh sách buột", Icon: List },
-    { syntax: "code",    title: "Mã nguồn",     Icon: CodeIcon },
-  ];
+  const toolbarButtons = editor ? [
+    { key: "bold",    title: "In đậm",        Icon: Bold,     isActive: editor.isActive("bold"),               action: () => editor.chain().focus().toggleBold().run() },
+    { key: "italic",  title: "In nghiêng",    Icon: Italic,   isActive: editor.isActive("italic"),             action: () => editor.chain().focus().toggleItalic().run() },
+    { key: "heading", title: "Tiêu đề",       Icon: Heading,  isActive: editor.isActive("heading", { level: 3 }), action: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
+    { key: "quote",   title: "Trích dẫn",     Icon: Quote,    isActive: editor.isActive("blockquote"),         action: () => editor.chain().focus().toggleBlockquote().run() },
+    { key: "link",    title: "Chèn liên kết", Icon: Link2,    isActive: editor.isActive("link"),               action: insertLink },
+    { key: "list",    title: "Danh sách",     Icon: List,     isActive: editor.isActive("bulletList"),         action: () => editor.chain().focus().toggleBulletList().run() },
+    { key: "code",    title: "Mã nguồn",      Icon: CodeIcon, isActive: editor.isActive("code"),               action: () => editor.chain().focus().toggleCode().run() },
+    { key: "image",   title: "Chèn ảnh",      Icon: ImageIcon, isActive: false,                                action: insertImage },
+  ] : [];
 
   if (loading) {
     return (
@@ -186,6 +233,7 @@ export default function ArticleEditor() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 px-5 sm:px-6 py-8 sm:py-10 transition-colors duration-500">
+      <style>{EDITOR_PLACEHOLDER_CSS}</style>
       <div className="max-w-3xl mx-auto">
         
         {/* Nút quay lại */}
@@ -215,7 +263,7 @@ export default function ArticleEditor() {
             {id ? "Chỉnh sửa bài viết" : "Soạn thảo bài viết mới"}
           </h1>
           <p className="text-[13.5px] font-medium text-stone-500 dark:text-stone-400 mt-1.5 leading-relaxed">
-            Hệ thống hỗ trợ định dạng Markdown chuẩn. Bạn có thể sử dụng giao diện trực quan hoặc tự gõ cú pháp.
+            Soạn trực quan như Word — hệ thống tự lưu lại dưới định dạng chuẩn, không cần biết cú pháp Markdown.
           </p>
         </motion.div>
 
@@ -348,16 +396,20 @@ export default function ArticleEditor() {
                 </button>
               </div>
 
-              {/* Helper Bar */}
-              {tab === "edit" && (
+              {/* Thanh định dạng trực quan */}
+              {tab === "edit" && editor && (
                 <div className="flex flex-wrap items-center gap-1 bg-stone-100/80 dark:bg-stone-900/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
-                  {toolbarButtons.map(({ syntax, title, Icon }) => (
+                  {toolbarButtons.map(({ key, title, Icon, isActive, action }) => (
                     <motion.button
-                      key={syntax}
+                      key={key}
                       type="button"
-                      onClick={() => insertMarkdown(syntax)}
+                      onClick={action}
                       whileTap={{ scale: 0.85 }}
-                      className="p-2 rounded-lg text-stone-600 dark:text-stone-300 md:hover:bg-white dark:md:hover:bg-stone-700 hover:shadow-sm transition-colors"
+                      className={`p-2 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm"
+                          : "text-stone-600 dark:text-stone-300 md:hover:bg-white dark:md:hover:bg-stone-700 hover:shadow-sm"
+                      }`}
                       title={title}
                     >
                       <Icon className="w-4 h-4" />
@@ -375,17 +427,13 @@ export default function ArticleEditor() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative"
                 >
-                  <textarea
-                    ref={textareaRef}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={16}
-                    placeholder="Bắt đầu soạn thảo ở đây... Hệ thống tự động nhận diện cú pháp Markdown."
-                    className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-4 text-[14.5px] font-medium leading-relaxed text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm resize-y"
-                    data-lenis-prevent
-                  />
+                  <div
+                    onClick={() => editor?.chain().focus().run()}
+                    className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 sm:px-6 py-4 shadow-inner backdrop-blur-sm cursor-text focus-within:ring-2 focus-within:ring-amber-900/30 dark:focus-within:ring-amber-500/30 focus-within:border-amber-500 transition-all"
+                  >
+                    <EditorContent editor={editor} />
+                  </div>
                   <div className="flex justify-end text-[11px] font-bold text-stone-400 dark:text-stone-500 mt-2 mr-1">
                     TỔNG CỘNG: {wordCount} TỪ · {charCount} KÝ TỰ
                   </div>
@@ -400,7 +448,13 @@ export default function ArticleEditor() {
                   className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert rounded-[20px] bg-white/60 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 shadow-inner px-6 py-6 min-h-[380px] overflow-y-auto font-medium"
                 >
                   {content.trim() ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>{content}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      skipHtml
+                      components={{ a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" /> }}
+                    >
+                      {content}
+                    </ReactMarkdown>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-stone-400 py-24">
                       <Eye className="w-8 h-8 mb-3 opacity-50" />

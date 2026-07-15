@@ -248,3 +248,64 @@ Dùng khi người dùng thao tác xong và cần tráo đổi UI (ví dụ Form
 2. Mọi Box Content có shadow cần thêm `backdrop-blur-sm` hoặc `backdrop-blur-xl` để nếu nằm đè lên pattern nền, nó tạo ra hiệu ứng kính mờ (kỹ thuật của iOS).
 3. Khi làm UI có màu đỏ (Cảnh báo/Huỷ), dùng mã màu `red-500` hoặc `red-600` kết hợp text trắng, không dùng các màu neon gắt.
 4. **Animation phải có điểm dừng:** Tất cả animation cuộn (`whileInView`) đều phải có `viewport={{ once: true }}` để tránh gây loạn nhịp, mất tập trung cho người xem khi họ cuộn lên xuống nhiều lần.
+
+
+### 7. Sử dụng CSS Media Queries (Tránh Hover trên thiết bị cảm ứng)
+
+Trên di động, sự kiện `hover` có thể bị kẹt lại. Bạn nên bao bọc các hiệu ứng hover bên trong điều kiện `@media (hover: hover)`. Điều này đảm bảo rằng hiệu ứng chỉ hoạt động trên các thiết bị có chuột hoặc con trỏ, không kích hoạt trên màn hình cảm ứng.
+
+```css
+/* Chỉ áp dụng hover nếu thiết bị hỗ trợ hover (máy tính) */
+@media (hover: hover) {
+  .button:hover {
+    background-color: #d97706; /* Màu Amber-700 */
+    transform: scale(1.02);
+  }
+}
+
+/* Ưu tiên Mobile: Thiết lập trạng thái nhấn (active) để thay thế hover */
+.button:active {
+  transform: scale(0.97);
+  background-color: #92400e; /* Màu Amber-900 */
+}
+
+```
+
+### 8. Sử dụng Tailwind CSS (Đúng chuẩn Mobile-First)
+
+Trong Tailwind, tư duy thiết kế luôn là Mobile-First. Các class cơ bản luôn áp dụng cho di động, còn các class có tiền tố `md:`, `lg:` sẽ áp dụng cho màn hình lớn hơn.
+
+* **Để xử lý hover:** Sử dụng tiền tố `hover:` đi kèm với `md:` để hiệu ứng chỉ xuất hiện trên thiết bị có con trỏ.
+
+
+* **Để xử lý active (chạm):** Sử dụng `active:` trực tiếp để phản hồi ngay lập tức trên di động.
+
+
+
+```html
+<!-- Ví dụ nút bấm tối ưu -->
+<button 
+  class="w-full sm:w-auto px-6 py-4 rounded-xl 
+         bg-amber-900 text-white 
+         active:scale-[0.97] transition-transform duration-200 
+         md:hover:bg-amber-800" 
+>
+  Đăng ký ngay
+</button>
+
+```
+
+### Các nguyên tắc vàng để tối ưu cho Mobile
+
+:
+
+* **Vùng chạm (Hit Targets):** Đảm bảo nút bấm có kích thước tối thiểu là `44px x 44px` (hoặc `h-12`/`h-14` trong Tailwind) để ngón tay có thể chạm chính xác.
+
+
+* **Active State:** Sử dụng class `active:scale-95` hoặc `active:opacity-80` để người dùng di động nhận được phản hồi ngay lập tức khi chạm vào màn hình.
+
+
+* **Tránh Hover cố định:** Đừng bao giờ dựa vào `hover` để hiển thị thông tin quan trọng (như menu con hoặc tooltip) vì người dùng di động sẽ không bao giờ nhìn thấy chúng.
+
+
+* **Overscroll Contain:** Luôn sử dụng `overscroll-contain` trên các phần tử cuộn (như modal, danh sách) để tránh việc cuộn nhầm toàn bộ trang nền phía sau.

@@ -2,9 +2,8 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, Users as UsersIcon, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { Spinner } from "../ui/StudentShared.jsx";
 import { useAdminContext } from "./AdminContext.jsx";
-import { TableSkeleton } from "../ui/Skeleton.jsx";
+import { TableSkeleton, Spinner } from "../ui/Skeleton.jsx";
 import {
   ROLE_OPTIONS, ROLE_LABELS_VI, ROLE_BADGE, AVATAR_FALLBACK,
   DOWNGRADE_ROLES, handleAvatarError,
@@ -13,6 +12,30 @@ import { updateUserRole, fetchUsersPaginated } from "./dataLayer.js";
 
 // Hằng số Easing chuẩn
 const APPLE_EASE = [0.16, 1, 0.3, 1];
+
+/* ============================================================
+   COMPONENT TÁCH RỜI (Tránh Anti-pattern Unmount/Remount)
+   ============================================================ */
+const RoleSelect = React.memo(({ userRole, username, isSaving, compact, onChange }) => (
+  <div className="relative inline-block">
+    <select
+      value={userRole}
+      disabled={isSaving}
+      onChange={(e) => onChange(username, e.target.value, userRole)}
+      className={`appearance-none rounded-full border border-black/5 dark:border-white/5 px-2 md:px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-center [text-align-last:center]
+        focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30
+        disabled:opacity-50 transition-shadow
+        dark:brightness-[1.1] dark:contrast-125
+        ${ROLE_BADGE[userRole] || ROLE_BADGE.user} ${compact ? "w-full" : ""}`}
+    >
+      {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{ROLE_LABELS_VI[r]}</option>)}
+    </select>
+    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+    {isSaving && (
+      <Spinner className="w-3.5 h-3.5 absolute -right-6 top-1/2 -translate-y-1/2" />
+    )}
+  </div>
+));
 
 export default function UsersTab() {
   const { classes, showToast, handleRoleChanged } = useAdminContext();
@@ -80,7 +103,8 @@ export default function UsersTab() {
     navigate("/", { replace: true });
   }, [navigate]);
 
-  const handleRoleChange = async (username, newRole, currentRole) => {
+  // Tối ưu hoá bộ nhớ: Bọc logic đổi quyền bằng useCallback
+  const handleRoleChange = useCallback(async (username, newRole, currentRole) => {
     if (currentRole === "teacher" && newRole !== "teacher") {
       const lop = homeroomLopOf(username);
       if (lop) {
@@ -125,28 +149,7 @@ export default function UsersTab() {
     } finally {
       setSavingUser(null);
     }
-  };
-
-  const RoleSelect = ({ u, compact }) => (
-    <div className="relative inline-block">
-      <select
-        value={u.role}
-        disabled={savingUser === u.username}
-        onChange={(e) => handleRoleChange(u.username, e.target.value, u.role)}
-        className={`appearance-none rounded-full border border-black/5 dark:border-white/5 px-2 md:px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-center [text-align-last:center]
-          focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30
-          disabled:opacity-50 transition-shadow
-          dark:brightness-[1.1] dark:contrast-125
-          ${ROLE_BADGE[u.role] || ROLE_BADGE.user} ${compact ? "w-full" : ""}`}
-      >
-        {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{ROLE_LABELS_VI[r]}</option>)}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
-      {savingUser === u.username && (
-        <Spinner className="w-3.5 h-3.5 absolute -right-6 top-1/2 -translate-y-1/2" />
-      )}
-    </div>
-  );
+  }, [homeroomLopOf, currentUsername, handleRoleChanged, handleSelfDemoted, showToast]);
 
   return (
     <motion.div 
@@ -211,7 +214,13 @@ export default function UsersTab() {
                 </div>
                 
                 <div className="flex-shrink-0 ml-2">
-                  <RoleSelect u={u} />
+                  <RoleSelect 
+                    userRole={u.role} 
+                    username={u.username} 
+                    isSaving={savingUser === u.username} 
+                    compact={true} 
+                    onChange={handleRoleChange} 
+                  />
                 </div>
               </div>
             ))}
@@ -247,7 +256,12 @@ export default function UsersTab() {
                       </div>
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <RoleSelect u={u} />
+                      <RoleSelect 
+                        userRole={u.role} 
+                        username={u.username} 
+                        isSaving={savingUser === u.username} 
+                        onChange={handleRoleChange} 
+                      />
                     </td>
                     <td className="px-4 py-3.5 text-center text-[13px] font-medium text-stone-500 dark:text-stone-400">{u.trangThai}</td>
                   </tr>

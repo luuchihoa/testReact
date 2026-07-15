@@ -596,8 +596,13 @@ CREATE POLICY "articles: public select published" ON public.articles FOR SELECT 
 CREATE POLICY "articles: author select own" ON public.articles FOR SELECT USING (author_username = public.my_username());
 CREATE POLICY "articles: admin select all" ON public.articles FOR SELECT USING (public.is_admin());
 CREATE POLICY "articles: author insert own draft" ON public.articles FOR INSERT WITH CHECK (author_username = public.my_username() AND status = 'draft');
-CREATE POLICY "articles: author update draft or rejected" ON public.articles FOR UPDATE USING (author_username = public.my_username() AND status IN ('draft', 'rejected')) WITH CHECK (author_username = public.my_username() AND status IN ('draft', 'rejected', 'pending'));
-CREATE POLICY "articles: author delete own draft" ON public.articles FOR DELETE USING (author_username = public.my_username() AND status = 'draft');
+-- Cho phép tác giả sửa cả bài đã "published" (để dùng cho nút "Ẩn bài": UPDATE
+-- status -> 'draft'). WITH CHECK vẫn không cho 'published' xuất hiện ở hàng
+-- kết quả, nên tác giả không thể tự publish hay sửa nội dung mà giữ nguyên
+-- trạng thái published qua kênh này — phải ẩn về draft rồi gửi duyệt lại.
+CREATE POLICY "articles: author update own (draft/rejected/published)" ON public.articles FOR UPDATE USING (author_username = public.my_username() AND status IN ('draft', 'rejected', 'published')) WITH CHECK (author_username = public.my_username() AND status IN ('draft', 'rejected', 'pending'));
+-- Cho phép tác giả xoá bài của mình ở bất kỳ trạng thái nào (không chỉ draft)
+CREATE POLICY "articles: author delete own" ON public.articles FOR DELETE USING (author_username = public.my_username());
 CREATE POLICY "articles: admin all" ON public.articles FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ============================================================

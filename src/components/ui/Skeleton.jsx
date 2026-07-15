@@ -1,7 +1,7 @@
 import React from "react";
 
 /* ============================================================
-   SKELETON — APPLE-STYLE, MOBILE-FIRST, DARK MODE
+   SKELETON & COMPONENTS — APPLE-STYLE, MOBILE-FIRST, DARK MODE
    ------------------------------------------------------------
    Nguyên tắc thiết kế (theo Apple HIG):
    - Bề mặt phân lớp: base -> elevated -> further elevated
@@ -64,13 +64,41 @@ export function SkeletonStyles() {
   return <style>{SHIMMER_CSS}</style>;
 }
 
-// Viên gạch cơ bản — bo góc mềm mại kiểu Apple
+// Viên gạch cơ bản — bo góc mềm mại kiểu Apple[cite: 10]
 export function Bone({ className = "" }) {
   return <div className={`skel rounded-xl ${className}`} />;
 }
 
 /* ------------------------------------------------------------
-   Header + Tabbar Skeleton
+   🌟 THÀNH PHẦN BỔ SUNG: VÒNG XOAY TẢI DỮ LIỆU (SPINNER)
+   ------------------------------------------------------------ */
+export function Spinner({ className = "w-4 h-4" }) {
+  return (
+    <svg 
+      className={`animate-spin text-current ${className}`} 
+      fill="none" 
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle 
+        className="opacity-25" 
+        cx="12" 
+        cy="12" 
+        r="10" 
+        stroke="currentColor" 
+        strokeWidth="3.5"
+      />
+      <path 
+        className="opacity-75" 
+        fill="currentColor" 
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------
+   Header + Tabbar Skeleton[cite: 10]
    ------------------------------------------------------------ */
 export function HeaderTabbarSkeleton({ tabCount = 4 }) {
   return (
@@ -88,7 +116,7 @@ export function HeaderTabbarSkeleton({ tabCount = 4 }) {
           </div>
           <Bone className="h-6 w-6 sm:h-5 sm:w-20 rounded-full flex-shrink-0" />
         </div>
-        {/* Mobile: tab bar cuộn ngang, không vỡ layout trên màn nhỏ */}
+        {/* Mobile: tab bar cuộn ngang, không vỡ layout trên màn nhỏ[cite: 10] */}
         <div className="flex gap-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-2xl p-1 w-full overflow-x-auto no-scrollbar">
           {Array.from({ length: tabCount }).map((_, i) => (
             <Bone key={i} className="h-8 w-[22%] min-w-[5.5rem] sm:w-28 rounded-xl flex-shrink-0" />
@@ -100,7 +128,7 @@ export function HeaderTabbarSkeleton({ tabCount = 4 }) {
 }
 
 /* ------------------------------------------------------------
-   Danh sách có avatar (StudentListPanel)
+   Danh sách có avatar (StudentListPanel)[cite: 10]
    ------------------------------------------------------------ */
 export function ListRowsSkeleton({ rows = 6 }) {
   return (
@@ -123,14 +151,14 @@ export function ListRowsSkeleton({ rows = 6 }) {
 }
 
 /* ------------------------------------------------------------
-   Bảng dữ liệu chuẩn chỉnh (Mô phỏng chính xác border & layout thật)
+   Bảng dữ liệu chuẩn chỉnh (Mô phỏng chính xác border & layout thật)[cite: 10]
    ------------------------------------------------------------ */
 export function TableSkeleton({ rows = 6, columns = 6 }) {
   return (
     <div className="fade-in-up bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none overflow-hidden">
       <SkeletonStyles />
 
-      {/* MOBILE: Layout dạng Card rút gọn — ưu tiên chạm dễ, thoáng dòng */}
+      {/* MOBILE: Layout dạng Card rút gọn — ưu tiên chạm dễ, thoáng dòng[cite: 10] */}
       <div className="md:hidden flex flex-col divide-y divide-black/5 dark:divide-white/10">
         {Array.from({ length: Math.min(rows, 5) }).map((_, i) => (
           <div key={i} className="p-4 flex flex-col gap-3">
@@ -150,7 +178,7 @@ export function TableSkeleton({ rows = 6, columns = 6 }) {
         ))}
       </div>
 
-      {/* DESKTOP: Bảng chia cột tỷ lệ thực tế */}
+      {/* DESKTOP: Bảng chia cột tỷ lệ thực tế[cite: 10] */}
       <div className="hidden md:block">
         <div className="bg-black/[0.02] dark:bg-white/[0.03] border-b border-black/5 dark:border-white/10 flex gap-4 px-6 py-3.5">
           <Bone className="h-3.5 w-8" />
@@ -180,7 +208,7 @@ export function TableSkeleton({ rows = 6, columns = 6 }) {
 }
 
 /* ------------------------------------------------------------
-   Khối biểu mẫu nhập liệu (FormBlockSkeleton)
+   Khối biểu mẫu nhập liệu (FormBlockSkeleton)[cite: 10]
    ------------------------------------------------------------ */
 export function FormBlockSkeleton() {
   return (
@@ -188,7 +216,7 @@ export function FormBlockSkeleton() {
       <SkeletonStyles />
       <Bone className="h-8 w-44 rounded-xl" />
 
-      {/* Khối Điểm số */}
+      {/* Khối Điểm số[cite: 10] */}
       <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none p-4 sm:p-5 flex flex-col gap-3">
         <Bone className="h-4 w-28 mb-1" />
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 sm:gap-3">
@@ -198,7 +226,7 @@ export function FormBlockSkeleton() {
         </div>
       </div>
 
-      {/* Khối Điểm danh nhanh */}
+      {/* Khối Điểm danh nhanh[cite: 10] */}
       <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none p-4 sm:p-5 flex flex-col gap-4">
         <Bone className="h-4 w-36 mb-1" />
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
@@ -211,7 +239,7 @@ export function FormBlockSkeleton() {
         </div>
       </div>
 
-      {/* Khối tổng kết bổ sung */}
+      {/* Khối tổng kết bổ sung[cite: 10] */}
       <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none p-4 sm:p-5 flex flex-col gap-3">
         <Bone className="h-4 w-40 mb-1" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
@@ -225,7 +253,7 @@ export function FormBlockSkeleton() {
 }
 
 /* ------------------------------------------------------------
-   Nội dung tab Admin (AdminTabSkeleton)
+   Nội dung tab Admin (AdminTabSkeleton)[cite: 10]
    ------------------------------------------------------------ */
 export function AdminTabSkeleton() {
   return (
@@ -248,7 +276,7 @@ export function AdminTabSkeleton() {
 }
 
 /* ------------------------------------------------------------
-   Trang tổng quát (PageContentSkeleton)
+   Trang tổng quát (PageContentSkeleton)[cite: 10]
    ------------------------------------------------------------ */
 export function PageContentSkeleton() {
   return (
@@ -280,7 +308,7 @@ export function PageContentSkeleton() {
 }
 
 /* ------------------------------------------------------------
-   Hàng thẻ thống kê (StatCardsSkeleton) — DashboardTab
+   Hàng thẻ thống kê (StatCardsSkeleton) — DashboardTab[cite: 10]
    ------------------------------------------------------------ */
 export function StatCardsSkeleton({ count = 4 }) {
   return (
@@ -300,7 +328,7 @@ export function StatCardsSkeleton({ count = 4 }) {
 }
 
 /* ------------------------------------------------------------
-   Lưới thẻ chọn (CardsGridSkeleton) — vd. ClassPicker trong GradesTab
+   Lưới thẻ chọn (CardsGridSkeleton) — vd. ClassPicker trong GradesTab[cite: 10]
    ------------------------------------------------------------ */
 export function CardsGridSkeleton({ count = 6 }) {
   return (
@@ -324,7 +352,7 @@ export function CardsGridSkeleton({ count = 6 }) {
 }
 
 /* ------------------------------------------------------------
-   Danh sách 2 cột song song (SplitListSkeleton)
+   Danh sách 2 cột song song (SplitListSkeleton)[cite: 10]
    vd. ClassRosterPanel: "Đã xếp lớp" | "Thêm học sinh"
    Mobile: xếp dọc thành 2 khối, không chia cột chật.
    ------------------------------------------------------------ */
@@ -348,9 +376,9 @@ export function SplitListSkeleton({ rows = 6 }) {
 }
 
 /* ------------------------------------------------------------
-   Bố cục Sidebar + Chi tiết (SidebarDetailSkeleton)
+   Bố cục Sidebar + Chi tiết (SidebarDetailSkeleton)[cite: 10]
    vd. ArticlesTab: danh sách bài chờ duyệt + nội dung bài đang chọn
-   Mobile: sidebar trở thành dải cuộn ngang phía trên chi tiết.
+   Mobile: sidebar trở thành dải cuộn nang phía trên chi tiết.
    ------------------------------------------------------------ */
 export function SidebarDetailSkeleton({ items = 4 }) {
   return (
@@ -385,14 +413,14 @@ export function SidebarDetailSkeleton({ items = 4 }) {
 }
 
 /* ------------------------------------------------------------
-   Tab "Thành tích" của học sinh (AchievementSkeleton)
+   Tab "Thành tích" của học sinh (AchievementSkeleton)[cite: 10]
    ------------------------------------------------------------ */
 export function AchievementSkeleton() {
   return (
     <div className="flex flex-col gap-4 sm:gap-5 fade-in-up">
       <SkeletonStyles />
 
-      {/* Thẻ tổng hợp — Điểm TB / Học lực / Hạnh kiểm / Vị thứ */}
+      {/* Thẻ tổng hợp — Điểm TB / Học lực / Hạnh kiểm / Vị thứ[cite: 10] */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
@@ -405,10 +433,10 @@ export function AchievementSkeleton() {
         ))}
       </div>
 
-      {/* Banner trạng thái */}
+      {/* Banner trạng thái[cite: 10] */}
       <Bone className="h-11 w-full rounded-2xl opacity-80" />
 
-      {/* Điểm danh */}
+      {/* Điểm danh[cite: 10] */}
       <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none p-4">
         <Bone className="h-4 w-28 mb-3" />
         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
@@ -431,7 +459,7 @@ export function AchievementSkeleton() {
         </div>
       </div>
 
-      {/* Bảng điểm chi tiết */}
+      {/* Bảng điểm chi tiết[cite: 10] */}
       <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-black/5 dark:border-white/10 shadow-sm dark:shadow-none p-4">
         <div className="flex items-center justify-between mb-3">
           <Bone className="h-4 w-32" />
@@ -455,7 +483,7 @@ export function AchievementSkeleton() {
 }
 
 /* ------------------------------------------------------------
-   Màn hình xác thực quyền (AuthGateSkeleton)
+   Màn hình xác thực quyền (AuthGateSkeleton)[cite: 10]
    ------------------------------------------------------------ */
 export function AuthGateSkeleton() {
   return (

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CalendarDays, User, Clock } from "lucide-react";
+import { CalendarDays, User, Clock, Trash2 } from "lucide-react";
 import ArticleStatusBadge from "./ArticleStatusBadge.jsx";
 
 function formatDateVi(dateStr) {
@@ -12,12 +12,23 @@ function formatDateVi(dateStr) {
 // Thứ tự xuất hiện trong danh sách (index) quyết định độ trễ vào — tạo hiệu
 // ứng lần lượt thay vì tất cả bật lên cùng lúc. Giới hạn ở 8 phần tử đầu để
 // những trang có nhiều bài viết không phải chờ quá lâu mới thấy hết.
-export default function ArticleCard({ article, linkTo, showStatus = false, index = 0 }) {
+//
+// onDelete (tuỳ chọn): chỉ được truyền vào khi người xem là admin — hiện nút
+// xoá nhanh ngay trên thẻ mà không cần vào khu vực quản trị riêng.
+export default function ArticleCard({ article, linkTo, showStatus = false, index = 0, onDelete }) {
   // Ước tính thời gian đọc
   const wordCount = article.content
     ? article.content.trim().split(/\s+/).filter(Boolean).length
     : (article.summary || "").trim().split(/\s+/).filter(Boolean).length * 4;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  const handleDeleteClick = (e) => {
+    // Ngăn không cho click lan ra ngoài Link bọc thẻ (tránh vừa xoá vừa bị
+    // điều hướng sang trang bài viết).
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete?.(article.id);
+  };
 
   return (
     <Link to={linkTo} className="group block h-full">
@@ -45,9 +56,25 @@ export default function ArticleCard({ article, linkTo, showStatus = false, index
               {article.title?.[0]?.toUpperCase() || "B"}
             </div>
           )}
-          {showStatus && (
-            <div className="absolute top-3 right-3">
-              <ArticleStatusBadge status={article.status} />
+          {(showStatus || onDelete) && (
+            <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+              {showStatus && <ArticleStatusBadge status={article.status} />}
+              {onDelete && (
+                <motion.button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.045 + 0.15 }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Xoá bài viết (Quản trị)"
+                  aria-label="Xoá bài viết"
+                  className="group/del w-9 h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-stone-900/70 text-red-600 dark:text-red-400 ring-1 ring-black/5 dark:ring-white/10 shadow-sm backdrop-blur-md transition-all duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:hover:bg-red-600 md:hover:text-white md:hover:ring-red-600 focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  <Trash2 className="w-4 h-4 transition-transform duration-200 md:group-hover/del:scale-110" strokeWidth={2.25} />
+                </motion.button>
+              )}
             </div>
           )}
         </div>

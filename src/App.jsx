@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 const ReactLenisLazy = lazy(() => 
@@ -62,10 +62,10 @@ const ArticleEditor = lazyWithRetry(() => import("./components/articles/ArticleE
 const DashboardTab    = lazyWithRetry(() => import("./components/admin/DashboardTab.jsx"));
 const UsersTab        = lazyWithRetry(() => import("./components/admin/UsersTab.jsx"));
 const ClassesTab      = lazyWithRetry(() => import("./components/admin/ClassesTab.jsx"));
-const AdminGradesTab     = lazyWithRetry(() => import("./components/admin/GradesTab.jsx"));
-const ReportsTab      = lazyWithRetry(() => import("./components/admin/ReportsTab"));
+const AdminGradesTab  = lazyWithRetry(() => import("./components/admin/GradesTab.jsx"));
+const ReportsTab      = lazyWithRetry(() => import("./components/admin/reports/ReportsTab.jsx"));
 const BroadcastTab    = lazyWithRetry(() => import("./components/admin/BroadcastTab.jsx"));
-const ArticlesTab     = lazyWithRetry(() => import("./components/admin/ArticlesTab.jsx"));
+const ArticlesTab     = lazyWithRetry(() => import("./components/admin/articles/ArticlesTab.jsx"));
 const DangKyTab       = lazyWithRetry(() => import("./components/admin/DangKyTab.jsx"));
 const GopYTab         = lazyWithRetry(() => import("./components/admin/GopYTab.jsx"));
 
@@ -85,27 +85,35 @@ const fontSizeMap = {
   xl: "text-xl",
 };
 
-const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) => (
-  <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
-    {/* Thanh điều hướng Header */}
-    <Header 
-      toggleModal={toggleModal} 
-      isLogin={isLogin} 
-      setIsLogin={setIsLogin} 
-      handleClose={handleClose}
-    />
-    
-    {/* Không gian nội dung chính tối ưu hóa khoảng cách thiết bị di động */}
-    <main className="w-full flex-grow">
-      <Suspense fallback={<PageLoader />}>
-        <Outlet context={{ toggleModal, isLogin, setIsLogin }} />
-      </Suspense>
-    </main>
-    
-    {/* Chân trang Footer */}
-    <Footer />
-  </div>
-);
+const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) => {
+  const location = useLocation();
+  const decodedPath = decodeURIComponent(location.pathname);
+  const isDashboard = decodedPath.startsWith("/quản-trị") || decodedPath.startsWith("/quản-lý-học-sinh");
+
+  return (
+    <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
+      {/* Thanh điều hướng Header */}
+      {!isDashboard && (
+        <Header 
+          toggleModal={toggleModal} 
+          isLogin={isLogin} 
+          setIsLogin={setIsLogin} 
+          handleClose={handleClose}
+        />
+      )}
+      
+      {/* Không gian nội dung chính tối ưu hóa khoảng cách thiết bị di động */}
+      <main className="w-full flex-grow">
+        <Suspense fallback={<PageLoader />}>
+          <Outlet context={{ toggleModal, isLogin, setIsLogin }} />
+        </Suspense>
+      </main>
+      
+      {/* Chân trang Footer */}
+      {!isDashboard && <Footer />}
+    </div>
+  );
+};
 
 export default function App() {
   const [fontSize, setFontSize] = useState("base");

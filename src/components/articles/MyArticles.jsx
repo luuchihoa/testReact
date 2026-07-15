@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../ui/ToastContext.jsx";
 import ArticleStatusBadge from "./ArticleStatusBadge.jsx";
-import { Plus, Loader2, FileText, Pencil, Trash2, Send, AlertCircle } from "lucide-react";
+import { Plus, Loader2, FileText, Pencil, Trash2, Send, AlertCircle, EyeOff } from "lucide-react";
 
 function formatDateVi(dateStr) {
   if (!dateStr) return "—";
@@ -40,8 +40,19 @@ export default function MyArticles() {
     fetchMine();
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Xoá bài viết nháp này? Hành động không thể hoàn tác.")) return;
+  const handleHide = async (id) => {
+    if (!window.confirm("Ẩn bài viết này khỏi trang công khai? Bài viết sẽ chuyển về trạng thái Nháp — bạn có thể chỉnh sửa và gửi duyệt lại bất cứ lúc nào.")) return;
+    const { error } = await supabase.from("articles").update({ status: "draft" }).eq("id", id);
+    if (error) { showToast(error.message || "Không ẩn được bài viết", "error"); return; }
+    showToast("Đã ẩn bài viết, chuyển về trạng thái Nháp", "success");
+    fetchMine();
+  };
+
+  const handleDelete = async (id, status) => {
+    const confirmMsg = status === "published"
+      ? "Xoá vĩnh viễn bài viết ĐÃ ĐĂNG này? Bài sẽ biến mất khỏi trang công khai ngay lập tức. Hành động không thể hoàn tác."
+      : "Xoá bài viết này? Hành động không thể hoàn tác.";
+    if (!window.confirm(confirmMsg)) return;
     const { error } = await supabase.from("articles").delete().eq("id", id);
     if (error) { showToast(error.message || "Không xoá được bài viết", "error"); return; }
     showToast("Đã xoá bài viết", "success");
@@ -157,9 +168,15 @@ export default function MyArticles() {
                     <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto w-full sm:w-auto justify-end border-t sm:border-0 border-amber-900/10 dark:border-amber-100/10 pt-3 sm:pt-0 mt-2 sm:mt-0">
                       
                       {a.status === "published" && (
-                        <Link to={`/bài-viết/${a.slug}`} className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-[12px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 transition-all active:scale-[0.97] md:hover:bg-amber-100 dark:md:hover:bg-amber-900/40">
-                          Xem bài viết
-                        </Link>
+                        <>
+                          <Link to={`/bài-viết/${a.slug}`} className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-[12px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 transition-all active:scale-[0.97] md:hover:bg-amber-100 dark:md:hover:bg-amber-900/40">
+                            Xem bài viết
+                          </Link>
+                          <motion.button whileTap={{ scale: 0.9 }} type="button" onClick={() => handleHide(a.id)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 transition-colors" title="Ẩn bài (chuyển về nháp)">
+                            <EyeOff className="w-4 h-4" />
+                          </motion.button>
+                        </>
                       )}
                       
                       {(a.status === "draft" || a.status === "rejected") && (
@@ -175,12 +192,11 @@ export default function MyArticles() {
                         </>
                       )}
                       
-                      {a.status === "draft" && (
-                        <motion.button whileTap={{ scale: 0.9 }} type="button" onClick={() => handleDelete(a.id)}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 md:hover:bg-red-100 dark:md:hover:bg-red-900/40 transition-colors ml-1" title="Xoá nháp">
-                          <Trash2 className="w-4 h-4" />
-                        </motion.button>
-                      )}
+                      {/* Xoá bài — áp dụng cho mọi trạng thái, không chỉ nháp */}
+                      <motion.button whileTap={{ scale: 0.9 }} type="button" onClick={() => handleDelete(a.id, a.status)}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 md:hover:bg-red-100 dark:md:hover:bg-red-900/40 transition-colors ml-1" title="Xoá bài viết">
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
                     </div>
                   </div>
                 </motion.div>
