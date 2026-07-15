@@ -33,28 +33,28 @@ export default defineConfig({
     chunkSizeWarningLimit: 600, // Tăng nhẹ giới hạn để tránh cảnh báo thừa
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            // 1. Gom các animation framework cốt lõi (Tải sau)
-            if (id.includes('gsap') || id.includes('lenis')) {
-              return 'vendor-animation';
-            }
+        // manualChunks(id) {
+        //   if (id.includes('node_modules')) {
+        //     // 1. Gom các animation framework cốt lõi (Tải sau)
+        //     if (id.includes('gsap') || id.includes('lenis')) {
+        //       return 'vendor-animation';
+        //     }
             
-            // 2. Gom React + tất cả các thư viện phụ thuộc trực tiếp vào lõi React (Đảm bảo không lệch context)
-            if (
-              id.includes('react') || 
-              id.includes('react-dom') || 
-              id.includes('react-router') || 
-              id.includes('lucide-react') || 
-              id.includes('framer-motion')
-            ) {
-              return 'vendor-react-core';
-            }
+        //     // 2. Gom React + tất cả các thư viện phụ thuộc trực tiếp vào lõi React (Đảm bảo không lệch context)
+        //     if (
+        //       id.includes('react') || 
+        //       id.includes('react-dom') || 
+        //       id.includes('react-router') || 
+        //       id.includes('lucide-react') || 
+        //       id.includes('framer-motion')
+        //     ) {
+        //       return 'vendor-react-core';
+        //     }
             
-            // 3. Các thư viện tiện ích độc lập khác (nếu có)
-            return 'vendor-utils';
-          }
-        },
+        //     // 3. Các thư viện tiện ích độc lập khác (nếu có)
+        //     return 'vendor-utils';
+        //   }
+        // },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash][extname]',
