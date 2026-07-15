@@ -12,13 +12,13 @@ const ReactLenisLazy = lazy(() =>
   })
 );
 
-import Header from "./components/Header.jsx";
-import Home from "./components/Home.jsx";
-import Footer from "./components/Footer.jsx";
+import Header from "./components/layout/Header.jsx";
+import Home from "./pages/Home.jsx";
+import Footer from "./components/layout/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
 import { PageContentSkeleton } from "./components/ui/Skeleton.jsx";
-import TeacherLayout , { RequireTeacherRoute } from "./components/teacher/TeacherLayout.jsx";
-import AdminLayout , { RequireAdminRoute } from "./components/admin/AdminLayout.jsx";
+import TeacherLayout , { RequireTeacherRoute } from "./features/teacher/TeacherLayout.jsx";
+import AdminLayout , { RequireAdminRoute } from "./features/admin/AdminLayout.jsx";
 
 const lazyWithRetry = (componentImport) =>
   lazy(() =>
@@ -33,46 +33,46 @@ const lazyWithRetry = (componentImport) =>
     })
   );
 
-const ModalLogin    = lazyWithRetry(() => import("./components/ModalLogin.jsx"));
-const TaiKhoanLayout = lazyWithRetry(() => import("./components/TaiKhoanLayout.jsx"));
-const Contact       = lazyWithRetry(() => import("./components/Contact.jsx"));
-const Setting       = lazyWithRetry(() => import("./components/Setting.jsx"));
-const KhoiChienCon  = lazyWithRetry(() => import("./components/KhoiChienCon.jsx"));
-const KhoiRuocLe    = lazyWithRetry(() => import("./components/KhoiRuocLe.jsx"));
-const KhoiThemSuc   = lazyWithRetry(() => import("./components/KhoiThemSuc.jsx"));
-const KhoiPhungVu   = lazyWithRetry(() => import("./components/KhoiPhungVu.jsx"));
-const KhoiKinhThanh = lazyWithRetry(() => import("./components/KhoiKinhThanh.jsx"));
-const KhoiVaoDoi    = lazyWithRetry(() => import("./components/KhoiVaoDoi.jsx"));
-const TaiLieu       = lazyWithRetry(() => import("./components/TaiLieu.jsx"));
-const TestQuiz      = lazyWithRetry(() => import("./components/TestQuiz.jsx"));
-const BaoMat        = lazyWithRetry(() => import("./components/BaoMat.jsx"));
-const QuyDinh       = lazyWithRetry(() => import("./components/QuyDinh.jsx"));
-const GioiThieu     = lazyWithRetry(() => import("./components/GioiThieu.jsx"));
-const TuyenSinh     = lazyWithRetry(() => import("./components/TuyenSinh.jsx"));
-const LichSinhHoat  = lazyWithRetry(() => import("./components/LichSinhHoat.jsx"));
-const LichHoc       = lazyWithRetry(() => import("./components/LichHoc.jsx"));
-const GioiTre       = lazyWithRetry(() => import("./components/GioiTre.jsx"));
+const ModalLogin    = lazyWithRetry(() => import("./components/ui/ModalLogin.jsx"));
+const TaiKhoanLayout = lazyWithRetry(() => import("./components/layout/TaiKhoanLayout.jsx"));
+const Contact       = lazyWithRetry(() => import("./pages/Contact.jsx"));
+const Setting       = lazyWithRetry(() => import("./pages/Setting.jsx"));
+const KhoiChienCon  = lazyWithRetry(() => import("./pages/KhoiChienCon.jsx"));
+const KhoiRuocLe    = lazyWithRetry(() => import("./pages/KhoiRuocLe.jsx"));
+const KhoiThemSuc   = lazyWithRetry(() => import("./pages/KhoiThemSuc.jsx"));
+const KhoiPhungVu   = lazyWithRetry(() => import("./pages/KhoiPhungVu.jsx"));
+const KhoiKinhThanh = lazyWithRetry(() => import("./pages/KhoiKinhThanh.jsx"));
+const KhoiVaoDoi    = lazyWithRetry(() => import("./pages/KhoiVaoDoi.jsx"));
+const TaiLieu       = lazyWithRetry(() => import("./pages/TaiLieu.jsx"));
+const TestQuiz      = lazyWithRetry(() => import("./components/shared/TestQuiz.jsx"));
+const BaoMat        = lazyWithRetry(() => import("./pages/BaoMat.jsx"));
+const QuyDinh       = lazyWithRetry(() => import("./pages/QuyDinh.jsx"));
+const GioiThieu     = lazyWithRetry(() => import("./pages/GioiThieu.jsx"));
+const TuyenSinh     = lazyWithRetry(() => import("./pages/TuyenSinh.jsx"));
+const LichSinhHoat  = lazyWithRetry(() => import("./pages/LichSinhHoat.jsx"));
+const LichHoc       = lazyWithRetry(() => import("./pages/LichHoc.jsx"));
+const GioiTre       = lazyWithRetry(() => import("./pages/GioiTre.jsx"));
 
 // ── Bài viết ──
-const ArticleList   = lazyWithRetry(() => import("./components/articles/ArticleList.jsx"));
-const ArticleDetail = lazyWithRetry(() => import("./components/articles/ArticleDetail.jsx"));
-const MyArticles    = lazyWithRetry(() => import("./components/articles/MyArticles.jsx"));
-const ArticleEditor = lazyWithRetry(() => import("./components/articles/ArticleEditor.jsx"));
+const ArticleList   = lazyWithRetry(() => import("./features/articles/ArticleList.jsx"));
+const ArticleDetail = lazyWithRetry(() => import("./features/articles/ArticleDetail.jsx"));
+const MyArticles    = lazyWithRetry(() => import("./features/articles/MyArticles.jsx"));
+const ArticleEditor = lazyWithRetry(() => import("./features/articles/ArticleEditor.jsx"));
 
-const DashboardTab    = lazyWithRetry(() => import("./components/admin/DashboardTab.jsx"));
-const UsersTab        = lazyWithRetry(() => import("./components/admin/UsersTab.jsx"));
-const ClassesTab      = lazyWithRetry(() => import("./components/admin/ClassesTab.jsx"));
-const AdminGradesTab  = lazyWithRetry(() => import("./components/admin/GradesTab.jsx"));
-const ReportsTab      = lazyWithRetry(() => import("./components/admin/reports/ReportsTab.jsx"));
-const BroadcastTab    = lazyWithRetry(() => import("./components/admin/BroadcastTab.jsx"));
-const ArticlesTab     = lazyWithRetry(() => import("./components/admin/articles/ArticlesTab.jsx"));
-const DangKyTab       = lazyWithRetry(() => import("./components/admin/DangKyTab.jsx"));
-const GopYTab         = lazyWithRetry(() => import("./components/admin/GopYTab.jsx"));
+const DashboardTab    = lazyWithRetry(() => import("./features/admin/DashboardTab.jsx"));
+const UsersTab        = lazyWithRetry(() => import("./features/admin/UsersTab.jsx"));
+const ClassesTab      = lazyWithRetry(() => import("./features/admin/ClassesTab.jsx"));
+const AdminGradesTab  = lazyWithRetry(() => import("./features/admin/GradesTab.jsx"));
+const ReportsTab      = lazyWithRetry(() => import("./features/admin/reports/ReportsTab.jsx"));
+const BroadcastTab    = lazyWithRetry(() => import("./features/admin/BroadcastTab.jsx"));
+const ArticlesTab     = lazyWithRetry(() => import("./features/admin/articles/ArticlesTab.jsx"));
+const DangKyTab       = lazyWithRetry(() => import("./features/admin/DangKyTab.jsx"));
+const GopYTab         = lazyWithRetry(() => import("./features/admin/GopYTab.jsx"));
 
-const TeacherSummaryTab   = lazyWithRetry(() => import("./components/teacher/SummaryTab.jsx"));
-const TeacherRosterTab    = lazyWithRetry(() => import("./components/teacher/RosterTab.jsx"));
-const TeacherAttendanceTab= lazyWithRetry(() => import("./components/teacher/AttendanceTab.jsx"));
-const TeacherGradesTab    = lazyWithRetry(() => import("./components/teacher/GradesTab.jsx"));
+const TeacherSummaryTab   = lazyWithRetry(() => import("./features/teacher/SummaryTab.jsx"));
+const TeacherRosterTab    = lazyWithRetry(() => import("./features/teacher/RosterTab.jsx"));
+const TeacherAttendanceTab= lazyWithRetry(() => import("./features/teacher/AttendanceTab.jsx"));
+const TeacherGradesTab    = lazyWithRetry(() => import("./features/teacher/GradesTab.jsx"));
 
 function PageLoader() {
   return <PageContentSkeleton />;
