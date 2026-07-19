@@ -21,7 +21,7 @@ const DEFAULT_MC = {
  * Gộp toàn bộ boilerplate motion (hero parallax, fadeUp variants, viewport config)
  * từng bị lặp lại giữa KhoiChienCon.jsx, KhoiRuocLe.jsx, ... về một chỗ.
  *
- * Dùng: const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
+ * Dùng: const { heroRef, lenis, mc, heroY, fadeUp, heroReveal, vp } = useKhoiMotion();
  */
 export function useKhoiMotion() {
   const heroRef = useRef(null);
@@ -38,11 +38,24 @@ export function useKhoiMotion() {
     visible: (d = 0) => ({
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 90, damping: 15, mass: 0.8, delay: mc.delay(d) },
+      transition: { 
+        duration: mc.duration(0.8),
+        ease: [0.16, 1, 0.3, 1], 
+        delay: mc.delay(d) 
+      },
+    }),
+  };
+
+  const heroReveal = {
+    hidden: { opacity: 0, y: 24 },
+    visible: (d = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 100, damping: 18, mass: 0.7, delay: mc.delay(d) },
     }),
   };
 
   const vp = mc.vp();
 
-  return { heroRef, lenis, mc, heroY, fadeUp, vp };
+  return { heroRef, lenis, mc, heroY, fadeUp, heroReveal, vp };
 }

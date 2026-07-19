@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 import { useNavigate } from "react-router-dom";
 import {
   Type, Moon, Sun, Bell, CalendarDays, Trophy,
@@ -85,7 +86,7 @@ function Toggle({ checked, onChange }) {
 
 function FontPills({ fontSize, setFontSize }) {
   return (
-    <div className="flex bg-stone-100/80 dark:bg-stone-800 p-0.5 rounded-lg select-none border border-black/5 dark:border-white/5">
+    <div className="flex bg-stone-100/80 dark:bg-stone-800 p-1 rounded-xl select-none border border-black/5 dark:border-white/5 items-center gap-0.5">
       {FONT_OPTIONS.map((opt) => {
         const active = fontSize === opt.key;
         return (
@@ -93,10 +94,11 @@ function FontPills({ fontSize, setFontSize }) {
             key={opt.key}
             type="button"
             onClick={() => setFontSize(opt.key)}
-            className={`px-2.5 py-1.5 rounded-md text-[13px] font-bold transition-all ${
+            style={{ fontSize: opt.px, lineHeight: 1 }}
+            className={`w-9 h-8 flex items-center justify-center rounded-lg font-bold transition-all duration-200 ${
               active
-                ? "bg-white dark:bg-stone-600 text-amber-900 dark:text-white shadow-sm"
-                : "text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-300"
+                ? "bg-white dark:bg-stone-600 text-amber-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5"
+                : "text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-stone-200/50 dark:hover:bg-stone-700/50"
             }`}
             aria-label={opt.label}
           >
@@ -108,12 +110,19 @@ function FontPills({ fontSize, setFontSize }) {
   );
 }
 
+import { supabase } from "../lib/supabase.js";
+import { useToast } from "../components/ui/ToastContext.jsx";
+
 export default function Setting({ fontSize, setFontSize }) {
+  const { heroReveal } = usePageMotion();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  
   const [darkMode, setDarkMode] = useState(false);
   const [notifSystem, setNotifSystem] = useState(true);
   const [notifSchedule, setNotifSchedule] = useState(true);
-  const [notifScore, setNotifScore] = useState(false);
+  const [notifScore, setNotifScore] = useState(true);
+  const [username, setUsername] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -121,21 +130,56 @@ export default function Setting({ fontSize, setFontSize }) {
     setDarkMode(isDark);
     document.documentElement.classList.toggle("dark", isDark);
 
-    setNotifSystem(localStorage.getItem("notif") !== "false");
-    setNotifSchedule(localStorage.getItem("notifSchedule") !== "false");
-    setNotifScore(localStorage.getItem("notifScore") === "true");
+    const loadPreferences = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const { data: userRow } = await supabase.from("users").select("username, notif_system, notif_schedule, notif_score").eq("auth_id", session.user.id).single();
+        if (userRow) {
+          setUsername(userRow.username);
+          setNotifSystem(userRow.notif_system ?? true);
+          setNotifSchedule(userRow.notif_schedule ?? true);
+          setNotifScore(userRow.notif_score ?? true);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadPreferences();
   }, []);
 
   const handleDarkMode = (val) => { setDarkMode(val); localStorage.setItem("theme", val ? "dark" : "light"); document.documentElement.classList.toggle("dark", val); };
-  const handleNotifSystem = (val) => { setNotifSystem(val); localStorage.setItem("notif", val); };
-  const handleNotifSchedule = (val) => { setNotifSchedule(val); localStorage.setItem("notifSchedule", val); };
-  const handleNotifScore = (val) => { setNotifScore(val); localStorage.setItem("notifScore", val); };
+
+  const updatePreference = async (field, val, setter) => {
+    setter(val);
+    if (!username) {
+      showToast("Vui lòng đăng nhập để lưu cài đặt", "warning");
+      return;
+    }
+    try {
+      const { error } = await supabase.from("users").update({ [field]: val }).eq("username", username);
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      showToast("Lỗi lưu cài đặt", "error");
+    }
+  };
+
+  const handleNotifSystem = (val) => updatePreference("notif_system", val, setNotifSystem);
+  const handleNotifSchedule = (val) => updatePreference("notif_schedule", val, setNotifSchedule);
+  const handleNotifScore = (val) => updatePreference("notif_score", val, setNotifScore);
 
   const currentLabel = FONT_OPTIONS.find((o) => o.key === fontSize)?.label ?? "Trung bình";
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 antialiased transition-colors duration-300">
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="mx-auto max-w-md px-4 pt-8 pb-16 relative z-10">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 antialiased transition-colors duration-500 relative overflow-hidden">
+      {/* Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-amber-200/30 dark:bg-amber-900/20 blur-[100px] rounded-full pointer-events-none" />
+      
+      {/* Background Pattern Đồng Bộ */}
+      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+
+      <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0} className="mx-auto max-w-xl px-4 pt-8 pb-16 relative z-10">
         
         <div className="mb-6 px-1 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 flex items-center justify-center shadow-sm">
@@ -176,10 +220,6 @@ export default function Setting({ fontSize, setFontSize }) {
           <Row icon={<ShieldCheck />} iconBg="#10B981" iconColor="#FFFFFF" label="Bảo mật & quyền riêng tư" onClick={() => navigate("/bảo-mật")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />
           <Row icon={<FileText />} iconBg="#3B82F6" iconColor="#FFFFFF" label="Quy định sử dụng" onClick={() => navigate("/quy-định")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />
         </SettingCard>
-
-        <p className="text-center text-[11px] font-bold text-amber-900/40 dark:text-amber-100/40 mt-12 tracking-widest uppercase">
-          BAN GIÁO LÝ · HTDC XỨ ĐOÀN MẸ MÂN CÔI
-        </p>
       </motion.div>
     </div>
   );

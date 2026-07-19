@@ -114,55 +114,88 @@ export function ScoreCell({ label, value }) {
   );
 }
 
-export function FieldRow({ icon, label, field, value, displayValue, type = "text", editingField, tempValue, setTempValue, onEdit, onBlur, options }) {
+export function FieldRow({ icon, label, field, value, displayValue, type = "text", editingField, tempValue, setTempValue, onEdit, onBlur, onCancel, options }) {
   const isEditing = editingField === field;
+
+  const handleKeyDown = (e) => { 
+    if (e.key === "Escape") { e.preventDefault(); onCancel?.(); } 
+    else if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } 
+  };
+
   return (
-    <div className="flex items-center justify-between bg-white/60 dark:bg-[#1C1917]/60 border border-amber-900/10 dark:border-amber-100/10 rounded-[20px] px-4 py-4 shadow-sm transition-all">
-      <div className="flex items-center gap-4 min-w-0 flex-1">
-        <span className="text-[22px] flex-shrink-0 drop-shadow-sm">{icon}</span>
+    <div className="flex items-center justify-between bg-white/60 dark:bg-stone-800/40 backdrop-blur-sm border border-amber-900/10 dark:border-amber-100/10 rounded-2xl px-4 py-3.5 shadow-sm overflow-hidden relative">
+      <div className="flex items-center gap-3.5 min-w-0 w-full z-10">
+        <span className="text-xl flex-shrink-0 opacity-90">{icon}</span>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mb-1">{label}</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">{label}</div>
           
-          {!isEditing && (
-            <div className="text-[15px] font-semibold text-amber-950 dark:text-amber-50 truncate">
-              {displayValue ?? value ?? "—"}
-            </div>
-          )}
-          
-          {isEditing && options && (
-            <select 
-              value={tempValue} 
-              onChange={(e) => setTempValue(e.target.value)} 
-              onBlur={onBlur} 
-              autoFocus
-              className="mt-0.5 w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:border-amber-100/20 text-[14.5px] font-medium text-amber-950 dark:text-amber-50 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-600/50 shadow-inner"
-            >
-              {options.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          )}
-          
-          {isEditing && !options && (
-            <input 
-              type={type} 
-              value={tempValue} 
-              onChange={(e) => setTempValue(e.target.value)} 
-              onBlur={onBlur} 
-              autoFocus
-              className="mt-0.5 w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:border-amber-100/20 text-[14.5px] font-medium text-amber-950 dark:text-amber-50 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-600/50 shadow-inner" 
-            />
-          )}
+          <div className="relative h-[24px]">
+            <AnimatePresence mode="popLayout">
+              {!isEditing ? (
+                <motion.div
+                  key="display"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 text-[15px] font-bold text-amber-950 dark:text-amber-50 truncate"
+                >
+                  {displayValue ?? value ?? "—"}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="edit"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 -top-1"
+                >
+                  {options ? (
+                    <select
+                      value={tempValue}
+                      onChange={(e) => setTempValue(e.target.value)}
+                      onBlur={onBlur}
+                      onKeyDown={handleKeyDown}
+                      autoFocus
+                      className="px-2.5 py-1 rounded-lg border border-amber-900/20 dark:border-amber-100/20 text-[14px] font-bold bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 text-amber-950 dark:text-amber-50 w-full"
+                    >
+                      {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type={type}
+                      value={tempValue}
+                      onChange={(e) => setTempValue(e.target.value)}
+                      onBlur={onBlur}
+                      onKeyDown={handleKeyDown}
+                      autoFocus
+                      max={type === "date" ? new Date().toISOString().slice(0, 10) : undefined}
+                      className="px-2.5 py-1 rounded-lg border border-amber-900/20 dark:border-amber-100/20 text-[14px] font-bold bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 w-full text-amber-950 dark:text-amber-50"
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
       
-      {!isEditing && (
-        <motion.button 
-          {...pressable(0.9)} 
-          onClick={onEdit}
-          className="flex-shrink-0 w-9 h-9 ml-3 rounded-full bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5 hover:bg-amber-100 dark:hover:bg-amber-900/40 flex items-center justify-center text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400 transition-colors"
-        >
-          <Edit2 className="w-4 h-4" strokeWidth={2.5} />
-        </motion.button>
-      )}
+      <AnimatePresence>
+        {!isEditing && (
+          <motion.button
+            key="edit-btn"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            {...pressable(1.15)}
+            onClick={onEdit}
+            className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-amber-900/5 hover:bg-amber-900/10 dark:bg-amber-100/5 dark:hover:bg-amber-100/10 flex items-center justify-center text-[13px] transition-colors text-amber-800 dark:text-amber-400 ml-2"
+          >
+            ✏️
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

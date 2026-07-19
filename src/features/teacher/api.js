@@ -2,8 +2,7 @@ import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../../components/ui/StudentShared.jsx";
 import { buildSundayList, getCurrentNamHoc } from "./utils.js";
 
-// Xác định giáo viên đang đăng nhập đang chủ nhiệm lớp nào (năm học hiện tại)
-export async function fetchTeacherContext(authId) {
+export async function fetchTeacherContext(authId, requestedNamHoc) {
   const { data: teacherRow, error: teacherErr } = await supabase
     .from("users")
     .select("username, role")
@@ -14,21 +13,31 @@ export async function fetchTeacherContext(authId) {
   if (!teacherRow) throw new Error("Không tìm thấy tài khoản giáo viên");
   if (teacherRow.role !== "teacher") throw new Error("Tài khoản không có quyền giáo viên");
 
-  const namHoc = getCurrentNamHoc();
-
-  const { data: classRow, error: classErr } = await supabase
+  const { data: classRows, error: classErr } = await supabase
     .from("class_teachers")
     .select("lop, nam_hoc")
     .eq("teacher_username", teacherRow.username)
-    .eq("nam_hoc", namHoc)
-    .maybeSingle();
+    .order("nam_hoc", { ascending: false });
 
   if (classErr) throw classErr;
 
+  const current = getCurrentNamHoc();
+  const namHocs = [...new Set(classRows.map(r => r.nam_hoc))];
+  
+  // Nếu giáo viên chưa có lớp nào thì mặc định hiển thị năm hiện tại
+  if (!namHocs.includes(current)) {
+    namHocs.unshift(current);
+  }
+  
+  // Chọn năm học theo ưu tiên: requestedNamHoc > năm hiện tại (nếu có lớp) > năm gần nhất có lớp > current
+  const activeNamHoc = requestedNamHoc || (namHocs.includes(current) ? current : namHocs[0]);
+  const activeClass = classRows.find(r => r.nam_hoc === activeNamHoc);
+
   return {
     teacherUsername: teacherRow.username,
-    namHoc,
-    lop: classRow?.lop ?? null,
+    namHoc: activeNamHoc,
+    lop: activeClass?.lop ?? null,
+    availableYears: namHocs,
   };
 }
 
@@ -50,6 +59,26 @@ export async function fetchClassStudents(lop, namHoc) {
 
 // Điểm + tổng kết học kỳ + các buổi điểm danh ngoại lệ của 1 học sinh
 export async function fetchStudentAcademic(username, namHoc, hocKyInt) {
+  if (hocKyInt === 0) {
+    const { data: yearRes, error: yearErr } = await supabase
+      .from("year_summary")
+      .select("*")
+      .eq("username", username).eq("nam_hoc", namHoc).maybeSingle();
+      
+    if (yearErr) console.error("fetch year_summary error:", yearErr);
+    
+    return {
+      grades: { diem_tb: yearRes?.diem_tb ?? null },
+      term: { 
+        hoc_luc: yearRes?.hoc_luc ?? null, 
+        hanh_kiem: yearRes?.hanh_kiem ?? null, 
+        vi_thu: yearRes?.vi_thu ?? null, 
+        ghi_chu: yearRes?.ghi_chu ?? "" 
+      },
+      attendanceExceptions: [],
+    };
+  }
+
   const [gradesRes, termRes, attendanceRes] = await Promise.all([
     supabase.from("grades").select("*")
       .eq("username", username).eq("nam_hoc", namHoc).eq("hoc_ky", hocKyInt).maybeSingle(),

@@ -40,12 +40,10 @@ const SHARE_CHANNELS = [
   { key: "copy",      label: "Sao chép liên kết", Icon: Link2,      color: "#92400E" },
 ];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0 },
-};
+import { usePageMotion } from "../../hooks/usePageMotion.js";
 
 export default function ArticleDetail() {
+  const { fadeUp, vp } = usePageMotion();
   const { slug } = useParams();
   const { showToast } = useToast();
   const [article, setArticle] = useState(null);
@@ -146,13 +144,13 @@ export default function ArticleDetail() {
 
       <motion.div
         initial="hidden"
-        animate="show"
-        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
         className="max-w-3xl mx-auto px-5 sm:px-6 py-8 sm:py-12"
       >
         
         {/* Nút quay lại (Secondary Button) */}
-        <motion.div variants={fadeUp} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="mb-8">
+        <motion.div variants={fadeUp} className="mb-8">
           <Link to="/bài-viết" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13.5px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700">
             <ArrowLeft className="w-4 h-4" /> Tất cả bài viết
           </Link>
@@ -162,7 +160,6 @@ export default function ArticleDetail() {
         {article.category && (
           <motion.span
             variants={fadeUp}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block mb-4 px-3 py-1.5 rounded-lg bg-amber-50/80 dark:bg-amber-900/20 text-[11px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 border border-amber-200/50 dark:border-amber-800/30"
           >
             {article.category}
@@ -172,7 +169,6 @@ export default function ArticleDetail() {
         {/* Tiêu đề bài viết */}
         <motion.h1
           variants={fadeUp}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold font-serif text-amber-950 dark:text-amber-50 tracking-tight leading-tight mb-6"
         >
           {article.title}
@@ -181,7 +177,6 @@ export default function ArticleDetail() {
         {/* Meta thông tin chi tiết */}
         <motion.div
           variants={fadeUp}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-900/10 dark:border-amber-100/10 pb-5 mb-8 text-[13px] text-stone-500 dark:text-stone-400 font-medium"
         >
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -243,7 +238,6 @@ export default function ArticleDetail() {
         {article.cover_image && (
           <motion.div
             variants={fadeUp}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="w-full rounded-[28px] overflow-hidden shadow-sm mb-10 max-h-[460px] border border-amber-900/5 dark:border-amber-100/5 bg-white/50 dark:bg-stone-900/30"
           >
             <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
@@ -251,10 +245,12 @@ export default function ArticleDetail() {
         )}
 
         {/* Nội dung bài viết Markdown */}
-        <motion.div
-          variants={fadeUp}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-bold prose-headings:font-serif prose-headings:text-amber-950 dark:prose-headings:text-amber-50 prose-a:text-amber-900 dark:prose-a:text-amber-500 prose-img:rounded-3xl prose-blockquote:border-l-amber-900 dark:prose-blockquote:border-l-amber-600 prose-blockquote:bg-amber-50/30 dark:prose-blockquote:bg-amber-900/10 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
+        <motion.div variants={fadeUp} className="prose prose-stone dark:prose-invert prose-lg max-w-none 
+          prose-headings:font-serif prose-headings:text-amber-950 dark:prose-headings:text-amber-50 prose-headings:tracking-tight
+          prose-p:leading-relaxed prose-p:text-stone-700 dark:prose-p:text-stone-300
+          prose-a:text-amber-800 dark:prose-a:text-amber-500 prose-a:font-semibold hover:prose-a:text-amber-600
+          prose-img:rounded-[20px] prose-img:shadow-sm prose-img:mx-auto prose-img:border prose-img:border-amber-900/5 dark:prose-img:border-amber-100/5
+          prose-li:marker:text-amber-900/50 dark:prose-li:marker:text-amber-500/50 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

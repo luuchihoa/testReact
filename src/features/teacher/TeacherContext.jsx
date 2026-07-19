@@ -39,9 +39,6 @@ export function TeacherProvider({ children }) {
     (async () => {
       setLoadingContext(true);
       try {
-        // getSession() đọc phiên đã lưu cục bộ (không gọi mạng) — nhanh hơn
-        // getUser(), và ở đây chỉ cần user id để tra cứu, không cần làm mới
-        // token.
         const { data: { session } } = await supabase.auth.getSession();
         const authUser = session?.user;
         if (!authUser) throw new Error("Chưa đăng nhập");
@@ -56,6 +53,26 @@ export function TeacherProvider({ children }) {
     })();
     return () => { cancelled = true; };
   }, [showToast]);
+
+  const changeYear = useCallback(async (newYear) => {
+    if (!newYear || newYear === context?.namHoc) return;
+    
+    setStudentsInitialized(false);
+    setInitialSummary(null);
+    setStudents([]);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUser = session?.user;
+      if (!authUser) throw new Error("Chưa đăng nhập");
+      
+      const ctx = await fetchTeacherContext(authUser.id, newYear);
+      setContext(ctx);
+    } catch (err) {
+      console.error("changeYear error:", err);
+      showToast("Không chuyển được năm học", "error");
+    }
+  }, [context?.namHoc, showToast]);
 
   const reloadStudents = useCallback(async () => {
     if (!context?.lop) return;
@@ -91,6 +108,7 @@ export function TeacherProvider({ children }) {
     initialSummary,
     reloadStudents,
     handleStudentSaved,
+    changeYear,
   };
 
   return <TeacherContext.Provider value={value}>{children}</TeacherContext.Provider>;

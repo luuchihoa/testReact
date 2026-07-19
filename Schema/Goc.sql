@@ -72,6 +72,9 @@ CREATE TABLE public.users (
   avatar         TEXT,
   role           TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('user', 'admin', 'teacher', 'student')),
   trang_thai     TEXT NOT NULL DEFAULT 'Đang học' CHECK (trang_thai IN ('Đang học', 'Nghỉ học', 'Hoàn thành', 'Đang dạy', 'Nghỉ dạy')),
+  notif_system   BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_schedule BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_score    BOOLEAN NOT NULL DEFAULT TRUE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -307,7 +310,14 @@ RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_parts TEXT[] := '{}';
   v_message TEXT;
+  v_recent_id BIGINT;
+  v_notif_score BOOLEAN;
 BEGIN
+  SELECT notif_score INTO v_notif_score FROM public.users WHERE username = NEW.username;
+  IF v_notif_score = FALSE THEN
+    RETURN NEW;
+  END IF;
+
   IF TG_OP = 'UPDATE' THEN
     IF NEW.diem_mieng IS DISTINCT FROM OLD.diem_mieng AND NEW.diem_mieng IS NOT NULL THEN v_parts := array_append(v_parts, 'Điểm miệng: ' || NEW.diem_mieng); END IF;
     IF NEW.diem_15_phut IS DISTINCT FROM OLD.diem_15_phut AND NEW.diem_15_phut IS NOT NULL THEN v_parts := array_append(v_parts, 'Điểm 15 phút: ' || NEW.diem_15_phut); END IF;
@@ -327,8 +337,24 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, lop, hoc_ky, created_by)
-  VALUES ('diem', 'Điểm học kỳ ' || NEW.hoc_ky || ' đã cập nhật', v_message, '/ket-qua-hoc-tap', NEW.username, NEW.nam_hoc, NEW.lop, NEW.hoc_ky, COALESCE(NEW.updated_by, public.my_username()));
+  SELECT id INTO v_recent_id FROM public.notifications 
+  WHERE type = 'diem' 
+    AND recipient_username = NEW.username 
+    AND hoc_ky = NEW.hoc_ky
+    AND created_at > (now() - interval '30 minutes')
+  ORDER BY created_at DESC LIMIT 1;
+
+  IF v_recent_id IS NOT NULL THEN
+    UPDATE public.notifications 
+    SET message = 'Giáo viên vừa có nhiều cập nhật mới về điểm số của bạn.',
+        link = '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky,
+        created_at = now()
+    WHERE id = v_recent_id;
+  ELSE
+    INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, lop, hoc_ky, created_by)
+    VALUES ('diem', 'Điểm học kỳ ' || NEW.hoc_ky || ' đã cập nhật', v_message, '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky, NEW.username, NEW.nam_hoc, NEW.lop, NEW.hoc_ky, COALESCE(NEW.updated_by, public.my_username()));
+  END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -338,7 +364,14 @@ RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_parts TEXT[] := '{}';
   v_message TEXT;
+  v_recent_id BIGINT;
+  v_notif_score BOOLEAN;
 BEGIN
+  SELECT notif_score INTO v_notif_score FROM public.users WHERE username = NEW.username;
+  IF v_notif_score = FALSE THEN
+    RETURN NEW;
+  END IF;
+
   IF TG_OP = 'UPDATE' THEN
     IF NEW.hoc_luc IS DISTINCT FROM OLD.hoc_luc AND NEW.hoc_luc IS NOT NULL THEN v_parts := array_append(v_parts, 'Học lực: ' || NEW.hoc_luc); END IF;
     IF NEW.hanh_kiem IS DISTINCT FROM OLD.hanh_kiem AND NEW.hanh_kiem IS NOT NULL THEN v_parts := array_append(v_parts, 'Hạnh kiểm: ' || NEW.hanh_kiem); END IF;
@@ -350,8 +383,24 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, lop, hoc_ky, created_by)
-  VALUES ('tong_ket_ky', 'Tổng kết học kỳ ' || NEW.hoc_ky || ' đã cập nhật', v_message, '/ket-qua-hoc-tap', NEW.username, NEW.nam_hoc, NEW.lop, NEW.hoc_ky, COALESCE(NEW.updated_by, public.my_username()));
+  SELECT id INTO v_recent_id FROM public.notifications 
+  WHERE type = 'tong_ket_ky' 
+    AND recipient_username = NEW.username 
+    AND hoc_ky = NEW.hoc_ky
+    AND created_at > (now() - interval '30 minutes')
+  ORDER BY created_at DESC LIMIT 1;
+
+  IF v_recent_id IS NOT NULL THEN
+    UPDATE public.notifications 
+    SET message = 'Giáo viên vừa cập nhật thông tin tổng kết của bạn.',
+        link = '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky,
+        created_at = now()
+    WHERE id = v_recent_id;
+  ELSE
+    INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, lop, hoc_ky, created_by)
+    VALUES ('tong_ket_ky', 'Tổng kết học kỳ ' || NEW.hoc_ky || ' đã cập nhật', v_message, '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky, NEW.username, NEW.nam_hoc, NEW.lop, NEW.hoc_ky, COALESCE(NEW.updated_by, public.my_username()));
+  END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -361,7 +410,14 @@ RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_parts TEXT[] := '{}';
   v_message TEXT;
+  v_recent_id BIGINT;
+  v_notif_score BOOLEAN;
 BEGIN
+  SELECT notif_score INTO v_notif_score FROM public.users WHERE username = NEW.username;
+  IF v_notif_score = FALSE THEN
+    RETURN NEW;
+  END IF;
+
   IF TG_OP = 'UPDATE' THEN
     IF NEW.hoc_luc IS DISTINCT FROM OLD.hoc_luc AND NEW.hoc_luc IS NOT NULL THEN v_parts := array_append(v_parts, 'Học lực cả năm: ' || NEW.hoc_luc); END IF;
     IF NEW.hanh_kiem IS DISTINCT FROM OLD.hanh_kiem AND NEW.hanh_kiem IS NOT NULL THEN v_parts := array_append(v_parts, 'Hạnh kiểm cả năm: ' || NEW.hanh_kiem); END IF;
@@ -375,8 +431,23 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, created_by)
-  VALUES ('tong_ket_nam', 'Tổng kết năm học đã cập nhật', v_message, '/ket-qua-hoc-tap', NEW.username, NEW.nam_hoc, COALESCE(NEW.updated_by, public.my_username()));
+  SELECT id INTO v_recent_id FROM public.notifications 
+  WHERE type = 'tong_ket_nam' 
+    AND recipient_username = NEW.username 
+    AND nam_hoc = NEW.nam_hoc
+    AND created_at > (now() - interval '30 minutes')
+  ORDER BY created_at DESC LIMIT 1;
+
+  IF v_recent_id IS NOT NULL THEN
+    UPDATE public.notifications 
+    SET message = 'Giáo viên vừa cập nhật thông tin tổng kết cả năm của bạn.',
+        created_at = now()
+    WHERE id = v_recent_id;
+  ELSE
+    INSERT INTO public.notifications (type, title, message, link, recipient_username, nam_hoc, created_by)
+    VALUES ('tong_ket_nam', 'Tổng kết cả năm đã cập nhật', v_message, '/tài-khoản/thành-tích?ky=NAM', NEW.username, NEW.nam_hoc, COALESCE(NEW.updated_by, public.my_username()));
+  END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -415,19 +486,46 @@ $$;
 
 CREATE OR REPLACE FUNCTION public.get_my_notifications(p_limit INT DEFAULT 30)
 RETURNS TABLE (id BIGINT, type TEXT, title TEXT, message TEXT, link TEXT, created_at TIMESTAMPTZ, read BOOLEAN)
-LANGUAGE SQL STABLE SET search_path = public AS $$
+LANGUAGE plpgsql STABLE SET search_path = public AS $$
+DECLARE
+  v_notif_system BOOLEAN;
+BEGIN
+  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = public.my_username();
+  
+  RETURN QUERY
   SELECT n.id, n.type, n.title, n.message, n.link, n.created_at, (nr.read_at IS NOT NULL) AS read
   FROM public.notifications n
   LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = public.my_username()
-  WHERE n.recipient_username = public.my_username() OR n.recipient_username IS NULL
+  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL)
+    AND (
+      (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
+      OR
+      (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
+    )
   ORDER BY n.created_at DESC LIMIT p_limit;
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_unread_notification_count()
-RETURNS INT LANGUAGE SQL STABLE SET search_path = public AS $$
-  SELECT COUNT(*)::INT FROM public.notifications n
+RETURNS INT LANGUAGE plpgsql STABLE SET search_path = public AS $$
+DECLARE
+  v_notif_system BOOLEAN;
+  v_count INT;
+BEGIN
+  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = public.my_username();
+
+  SELECT COUNT(*)::INT INTO v_count FROM public.notifications n
   LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = public.my_username()
-  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL) AND nr.read_at IS NULL;
+  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL)
+    AND nr.read_at IS NULL
+    AND (
+      (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
+      OR
+      (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
+    );
+    
+  RETURN v_count;
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.mark_all_notifications_read()

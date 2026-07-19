@@ -65,7 +65,10 @@ const ROLE_EXTRA_ITEMS = {
     { path: "/quản-lý-học-sinh/", label: "Lớp học của tôi", icon: GraduationCap },
     { path: "/bài-viết-của-tôi", label: "Bài viết của tôi", icon: FileText },
   ],
-  student: [{ path: "/bài-viết-của-tôi", label: "Bài viết của tôi", icon: FileText }],
+  student: [
+    { path: "/tài-khoản/thành-tích", label: "Thành tích học tập", icon: GraduationCap },
+    { path: "/bài-viết-của-tôi", label: "Bài viết của tôi", icon: FileText }
+  ],
   user:    [{ path: "/bài-viết-của-tôi", label: "Bài viết của tôi", icon: FileText }],
 };
 
@@ -127,11 +130,30 @@ function useOnClickOutside(ref, handler) {
   }, [ref, handler]);
 }
 
+// Hook theo dõi vị trí cuộn chuột
+function useScrollPosition() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return isScrolled;
+}
+
 /* ═══ DESKTOP COMPONENTS ══════════════════════════════════════════ */
 function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggle, onLogin }) {
   if (!isLogin) return (
     <button type="button" onClick={onLogin}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-amber-900 dark:bg-amber-100 px-5 text-[13px] font-bold text-amber-50 dark:text-amber-950 shadow-sm md:hover:bg-amber-950 dark:md:hover:bg-amber-50 transition-colors">
+      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-amber-900 dark:bg-amber-100 px-5 text-[13px] font-bold text-amber-50 dark:text-amber-950 shadow-sm hover:bg-amber-950 dark:hover:bg-amber-50 transition-colors">
       <LogIn className="w-3.5 h-3.5" />Đăng nhập
     </button>
   );
@@ -139,7 +161,7 @@ function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggl
   return (
     <button type="button" onClick={onToggle} aria-expanded={isOpen}
       className={`flex items-center gap-2 rounded-full border transition-all pl-0.5 pr-3 py-0.5 ${
-        isOpen ? "border-amber-900/30 dark:border-amber-100/30 bg-amber-900/5 dark:bg-amber-100/10 shadow-inner" : "border-amber-900/15 dark:border-amber-100/15 bg-white/50 dark:bg-stone-800/60 md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/10"
+        isOpen ? "border-amber-900/30 dark:border-amber-100/30 bg-amber-900/5 dark:bg-amber-100/10 shadow-inner" : "border-amber-900/15 dark:border-amber-100/15 bg-white/50 dark:bg-stone-800/60 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
       }`}>
       <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: roleAccent }}>
         <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="h-full w-full object-cover" />
@@ -156,33 +178,61 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[520px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute left-1/2 -translate-x-[40%] top-full mt-3 w-[720px] rounded-[2rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
         >
-          <div className="px-5 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800/80 dark:text-amber-200/80 font-serif">Chương trình giáo lý</p>
-          </div>
-          <div className="grid grid-cols-2 gap-px bg-amber-900/5 dark:bg-amber-100/5 p-px">
-            {KHOI_ITEMS.map((khoi) => {
-              const Icon     = khoi.icon;
-              const isActive = currentPath === khoi.path;
-              return (
-                <button key={khoi.path} type="button" onClick={() => { navigate(khoi.path); onClose(); }}
-                  className={`flex items-center gap-3 px-4 py-3.5 text-left bg-[#FDFBF7] dark:bg-[#1C1917] md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20 transition-colors group ${isActive ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}
-                >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${khoi.bg} ring-1 ${isActive ? khoi.ring : "ring-transparent"} md:group-hover:ring-1 md:group-hover:${khoi.ring} transition-all`}>
-                    <Icon className="w-4 h-4" style={{ color: khoi.accent }} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={`text-sm font-semibold leading-snug ${isActive ? "text-amber-950 dark:text-amber-50" : "text-stone-700 dark:text-stone-300"}`}>{khoi.label}</p>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">{khoi.sub}</p>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex">
+            {/* Cột Danh sách Khối (2/3 chiều rộng) */}
+            <div className="w-2/3 p-5">
+              <div className="mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800/80 dark:text-amber-200/80 font-serif">Chương trình giáo lý</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {KHOI_ITEMS.map((khoi) => {
+                  const Icon     = khoi.icon;
+                  const isActive = currentPath === khoi.path;
+                  return (
+                    <button key={khoi.path} type="button" onClick={() => { navigate(khoi.path); onClose(); }}
+                      className={`flex items-center gap-3 px-4 py-3 text-left rounded-2xl bg-[#FDFBF7] dark:bg-[#1C1917] hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors group ${isActive ? "bg-amber-50 dark:bg-amber-900/20 shadow-sm" : ""}`}
+                    >
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-[14px] flex items-center justify-center ${khoi.bg} ring-1 ${isActive ? khoi.ring : "ring-transparent"} group-hover:ring-1 group-hover:${khoi.ring} transition-all`}>
+                        <Icon className="w-4 h-4" style={{ color: khoi.accent }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-[13px] font-bold leading-snug ${isActive ? "text-amber-950 dark:text-amber-50" : "text-stone-700 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-amber-100"}`}>{khoi.label}</p>
+                        <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">{khoi.sub}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Cột Nổi bật (Featured - 1/3 chiều rộng) */}
+            <div className="w-1/3 bg-gradient-to-br from-amber-100 to-amber-50/50 dark:from-stone-800 dark:to-stone-900 p-6 flex flex-col justify-between border-l border-amber-900/10 dark:border-amber-100/10">
+              <div>
+                <div className="w-10 h-10 rounded-full bg-white dark:bg-stone-800 shadow-sm flex items-center justify-center mb-4">
+                  <Star className="w-5 h-5 text-amber-500" />
+                </div>
+                <h4 className="text-sm font-bold text-amber-950 dark:text-amber-50 font-serif leading-snug mb-2">Lời Chúa cho Thiếu Nhi</h4>
+                <p className="text-[11px] text-stone-600 dark:text-stone-400 italic">"Hãy để trẻ nhỏ đến cùng Thầy, đừng ngăn cấm chúng, vì Nước Thiên Chúa thuộc về những ai giống như chúng."</p>
+                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-500 mt-2">— Mc 10, 14</p>
+              </div>
+              <button onClick={() => { navigate("/giới-thiệu"); onClose(); }} className="mt-6 w-full py-2 bg-amber-900 hover:bg-amber-800 dark:bg-amber-100 dark:hover:bg-white text-amber-50 dark:text-amber-950 rounded-xl text-xs font-bold transition-colors">
+                Tìm hiểu thêm
+              </button>
+            </div>
           </div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function Star(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+    </svg>
   );
 }
 
@@ -192,19 +242,19 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
         >
           {COMMUNITY_ITEMS.map((item, i) => {
             const Icon     = item.icon;
             const isActive = currentPath === item.path;
             return (
               <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${i !== COMMUNITY_ITEMS.length - 1 ? "border-b border-amber-900/5 dark:border-amber-100/5" : ""} ${isActive ? "bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300" : "text-stone-700 dark:text-stone-300 md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20"}`}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${i !== COMMUNITY_ITEMS.length - 1 ? "border-b border-amber-900/5 dark:border-amber-100/5" : ""} ${isActive ? "bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
               >
                 <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`} />
                 <div>
-                  <p className="text-sm font-medium">{item.label}</p>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400">{item.desc}</p>
+                  <p className="text-sm font-semibold">{item.label}</p>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{item.desc}</p>
                 </div>
               </button>
             );
@@ -215,35 +265,37 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
   );
 }
 
-function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemClick, onMarkAllRead, hasUnread }) {
+function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemClick, onMarkAllRead, hasUnread, navigate }) {
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-96 rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-2xl dark:shadow-black/40 z-50 overflow-hidden flex flex-col"
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
-            <p className="text-[13px] font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 shrink-0">
+            <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
             {hasUnread && (
               <button type="button" onClick={onMarkAllRead}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 md:hover:text-amber-800 dark:md:hover:text-amber-300 transition-colors">
-                <CheckCheck className="w-3.5 h-3.5" /> Đọc hết
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors">
+                <CheckCheck className="w-3.5 h-3.5" /> Đánh dấu đã đọc
               </button>
             )}
           </div>
 
-          <div className="max-h-[60vh] overflow-y-auto" data-lenis-prevent>
+          <div className="max-h-[50vh] overflow-y-auto" data-lenis-prevent>
             {loading && (
-              <div className="flex items-center justify-center gap-2 py-10 text-stone-400 dark:text-stone-500">
-                <Loader2 className="w-4 h-4 animate-spin" /> <span className="text-[12px]">Đang tải…</span>
+              <div className="flex items-center justify-center gap-2 py-12 text-stone-400 dark:text-stone-500">
+                <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13px] font-medium">Đang tải…</span>
               </div>
             )}
 
             {!loading && notifications.length === 0 && (
-              <div className="flex flex-col items-center gap-2 py-10 text-stone-400 dark:text-stone-600">
-                <BellOff className="w-6 h-6" />
-                <p className="text-[12px] text-stone-500 dark:text-stone-400">Chưa có thông báo nào</p>
+              <div className="flex flex-col items-center gap-3 py-12 text-stone-400 dark:text-stone-600">
+                <div className="w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                  <BellOff className="w-6 h-6" />
+                </div>
+                <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400">Bạn chưa có thông báo nào</p>
               </div>
             )}
 
@@ -252,23 +304,34 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
               return (
                 <button
                   key={n.id} type="button" onClick={() => onItemClick(n)}
-                  className={`flex w-full items-start gap-3 px-4 py-3 text-left border-b border-amber-900/5 dark:border-amber-100/5 transition-colors md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20 ${!n.read ? "bg-amber-100/40 dark:bg-amber-900/30" : ""}`}
+                  className={`flex w-full items-start gap-4 px-5 py-4 text-left border-b border-amber-900/5 dark:border-amber-100/5 transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20 ${!n.read ? "bg-amber-100/20 dark:bg-amber-900/10" : ""}`}
                 >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5 ${!n.read ? "bg-amber-200/50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400" : "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500"}`}>
-                    <Icon className="w-4 h-4" />
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${!n.read ? "bg-amber-200 dark:bg-amber-600 text-amber-900 dark:text-amber-50" : "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500"}`}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-[13px] leading-snug ${!n.read ? "font-bold text-amber-950 dark:text-amber-50" : "font-semibold text-stone-700 dark:text-stone-300"}`}>{n.title}</p>
-                      {!n.read && <span className="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />}
+                      <p className={`text-[14px] leading-snug ${!n.read ? "font-bold text-amber-950 dark:text-amber-50" : "font-semibold text-stone-700 dark:text-stone-300"}`}>{n.title}</p>
+                      {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
                     </div>
-                    <p className="text-[12px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">{n.message}</p>
-                    <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1">{timeAgoVi(n.created_at)}</p>
+                    <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
+                    <p className="text-[11px] font-medium text-stone-400 dark:text-stone-500 mt-2">{timeAgoVi(n.created_at)}</p>
                   </div>
                 </button>
               );
             })}
           </div>
+
+          {!loading && notifications.length > 0 && (
+            <div className="p-3 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shrink-0 text-center">
+              <button 
+                onClick={() => { navigate("/tài-khoản/thông-báo"); onClose(); }} 
+                className="text-[12px] font-bold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+              >
+                Xem tất cả thông báo
+              </button>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
@@ -285,7 +348,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-56 rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-3 w-56 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
             <div className="flex items-center gap-2.5">
@@ -299,7 +362,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
             </div>
           </div>
           <button type="button" onClick={() => { onOpenProfile(); onClose(); }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 dark:text-stone-300 md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20 border-b border-amber-900/10 dark:border-amber-100/10">
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 border-b border-amber-900/10 dark:border-amber-100/10 transition-colors">
             <User className="w-4 h-4 text-stone-400 dark:text-stone-500" /> Hồ sơ của tôi
           </button>
 
@@ -313,7 +376,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
                 const isActive = currentPath === item.path;
                 return (
                   <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold" : "text-stone-700 dark:text-stone-300 md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20"}`}
+                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
                     style={isActive ? { color: roleAccent, background: `${roleAccent}0f` } : undefined}
                   >
                     <Icon className="w-4 h-4" style={{ color: isActive ? roleAccent : "#a8a29e" }} />
@@ -330,7 +393,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
               const isActive = currentPath === item.path;
               return (
                 <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30" : "text-stone-700 dark:text-stone-300 md:hover:bg-amber-50 dark:md:hover:bg-amber-900/20"}`}
+                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`} />
                   {item.label}
@@ -340,7 +403,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
           </div>
           <div className="border-t border-amber-900/10 dark:border-amber-100/10">
             <button type="button" onClick={() => { onLogout(); onClose(); }}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-red-600 dark:text-red-400 md:hover:bg-red-50 dark:md:hover:bg-red-900/20">
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
               <LogOut className="w-4 h-4" /> Đăng xuất
             </button>
           </div>
@@ -452,7 +515,7 @@ function MoreMenuSheet({
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
             className="
               fixed z-[51] flex flex-col bg-[#FDFBF7] dark:bg-[#1C1917] shadow-2xl dark:shadow-black/50
-              inset-x-0 bottom-0 rounded-t-3xl max-h-[85vh]
+              inset-x-0 bottom-0 rounded-t-[2rem] max-h-[85vh]
               sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2
               sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md
               sm:rounded-3xl sm:max-h-[80vh]
@@ -467,7 +530,7 @@ function MoreMenuSheet({
               type="button"
               onClick={onClose}
               aria-label="Đóng"
-              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-amber-900/5 dark:bg-amber-100/10 flex items-center justify-center active:bg-amber-900/10 dark:active:bg-amber-100/20 md:hover:bg-amber-900/10 dark:md:hover:bg-amber-100/20 transition-colors"
+              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-amber-900/5 dark:bg-amber-100/10 flex items-center justify-center active:bg-amber-900/10 dark:active:bg-amber-100/20 transition-colors"
             >
               <X className="w-4 h-4 text-amber-900/60 dark:text-amber-100/60" strokeWidth={2.5} />
             </button>
@@ -585,7 +648,7 @@ function MoreMenuSheet({
                   <button
                     type="button"
                     onClick={() => { onLogout(); onClose(); }}
-                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[14px] font-bold active:bg-red-100 dark:active:bg-red-500/20 md:hover:bg-red-100 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-[1rem] bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[14px] font-bold active:bg-red-100 dark:active:bg-red-500/20 transition-colors"
                   >
                     <LogOut className="w-4 h-4" strokeWidth={2} />
                     Đăng xuất tài khoản
@@ -606,7 +669,7 @@ function QuickLink({ icon: Icon, label, onClick, accent = false }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 py-3.5 rounded-xl bg-white dark:bg-stone-900 border border-amber-900/5 dark:border-stone-700/50 shadow-sm dark:shadow-black/20 active:bg-amber-50 dark:active:bg-stone-800 transition-colors"
+      className="flex flex-col items-center gap-1.5 py-3.5 rounded-[1rem] bg-white dark:bg-stone-900 border border-amber-900/5 dark:border-stone-700/50 shadow-sm dark:shadow-black/20 active:bg-amber-50 dark:active:bg-stone-800 transition-colors"
     >
       <Icon className={`w-[18px] h-[18px] ${accent ? "text-amber-600 dark:text-amber-400" : "text-stone-500 dark:text-stone-400"}`} strokeWidth={1.75} />
       <span className="text-[12px] font-semibold text-stone-700 dark:text-stone-300 leading-none">{label}</span>
@@ -639,7 +702,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl border-t border-amber-900/10 dark:border-amber-100/10 shadow-[0_-4px_20px_rgba(146,64,14,0.05)] dark:shadow-black/30"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="flex h-18 items-stretch justify-around">
+        <div className="flex h-18 items-stretch justify-around px-2">
           {MOBILE_TAB_ITEMS.map((item) => {
             const active = isItemActive(item, location.pathname);
             
@@ -647,48 +710,48 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
             if (item.type === "dropdown_khoi") {
               const Icon = item.icon;
               return (
-                <button key="khoi-tab" type="button" onClick={() => setKhoiSheetOpen(true)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+                <motion.button whileTap={{ scale: 0.85, y: 2 }} key="khoi-tab" type="button" onClick={() => setKhoiSheetOpen(true)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
                 >
-                  <div className={`w-8 h-5 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
-                    <Icon className="w-4 h-4" />
+                  <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
-                </button>
+                </motion.button>
               );
             }
 
             // Xử lý nút Mở Rộng (More)
             if (item.type === "menu_more") {
               return (
-                <button key="more-tab" type="button" onClick={() => setMoreSheetOpen(true)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+                <motion.button whileTap={{ scale: 0.85, y: 2 }} key="more-tab" type="button" onClick={() => setMoreSheetOpen(true)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
                 >
-                  <div className={`w-8 h-5 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 w-12" : ""}`}>
+                  <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 w-12" : ""}`}>
                     {isLogin ? (
-                      <div className="w-4 h-4 rounded-full overflow-hidden border" style={{ borderColor: active ? (ROLE_ACCENTS[role] || ROLE_ACCENTS.user) : "#d6d3d1" }}>
+                      <div className="w-6 h-6 rounded-full overflow-hidden border-2" style={{ borderColor: active ? (ROLE_ACCENTS[role] || ROLE_ACCENTS.user) : "#d6d3d1" }}>
                         <img src={avatar || "/images/avatarDefault.avif"} className="w-full h-full object-cover" alt="" />
                       </div>
                     ) : (
-                      <Menu className="w-4 h-4" />
+                      <Menu className="w-5 h-5" />
                     )}
                   </div>
                   <span className="text-[10px] font-bold tracking-tight">{isLogin ? (username || "Tôi").split(" ").pop() : "Mở rộng"}</span>
-                </button>
+                </motion.button>
               );
             }
 
             // Xử lý các tab đường dẫn trực tiếp (Home, Lịch học, Tài liệu)
             const Icon = item.icon;
             return (
-              <button key={item.path} type="button" onClick={() => navigate(item.path)}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+              <motion.button whileTap={{ scale: 0.85, y: 2 }} key={item.path} type="button" onClick={() => navigate(item.path)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
               >
-                <div className={`w-8 h-5 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
-                  <Icon className="w-4 h-4" />
+                <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
+                  <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -702,6 +765,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const { showToast } = useToast();
   const navigate  = useNavigate();
   const location  = useLocation();
+  const isScrolled = useScrollPosition(); // Sử dụng hook cuộn chuột
 
   const [openMenu, setOpenMenu] = useState(null);
   const [avatar,   setAvatar]   = useState(() => localStorage.getItem("avatar")   || "");
@@ -716,6 +780,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const [unreadCount,   setUnreadCount]   = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading,  setNotifLoading]  = useState(false);
+  const [isRinging,     setIsRinging]     = useState(false);
 
   useEffect(() => {
     const sync = () => {
@@ -806,11 +871,40 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     }
   }, []);
 
+  // Supabase Realtime Subscription thay cho setInterval
   useEffect(() => {
-    if (!isLogin) { setUnreadCount(0); setNotifications([]); return; }
+    if (!isLogin) { 
+      setUnreadCount(0); 
+      setNotifications([]); 
+      return; 
+    }
+    
+    // Fetch initial count
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 60000);
-    return () => clearInterval(interval);
+
+    // Subscribe to new notifications
+    const channel = supabase.channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          // Khi có thông báo mới insert vào db (cho dù của ai)
+          // Chúng ta cứ fetch lại count để cho an toàn nếu rls áp dụng
+          fetchUnreadCount();
+          // Kích hoạt hiệu ứng lắc chuông
+          setIsRinging(true);
+          setTimeout(() => setIsRinging(false), 2000); // Tắt hiệu ứng sau 2s
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isLogin, fetchUnreadCount]);
 
   const handleBellClick = (e) => {
@@ -850,7 +944,12 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     setOpenMenu((prev) => (prev === key ? null : key));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Header: logout error", err);
+    }
     ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
     setIsLogin(false);
     setRole("student");
@@ -867,15 +966,22 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/85 dark:bg-[#1C1917]/85 backdrop-blur-md antialiased" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <header 
+        className={`sticky top-0 z-50 w-full antialiased transition-all duration-300 ${
+          isScrolled 
+            ? "bg-[#FDFBF7]/85 dark:bg-[#1C1917]/85 backdrop-blur-lg border-b border-amber-900/10 dark:border-amber-100/10 shadow-sm" 
+            : "bg-transparent border-b border-transparent"
+        }`} 
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           
-          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/5">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-gradient-to-br from-amber-50 to-[#FDFBF7] dark:from-amber-900/20 dark:to-[#1C1917] shadow-sm transition-all md:group-hover:scale-105">
-              <img src="/images/logo_htdc.avif" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain p-1 transition-transform duration-500 md:group-hover:rotate-6" />
+          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors hover:bg-amber-900/5 dark:hover:bg-amber-100/5">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-gradient-to-br from-amber-50 to-[#FDFBF7] dark:from-amber-900/20 dark:to-[#1C1917] shadow-sm transition-all group-hover:scale-105">
+              <img src="/images/logo_htdc.avif" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:rotate-6" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-sm font-extrabold tracking-tight text-amber-950 dark:text-amber-50 md:group-hover:text-amber-700 dark:md:group-hover:text-amber-400 md:text-base font-serif">BAN GIÁO LÝ</span>
+              <span className="text-sm font-extrabold tracking-tight text-amber-950 dark:text-amber-50 group-hover:text-amber-700 dark:group-hover:text-amber-400 md:text-base font-serif transition-colors">BAN GIÁO LÝ</span>
               <span className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-800/60 dark:text-amber-200/50 md:text-[10px] whitespace-nowrap">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
             </div>
           </button>
@@ -885,7 +991,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               const isActive = location.pathname === item.path;
               return (
                 <button key={item.path} type="button" onClick={() => navigate(item.path)}
-                  className={`px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isActive ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5" : "text-stone-600 dark:text-stone-400 md:hover:text-amber-900 dark:md:hover:text-amber-100 md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/5"}`}
+                  className={`px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isActive ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}
                 >
                   {item.label}
                 </button>
@@ -893,13 +999,13 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
             })}
             <div className="w-px h-4 bg-amber-900/10 dark:bg-amber-100/10 mx-1.5" />
             <div ref={khoiRef} className="relative">
-              <button type="button" onClick={(e) => toggle("khoi", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isKhoiActive || openMenu === "khoi" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5" : "text-stone-600 dark:text-stone-400 md:hover:text-amber-900 dark:md:hover:text-amber-100 md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/5"}`}>
+              <button type="button" onClick={(e) => toggle("khoi", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isKhoiActive || openMenu === "khoi" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}>
                 Khối học <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "khoi" ? "rotate-180" : ""}`} />
               </button>
               <KhoiMegaMenu isOpen={openMenu === "khoi"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} />
             </div>
             <div ref={communityRef} className="relative">
-              <button type="button" onClick={(e) => toggle("community", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${openMenu === "community" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5" : "text-stone-600 dark:text-stone-400 md:hover:text-amber-900 dark:md:hover:text-amber-100 md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/5"}`}>
+              <button type="button" onClick={(e) => toggle("community", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${openMenu === "community" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}>
                 Cộng đoàn <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
               </button>
               <CommunityDropdown isOpen={openMenu === "community"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} />
@@ -911,7 +1017,9 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               <button
                 type="button"
                 onClick={handleBellClick}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full text-stone-500 dark:text-stone-400 md:hover:bg-amber-900/5 dark:md:hover:bg-amber-100/10 active:bg-amber-900/10 dark:active:bg-amber-100/20 transition-colors"
+                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  isScrolled ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10" : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
+                } ${isRinging ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`}
                 aria-label="Thông báo"
                 aria-expanded={openMenu === "notif"}
               >
@@ -928,6 +1036,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 onItemClick={handleNotifItemClick}
                 onMarkAllRead={handleMarkAllRead}
                 hasUnread={notifications.some((n) => !n.read)}
+                navigate={navigate}
               />
             </div>
             <div ref={accountRef} className="relative hidden md:block">

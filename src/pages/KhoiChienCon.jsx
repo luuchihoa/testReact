@@ -2,16 +2,16 @@ import {
   Heart, Music, Palette, Users, BookOpen, Clock,
   CalendarDays, Star, GraduationCap
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 import HeroSection from "../features/khoi/HeroSection.jsx";
 import OverviewCards from "../features/khoi/OverviewCards.jsx";
 import HighlightsGrid from "../features/khoi/HighlightsGrid.jsx";
 import CtaSection from "../features/khoi/CtaSection.jsx";
 import QuoteSlider from "../features/khoi/QuoteSlider.jsx";
+import KhoiChienConJourney from "../features/khoi/KhoiChienConJourney.jsx";
+import KhoiChienConTimeline from "../features/khoi/KhoiChienConTimeline.jsx";
+import FloatingParticles from "../features/khoi/FloatingParticles.jsx";
 
-// Hằng số Easing chuẩn hệ thống
-const APPLE_EASE = [0.16, 1, 0.3, 1];
 
 const OVERVIEW = [
   { icon: Users,         label: "Độ tuổi",    value: "6 - 7 tuổi" },
@@ -20,13 +20,14 @@ const OVERVIEW = [
   { icon: GraduationCap, label: "Sĩ số",      value: "20 em / lớp" },
 ];
 
-// Phần chương trình học dạng List đơn giản (Đã đồng bộ giao diện Kính mờ Glassmorphism)
+// BENTO GRID (Flip Cards) thay cho Syllabus khô khan
 const CHUONG_TRINH = [
   {
     icon: Heart,
-    title: "Học Kỳ 1: Thiên Chúa yêu con",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-pink-900/10 dark:border-pink-100/10 md:hover:border-pink-500/30 shadow-sm",
-    iconBg: "bg-pink-100/80 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 border border-pink-200/50 dark:border-pink-800/30 shadow-sm",
+    title: "Học Kỳ 1",
+    subtitle: "Thiên Chúa yêu con",
+    color: "bg-pink-50/80 dark:bg-[#1C1917]/90 backdrop-blur-xl border-pink-200/60 dark:border-pink-900/30",
+    iconBg: "bg-pink-100 text-pink-500 border border-pink-200/50",
     dot: "bg-pink-500 shadow-sm",
     topics: [
       "Thiên Chúa yêu thương tôi",
@@ -38,9 +39,10 @@ const CHUONG_TRINH = [
   },
   {
     icon: Star,
-    title: "Học Kỳ 2: Khám phá Lời Chúa",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-amber-500/30 shadow-sm",
-    iconBg: "bg-amber-100/80 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/30 shadow-sm",
+    title: "Học Kỳ 2",
+    subtitle: "Khám phá Lời Chúa",
+    color: "bg-amber-50/80 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-200/60 dark:border-amber-900/30",
+    iconBg: "bg-amber-100 text-amber-500 border border-amber-200/50",
     dot: "bg-amber-500 shadow-sm",
     topics: [
       "Thánh Kinh kể chuyện — Ông Nô-ê",
@@ -84,7 +86,7 @@ const QUOTES = [
 ];
 
 export default function KhoiChienCon() {
-  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
+  const { heroRef, lenis, heroY, heroReveal } = usePageMotion();
 
   return (
     // Đồng bộ mã màu nền tổng thể giống hệ thống quản trị
@@ -93,7 +95,7 @@ export default function KhoiChienCon() {
       <HeroSection
         heroRef={heroRef}
         heroY={heroY}
-        fadeUp={fadeUp}
+        fadeUp={heroReveal}
         lenis={lenis}
         glowClass="bg-pink-500/5 dark:bg-pink-500/10"
         eyebrowIcon={Heart}
@@ -112,72 +114,26 @@ export default function KhoiChienCon() {
         image={{ src: "/images/khoichiencon.avif", alt: "Khối Chiên Con" }}
         imageGlowClass="bg-gradient-to-tr from-pink-500/5 to-rose-500/5"
         floatBadge={{ label: "Mầm non – Lớp 2", sub: "Ươm mầm đức tin", dotClass: "bg-pink-500" }}
-      />
+      >
+        <FloatingParticles />
+      </HeroSection>
 
-      <OverviewCards items={OVERVIEW} />
+      <OverviewCards items={OVERVIEW} accentBgClass="bg-pink-100/50 dark:bg-pink-900/20" accentTextClass="text-pink-900 dark:text-pink-400" accentBorderClass="border-pink-900/10 dark:border-pink-700/30" />
 
-      {/* CHƯƠNG TRÌNH SECTION */}
-      <section id="chuong-trinh" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-10">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-pink-600 dark:text-pink-400 ml-1">
-            Chương trình học
-          </p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-stone-900 dark:text-stone-50 leading-tight">
-            Hành trình một năm học
-          </h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-            Chương trình được chia thành 2 học kỳ, mỗi chủ đề kéo dài 2–3 buổi để các em có đủ thời gian thấm nhuần qua nhiều hình thức học tập trực quan.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
-          {CHUONG_TRINH.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: APPLE_EASE }}
-                className={`rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col transition-all duration-300 relative ${item.color}`}
-              >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
-                    <Icon className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-[18px] sm:text-[20px] font-extrabold font-serif text-stone-900 dark:text-stone-50 leading-snug">
-                    {item.title}
-                  </h3>
-                </div>
-
-                <ul className="space-y-4 flex-1">
-                  {item.topics.map((topic, j) => (
-                    <li key={j} className="flex items-start gap-3.5 text-[14.5px] text-stone-600 dark:text-stone-300 font-medium leading-relaxed">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2 ${item.dot}`} />
-                      <span>{topic}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
+      <KhoiChienConJourney items={CHUONG_TRINH} />
+      
+      <KhoiChienConTimeline />
 
       <HighlightsGrid
         items={HIGHLIGHTS}
         title="Học mà chơi, chơi mà học"
         accentTextClass="text-pink-600 dark:text-pink-400"
-        accentIconClass="bg-pink-100/80 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 border border-pink-200/50 dark:border-pink-800/30 shadow-sm"
-        mc={mc}
-        vp={vp}
+        accentIconClass="bg-pink-100/80 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 border-pink-200/50 dark:border-pink-800/30"
       />
 
-      {/* QUOTES SLIDER SECTION */}
       <section className="py-20 relative overflow-hidden flex items-center justify-center z-10">
         <div className="absolute inset-0 bg-stone-100 dark:bg-stone-900/30 -z-10" />
-        <QuoteSlider quotes={QUOTES} />
+        <QuoteSlider quotes={QUOTES} accentTextClass="text-pink-800/60 dark:text-pink-400/60" />
       </section>
 
       <CtaSection
@@ -190,9 +146,6 @@ export default function KhoiChienCon() {
         primaryCtaClass="bg-pink-600 text-white md:hover:bg-pink-500 shadow-sm"
         secondaryCtaLabel="Liên hệ Văn phòng"
         secondaryCtaTo="/liên-hệ"
-        mc={mc}
-        vp={vp}
-        sectionClassName="pt-20 pb-32 max-w-3xl mx-auto px-4 sm:px-6 text-center border-t border-amber-900/5 dark:border-amber-100/5 relative z-10"
       />
     </div>
   );

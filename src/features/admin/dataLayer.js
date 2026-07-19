@@ -335,17 +335,57 @@ export async function sendBroadcastNotification(title, message, link) {
   if (error) throw error;
 }
 
+// Gửi Email hàng loạt (Newsletter) bằng cách gọi Edge Function
+export async function sendNewsletter(title, message, link) {
+  const { data, error } = await supabase.functions.invoke('send-newsletter', {
+    body: { title, message, link }
+  });
+  
+  if (error) {
+    console.error("Lỗi mạng khi gọi Edge Function:", error);
+    throw new Error(error.message || "Lỗi gọi Edge Function");
+  }
+  
+  if (data && data.success === false) {
+    console.error("Lỗi logic từ Edge Function:", data.error);
+    throw new Error(data.error);
+  }
+  
+  // Lưu lịch sử gửi email vào database
+  await supabase.rpc("log_email_broadcast", {
+    p_title: title,
+    p_message: message,
+    p_link: link || null,
+  });
+  
+  return data;
+}
+
 // Lịch sử các thông báo chung đã gửi — dùng để hiển thị lại trong tab,
 // tránh gửi trùng và để admin xem lại đã thông báo gì.
 export async function fetchRecentBroadcasts(limit = 20) {
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, title, message, link, created_at, created_by")
+    .select("id, type, title, message, link, created_at, created_by")
     .is("recipient_username", null)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
   return data ?? [];
+}
+
+export async function deleteBroadcast(id) {
+  const { error } = await supabase.rpc("delete_broadcast", { p_id: id });
+  if (error) throw error;
+}
+
+export async function fetchSubscriberCount() {
+  const { count, error } = await supabase
+    .from("subscribers")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active");
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function submitContactForm(hoTen, sdt, noiDung) {

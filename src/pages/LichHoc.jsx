@@ -5,7 +5,7 @@ import {
   Heart, Church, BookOpen, Sparkles, Flame, Globe, GraduationCap, Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMotionConfig } from "../hooks/useMotionConfig";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 
 const KHOI_LIST = [
   { id: "all",        label: "Tất cả" },
@@ -40,19 +40,7 @@ const DAYS = ["Thứ Bảy", "Chủ Nhật"];
 export default function LichHoc() {
   const [activeKhoi, setActiveKhoi] = useState("all");
   
-  const mc = useMotionConfig() || {
-    yOffset: 30, duration: (d) => d || 0.6, delay: (d) => d || 0,
-    stagger: 0.08, isMobile: false, vp: () => ({ once: true, margin: "-12% 0px" })
-  };
-  const vp = mc.vp();
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1, y: 0,
-      transition: { duration: mc.duration(0.7), ease: [0.16, 1, 0.3, 1], delay: mc.delay(d) },
-    }),
-  };
+  const { fadeUp, heroReveal, vp } = usePageMotion();
 
   const filtered = SCHEDULE.filter((s) => activeKhoi === "all" || s.khoi === activeKhoi);
 
@@ -64,14 +52,14 @@ export default function LichHoc() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: mc.stagger } } }}>
-            <motion.div variants={fadeUp} custom={0}>
+          <div>
+            <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0}>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-6 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
                 <CalendarDays className="w-3.5 h-3.5" /> Lịch Học
               </span>
             </motion.div>
 
-            <motion.h1 variants={fadeUp} custom={0.05}
+            <motion.h1 variants={heroReveal} initial="hidden" animate="visible" custom={0.05}
               className="text-4xl md:text-6xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 leading-[1.08] mb-5 font-serif">
               Thời gian biểu<br />
               <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
@@ -79,11 +67,11 @@ export default function LichHoc() {
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeUp} custom={0.1}
+            <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.1}
               className="text-base md:text-lg text-stone-600 dark:text-stone-400 leading-relaxed max-w-xl font-medium">
               Lịch sinh hoạt hàng tuần của tất cả các khối — kiểm tra giờ học, phòng học và giáo lý viên phụ trách trước khi đến lớp.
             </motion.p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -109,7 +97,7 @@ export default function LichHoc() {
 
         {/* ══ LỊCH TUẦN ══ */}
         <section>
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: mc.duration(0.6) }} className="mb-8">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.15} className="mb-8">
             <h2 className="text-2xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif">Lịch theo tuần</h2>
             <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">Tổng quan các lớp diễn ra trong tuần.</p>
           </motion.div>
@@ -153,7 +141,7 @@ export default function LichHoc() {
 
         {/* ══ CHI TIẾT TỪNG KHỐI ══ */}
         <section>
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: mc.duration(0.6) }} className="mb-8">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.15} className="mb-8">
             <h2 className="text-2xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif">Chi tiết các lớp</h2>
             <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">Thông tin đầy đủ về độ tuổi, giáo lý viên và phòng học.</p>
           </motion.div>
@@ -165,7 +153,7 @@ export default function LichHoc() {
                   const meta = KHOI_META[s.khoi];
                   const Icon = meta.icon;
                   return (
-                    <motion.div key={s.khoi} initial={{ opacity: 0, y: mc.yOffset }} animate={{ opacity: 1, y: 0 }} transition={{ duration: mc.duration(0.4), delay: mc.delay(i * 0.06) }}>
+                    <motion.div key={s.khoi} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.06}>
                       <Link to={s.path} className={`group flex flex-col h-full bg-white/90 dark:bg-stone-800/50 backdrop-blur-sm rounded-[1.75rem] border border-amber-900/10 dark:border-amber-100/10 p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 transition-all duration-300 active:scale-[0.97]`}>
                         <div className="flex items-start justify-between mb-5">
                           <div className={`w-12 h-12 rounded-[1rem] flex items-center justify-center ${meta.bg}`}>
@@ -196,7 +184,7 @@ export default function LichHoc() {
         </section>
 
         {/* ══ LƯU Ý ══ */}
-        <motion.section initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: mc.duration(0.6) }}
+        <motion.section variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.3}
           className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/30 rounded-[2rem] p-6 sm:p-8 backdrop-blur-sm"
         >
           <div className="flex flex-col sm:flex-row items-start gap-5">
@@ -215,7 +203,7 @@ export default function LichHoc() {
         </motion.section>
 
         {/* ══ CTA SECTION ══ */}
-        <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: mc.duration(0.6) }} className="text-center py-10">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.4} className="text-center py-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-white dark:bg-stone-800 shadow-sm border border-amber-900/10 dark:border-amber-100/10 mb-6">
             <GraduationCap className="w-8 h-8 text-amber-600 dark:text-amber-400" />
           </div>

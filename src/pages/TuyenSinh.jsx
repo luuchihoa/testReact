@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, BookOpen, Sparkles, Flame, GraduationCap, ArrowRight, CheckCircle, ChevronDown, Check } from "lucide-react";
+import { Heart, BookOpen, Sparkles, Flame, GraduationCap, ArrowRight, CheckCircle, ChevronDown, Check, Users, Clock, School, Globe, Baby, Cross } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useIsMobile } from "../hooks/useMotionConfig";
 import { createPortal } from "react-dom";
@@ -45,9 +45,11 @@ function Counter({ target, suffix = "" }) {
 }
 
 const FAQS = [
-  { q: "Con tôi chưa biết đọc có học được không?", a: "Với các bé độ tuổi mầm non hoặc lớp 1 chưa thạo chữ, chúng tôi sử dụng phương pháp trực quan sinh động bằng hình ảnh, bài hát và kể chuyện. Không yêu cầu bé phải biết đọc viết thành thạo." },
-  { q: "Lịch học có trùng với giờ lễ không?", a: "Giờ học Giáo Lý (08:00–09:30) được sắp xếp ngay sau Thánh Lễ Thiếu Nhi (07:00–08:00) để thuận tiện cho phụ huynh đưa đón và các em tham dự trọn vẹn." },
-  { q: "Phụ huynh ngoài giáo xứ có đăng ký được không?", a: "Chúng tôi luôn chào đón tất cả các gia đình Công giáo có nhu cầu. Vui lòng liên hệ trực tiếp văn phòng giáo xứ để được hỗ trợ thủ tục." },
+  { q: "Con tôi chưa biết đọc có học được không?", a: "Với các bé độ tuổi mầm non hoặc lớp 1 chưa thạo chữ, chúng tôi sử dụng phương pháp trực quan sinh động bằng hình ảnh, bài hát và kể chuyện. Không yêu cầu bé phải biết đọc viết thành thạo.", emoji: "📚" },
+  { q: "Lịch học có trùng với giờ lễ không?", a: "Giờ học Giáo Lý (08:00–09:30) được sắp xếp ngay sau Thánh Lễ Thiếu Nhi (07:00–08:00) để thuận tiện cho phụ huynh đưa đón và các em tham dự trọn vẹn.", emoji: "🕐" },
+  { q: "Phụ huynh ngoài giáo xứ có đăng ký được không?", a: "Chúng tôi luôn chào đón tất cả các gia đình Công giáo có nhu cầu. Vui lòng liên hệ trực tiếp văn phòng giáo xứ để được hỗ trợ thủ tục.", emoji: "🏠" },
+  { q: "Học phí như thế nào?", a: "Chương trình Giáo Lý hoàn toàn miễn phí. Phụ huynh chỉ cần đóng góp tự nguyện một khoản nhỏ cho tài liệu học tập và sinh hoạt hàng năm.", emoji: "💰" },
+  { q: "Một năm học kéo dài bao lâu?", a: "Năm học Giáo Lý thường kéo dài từ tháng 9 đến tháng 6 năm sau, nghỉ hè 2 tháng. Các ngày lễ lớn và Tết Nguyên Đán cũng được nghỉ theo lịch giáo xứ.", emoji: "📅" },
 ];
 
 function FaqItem({ item, index, lenis }) {
@@ -60,7 +62,7 @@ function FaqItem({ item, index, lenis }) {
       className="bg-white/60 dark:bg-stone-800/40 backdrop-blur-sm rounded-2xl overflow-hidden border border-amber-900/10 dark:border-amber-100/10 transition-colors shadow-sm"
     >
       <button type="button" onClick={() => { setOpen((v) => !v); setTimeout(() => lenis?.resize(), 360); }} className="w-full flex justify-between items-center p-5 sm:p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-2xl">
-        <h3 className="font-bold text-amber-950 dark:text-amber-50 pr-4 leading-snug text-[14.5px] sm:text-base">{item.q}</h3>
+        <h3 className="font-bold text-amber-950 dark:text-amber-50 pr-4 leading-snug text-[14.5px] sm:text-base"><span className="mr-2 select-none">{item.emoji}</span>{item.q}</h3>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center text-amber-800 dark:text-amber-400 shadow-sm border border-amber-900/5 dark:border-amber-100/5">
           <ChevronDown className="w-4 h-4" />
         </motion.span>
@@ -81,16 +83,19 @@ function FaqItem({ item, index, lenis }) {
 }
 
 const PROGRAMS = [
+  { icon: Baby, title: "Khối Chiên Con", desc: "Bước đầu gieo hạt giống đức tin cho các bé mầm non – lớp 2 bằng bài hát, kể chuyện và hình ảnh sinh động.", path: "/khối-chiên-con", iconBg: "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-200/50 dark:border-pink-500/20" },
+  { icon: Cross, title: "Khối Rước Lễ", desc: "Chuẩn bị tâm hồn để các em lần đầu tiên đón nhận Mình và Máu Thánh Chúa Kitô.", path: "/khối-rước-lễ", iconBg: "bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 border border-lime-200/50 dark:border-lime-500/20" },
+  { icon: Flame, title: "Khối Thêm Sức", desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.", path: "/khối-thêm-sức", iconBg: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20" },
   { icon: BookOpen, title: "Khối Kinh Thánh", desc: "Giai đoạn nền tảng giúp các em làm quen với Lời Chúa, xây dựng đức tin trên Kinh Thánh.", path: "/khối-kinh-thánh", iconBg: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-500/20" },
   { icon: Sparkles, title: "Khối Phụng Vụ", desc: "Tìm hiểu sâu các nghi thức, bí tích và đời sống tâm linh trong các cử hành Phụng vụ.", path: "/khối-phụng-vụ", iconBg: "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200/50 dark:border-orange-500/20", featured: true },
-  { icon: Flame, title: "Khối Thêm Sức", desc: "Hành trình trưởng thành trong đức tin, sẵn sàng lãnh nhận ơn thiêng từ Chúa Thánh Thần.", path: "/khối-thêm-sức", iconBg: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20" },
+  { icon: Globe, title: "Khối Vào Đời", desc: "Trang bị hành trang đức tin cho các bạn trẻ sắp bước ra xã hội, sống đạo giữa đời.", path: "/khối-vào-đời", iconBg: "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-500/20" },
 ];
 
 const STATS = [
-  { target: 500, suffix: "+", label: "Học viên" },
-  { target: 45,  suffix: "", label: "Giáo lý viên" },
-  { target: 12,  suffix: "", label: "Lớp học" },
-  { target: 100, suffix: "%", label: "Yêu thương" },
+  { target: 500, suffix: "+", label: "Học viên", icon: Users },
+  { target: 45,  suffix: "", label: "Giáo lý viên", icon: Heart },
+  { target: 12,  suffix: "", label: "Lớp học", icon: School },
+  { target: 100, suffix: "%", label: "Yêu thương", icon: Sparkles },
 ];
 
 const KHOI_OPTIONS = ["Chiên Con (Mầm non – Lớp 2)", "Rước Lễ Lần Đầu (Lớp 3 – 4)", "Thêm Sức (Lớp 5 – 6)", "Phụng Vụ (Lớp 7)"];
@@ -264,15 +269,21 @@ export default function TuyenSinh() {
 
       {/* ══════ STATS ══════ */}
       <section className="py-8 sm:py-12 bg-[#FDFBF7]/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 relative z-10 sticky top-[60px] md:top-[64px]">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
-          {STATS.map((s) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-              <p className="text-3xl sm:text-4xl font-serif font-bold text-amber-950 dark:text-amber-50 mb-1.5 tabular-nums">
-                <Counter target={s.target} suffix={s.suffix} />
-              </p>
-              <p className="text-[10px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-widest">{s.label}</p>
-            </motion.div>
-          ))}
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-0 text-center">
+          {STATS.map((s, i) => {
+            const StatIcon = s.icon;
+            return (
+              <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+                className={`flex flex-col items-center ${i > 0 ? 'sm:border-l sm:border-amber-900/10 sm:dark:border-amber-100/10' : ''}`}
+              >
+                <StatIcon className="w-5 h-5 text-amber-600/60 dark:text-amber-400/50 mb-2" strokeWidth={2} />
+                <p className="text-3xl sm:text-4xl font-serif font-bold text-amber-950 dark:text-amber-50 mb-1.5 tabular-nums">
+                  <Counter target={s.target} suffix={s.suffix} />
+                </p>
+                <p className="text-[10px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-widest">{s.label}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
@@ -392,6 +403,22 @@ function RegisterSection({ showToast, lenis }) {
               </motion.div>
             ) : (
               <motion.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onSubmit={handleSubmit} noValidate className="space-y-5">
+                {(() => {
+                  const fields = ['hoTen', 'namSinh', 'sdt', 'giaoXom', 'khoi'];
+                  const filled = fields.filter(f => form[f] && String(form[f]).trim()).length;
+                  const pct = Math.round((filled / fields.length) * 100);
+                  return (
+                    <div className="mb-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[11px] font-bold text-amber-800/60 dark:text-amber-400/60 uppercase tracking-wider">Tiến trình điền hồ sơ</span>
+                        <span className="text-[11px] font-bold text-amber-800/60 dark:text-amber-400/60 tabular-nums">{filled}/{fields.length} trường</span>
+                      </div>
+                      <div className="w-full bg-amber-100/50 dark:bg-amber-900/20 rounded-full h-1.5 overflow-hidden">
+                        <div className="h-full rounded-full bg-amber-600 dark:bg-amber-500 transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div><label className={LABEL_CLASS}>Tên Thánh & Tên Gọi</label><input type="text" value={form.hoTen} onChange={set("hoTen")} placeholder="Maria Nguyễn Thị A" className={getInputClass(errors.hoTen)} disabled={loading} />{errors.hoTen && <p className={ERR_CLASS}>⚠ {errors.hoTen}</p>}</div>
                   <div><label className={LABEL_CLASS}>Năm sinh</label><input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={4} value={form.namSinh} onChange={set("namSinh")} placeholder="2015" className={getInputClass(errors.namSinh)} disabled={loading} />{errors.namSinh && <p className={ERR_CLASS}>⚠ {errors.namSinh}</p>}</div>

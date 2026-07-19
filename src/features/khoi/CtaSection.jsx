@@ -2,25 +2,25 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { usePageMotion } from "../../hooks/usePageMotion.js";
 
 export default function CtaSection({
   icon: Icon,
-  iconClass,
+  iconClass = "text-amber-500",
   title,
   description,
   primaryCtaLabel,
   primaryCtaTo,
-  // Đổi nút bấm mặc định sang tone hệ thống (amber)
   primaryCtaClass = "bg-amber-900 md:hover:bg-amber-800 dark:bg-amber-600 dark:hover:bg-amber-500",
   secondaryCtaLabel,
   secondaryCtaTo,
-  mc,
-  vp,
   sectionClassName = "pt-20 pb-32 max-w-3xl mx-auto px-6 text-center relative z-10",
 }) {
+  const { fadeUp, vp } = usePageMotion();
+
   return (
     <section className={sectionClassName}>
-      <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }} viewport={vp} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+      <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.2}>
         
         {/* Đồng bộ Icon Box */}
         <div className="inline-flex w-16 h-16 rounded-[20px] bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 shadow-md items-center justify-center mb-8">

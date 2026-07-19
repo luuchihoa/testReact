@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageMotion } from "../../hooks/usePageMotion.js";
 
 // Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 
-export default function QuoteSlider({ quotes }) {
+export default function QuoteSlider({ quotes, accentTextClass = "text-amber-800/60 dark:text-amber-400/60" }) {
+  const { fadeUp, vp } = usePageMotion();
   const [cur, setCur] = useState(0);
   const [dir, setDir] = useState(1);
   const timerRef = useRef(null);
@@ -46,8 +48,11 @@ export default function QuoteSlider({ quotes }) {
   if (!quotes || quotes.length === 0) return null;
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
-      <div className="overflow-hidden py-4">
+    <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.2} className="w-full max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+      <div 
+        className="overflow-hidden py-4 sm:px-12"
+        style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)' }}
+      >
         <AnimatePresence initial={false} custom={dir} mode="wait">
           <motion.div
             key={cur}
@@ -66,12 +71,12 @@ export default function QuoteSlider({ quotes }) {
             </p>
             
             {/* Nhãn nguồn trích dẫn dạng in hoa cách điệu */}
-            <p className="text-amber-800/60 dark:text-amber-400/60 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase mt-6 sm:mt-8 select-none">
+            <p className={`text-[10px] sm:text-[11px] font-bold tracking-widest uppercase mt-6 sm:mt-8 select-none ${accentTextClass}`}>
               — {quotes[cur].src} —
             </p>
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

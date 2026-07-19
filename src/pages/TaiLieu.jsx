@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   GraduationCap, FileText, Play, Search, ChevronRight, 
   Download, Clock, BookOpen, Sparkles, Flame, Heart, Church, Globe 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMotionConfig } from "../hooks/useMotionConfig";
+import { usePageMotion } from "../hooks/usePageMotion.js";
+import { useDebounce } from "../hooks/useDebounce";
 
 const KHOI_LIST = [
   { id: "all",        label: "Tất cả" },
@@ -137,44 +138,43 @@ export const KHOI_LINKS = [
 export default function TaiLieu() {
   const [activeKhoi, setActiveKhoi] = useState("all");
   const [search, setSearch] = useState("");
-  const systemConfig = useMotionConfig();
+  const debouncedSearch = useDebounce(search, 300); // 300ms delay
+  const [isLoading, setIsLoading] = useState(false);
+  const { mc, fadeUp, heroReveal, vp } = usePageMotion();
   
-  const mc = systemConfig || {
-    yOffset: 30,
-    duration: (d) => d || 0.6,
-    delay: (d) => d || 0,
-    stagger: 0.06,
-    isMobile: false,
-    vp: () => ({ once: true, margin: "-10% 0px" })
+  // Simulate network request when filter changes
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 400); // simulate 400ms load
+    return () => clearTimeout(timer);
+  }, [activeKhoi, debouncedSearch]);
+
+  const filteredQuizzes = useMemo(() => {
+    return QUIZZES.filter(q =>
+      (activeKhoi === "all" || q.khoi === activeKhoi || q.khoi === "all") &&
+      q.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [activeKhoi, debouncedSearch]);
+
+  const filteredDocs = useMemo(() => {
+    return DOCS.filter(d =>
+      (activeKhoi === "all" || d.khoi === activeKhoi || d.khoi === "all") &&
+      d.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [activeKhoi, debouncedSearch]);
+
+  const handleDownload = (e, title) => {
+    e.preventDefault(); // Prevent standard # link navigation
+    // TODO: Later implement Supabase Blob download here
+    alert(`[Mô phỏng] Đang tải tài liệu: ${title}\n(Tính năng tải file thực từ server sẽ được cập nhật sau khi tích hợp Supabase)`);
   };
-
-  const vp = mc.vp();
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({ 
-      opacity: 1, 
-      y: 0, 
-      transition: { type: "spring", stiffness: 90, damping: 15, mass: 0.8, delay: mc.delay(d) } 
-    }),
-  };
-
-  const filteredQuizzes = QUIZZES.filter(q =>
-    (activeKhoi === "all" || q.khoi === activeKhoi || q.khoi === "all") &&
-    q.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const filteredDocs = DOCS.filter(d =>
-    (activeKhoi === "all" || d.khoi === activeKhoi || d.khoi === "all") &&
-    d.title.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900 transition-colors duration-500 relative">
       
       {/* Background lưới mờ tinh tế (Apple Premium Grid) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
-      
+      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+
       {/* HERO SECTION */}
       <section className="relative overflow-hidden pt-12 pb-14 md:pt-24 md:pb-20 z-10">
         {!mc.isMobile && (
@@ -182,14 +182,14 @@ export default function TaiLieu() {
         )}
         <div className="max-w-5xl mx-auto px-5 sm:px-6 relative z-10">
 
-          <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: mc.stagger } } }} className="space-y-6">
-            <motion.div variants={fadeUp} custom={0}>
+          <div>
+            <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0}>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100/50 text-amber-800 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50 shadow-sm cursor-default">
                 <GraduationCap className="w-3.5 h-3.5" /> Kho Tư Liệu Giáo Lý
               </span>
             </motion.div>
             
-            <motion.h1 variants={fadeUp} custom={0.06}
+            <motion.h1 variants={heroReveal} initial="hidden" animate="visible" custom={0.05}
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 leading-[1.1] font-serif">
               Tài liệu học tập &<br />
               <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
@@ -197,46 +197,59 @@ export default function TaiLieu() {
               </span>
             </motion.h1>
             
-            <motion.p variants={fadeUp} custom={0.12}
+            <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.1}
               className="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed max-w-xl font-medium">
               Hỗ trợ học tập trực tuyến, kho đề kiểm tra tự động và các văn kiện chính thức dành cho Huynh Trưởng & Thiếu Nhi — hoàn toàn miễn phí.
             </motion.p>
 
-            {/* Thanh Tìm Kiếm Chuẩn Apple Mượt Mà */}
-            <motion.div variants={fadeUp} custom={0.18} className="relative max-w-md pt-2">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none z-10" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm đề thi, tài liệu giáo lý..."
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:bg-white dark:focus:bg-stone-900 shadow-sm backdrop-blur-md transition-all"
-              />
-            </motion.div>
-          </motion.div>
+
+          </div>
         </div>
       </section>
 
-      {/* STICKY FILTER TABS */}
-      <div className="sticky top-0 z-30 bg-[#FDFBF7]/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 transition-colors">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-2 overflow-x-auto py-3 scrollbar-none snap-x snap-mandatory">
-            {KHOI_LIST.map((k) => {
-              const active = activeKhoi === k.id;
-              return (
-                <button 
-                  key={k.id} 
-                  onClick={() => setActiveKhoi(k.id)}
-                  className={`flex-shrink-0 px-5 py-2 rounded-full text-[13px] font-bold snap-center transition-all duration-300 active:scale-[0.96]
-                    ${active 
-                      ? "bg-amber-900 text-amber-50 dark:bg-amber-100 dark:text-amber-950 shadow-sm border border-transparent" 
-                      : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-stone-800/80 bg-white/50 dark:bg-stone-800/50 border border-amber-900/5 dark:border-amber-100/5"
-                    }`}
-                >
-                  {k.label}
-                </button>
-              );
-            })}
+      {/* STICKY FILTER TABS & SEARCH */}
+      <div className="sticky top-0 z-30 bg-[#FDFBF7]/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 transition-colors shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
+          <div className="flex flex-col gap-3">
+            
+            {/* Hàng 1: Tiêu đề tĩnh & Ô Tìm kiếm */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="hidden sm:flex items-center gap-2 text-amber-900 dark:text-amber-100 font-serif font-bold">
+                <FileText className="w-5 h-5 opacity-80" />
+                <span className="text-lg">Thư viện</span>
+              </div>
+              <div className="relative w-full sm:max-w-xs flex-shrink-0 ml-auto">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none z-10" />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Tìm đề thi, tài liệu..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/80 dark:bg-stone-900/60 text-[13px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:bg-white dark:focus:bg-stone-900 shadow-sm backdrop-blur-md transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Hàng 2: Tabs Khối học */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
+              {KHOI_LIST.map((k) => {
+                const active = activeKhoi === k.id;
+                return (
+                  <button 
+                    key={k.id} 
+                    onClick={() => setActiveKhoi(k.id)}
+                    className={`flex-shrink-0 px-5 py-2 rounded-full text-[13px] font-bold snap-center transition-all duration-300 active:scale-[0.96]
+                      ${active 
+                        ? "bg-amber-900 text-amber-50 dark:bg-amber-100 dark:text-amber-950 shadow-sm border border-transparent" 
+                        : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-stone-800/80 bg-white/50 dark:bg-stone-800/50 border border-amber-900/5 dark:border-amber-100/5"
+                      }`}
+                  >
+                    {k.label}
+                  </button>
+                );
+              })}
+            </div>
+
           </div>
         </div>
       </div>
@@ -246,8 +259,8 @@ export default function TaiLieu() {
 
         {/* SECTION 1: ĐỀ ÔN LUYỆN */}
         <section>
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp} transition={{ duration: 0.5 }} className="mb-8 text-left">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible"
+            viewport={vp} custom={0.2} className="mb-8 text-left">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5 flex items-center justify-center flex-shrink-0">
                 <Play className="w-4 h-4 fill-current" />
@@ -258,15 +271,32 @@ export default function TaiLieu() {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {filteredQuizzes.length > 0 ? (
+            {isLoading ? (
+              <motion.div key="loading-q" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-[180px] bg-white/40 dark:bg-stone-800/20 backdrop-blur-sm rounded-3xl border border-amber-900/5 dark:border-amber-100/5 p-6 animate-pulse">
+                    <div className="flex justify-between mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-amber-900/5 dark:bg-stone-700/30" />
+                      <div className="w-12 h-5 rounded-full bg-amber-900/5 dark:bg-stone-700/30" />
+                    </div>
+                    <div className="w-3/4 h-5 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-2" />
+                    <div className="w-1/2 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-6" />
+                    <div className="h-px bg-amber-900/5 dark:bg-stone-700/30 w-full mb-3" />
+                    <div className="flex justify-between">
+                      <div className="w-16 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
+                      <div className="w-16 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            ) : filteredQuizzes.length > 0 ? (
               <motion.div key={activeKhoi + search}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {filteredQuizzes.map((quiz, i) => {
                   const Icon = quiz.icon;
                   return (
-                    <motion.div key={quiz.path} initial={{ opacity: 0, y: mc.yOffset }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 100, damping: 15, delay: i * 0.04 }}>
+                    <motion.div key={quiz.path} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04}>
                       <Link to={quiz.path}
                         className="group flex flex-col justify-between h-full bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 active:scale-[0.99] transition-all duration-300 text-left"
                       >
@@ -311,8 +341,8 @@ export default function TaiLieu() {
 
         {/* SECTION 2: TÀI LIỆU */}
         <section>
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp} transition={{ duration: 0.5 }} className="mb-8 text-left">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible"
+            viewport={vp} custom={0.3} className="mb-8 text-left">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5 flex items-center justify-center flex-shrink-0">
                 <FileText className="w-4 h-4" />
@@ -323,7 +353,20 @@ export default function TaiLieu() {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {filteredDocs.length > 0 ? (
+            {isLoading ? (
+              <motion.div key="loading-d" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 bg-white/40 dark:bg-stone-800/20 backdrop-blur-sm rounded-2xl border border-amber-900/5 dark:border-amber-100/5 px-5 py-4 animate-pulse">
+                     <div className="w-11 h-11 rounded-[14px] bg-amber-900/5 dark:bg-stone-700/30 flex-shrink-0" />
+                     <div className="flex-1">
+                        <div className="w-1/2 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-2" />
+                        <div className="w-3/4 h-3 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
+                     </div>
+                     <div className="w-9 h-9 rounded-full bg-amber-900/5 dark:bg-stone-700/30 flex-shrink-0" />
+                  </div>
+                ))}
+              </motion.div>
+            ) : filteredDocs.length > 0 ? (
               <motion.div key={activeKhoi + search + "d"}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid gap-3"
@@ -333,9 +376,8 @@ export default function TaiLieu() {
                   const khoiMeta = KHOI_ICON_MAP[doc.khoi] || KHOI_ICON_MAP["all"];
                   const KhoiIcon = khoiMeta.icon;
                   return (
-                    <motion.div key={doc.title} initial={{ opacity: 0, y: mc.yOffset }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 100, damping: 16, delay: i * 0.03 }}>
-                      <a href={doc.url}
+                    <motion.div key={doc.title} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04}>
+                      <a href={doc.url} onClick={(e) => handleDownload(e, doc.title)}
                         className="group flex items-center gap-4 bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-2xl border border-amber-900/10 dark:border-amber-100/10 px-5 py-4 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 active:scale-[0.995] transition-all duration-300 text-left"
                       >
                         <div className="w-11 h-11 rounded-[14px] bg-amber-50 dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center flex-shrink-0 text-amber-700 dark:text-amber-400 shadow-sm">
@@ -372,8 +414,8 @@ export default function TaiLieu() {
 
         {/* SECTION 3: CÁC KHỐI GIÁO LÝ */}
         <section>
-          <motion.div initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={vp} transition={{ duration: 0.5 }} className="mb-8 text-left">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible"
+            viewport={vp} custom={0.4} className="mb-8 text-left">
             <h2 className="text-xl font-extrabold text-amber-950 dark:text-amber-50 tracking-tight font-serif">Khám phá theo cấp lớp</h2>
             <p className="text-[13px] text-stone-500 dark:text-stone-400 font-medium mt-1">Xem chi tiết khung chương trình, thời lượng, độ tuổi và mục tiêu đào tạo của từng khối lớp học.</p>
           </motion.div>
@@ -382,8 +424,8 @@ export default function TaiLieu() {
             {KHOI_LINKS.map((k, i) => {
               const Icon = k.icon;
               return (
-                <motion.div key={k.path} initial={{ opacity: 0, y: mc.yOffset }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={vp} transition={{ type: "spring", stiffness: 100, damping: 15, delay: i * 0.04 }}>
+                <motion.div key={k.path} variants={fadeUp} initial="hidden" whileInView="visible"
+                  viewport={vp} custom={i * 0.04}>
                   <Link to={k.path}
                     className={`group flex flex-col items-center gap-3 p-5 rounded-3xl border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-800/40 backdrop-blur-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 transition-all duration-300 text-center relative overflow-hidden`}
                   >

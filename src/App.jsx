@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { supabase } from "./lib/supabase.js";
 
 const ReactLenisLazy = lazy(() => 
   import("lenis/react").then(mod => {
@@ -34,7 +35,7 @@ const lazyWithRetry = (componentImport) =>
   );
 
 const ModalLogin    = lazyWithRetry(() => import("./components/ui/ModalLogin.jsx"));
-const TaiKhoanLayout = lazyWithRetry(() => import("./components/layout/TaiKhoanLayout.jsx"));
+const TaiKhoanLayout = lazyWithRetry(() => import("./features/account/TaiKhoanLayout.jsx"));
 const Contact       = lazyWithRetry(() => import("./pages/Contact.jsx"));
 const Setting       = lazyWithRetry(() => import("./pages/Setting.jsx"));
 const KhoiChienCon  = lazyWithRetry(() => import("./pages/KhoiChienCon.jsx"));
@@ -52,6 +53,10 @@ const TuyenSinh     = lazyWithRetry(() => import("./pages/TuyenSinh.jsx"));
 const LichSinhHoat  = lazyWithRetry(() => import("./pages/LichSinhHoat.jsx"));
 const LichHoc       = lazyWithRetry(() => import("./pages/LichHoc.jsx"));
 const GioiTre       = lazyWithRetry(() => import("./pages/GioiTre.jsx"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
+
+// ── Lời Chúa ──
+const LiturgyPage   = lazyWithRetry(() => import("./pages/LiturgyPage.jsx"));
 
 // ── Bài viết ──
 const ArticleList   = lazyWithRetry(() => import("./features/articles/ArticleList.jsx"));
@@ -68,6 +73,7 @@ const BroadcastTab    = lazyWithRetry(() => import("./features/admin/BroadcastTa
 const ArticlesTab     = lazyWithRetry(() => import("./features/admin/articles/ArticlesTab.jsx"));
 const DangKyTab       = lazyWithRetry(() => import("./features/admin/DangKyTab.jsx"));
 const GopYTab         = lazyWithRetry(() => import("./features/admin/GopYTab.jsx"));
+const AdminLiturgyTab = lazyWithRetry(() => import("./features/admin/LiturgyTab.jsx"));
 
 const TeacherSummaryTab   = lazyWithRetry(() => import("./features/teacher/SummaryTab.jsx"));
 const TeacherRosterTab    = lazyWithRetry(() => import("./features/teacher/RosterTab.jsx"));
@@ -133,13 +139,30 @@ export default function App() {
     
     document.documentElement.classList.toggle("dark", isDark);
 
-    const username = localStorage.getItem("username");
-    if (username) setIsLogin(true);
-
     const savedFontSize = localStorage.getItem("fontSize");
     if (savedFontSize && fontSizeMap[savedFontSize]) {
       setFontSize(savedFontSize);
     }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsLogin(true);
+      } else {
+        setIsLogin(false);
+        ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        setIsLogin(false);
+        ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        setIsLogin(true);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
   useEffect(() => {
     const sizeMap = { sm: "14px", base: "16px", lg: "18px", xl: "20px" };
@@ -159,6 +182,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout fontSize={fontSize} toggleModal={toggleModal} isLogin={isLogin} setIsLogin={setIsLogin} handleClose={handleClose}/>}>
           <Route index element={<Home />} />
+          <Route path="lời-chúa-hàng-ngày" element={<LiturgyPage />} />
           <Route path="tuyển-sinh" element={<TuyenSinh />} />
           <Route path="giới-thiệu" element={<GioiThieu />} />
           <Route path="khối-chiên-con" element={<KhoiChienCon />} />
@@ -176,6 +200,7 @@ export default function App() {
           <Route path="bảo-mật" element={<BaoMat />} />
           <Route path="quy-định" element={<QuyDinh />} />
           <Route path="tài-khoản/*" element={<TaiKhoanLayout />} />
+          <Route path="reset-password" element={<ResetPassword />} />
 
           {/* ── Bài viết ── */}
           <Route path="bài-viết" element={<ArticleList />} />
@@ -202,6 +227,7 @@ export default function App() {
             <Route path="bài-viết"   element={<ArticlesTab />} />
             <Route path="đăng-ký"    element={<DangKyTab />} />
             <Route path="góp-ý"      element={<GopYTab />} />
+            <Route path="lời-chúa"   element={<AdminLiturgyTab />} />
           </Route>
           
           {/* Thay thế đoạn Route /quản-lý-học-sinh cũ bằng đoạn mã tối ưu này */}

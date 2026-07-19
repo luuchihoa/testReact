@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 import { 
   Shield, 
   UserCheck, 
@@ -10,35 +11,10 @@ import {
   Scale 
 } from "lucide-react";
 
-const headerVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (d = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 16, mass: 0.6, delay: d }
-  }),
-};
 
-const listVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.15,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 16, mass: 0.6 },
-  },
-};
 
 export default function QuyDinh() {
+  const { heroRef, heroY, heroReveal, vp } = usePageMotion();
   const sections = [
     { icon: Shield, heading: "1. Mục đích sử dụng", body: "Nền tảng này được Ban Giáo Lý Giáo xứ An Ngãi xây dựng nhằm hỗ trợ việc học hỏi, ôn tập giáo lý cho các em thiếu nhi và huynh trưởng trong xứ đoàn. Nội dung chỉ phục vụ mục đích giáo dục đức tin." },
     { icon: UserCheck, heading: "2. Tài khoản người dùng", body: "Mỗi tài khoản được cấp cho một cá nhân cụ thể. Người dùng có trách nhiệm bảo mật mật khẩu và không chia sẻ tài khoản cho người khác sử dụng." },
@@ -49,50 +25,47 @@ export default function QuyDinh() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 transition-colors duration-500 relative">
+    <div ref={heroRef} className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100 transition-colors duration-500 relative">
       {/* Ambient Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-amber-200/30 dark:bg-amber-900/20 blur-[100px] rounded-full pointer-events-none" />
       
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 pointer-events-none" style={{ maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(#92400E12_1px,transparent_1px)] bg-[size:20px_20px] dark:bg-[radial-gradient(#FDE68A10_1px,transparent_1px)]" />
-      </div>
+      {/* Background Pattern */}
+      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-24 relative z-10">
+      <motion.div style={{ y: heroY }} className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-24 relative z-10">
         <header className="mb-10 text-left space-y-3 px-1">
-          <motion.div variants={headerVariants} initial="hidden" animate="visible" custom={0}>
+          <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0}>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100/50 text-amber-800 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50">
-              <Scale className="w-3 h-3" /> Pháp lý & Vận hành
+              <Scale className="w-3 h-3" /> Điều khoản sử dụng
             </span>
           </motion.div>
           
           <motion.h1 
-            variants={headerVariants} 
+            variants={heroReveal} 
             initial="hidden" 
             animate="visible" 
-            custom={0.05} 
+            custom={0.06} 
             className="text-[32px] sm:text-4xl font-extrabold tracking-tight leading-tight text-amber-950 dark:text-amber-50 font-serif"
           >
             Quy định sử dụng
           </motion.h1>
 
-          <motion.p variants={headerVariants} initial="hidden" animate="visible" custom={0.1} className="text-[13px] font-medium text-stone-500 dark:text-stone-400">
+          <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.12} className="text-[13px] font-medium text-stone-500 dark:text-stone-400">
             Cập nhật lần cuối: Tháng 6/2026 • Ban Giáo Lý Gx. An Ngãi
           </motion.p>
         </header>
 
-        <motion.div 
-          className="space-y-3 sm:space-y-4"
-          variants={listVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {sections.map((s) => {
+        <div className="space-y-3 sm:space-y-4">
+          {sections.map((s, idx) => {
             const Icon = s.icon;
             return (
               <motion.section
                 key={s.heading}
-                variants={itemVariants}
+                variants={heroReveal}
+                initial="hidden"
+                whileInView="visible"
+                viewport={vp}
+                custom={idx * 0.05 + 0.15}
                 whileTap={{ scale: 0.98 }}
                 className="group bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-2xl border border-amber-900/10 dark:border-amber-100/10 p-4 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 transition-all duration-300 text-left flex gap-3.5 sm:gap-4 items-start cursor-pointer select-none"
               >
@@ -111,10 +84,10 @@ export default function QuyDinh() {
               </motion.section>
             );
           })}
-        </motion.div>
+        </div>
 
         <motion.p 
-          variants={headerVariants} 
+          variants={heroReveal} 
           initial="hidden" 
           animate="visible" 
           custom={0.45}
@@ -122,7 +95,7 @@ export default function QuyDinh() {
         >
           Việc tiếp tục sử dụng nền tảng đồng nghĩa với việc bạn đã đọc và đồng ý với các quy định trên.
         </motion.p>
-      </div>
+      </motion.div>
     </div>
   );
 }

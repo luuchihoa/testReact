@@ -1,12 +1,12 @@
 import React from "react";
 import { Globe, Compass, Users, MessageSquare, Lightbulb, Heart, Clock, CalendarDays, ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
-import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 import HeroSection from "../features/khoi/HeroSection.jsx";
 import OverviewCards from "../features/khoi/OverviewCards.jsx";
 import HighlightsGrid from "../features/khoi/HighlightsGrid.jsx";
 import CtaSection from "../features/khoi/CtaSection.jsx";
 import QuoteSlider from "../features/khoi/QuoteSlider.jsx";
+import KhoiVaoDoiPillars from "../features/khoi/KhoiVaoDoiPillars.jsx";
 
 // Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
 const APPLE_EASE = [0.16, 1, 0.3, 1];
@@ -63,7 +63,7 @@ const QUOTES = [
 ];
 
 export default function KhoiVaoDoi() {
-  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
+  const { heroRef, lenis, heroY, fadeUp, heroReveal, vp } = usePageMotion();
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-900 dark:bg-[#1C1917] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-blue-500/20 dark:selection:bg-blue-500/30 transition-colors duration-500">
@@ -71,7 +71,7 @@ export default function KhoiVaoDoi() {
       <HeroSection
         heroRef={heroRef}
         heroY={heroY}
-        fadeUp={fadeUp}
+        fadeUp={heroReveal}
         lenis={lenis}
         sectionBgClass="bg-gradient-to-b from-white via-[#FDFBF7] to-[#FDFBF7] dark:from-[#1C1917] dark:via-[#191614] dark:to-[#191614]"
         glowClass="bg-blue-500/5 dark:bg-blue-500/10"
@@ -92,56 +92,14 @@ export default function KhoiVaoDoi() {
         floatBadge={{ label: "Lớp 10 – 11", sub: "Hành trang dấn thân", dotClass: "bg-blue-500" }}
       />
 
-      <OverviewCards items={OVERVIEW} />
+      <OverviewCards items={OVERVIEW} accentBgClass="bg-blue-100/50 dark:bg-blue-900/20" accentTextClass="text-blue-900 dark:text-blue-400" accentBorderClass="border-blue-900/10 dark:border-blue-700/30" />
 
       {/* PILLARS SECTION */}
-      <section id="noi-dung" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400 ml-1">Trọng tâm đào tạo</p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Ba trụ cột của người Kitô hữu trưởng thành</h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-            Mỗi học kỳ đi sâu vào một trụ cột, xoay vòng qua các năm để đảm bảo sự toàn diện trong hành trình đức tin trưởng thành.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-          {PILLARS.map((pillar, i) => { 
-            const Icon = pillar.icon; 
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: APPLE_EASE }}
-                className={`rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col transition-all duration-300 md:hover:shadow-lg ${pillar.color}`}
-              >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${pillar.iconBg}`}>
-                    <Icon className="w-6 h-6" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 leading-snug">
-                    {pillar.title}
-                  </h3>
-                </div>
-
-                <ul className="space-y-4 flex-1">
-                  {pillar.topics.map((topic, j) => (
-                    <li key={j} className="flex items-start gap-3.5 text-[14.5px] text-stone-600 dark:text-stone-300 font-medium leading-relaxed">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2 ${pillar.dot} shadow-sm`} />
-                      <span>{topic}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ); 
-          })}
-        </div>
-      </section>
+      <KhoiVaoDoiPillars items={PILLARS} />
 
       {/* QUOTES WIDGET SECTION */}
       <section className="py-20 relative overflow-hidden flex items-center justify-center z-10 border-y border-amber-900/5 dark:border-amber-100/5 bg-stone-50/50 dark:bg-[#1C1917]/50">
-        <QuoteSlider quotes={QUOTES} />
+        <QuoteSlider quotes={QUOTES} accentTextClass="text-blue-800/60 dark:text-blue-400/60" />
       </section>
 
       <HighlightsGrid
@@ -149,11 +107,8 @@ export default function KhoiVaoDoi() {
         eyebrowLabel="Phương pháp tiếp cận"
         title="Học để sống, không chỉ để biết"
         accentTextClass="text-blue-600 dark:text-blue-400"
-        accentIconClass="bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30 shadow-sm"
+        accentIconClass="bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200/50 dark:border-blue-800/30"
         cardClass="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10"
-        sectionClassName="py-20 relative z-10"
-        mc={mc}
-        vp={vp}
       />
 
       <CtaSection
@@ -166,9 +121,6 @@ export default function KhoiVaoDoi() {
         primaryCtaClass="bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
         secondaryCtaLabel="Liên hệ Văn phòng"
         secondaryCtaTo="/liên-hệ"
-        mc={mc}
-        vp={vp}
-        sectionClassName="pt-20 pb-32 max-w-3xl mx-auto px-4 sm:px-6 text-center border-t border-amber-900/5 dark:border-amber-100/5 relative z-10"
       />
     </div>
   );

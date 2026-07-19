@@ -1,0 +1,674 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="msapplication-config" content="none"/>
+    <meta name="description" content="Đọc trực tuyến kinh phụng vụ và bài đọc trong thánh lễ" />
+    <meta name="keywords" content="Các,Giờ,Kinh,Phụng,Vụ,Liturgy,Bible,Thánh,Công,Giáo,Hour,Prayer,Bài,đọc,Lễ,Lời Chúa,hằng ngày" />
+    <meta name="author" content="Nhóm phiên dịch Các Giờ Kinh Phụng Vụ" />
+    <title>
+                Bài đọc trong Thánh Lễ    </title>
+    <link href="/favicon.ico" type="image/x-icon" rel="icon"/><link href="/favicon.ico" type="image/x-icon" rel="shortcut icon"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>    <link rel="stylesheet" href="/css/bootstrap/bootstrap-datepicker3.standalone.min.css"/>    <link rel="stylesheet" href="/css/bootstrap/bootstrap.vertical-tabs.min.css"/>    <link rel="stylesheet" href="/css/bootstrap/bootstrap-dropdownhover.min.css"/>    <link rel="stylesheet" href="/css/bootstrap/bootstrap-dialog.min.css"/>
+    <link rel="stylesheet" href="/css/font-awesome.min.css"/>    <link rel="stylesheet" href="/css/animate.min.css"/>    <link rel="stylesheet" href="/css/jplayer-skin/jplayer-black-and-yellow.css"/>
+    <link rel="stylesheet" href="/css/master-style.css"/>    <link rel="stylesheet" href="/css/reading-style.css"/>    
+    <script src="/js/jquery/jquery.min.js"></script>    <script src="/js/jquery/jquery.cookie.js"></script>
+    <script src="/js/bootstrap/bootstrap.min.js"></script>    <script src="/js/bootstrap/bootstrap-datepicker.min.js"></script>    <script src="/js/bootstrap/bootstrap-datepicker.vi.min.js"></script>    <script src="/js/bootstrap/bootstrap-dropdownhover.min.js"></script>    <script src="/js/bootstrap/bootstrap-dialog.min.js"></script>
+    <script src="/js/util.min.js"></script>    <script src="/js/reading/common.min.js"></script>
+    
+    <script type="text/javascript">
+        // Get font size
+        var USER_FONT_SIZE = DEFAULT_FONT_SIZE;
+                // Function to check for iOS app available
+        function checkiOSAvailable() {
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                if (!!window.indexedDB) { return true; }
+            }
+            return false;
+        }
+        // Function to check Android device
+        function getAndroidVersion(ua) {
+            ua = (ua || navigator.userAgent).toLowerCase(); 
+            var match = ua.match(/android\s([0-9\.]*)/);
+            return match ? match[1] : false;
+        };
+        // Document ready
+        $(function() {
+            // Setup ajax
+            $.ajaxSetup({
+                headers: {
+                                },
+            });
+            // Set default font
+            $('.reading-content').css('font-size', USER_FONT_SIZE);
+            // Check and set bold
+                            $('.reading-content').toggleClass('text-bold', true);
+                        // Check and show mobile app suggest
+            if (checkiOSAvailable()) {
+                BootstrapDialog.showSuccess("<p style='font-size: 20px;'>Thiết bị tương thích với ứng dụng cho iOS. Nhấn vào đây để cài đặt:</p><p align='center'><a href='https://itunes.apple.com/vn/app/ktcgkpv/id1231816985?mt=8' style='display:inline-block;overflow:hidden;background:url(//linkmaker.itunes.apple.com/assets/shared/badges/vi-vn/appstore-lrg.svg) no-repeat;width:170px;height:50px;background-size:contain;'></a></p><p style='font-size: 20px;'>Xin xem hướng dẫn sử dụng tại đây:</p><p style='font-size: 20px;'><a href='https://ktcgkpv.org/help-app'>https://ktcgkpv.org/help-app</a></p>");
+            } else {
+                androidVersion = getAndroidVersion();
+                if (androidVersion && parseFloat(androidVersion) >= 4.1) {
+                    BootstrapDialog.showSuccess("<p style='font-size: 20px;'>Thiết bị tương thích với ứng dụng cho Android. Nhấn vào đây để cài đặt:</p><p align='center'><a href='https://play.google.com/store/apps/details?id=org.ktcgkpv.ktcgkpv&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1' target='blank' style='display:inline-block;overflow:hidden;background:url(/img/google_play_button.png) no-repeat;width:170px;height:50px;background-size:contain;'></a></p>");
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="header">
+        <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header" style="padding-left: 15px;">
+            <div class="single-logo-visible single-logo-hidden">
+                <a href="/" class="navbar-brand" style="padding: 5px 0px;"><img src="/img/small_logo.png" alt="Nhóm Phiên Dịch Các Giờ Kinh Phụng Vụ" class="img-responsive" style="height: 100%;"/></a>            </div>
+            <div class="custom-hidden-xs" style="padding: 0px;">
+                <a href="/" class="navbar-brand" style="padding: 5px 0px;"><img src="/img/banner_img.png" alt="Nhóm Phiên Dịch Các Giờ Kinh Phụng Vụ" class="img-responsive" style="height: 100%;"/></a>            </div>
+            <button id="btnNavToggle" type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar-content" aria-expanded="false">
+                <span class="sr-only">Menu</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <div id="main-navbar-content" class="collapse navbar-collapse">
+            <script type="text/javascript">
+    $(document).ready(function() {
+                    var activePage = "bible-liturgy";
+            $(".nav.navbar-nav > li." + activePage).addClass('active');
+            });
+</script>
+<ul class="nav navbar-nav navbar-right navbar-menu-container" data-hover="dropdown" data-animations="fadeInUp fadeInLeft fadeInDown fadeInRight">
+    <li class="dropdown articles">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-newspaper-o" aria-hidden="true"></i>&nbsp;Bài viết
+        <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+        <ul class="dropdown-menu dropdown-menu-left">
+            <li>
+                <a href="/articles/view-more?category=0">Chuyên mục Kinh Thánh</a>            </li>
+            <li>
+                <a href="/articles/view-more?category=1">Giải đáp thắc mắc Kinh Thánh</a>            </li>
+            <li>
+                <a href="/articles/view-more?category=2">Các đề mục khác</a>            </li>
+            <li>
+                <a href="/articles/view-more?category=3">Tư liệu</a>            </li>
+            <li>
+                <a href="/articles/view-more">Tất cả</a>            </li>
+            <li>
+                <a href="/articles/view-toc">Mục lục</a>            </li>
+        </ul>
+    </li>
+    <li class="dropdown bible-liturgy">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="glyphicon glyphicon-book"></span>&nbsp;Kinh Thánh - Phụng Vụ
+        <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+        <ul class="dropdown-menu">
+            <li class="dropdown-header">Kinh Thánh</li>
+            <li>
+                <a href="https://kpv.vn/bible/scripture">Bản văn và chú thích</a>            </li>
+            <li>
+                <a href="/bible/audio">Lắng Nghe Lời Chúa</a>            </li>
+            <li>
+                <a href="/bible/video">Hãy đến mà xem</a>            </li>
+            <li>
+                <a href="/bible/names-transliteration">Phiên âm các tên riêng</a>            </li>
+            <li>
+                <a href="/articles/get-article?id=174">Đối Chiếu Bốn Sách Tin Mừng</a>            </li>
+            <li class="divider"></li>
+            <li class="dropdown-header">Phụng Vụ</li>
+            <li>
+                <a href="/readings/mass-reading">Các Bài Đọc trong Thánh Lễ</a>            </li>
+            <li>
+                <a href="/readings/prayer">Các Giờ Kinh Phụng Vụ</a>            </li>
+            <li>
+                <a href="/rites">Các nghi thức Phụng Vụ</a>            </li>
+        </ul>
+    </li>
+    <li class="books">
+        <a href="/books"><i class="fa fa-book" aria-hidden="true"></i>&nbsp;Sách</a>    </li>
+            <li>
+            <a href="/users/login">
+                <span class="glyphicon glyphicon-log-in"></span>&nbsp;Đăng nhập
+            </a>
+        </li>
+                <li class="dropdown help">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+            <i class="fa fa-question-circle" aria-hidden="true"></i>&nbsp;Hướng dẫn
+            <i class="fa fa-caret-down" aria-hidden="true"></i>
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a href="/help"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;Trang web</a>            </li>
+            <li>
+                <a href="/pages/help-app"><i class="fa fa-tablet" aria-hidden="true"></i>&nbsp;Ứng dụng di động</a>            </li>
+        </ul>
+    </li>
+</ul>
+        </div>
+    </div>
+</nav>    </div> <!-- End header -->
+    <div id="content" class="container-fluid">
+        <div class="overlay">
+            <div class="loader-spinner"></div>
+        </div>
+        
+<script src="/js/reading/mass-reading.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Change today
+        var date = parseInt('17');
+        var month = parseInt('07') - 1;
+        var year = parseInt('2026');
+        today = new Date(year, month, date);
+
+                    // Calculate previous date and next date
+            var preDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+            var nextDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+            // Display date on date selection buttons
+            $('#dateSelection .btn-group > .btn:eq(0)').text(preDate.getDate() + "/" + (preDate.getMonth() + 1));
+            $('#dateSelection .btn-group > .btn:eq(1)').text(today.getDate() + "/" + (today.getMonth() + 1));
+            $('#dateSelection .btn-group > .btn:eq(2)').text(nextDate.getDate() + "/" + (nextDate.getMonth() + 1));
+            // Handle date selection buttons click
+            $('#dateSelection .btn-group .btn').on('click', function() {
+                if ($(this).hasClass('active')) {
+                    return;
+                }
+                $('#dateSelection .btn-group .btn').removeClass('active');
+                $(this).addClass('active');
+                selDate = $('#dateSelection .btn-group .btn').index(this);
+                getReadingAjax();
+            });
+            // Get Mass Reading
+            getReadingAjax();
+            });
+</script>
+
+<div class="row">
+    <div id="optionBar" class="col-md-2 col-xs-6 col-sm-4 hidden-sm-down visible-md-up collapse in" style="height: 100%; -webkit-overflow-scrolling: touch; overflow-y:auto;">
+        <script type="text/javascript">
+    var isDatepickerShown = false;
+    
+    function waitToChangeToday(day, month, year, mustWait) {
+        if (!isDatepickerShown) {
+            return;
+        } 
+        setTimeout(function() {
+            var monthyear = $('.datepicker .datepicker-days .datepicker-switch').html();
+            month = month + 1
+            if (monthyear && (monthyear.indexOf(' '+ month + ' ') > -1) && (monthyear.indexOf(year) > -1)) {
+                $('.datepicker .datepicker-days td.day:contains(' + day + '):not(.old,.new)').first().addClass('today');
+            } else if (mustWait) {
+                waitToChangeToday(day, month - 1, year);
+            }
+        }, 50);
+    }
+
+    function changeToday(curDate, mustWait) {
+        if (curDate) {
+            $('.datepicker .datepicker-days td.today').removeClass('today');
+            if (!today) {
+                today = new Date();
+            }
+            if (curDate.getMonth() == today.getMonth() && curDate.getFullYear() == today.getFullYear()) {
+                waitToChangeToday(today.getDate(), today.getMonth(), today.getFullYear(), mustWait);
+            }
+        }
+    }
+
+    $(function() {
+        // Create datepicker with options
+        $('#dateSelection').datepicker({
+            language: "vi",
+            orientation: "bottom left",
+            todayHighlight: false,
+            daysOfWeekHighlighted: '0',
+            autoclose: true,
+            disableTouchKeyboard: true
+        }).on('show', function(e) {
+            if (!isDatepickerShown) {
+                $('.datepicker').hide();
+                $('.datepicker').slideDown();
+                isDatepickerShown = true;
+                changeToday(e.date, false);
+            }
+        }).on('hide', function() {
+            isDatepickerShown = false;
+        }).on('changeDate', function (ev) {
+            changeToday(ev.date, false);
+        }).on('changeMonth', function (ev) {
+            changeToday(ev.date, true);
+        });
+    });
+</script>
+
+<div id="dateSelection" class="input-group date" data-provide="datepicker">
+    <input type="text" class="form-control" readonly>
+    <div class="input-group-addon">
+        <i class="fa fa-calendar" aria-hidden="true"></i>
+    </div>
+</div>
+        <script type="text/javascript">
+            $(function() {
+                                    $('#optionBar .input-group.date').datepicker('setStartDate', new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7));
+                    $('#optionBar .input-group.date').datepicker('setEndDate', new Date(today.getFullYear(), today.getMonth(), today.getDate() + parseInt(45)));
+                
+                $('#optionBar .input-group.date').datepicker().on('changeDate', function (ev) {
+                    selDate = ev.date;
+                    getReadingAjax();
+                });
+                $('#optionBar .input-group.date').datepicker('setDate', today);
+            });
+        </script>
+
+        <div id="feastSelection" class="form-group"></div>
+        <div id="quickAccess">
+            <ul class="content-selection nav nav-tabs tabs-left"></ul>
+        </div>
+        <div style="margin-top: 25px;">
+            <p>
+                <a href="https://itunes.apple.com/vn/app/ktcgkpv/id1231816985?mt=8" target="blank">
+                    <img class="img-responsive" src="/img/app_store_button.png" />
+                </a>
+            </p>
+            <p>
+                <a href="https://play.google.com/store/apps/details?id=org.ktcgkpv.ktcgkpv&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1" target="blank">
+                    <img class="img-responsive" src="/img/google_play_button.png" />
+                </a>
+            </p>
+        </div>
+    </div>
+    <div class="reading-content col-md-8 col-sm-12 col-xs-12 text-bold">
+        
+<style>
+    #toolbar {
+        z-index: 1;
+        position: absolute;
+        left: 10px;
+        font-size: 18px !important;
+    }
+
+    #toolbar p {
+        z-index: 1;
+        padding: 5px;
+        margin: 0px;
+        padding-bottom: 7px;
+        opacity: 0.5;
+        transition: 0.5s;
+        cursor: pointer;
+        color: #A20000;
+    }
+
+    #toolbar p.disabled {
+        color: #4A4A4A;
+    }
+
+    #toolbar .tooltip-inner {
+        white-space:nowrap;
+        max-width:none;
+    }
+
+    #toolbar p:hover {
+        opacity: 1;
+    }
+
+    #toolbar p.disabled:hover {
+        opacity: 0.5;
+    }
+</style>
+
+<script type="text/javascript">
+    var isExpandClick = false;
+
+    function audioToolClickHandler(event) {
+        var audioTool = $('#toolbar .audio');
+        var position = audioTool.position();
+        var popoverHeight = parseInt($('#audioPopover').outerHeight(true));
+        var iconHeight = parseInt(audioTool.outerHeight(true));
+        var vtop = position.top - ((popoverHeight - iconHeight) / 2);
+        var vleft = parseInt(audioTool.outerWidth(true)) + position.left;
+        $('#audioPopover').css({top: vtop, left: vleft});
+        $('#audioPopover').fadeToggle();
+        event.stopPropagation();
+    }
+
+    $(function() {
+        
+        $('#audioPopover').hide();
+
+        $('#toolbar .audio').on('click', function(event) {
+            audioToolClickHandler(event);
+        });
+
+        $('#toolbar .scroll-top').on('click', function(event) {
+            $('#readingContainer').scrollTop(0);
+        });
+
+        $("body").click(function(event){
+            if (!$(event.target).is("#audioPopover *")) {
+                $('#audioPopover').fadeOut();
+            }
+        });
+
+        $('#toolbar .optionbar-toggle, #toolbar .reading-expand').on('click', function() {
+            isExpandClick = $(this).hasClass('reading-expand');
+            $('#optionBar').collapse('toggle');
+        });
+
+        $('#optionBar').on('show.bs.collapse', function(e) {
+            if (e.namespace !== 'bs.collapse') {
+                return;
+            }
+            $(this).removeClass('visible-md-up');
+            $(this).addClass('visible-md-up');
+            $('.right-side').show();
+            // Adjus reading content
+            var readingCont = $('.reading-content');
+            readingCont.removeClass('col-md-8 col-md-12 col-sm-12 col-xs-12 col-sm-8 col-xs-6');
+            readingCont.addClass('col-md-8 col-sm-8 col-xs-6');
+            if (isExpandClick) {
+                // Adjust expand icon
+                var expandIcon = $('#toolbar .reading-expand');
+                expandIcon.find('i').removeClass('fa-expand fa-compress');
+                expandIcon.find('i').addClass('fa-expand');
+            }
+            isExpandClick = false;
+            adjustContentHeight();
+            pullDownElement();
+            adjustReadingContent();
+        });
+
+        $('#optionBar').on('hide.bs.collapse', function(e) {
+            if (e.namespace !== 'bs.collapse') {
+                return;
+            }
+            $(this).removeClass('visible-md-up');
+            $('.right-side').hide();
+            // Adjus reading content
+            var readingCont = $('.reading-content');
+            readingCont.removeClass(' col-md-8 col-md-12 col-sm-12 col-xs-12 col-sm-8 col-xs-6');
+            readingCont.addClass('col-md-12 col-sm-12 col-xs-12');
+            if (isExpandClick) {
+                // Adjust expand icon
+                var expandIcon = $('#toolbar .reading-expand');
+                expandIcon.find('i').removeClass('fa-expand fa-compress');
+                expandIcon.find('i').addClass('fa-compress');
+            }
+            isExpandClick = false;
+            adjustReadingContent();
+        });
+
+        $('#toolbar .reading-bold').on('click', function() {
+            $('.reading-content').toggleClass('text-bold');
+        });
+    });
+</script>
+
+<div id="toolbar">
+    <p class="zoomin">
+        <i class="fa fa-search-plus" aria-hidden="true"></i>
+    </p>            
+    <p class="zoomout">
+        <i class="fa fa-search-minus" aria-hidden="true"></i>
+    </p>
+    <p class="resetzoom">
+        <i class="fa fa-search" aria-hidden="true"></i>
+    </p>
+    <p class="reading-bold">
+        <i class="fa fa-bold" aria-hidden="true"></i>
+    </p>
+    <p class="optionbar-toggle hidden-md hidden-lg">
+        <i class="fa fa-cog" aria-hidden="true"></i>
+    </p>
+    <p class="reading-expand hidden-sm hidden-xs">
+        <i class="fa fa-expand" aria-hidden="true"></i>
+    </p>
+    <p class="audio">
+        <i class="fa fa-volume-up" aria-hidden="true"></i>
+    </p>
+    <p class="disabled-audio disabled" style="display:none;" data-toggle="tooltip" title="Đăng nhập để nghe Audio ngày Chúa Nhật" data-placement="right" data-trigger="hover">
+        <i class="fa fa-volume-off" aria-hidden="true"></i>
+    </p>
+    <p class="scroll-top">
+        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+    </p>
+            <p class="reading-print disabled" data-toggle="tooltip" title="Chức năng chỉ dành cho tài khoản trả phí" data-placement="right" data-trigger="hover">
+            <i class="fa fa-print" aria-hidden="true"></i>
+        </p>
+        <div id="audioPopover" class="popover right in" role="tooltip" style="max-width: 500px; width: auto; display: none;">
+        <div class="arrow" style="top: 50%;"></div>
+        <div class="popover-content">
+            <script src="/js/jquery/jquery.jplayer.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('#audioPlayer').jPlayer({
+            ready: function (event) {
+                $("#audioContainer .jp-gui").removeClass("jp-no-volume");
+                if(event.jPlayer.status.noVolume) {
+					// Add a class and then CSS rules deal with it.
+					$("#audioContainer .jp-gui").addClass("jp-no-volume");
+				}
+            },
+            ended: function (event) {
+                var nextAudio = $('#audioPlaylist li.active').next('li');
+                if (nextAudio && $('.playlist-container .auto-play input').is(':checked')) {
+                    nextAudio.trigger('click');
+                }
+            },
+            timeupdate: function(event) {
+                $('#jpCurrentTime .tooltip-inner').html($('#audioContainer .jp-current-time').html());
+                var currentPosition = $('#audioContainer .jp-play-bar').width() - $('#jpCurrentTime').width() / 2 + 1 + $('#audioContainer .jp-progress').position().left;
+                $('#jpCurrentTime').css('left', currentPosition);
+            },
+            cssSelectorAncestor: "#audioContainer",
+            smoothPlayBar: true,
+            volume: 1,
+            swfPath: "../js/jquery",
+            supplied: "mp3",
+            preload: "none"
+        });
+
+        $('#audioPlaylist').on('click', 'li', function() {
+            $('#audioPlayer').jPlayer('stop');
+            var $this = $(this);
+            var audioUrl = $this.data('audio_url');
+            if (audioUrl) {
+                $('#audioPlayer').jPlayer("setMedia", {
+                    mp3: audioUrl
+                });
+                $('#audioPlayer').jPlayer("play");
+                $('#audioPlaylist li').removeClass('active');
+                $this.addClass('active');
+                var offset = $('#audioPlaylist li').first().position().top;
+                $('#audioPlaylist').animate({
+                    scrollTop: ($this.position().top - offset)
+                }, 500);
+            }
+        });
+
+        $('#audioContainer .jp-progress').hover(function() {
+            var currentPosition = $('#audioContainer .jp-play-bar').width() - $('#jpCurrentTime').width() / 2 + 1 + $('#audioContainer .jp-progress').position().left;
+            $('#jpCurrentTime').css('left', currentPosition);
+            $('#jpCurrentTime').fadeIn();
+        }, function() {
+            $('#jpCurrentTime').fadeOut();
+        });
+    });
+</script>
+
+<div id="audioPlayer" class="jp-jplayer"></div>
+<div id="audioContainer" class="jp-audio" role="application" aria-label="media player">
+    <div class="jp-type-single">
+        <div class="jp-gui jp-interface">
+            <ul class="jp-controls">
+                <li><a class="jp-play" role="button" tabindex="0">play</a></li>
+                <li><a class="jp-pause" role="button" tabindex="0">pause</a></li>
+                <li><a class="jp-stop" role="button" tabindex="0">stop</a></li>
+                <li><a class="jp-mute" role="button" tabindex="0">mute</a></li>
+                <li><a class="jp-unmute" role="button" tabindex="0">unmute</a></li>
+            </ul>
+            <div class="jp-progress-container">
+                <div class="tooltip fade top in" role="tooltip" id="jpCurrentTime" aria-label="time" style="display: none;">
+                    <div class="tooltip-arrow" style="left: 50%;"></div>
+                    <div class="tooltip-inner"></div>
+                </div>
+                <p class="jp-current-time hidden" role="timer" aria-label="time"></p>
+                <div class="jp-progress">
+                    <div class="jp-seek-bar">
+                        <div class="jp-play-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="jp-volume-bar-container">
+                <div class="jp-volume-bar">
+                    <div class="jp-volume-bar-value"></div>
+                </div>
+            </div>
+        </div>
+        <div class="jp-no-solution">
+            <span>Update Required</span>
+            To play the media you will need to either update your browser to a recent version or update your <a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.
+        </div>
+    </div>
+    <div class="playlist-container hidden">
+        <ul id="audioPlaylist"></ul>
+        <div class="auto-play"><label><input checked type="checkbox"> Tự động chuyển</label></div>
+    </div>
+</div>        </div>
+    </div>
+</div>        <div id="readingContainer" style="height: 100%; -webkit-overflow-scrolling: touch; overflow-y:scroll;">
+            <div id="massReadingContent">
+                <div id="dateInfo">
+                    <p class="daily-title center-block"></p>
+                    <p class="main-title center-block"></p>
+                    <div class="sub-title center-block">
+                        <p class="day-title"></p>
+                        <p class="day-rank"></p>
+                    </div>
+                    <div class="dt-description"></div>
+                </div>
+                <div class="normal-content content-div">
+                    <!-- INTROIT -->
+<div class="introit reading division">
+    <div class="header-indexing">
+        <div class="division-header"><span>Ca nhập lễ</span></div>
+        <div id="introitSel" class="introit[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="introit[content] body"></div>
+</div><!-- End INTROIT -->
+<!-- READING 1 -->
+<div class="reading1 reading division">
+    <div class="header-indexing">
+        <div class="division-header"><span>Bài đọc 1</span></div>
+        <div id="readingSel1" class="reading1[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="header">
+        <div class="center-block">
+            <p class="reading1[title] title text-center"></p>
+            <p class="reading1[epitomize] epitomize"></p>
+        </div>
+        <p class="reading1[lead] leading"></p>
+    </div>
+    <div class="reading1[content] body"></div>
+</div><!-- End READING -->
+
+<div class="responsory division">
+    <div class="header-indexing">
+        <div class="division-header"><span>Đáp ca</span></div>
+        <div id="responsorySel" class="responsory[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="responsory[content] body"></div>
+</div>
+
+<!-- READING 2 -->
+<div class="reading2 reading division">
+    <div class="header-indexing">
+        <div class="division-header"><span>Bài đọc 2</span></div>
+        <div id="readingSel2" class="reading2[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="header">
+        <div class="center-block">
+            <p class="reading2[title] title text-center"></p>
+            <p class="reading2[epitomize] epitomize"></p>
+        </div>
+        <p class="reading2[lead] leading"></p>
+    </div>
+    <div class="reading2[content] body"></div>
+</div><!-- End READING 2 -->
+
+<!-- GOSPEL -->
+<div class="gospel reading division">
+    <div class="division gospel-acclam">
+        <div class="header-indexing">
+            <div class="division-header">Tung hô Tin Mừng</div>
+            <div id="gospelAcclamSel" class="gospel-acclam[indexing] right-indexing sel-transparent dropdown">
+                <span class="btn dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+                <ul class="dropdown-menu dropdown-menu-right">
+                </ul>
+            </div>
+        </div>
+        <div class="gospel-acclam[content] body"></div>
+    </div>
+    <div class="header-indexing">
+        <div class="division-header"><span>Tin Mừng</span></div>
+        <div id="gospelSel" class="gospel[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="header">
+        <div class="center-block">
+            <p class="gospel[title] title text-center"></p>
+            <p class="gospel[epitomize] epitomize"></p>
+        </div>
+        <p class="gospel[lead] leading"></p>
+    </div>
+    <div class="gospel[content] body"></div>
+</div><!-- End GOSPEL -->
+<!-- COMMUNION -->
+<div class="communion reading division">
+    <div class="header-indexing">
+        <div class="division-header"><span>Ca hiệp lễ</span></div>
+        <div id="communionSel" class="communion[indexing] right-indexing sel-transparent dropdown">
+            <span class="btn dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+            <ul class="dropdown-menu dropdown-menu-right">
+            </ul>
+        </div>
+    </div>
+    <div class="communion[content] body"></div>
+</div><!-- End COMMUNION -->                </div>
+                <div class="special-content content-div"></div>
+            </div>
+        </div>
+    </div>
+    <div class="right-side col-md-2 hidden-xs hidden-sm" style="height: 100%;">
+        <img class="img-responsive center-block" style="padding-top: 25px;" src="/img/baidoc.png" alt="Bài đọc trong Thánh lễ" />
+    </div>
+</div>
+    </div>
+    </body>
+</html>

@@ -17,6 +17,9 @@ import {
   GraduationCap,
   Users,
   RefreshCw,
+  ChevronDown,
+  CalendarDays,
+  Check,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { AuthGateSkeleton, TableSkeleton, Bone } from "../../components/ui/Skeleton.jsx";
@@ -270,14 +273,40 @@ class RouteErrorBoundary extends React.Component {
 }
 
 // ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+function useDismissableDropdown(isOpen, onClose) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [isOpen, onClose]);
+  return ref;
+}
+
+// ---------------------------------------------------------------------------
 // Header — "hồ sơ lớp" layout with indexed underline tabs
 // ---------------------------------------------------------------------------
 
 const TeacherHeader = React.memo(
   React.forwardRef(function TeacherHeader(
-    { lop, namHoc, studentCount, studentsInitialized, collapsed },
+    { lop, namHoc, availableYears, changeYear, studentCount, studentsInitialized, collapsed },
     ref
   ) {
+    const [openYear, setOpenYear] = useState(false);
+    const wrapRef = useDismissableDropdown(openYear, () => setOpenYear(false));
+    const isCurrent = (nh) => nh === getCurrentNamHoc();
+
   return (
     <div
       ref={ref}
@@ -309,14 +338,73 @@ const TeacherHeader = React.memo(
               >
                 Sổ chủ nhiệm
               </p>
-              <h1
-                className={`font-semibold text-amber-950 dark:text-amber-50 truncate transition-all duration-300 ease-out ${
-                  collapsed ? "text-sm sm:text-lg" : "text-lg sm:text-2xl"
-                }`}
-                style={{ fontFamily: "'Fraunces', serif" }}
-              >
-                Lớp {lop} · {namHoc}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1
+                  className={`font-semibold text-amber-950 dark:text-amber-50 truncate transition-all duration-300 ease-out ${
+                    collapsed ? "text-sm sm:text-lg" : "text-lg sm:text-2xl"
+                  }`}
+                  style={{ fontFamily: "'Fraunces', serif" }}
+                >
+                  Lớp {lop}
+                </h1>
+                
+                <div className="relative flex-shrink-0" ref={wrapRef}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenYear((v) => !v)}
+                    title="Chọn năm học"
+                    aria-haspopup="listbox"
+                    aria-expanded={openYear}
+                    className={`inline-flex items-center gap-1.5 rounded-full border font-bold transition-all duration-150 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500/50 dark:focus-visible:ring-offset-[#1C1917] ${
+                      collapsed ? "h-6 pl-2 pr-1.5 text-[11px]" : "h-7 sm:h-8 pl-3 pr-2 text-[12px] sm:text-[13px] mt-0.5"
+                    } ${
+                      openYear
+                        ? "border-transparent bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 shadow-[0_2px_8px_rgba(146,64,14,0.2)]"
+                        : "border-amber-900/10 dark:border-amber-100/10 bg-white/80 dark:bg-stone-800/40 text-stone-700 dark:text-stone-300 shadow-sm backdrop-blur-sm hover:bg-amber-50 dark:hover:bg-stone-800/80"
+                    }`}
+                  >
+                    <CalendarDays className={`${collapsed ? "w-3 h-3" : "w-3.5 h-3.5"} ${openYear ? "text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`} strokeWidth={2.25} />
+                    <span className="whitespace-nowrap leading-none mt-[1px]">{namHoc}</span>
+                    <ChevronDown
+                      className={`${collapsed ? "w-3 h-3" : "w-3.5 h-3.5"} transition-transform duration-200 ${openYear ? "rotate-180 text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`}
+                    />
+                  </button>
+
+                  {openYear && (
+                    <div
+                      role="listbox"
+                      className="absolute left-0 sm:left-auto sm:right-0 z-[100] mt-2 min-w-[180px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      {availableYears?.map((nh) => {
+                        const active = nh === namHoc;
+                        return (
+                          <button
+                            key={nh}
+                            type="button"
+                            role="option"
+                            aria-selected={active}
+                            onClick={() => { changeYear(nh); setOpenYear(false); }}
+                            className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-bold text-left transition-colors ${
+                              active ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50" : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {nh}
+                              {isCurrent(nh) && (
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-amber-600 dark:bg-amber-400"
+                                  title="Năm học hiện tại"
+                                />
+                              )}
+                            </span>
+                            {active && <Check className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -408,7 +496,7 @@ function EmptyClassState({ onGoHome }) {
 
 function TeacherLayoutInner() {
   const navigate = useNavigate();
-  const { loadingContext, context, students, studentsInitialized } = useTeacherContext();
+  const { loadingContext, context, students, studentsInitialized, changeYear } = useTeacherContext();
 
   const [outletKey, setOutletKey] = useState(0);
   const resetOutlet = useCallback(() => setOutletKey((k) => k + 1), []);
@@ -447,6 +535,8 @@ function TeacherLayoutInner() {
         ref={headerRef}
         lop={context.lop}
         namHoc={context.namHoc}
+        availableYears={context.availableYears}
+        changeYear={changeYear}
         studentCount={studentCount}
         studentsInitialized={studentsInitialized}
         collapsed={headerCollapsed}
@@ -455,7 +545,7 @@ function TeacherLayoutInner() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <RouteErrorBoundary onReset={resetOutlet}>
           <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
-            <Outlet key={outletKey} />
+            <Outlet key={`${context.namHoc}-${outletKey}`} />
           </Suspense>
         </RouteErrorBoundary>
       </main>

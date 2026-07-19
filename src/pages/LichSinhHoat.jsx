@@ -2,24 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Calendar, Tent, BookOpen, Sparkles, Flame, Sun, Info } from "lucide-react";
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mql.matches);
-    const handler = (e) => setIsMobile(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-  return isMobile;
-}
-
-function useMotionConfig() {
-  const isMobile = useIsMobile();
-  const prefersReducedMotion = useReducedMotion();
-  const reduced = prefersReducedMotion || isMobile;
-  return { isMobile, reduced, yOffset: reduced ? 8 : 24, duration: reduced ? 0.3 : 0.6, stagger: reduced ? 0.04 : 0.08 };
-}
+import { usePageMotion } from "../hooks/usePageMotion.js";
 
 const KHOI_STYLE = {
   "Kinh Thánh":                    { icon: BookOpen, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10", border: "border-amber-200/60 dark:border-amber-500/20" },
@@ -133,19 +116,7 @@ function DayCard({ day }) {
 }
 
 export default function LichSinhHoat() {
-  const mc = useMotionConfig();
-
-  const fadeInUp = {
-    hidden:  { opacity: 0, y: mc.yOffset },
-    visible: { opacity: 1, y: 0, transition: { duration: mc.duration, ease: [0.16, 1, 0.3, 1] } },
-  };
-
-  const staggerContainer = {
-    hidden:  { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: mc.stagger } },
-  };
-
-  const vp = { once: true, margin: mc.isMobile ? "0px" : "-40px" };
+  const { mc, fadeUp, heroReveal, vp } = usePageMotion();
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 font-sans antialiased overflow-x-hidden selection:bg-amber-500/30 transition-colors duration-500">
@@ -156,28 +127,28 @@ export default function LichSinhHoat() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
         )}
 
-        <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-          <motion.div variants={fadeInUp} className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50 rounded-full mb-6 shadow-sm">
+        <div className="relative">
+          <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0} className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50 rounded-full mb-6 shadow-sm">
             <Calendar className="w-3.5 h-3.5" /> Lịch sinh hoạt
           </motion.div>
 
-          <motion.h1 variants={fadeInUp} className="font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight text-amber-950 dark:text-amber-50 mb-5 leading-[1.08] font-serif">
+          <motion.h1 variants={heroReveal} initial="hidden" animate="visible" custom={0.05} className="font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight text-amber-950 dark:text-amber-50 mb-5 leading-[1.08] font-serif">
             Hành trình đến{" "}
             <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
               Ngày Hội Trại
             </span>
           </motion.h1>
 
-          <motion.p variants={fadeInUp} className="max-w-lg mx-auto text-base text-stone-600 dark:text-stone-400 font-medium leading-relaxed">
+          <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.1} className="max-w-lg mx-auto text-base text-stone-600 dark:text-stone-400 font-medium leading-relaxed">
             Bốn tuần sinh hoạt cùng nhau chuẩn bị tâm hồn và tinh thần, hướng tới ngày hội trại lớn.
           </motion.p>
-        </motion.div>
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-6 pb-24 space-y-16">
 
         {/* ══ HỘI TRẠI BANNER ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeInUp}>
+        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.15}>
           <div className="relative bg-gradient-to-br from-amber-800 to-amber-950 dark:from-amber-700 dark:to-amber-900 rounded-[2rem] p-8 md:p-10 overflow-hidden text-center shadow-lg">
             <div className="absolute -top-20 -left-20 w-64 h-64 bg-amber-400/20 blur-3xl rounded-full pointer-events-none" />
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-orange-500/20 blur-3xl rounded-full pointer-events-none" />
@@ -200,7 +171,7 @@ export default function LichSinhHoat() {
         </motion.section>
 
         {/* ══ LEGEND ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeInUp}>
+        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.2}>
           <div className="flex flex-wrap justify-center gap-2.5">
             {Object.entries(KHOI_STYLE).map(([name, style]) => {
               const Icon = style.icon;
@@ -214,9 +185,9 @@ export default function LichSinhHoat() {
         </motion.section>
 
         {/* ══ TIMELINE 4 TUẦN ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={staggerContainer} className="space-y-12">
+        <div className="space-y-12">
           {WEEKS.map((week, idx) => (
-            <motion.div key={week.range} variants={fadeInUp} className="relative">
+            <motion.div key={week.range} variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={idx * 0.05 + 0.15} className="relative">
               {!mc.isMobile && <div className="absolute left-[1.15rem] top-12 bottom-0 w-px bg-amber-900/10 dark:bg-amber-100/10 -z-10" />}
 
               <div className="flex items-center gap-4 mb-5">
@@ -239,10 +210,10 @@ export default function LichSinhHoat() {
               </div>
             </motion.div>
           ))}
-        </motion.section>
+        </div>
 
         {/* ══ GHI CHÚ ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeInUp}>
+        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.3}>
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/30 rounded-[1.75rem] p-6 text-center sm:text-left backdrop-blur-sm">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-200/50 dark:bg-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400">
               <Info className="w-5 h-5" />

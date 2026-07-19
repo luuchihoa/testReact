@@ -4,7 +4,7 @@ import {
   Flame, BookOpen, MapPin, Clock, CalendarDays,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useKhoiMotion } from "../hooks/useKhoiMotion.js";
+import { usePageMotion } from "../hooks/usePageMotion.js";
 import HeroSection from "../features/khoi/HeroSection.jsx";
 import OverviewCards from "../features/khoi/OverviewCards.jsx";
 import CtaSection from "../features/khoi/CtaSection.jsx";
@@ -147,7 +147,7 @@ function InstagramIcon({ className }) {
 }
 
 export default function GioiTre() {
-  const { heroRef, lenis, mc, heroY, fadeUp, vp } = useKhoiMotion();
+  const { heroRef, lenis, heroY, fadeUp, heroReveal, vp } = usePageMotion();
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-900 dark:bg-[#1C1917] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-sky-500/20 dark:selection:bg-sky-500/30 transition-colors duration-500">
@@ -155,7 +155,7 @@ export default function GioiTre() {
       <HeroSection
         heroRef={heroRef}
         heroY={heroY}
-        fadeUp={fadeUp}
+        fadeUp={heroReveal}
         lenis={lenis}
         sectionBgClass="bg-gradient-to-b from-white via-[#FDFBF7] to-[#FDFBF7] dark:from-[#1C1917] dark:via-[#191614] dark:to-[#191614]"
         glowClass="bg-sky-500/5 dark:bg-sky-500/10"
@@ -176,7 +176,7 @@ export default function GioiTre() {
         floatBadge={{ label: "Sau Khối Vào Đời", sub: "Giai đoạn trưởng thành", dotClass: "bg-sky-500" }}
       />
 
-      <OverviewCards items={OVERVIEW} />
+      <OverviewCards items={OVERVIEW} accentBgClass="bg-sky-100/50 dark:bg-sky-900/20" accentTextClass="text-sky-900 dark:text-sky-400" accentBorderClass="border-sky-900/10 dark:border-sky-700/30" />
 
       {/* 4 TRỤ CỘT SINH HOẠT */}
       <section id="sinh-hoat" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
@@ -188,30 +188,34 @@ export default function GioiTre() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
                 viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.08, ease: APPLE_EASE }}
-                className={`rounded-[24px] border p-6 flex flex-col h-full transition-all duration-300 md:hover:shadow-lg ${p.color}`}
+                custom={i * 0.08}
+                whileHover={{ y: -6, scale: 1.01 }}
+                className={`rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col h-full transition-all duration-300 hover:shadow-xl ${p.color}`}
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${p.iconBg}`}>
                   <Icon className={`w-6 h-6 ${p.iconColor}`} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-[20px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-5">{p.title}</h3>
-                <ul className="space-y-3.5 mt-auto">
+                <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-6">{p.title}</h3>
+                <div className="space-y-3 mt-auto">
                   {p.items.map((item, j) => (
-                    <li key={j} className="flex items-start gap-3 text-[14px] text-stone-600 dark:text-stone-300 font-medium leading-relaxed">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2 shadow-sm ${p.dot}`} />
-                      <span>{item}</span>
-                    </li>
+                    <div key={j} className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl bg-white/40 dark:bg-[#1C1917]/40 border border-amber-900/5 dark:border-amber-100/5 shadow-sm group hover:bg-white/80 dark:hover:bg-[#1C1917]/80 transition-colors">
+                      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${p.iconBg.replace('shadow-sm', '')}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                      </div>
+                      <span className="text-[14px] text-stone-700 dark:text-stone-300 font-medium leading-relaxed">{item}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </motion.div>
             );
           })}
@@ -233,21 +237,25 @@ export default function GioiTre() {
             {EVENTS.map((ev, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
                 viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.05, ease: APPLE_EASE }}
-                className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[20px] border border-amber-900/10 dark:border-amber-100/10 p-5 shadow-sm md:hover:shadow-md transition-all flex flex-col"
+                custom={i * 0.05}
+                whileHover={{ y: -6, scale: 1.01 }}
+                className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[20px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden group"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="px-5 py-3 border-b border-dashed border-amber-900/20 dark:border-amber-100/20 bg-stone-100/50 dark:bg-stone-800/30 flex justify-between items-center">
                   <p className="text-[13px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-500">
                     {ev.month}
                   </p>
-                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border shadow-sm ${ev.color}`}>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-widest border shadow-sm ${ev.color}`}>
                     {ev.tag}
                   </span>
                 </div>
-                <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 leading-snug mt-auto">{ev.name}</p>
+                <div className="p-5 flex-1 flex items-center">
+                  <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{ev.name}</p>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -268,14 +276,16 @@ export default function GioiTre() {
           {ROLES.map((r, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: mc.yOffset }}
-              whileInView={{ opacity: 1, y: 0 }}
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
               viewport={vp}
-              transition={{ duration: 0.5, delay: i * 0.08, ease: APPLE_EASE }}
+              custom={i * 0.08}
+              whileHover={{ y: -6, scale: 1.01 }}
               className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-6 shadow-sm hover:border-sky-500/30 transition-colors"
             >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 bg-sky-100/80 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/30 shadow-sm font-black text-[16px] font-serif">
-                {(i + 1).toString().padStart(2, "0")}
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900/40 dark:to-sky-800/40 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-700/30 shadow-sm font-black text-[14px] tracking-wider uppercase">
+                {r.role.split(' ').map(word => word[0]).join('').substring(0, 2)}
               </div>
               <h3 className="text-[18px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-2">{r.role}</h3>
               <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">{r.desc}</p>
@@ -289,10 +299,11 @@ export default function GioiTre() {
         <div className="absolute inset-0 bg-gradient-to-br from-sky-900/50 to-stone-900 dark:from-sky-900/30 dark:to-black z-0" />
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: mc.yOffset }}
-            whileInView={{ opacity: 1, y: 0 }}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
             viewport={vp}
-            transition={{ duration: 0.7, ease: APPLE_EASE }}
+            custom={0.2}
           >
             <Mic2 className="w-10 h-10 mx-auto mb-8 text-sky-400/60" strokeWidth={1.5} />
             <blockquote className="text-white text-[20px] md:text-[26px] font-medium font-serif leading-relaxed italic mb-8 drop-shadow-md">
@@ -319,11 +330,13 @@ export default function GioiTre() {
               <motion.a
                 key={i}
                 href={ch.link}
-                initial={{ opacity: 0, y: mc.yOffset }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
                 viewport={vp}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: APPLE_EASE }}
-                className={`group rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-6 sm:p-8 flex flex-col gap-5 md:hover:shadow-lg dark:hover:shadow-none transition-all active:scale-[0.98] bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl ${ch.border}`}
+                custom={i * 0.1}
+                whileHover={{ y: -6, scale: 1.01 }}
+                className={`group rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-6 sm:p-8 flex flex-col gap-5 hover:shadow-xl dark:hover:shadow-none transition-all active:scale-[0.98] bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl ${ch.border}`}
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm ${ch.bg} ${ch.border}`}>
                   <Icon className={`w-6 h-6 text-stone-600 dark:text-stone-400 group-hover:${ch.textHover} transition-colors`} />
@@ -349,9 +362,6 @@ export default function GioiTre() {
         primaryCtaClass="bg-sky-600 text-white hover:bg-sky-500 shadow-sm"
         secondaryCtaLabel="Xem lại Khối Vào Đời"
         secondaryCtaTo="/khối-vào-đời"
-        mc={mc}
-        vp={vp}
-        sectionClassName="pt-20 pb-32 max-w-3xl mx-auto px-4 sm:px-6 text-center border-t border-amber-900/5 dark:border-amber-100/5 relative z-10"
       />
     </div>
   );

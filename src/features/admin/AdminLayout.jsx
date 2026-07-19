@@ -3,7 +3,7 @@ import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-route
 import {
   LayoutDashboard, UserCog, School, ClipboardCheck, BarChart3, Megaphone, FileCheck,
   ChevronDown, CalendarDays, Check, UserPlus, MessageSquare, MoreHorizontal,
-  Search, Bell, AlertTriangle,
+  Search, Bell, AlertTriangle, ChevronLeft, BookOpen
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { AuthGateSkeleton, AdminTabSkeleton } from "../../components/ui/Skeleton.jsx";
@@ -13,10 +13,6 @@ import { getCurrentNamHoc } from "./constants.js";
 const SYSTEM_FONT =
   "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif";
 
-// Layout này được mount bên dưới một header ứng dụng cố định cao 64px (h-16).
-// Đưa ra một hằng số ở đây để nếu header ngoài đổi chiều cao, chỉ cần sửa một chỗ
-// thay vì lục lại class "top-16" rải rác trong JSX.
-const HEADER_OFFSET = "4rem";
 
 // ---------------------------------------------------------------------------
 // Cấu hình tập trung: gom các "magic number/string" rải rác trước đây (ngưỡng
@@ -222,6 +218,7 @@ const TABS = [
   { to: "sổ-điểm",    label: "Bảng điểm",  icon: ClipboardCheck },
   { to: "báo-cáo",    label: "Báo cáo",    icon: BarChart3 },
   { to: "bài-viết",   label: "Duyệt bài",  icon: FileCheck,       pendingKey: "pendingBaiViet" },
+  { to: "lời-chúa",   label: "Lời Chúa",   icon: BookOpen },
 ];
 
 function YearPicker() {
@@ -632,21 +629,30 @@ function TabNav() {
 // desktop: đứng riêng, các nút hành động dồn sang phải).
 function HeaderTitleBlock({ scrolled, pageTitle, className = "" }) {
   return (
-    <div className={`min-w-0 ${className}`}>
-      <p
-        className={`font-bold uppercase tracking-widest overflow-hidden transition-all duration-300 motion-reduce:transition-none text-amber-800/70 dark:text-amber-400/70 text-[11px] ${
-          scrolled ? "max-h-0 opacity-0" : "max-h-5 opacity-100 mb-0.5"
-        }`}
+    <div className={`flex items-center gap-2 sm:gap-3 min-w-0 ${className}`}>
+      <NavLink
+        to="/"
+        className="p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 rounded-full flex-shrink-0 text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-amber-950 dark:hover:text-amber-50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-800/50"
+        aria-label="Về trang chủ"
       >
-        Quản trị hệ thống
-      </p>
-      <h1
-        className={`font-bold text-amber-950 dark:text-amber-50 tracking-tight truncate transition-all duration-300 font-serif ${
-          scrolled ? "text-lg" : "text-2xl sm:text-[28px]"
-        }`}
-      >
-        {pageTitle}
-      </h1>
+        <ChevronLeft className="w-5 h-5" />
+      </NavLink>
+      <div className="min-w-0">
+        <p
+          className={`font-bold uppercase tracking-widest overflow-hidden transition-all duration-300 motion-reduce:transition-none text-amber-800/70 dark:text-amber-400/70 text-[11px] ${
+            scrolled ? "max-h-0 opacity-0" : "max-h-5 opacity-100 mb-0.5"
+          }`}
+        >
+          Quản trị hệ thống
+        </p>
+        <h1
+          className={`font-bold text-amber-950 dark:text-amber-50 tracking-tight truncate transition-all duration-300 font-serif ${
+            scrolled ? "text-lg" : "text-2xl sm:text-[28px]"
+          }`}
+        >
+          {pageTitle}
+        </h1>
+      </div>
     </div>
   );
 }
@@ -656,11 +662,24 @@ function AdminHeader() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
 
+  const headerRef = useRef(null);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Đo chiều cao header thực tế
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--admin-header-h", `${el.offsetHeight}px`);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Ctrl/Cmd+K mở ô tìm kiếm nhanh từ bất kỳ đâu trong trang quản trị.
@@ -681,10 +700,10 @@ function AdminHeader() {
 
   return (
     <div
-      className={`sticky z-30 bg-[#FDFBF7]/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 transition-[padding,box-shadow] duration-300 motion-reduce:transition-none ${
+      ref={headerRef}
+      className={`sticky top-0 z-40 bg-[#FDFBF7]/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 transition-[padding,box-shadow] duration-300 motion-reduce:transition-none ${
         scrolled ? "shadow-[0_4px_20px_-8px_rgba(120,53,15,0.15)]" : ""
       }`}
-      style={{ top: HEADER_OFFSET }}
     >
       <div className={`max-w-6xl mx-auto px-4 sm:px-6 transition-all duration-300 motion-reduce:transition-none ${scrolled ? "py-2.5" : "py-4"}`}>
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
@@ -698,7 +717,7 @@ function AdminHeader() {
           </div>
 
           {/* Desktop: tiêu đề đứng riêng, mọi hành động dồn sang phải trên cùng hàng. */}
-          <HeaderTitleBlock scrolled={scrolled} pageTitle={pageTitle} className="hidden sm:block" />
+          <HeaderTitleBlock scrolled={scrolled} pageTitle={pageTitle} className="hidden sm:flex" />
 
           {/* Mobile: ô tìm kiếm chiếm hết phần chiều rộng còn dư, chuông giữ kích
               thước cố định cạnh bên — giống thanh tìm kiếm quen thuộc trên các app. */}

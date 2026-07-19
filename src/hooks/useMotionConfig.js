@@ -49,14 +49,14 @@ export function useMotionConfig() {
   return {
     isMobile,
     reduced,
-    yOffset: reduced ? 8 : 28,
+    yOffset: reduced ? 12 : 40,
     duration: (base = 0.7) => (reduced ? base * 0.6 : base),
     stagger: reduced ? 0.06 : 0.12,
     delay: (base = 0) => (reduced ? base * 0.5 : base),
     heroParallax: isMobile ? [0, 0] : [0, -80],
-    vp: (margin = "-60px 0px") => ({
+    vp: (margin = "-100px 0px") => ({
       once: true,
-      margin: isMobile ? "0px" : margin,
+      margin: isMobile ? "-20px 0px" : margin,
     }),
   };
 }

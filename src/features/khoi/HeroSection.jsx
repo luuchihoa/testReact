@@ -26,6 +26,7 @@ export default function HeroSection({
   image,
   imageGlowClass,
   floatBadge,
+  children,
 }) {
   const handlePrimaryCta = () => {
     const target = document.getElementById(primaryCtaTargetId);
@@ -36,6 +37,7 @@ export default function HeroSection({
   return (
     <section ref={heroRef} className={`relative overflow-hidden pt-16 pb-24 md:pt-32 md:pb-32 ${sectionBgClass}`}>
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] ${glowClass} blur-[120px] rounded-full pointer-events-none`} />
+      {children}
 
       <motion.div style={{ y: heroY }} className="max-w-6xl mx-auto px-6 relative z-10">
         <div className="grid md:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -100,7 +102,7 @@ export default function HeroSection({
                   <div className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-sm ${floatBadge.dotClass}`} />
                   <div>
                     <p className="text-[13px] font-bold text-amber-950 dark:text-amber-50 tracking-tight">{floatBadge.label}</p>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium uppercase tracking-widest mt-0.5">{floatBadge.sub}</p>
+                    <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium tracking-widest mt-0.5">{floatBadge.sub}</p>
                   </div>
                 </div>
               )}
