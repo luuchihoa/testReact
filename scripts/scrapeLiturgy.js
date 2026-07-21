@@ -148,7 +148,7 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
           } else if (
             lowerText.startsWith('đáp ca') ||
             lowerText.startsWith('tung hô tin mừng') ||
-            lowerText.startsWith('phúc âm rước lá') ||
+            lowerText.match(/^(tin mừng|phúc âm)\s*[-–—]?\s*(kiệu lá|rước lá)/i) ||
             lowerText.match(/^bài đọc\s*[1i]/i) ||
             lowerText.match(/^(✠\s*)?(tin mừng chúa giê-su|cuộc thương khó|khởi đầu tin mừng|kết thúc tin mừng)/i) ||
             lowerText.includes('dấu ký hiệu viết tắt')
@@ -161,7 +161,23 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
           }
         }
 
-        if (lowerText.startsWith('bài đọc 1') || lowerText.startsWith('bài đọc i ')) {
+        if (lowerText.match(/^(tin mừng|phúc âm)\s*[-–—]?\s*(kiệu lá|rước lá)/i)) {
+          saveBuffer();
+          currentSection = 'extra_reading';
+          const matchRef = text.match(/\(([^)]+)\)/);
+          const refStr = matchRef ? matchRef[1].trim() : text.replace(/^(tin mừng|phúc âm)\s*[-–—]?\s*(kiệu lá|rước lá)\s*/i, '').trim();
+          result.extraReadings.push({
+            title: 'Tin Mừng - Kiệu lá',
+            ref: refStr,
+            lead: '',
+            epitomize: '',
+            content: '',
+            psalm_title: '',
+            psalm_content: '',
+            type: 'procession'
+          });
+          extraIndex = result.extraReadings.length - 1;
+        } else if (lowerText.startsWith('bài đọc 1') || lowerText.startsWith('bài đọc i ')) {
           saveBuffer();
           currentSection = 'r1';
           result.r1.title = text.replace(/^(Bài đọc 1|Bài đọc I)\s*/i, '').trim();
@@ -191,6 +207,29 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
           saveBuffer();
           currentSection = 'r2';
           result.r2.title = text.replace(/^(Bài đọc 2|Bài đọc II)\s*/i, '').trim();
+        } else if (lowerText.match(/^hoặc(\s+bài đọc|\s+tin mừng|\s+phúc âm|\s*:|\s*$)/i)) {
+          saveBuffer();
+          let targetSection = 'gospel';
+          if (currentSection === 'r1' || currentSection === 'psalm') targetSection = 'r1';
+          else if (currentSection === 'r2') targetSection = 'r2';
+          else if (currentSection === 'gospel' || currentSection === 'gospelAcclam') targetSection = 'gospel';
+
+          currentSection = 'extra_reading';
+          const matchRef = text.match(/\(([^)]+)\)/);
+          const refStr = matchRef ? matchRef[1].trim() : text.replace(/^hoặc\s*[:\s]*/i, '').trim();
+          result.extraReadings.push({
+            title: text.trim(),
+            ref: refStr,
+            lead: '',
+            epitomize: '',
+            content: '',
+            psalm_title: '',
+            psalm_content: '',
+            type: 'alternative',
+            target_section: targetSection,
+            option_label: refStr ? `Hoặc (${refStr})` : 'Lựa chọn khác'
+          });
+          extraIndex = result.extraReadings.length - 1;
         } else if (lowerText.match(/^bài đọc [3-9]/i) || lowerText.match(/^thánh thư/i) && !lowerText.includes('tung hô')) {
           saveBuffer();
           currentSection = 'extra_reading';
@@ -377,14 +416,31 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
         r2_quote: cleanText(data.r2.epitomize),
         r2_intro: cleanText(data.r2.lead),
         r2_content: cleanText(data.r2.content),
-        extra_readings: data.extraReadings && data.extraReadings.length > 0 ? data.extraReadings.map(ex => ({
-          ref: cleanText(ex.title),
-          quote: cleanText(ex.epitomize),
-          intro: cleanText(ex.lead),
-          content: cleanText(ex.content),
-          psalm_ref: cleanText(ex.psalm_title),
-          psalm_content: cleanText(ex.psalm_content)
-        })) : null
+        extra_readings: data.extraReadings && data.extraReadings.length > 0 ? data.extraReadings.map(ex => {
+          if (ex.type === 'full_mass') {
+            return {
+              ...ex,
+              title: cleanText(ex.title),
+              mass_title: cleanText(ex.mass_title || ex.title),
+              r1_ref: cleanText(ex.r1_ref), r1_quote: cleanText(ex.r1_quote), r1_intro: cleanText(ex.r1_intro), r1_content: cleanText(ex.r1_content),
+              psalm_ref: cleanText(ex.psalm_ref), psalm_content: cleanText(ex.psalm_content),
+              r2_ref: cleanText(ex.r2_ref), r2_quote: cleanText(ex.r2_quote), r2_intro: cleanText(ex.r2_intro), r2_content: cleanText(ex.r2_content),
+              gospel_ref: cleanText(ex.gospel_ref), gospel_alleluia: cleanText(ex.gospel_alleluia), gospel_quote: cleanText(ex.gospel_quote), gospel_intro: cleanText(ex.gospel_intro), gospel_content: cleanText(ex.gospel_content)
+            };
+          }
+          return {
+            title: cleanText(ex.title),
+            ref: cleanText(ex.ref || ex.title),
+            quote: cleanText(ex.epitomize),
+            intro: cleanText(ex.lead),
+            content: cleanText(ex.content),
+            psalm_ref: cleanText(ex.psalm_title),
+            psalm_content: cleanText(ex.psalm_content),
+            type: ex.type || 'extra',
+            target_section: ex.target_section || null,
+            option_label: ex.option_label || null
+          };
+        }) : null
       };
       payloads.push(gospelPayload, readingPayload);
     } else {
@@ -403,14 +459,31 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
         r2_quote: cleanText(data.r2.epitomize),
         r2_intro: cleanText(data.r2.lead),
         r2_content: cleanText(data.r2.content),
-        extra_readings: data.extraReadings && data.extraReadings.length > 0 ? data.extraReadings.map(ex => ({
-          ref: cleanText(ex.title),
-          quote: cleanText(ex.epitomize),
-          intro: cleanText(ex.lead),
-          content: cleanText(ex.content),
-          psalm_ref: cleanText(ex.psalm_title),
-          psalm_content: cleanText(ex.psalm_content)
-        })) : null
+        extra_readings: data.extraReadings && data.extraReadings.length > 0 ? data.extraReadings.map(ex => {
+          if (ex.type === 'full_mass') {
+            return {
+              ...ex,
+              title: cleanText(ex.title),
+              mass_title: cleanText(ex.mass_title || ex.title),
+              r1_ref: cleanText(ex.r1_ref), r1_quote: cleanText(ex.r1_quote), r1_intro: cleanText(ex.r1_intro), r1_content: cleanText(ex.r1_content),
+              psalm_ref: cleanText(ex.psalm_ref), psalm_content: cleanText(ex.psalm_content),
+              r2_ref: cleanText(ex.r2_ref), r2_quote: cleanText(ex.r2_quote), r2_intro: cleanText(ex.r2_intro), r2_content: cleanText(ex.r2_content),
+              gospel_ref: cleanText(ex.gospel_ref), gospel_alleluia: cleanText(ex.gospel_alleluia), gospel_quote: cleanText(ex.gospel_quote), gospel_intro: cleanText(ex.gospel_intro), gospel_content: cleanText(ex.gospel_content)
+            };
+          }
+          return {
+            title: cleanText(ex.title),
+            ref: cleanText(ex.ref || ex.title),
+            quote: cleanText(ex.epitomize),
+            intro: cleanText(ex.lead),
+            content: cleanText(ex.content),
+            psalm_ref: cleanText(ex.psalm_title),
+            psalm_content: cleanText(ex.psalm_content),
+            type: ex.type || 'extra',
+            target_section: ex.target_section || null,
+            option_label: ex.option_label || null
+          };
+        }) : null
       };
       payloads.push(fullPayload);
     }

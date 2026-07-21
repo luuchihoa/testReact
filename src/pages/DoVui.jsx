@@ -1,505 +1,300 @@
-import React, { useState, useRef, useCallback, memo, useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import useSound from "../features/sound/useSounds.js";
 import { QuizTimerRing } from "../components/ui/Timer.jsx";
 import { GuideBox, ExitButton } from "../components/ui/Feedback.jsx";
+import useDoVuiLogic from "../features/dovui/hooks/useDoVuiLogic.js";
+import ThemeToggle from "../features/dovui/components/ThemeToggle.jsx";
+import OptionBtn from "../features/dovui/components/OptionBtn.jsx";
+import StatPill from "../features/dovui/components/StatPill.jsx";
+import ResultScreen from "../features/dovui/components/ResultScreen.jsx";
+import LeaderboardModal from "../features/dovui/components/LeaderboardModal.jsx";
+import { SKIP_GUIDE_KEY, APPLE_EASE } from "../features/dovui/utils/dovuiUtils.js";
 
-const SKIP_GUIDE_KEY = "skipGuideDoVui";
-const QUESTION_DURATION_MS = 30_000;
+export default function DoVui({ config = {}, quizData = [], handleExit: onExitToRoute }) {
+  const {
+    phase,
+    showGuide,
+    setShowGuide,
+    showExit,
+    setShowExit,
+    showLeaderboard,
+    setShowLeaderboard,
+    leaderboardPeriod,
+    changeLeaderboardPeriod,
+    leaderboardData,
+    leaderboardLoading,
+    openLeaderboard,
+    quizQ,
+    current,
+    score,
+    totalPoints,
+    streak,
+    maxStreak,
+    timerOn,
+    setTimerOn,
+    optStates,
+    history,
+    usedFiftyFifty,
+    usedExtraTime,
+    extraTimeCount,
+    questionDuration,
+    startQuiz,
+    handleGuideConfirm,
+    handleAnswer,
+    handleTimeUp,
+    handleFinalRush,
+    handleHover,
+    handleFiftyFifty,
+    handleAddExtraTime,
+    confirmExit,
+    handleEarlyEnd,
+  } = useDoVuiLogic({ config, quizData, onExitToRoute });
 
-// Hằng số Easing chuẩn hệ thống
-const APPLE_EASE = [0.16, 1, 0.3, 1];
-
-function getRandomItems(arr, n) {
-  return [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
-}
-
-/* ══════════════════════════════════════════════
-   THEME TOGGLE — Nút chuyển đổi Dark Mode
-══════════════════════════════════════════════ */
-const ThemeToggle = memo(() => {
-  // Đồng bộ với class .dark trên thẻ <html> của hệ thống
-  const [isDark, setIsDark] = useState(
-    typeof window !== "undefined" && document.documentElement.classList.contains("dark")
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  const toggleTheme = () => {
-    if (isDark) {
-      document.documentElement.classList.remove("dark");
-      localStorage.theme = 'light';
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.theme = 'dark';
-    }
-  };
-
-  return (
-    <motion.button
-      onClick={toggleTheme}
-      whileTap={{ scale: 0.9 }}
-      aria-label={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
-      className="flex-shrink-0 w-[40px] h-[40px] rounded-full bg-white dark:bg-[#1C1917] border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center cursor-pointer shadow-sm text-stone-500 dark:text-stone-400 transition-colors"
-    >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={isDark ? "moon" : "sun"}
-          initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-          animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-          transition={{ duration: 0.25, ease: APPLE_EASE }}
-          className="flex"
-        >
-          {isDark ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z" fill="currentColor" />
-            </svg>
-          ) : (
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="4.5" fill="currentColor" />
-              <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="12" y1="2" x2="12" y2="4.5" />
-                <line x1="12" y1="19.5" x2="12" y2="22" />
-                <line x1="2" y1="12" x2="4.5" y2="12" />
-                <line x1="19.5" y1="12" x2="22" y2="12" />
-                <line x1="4.9" y1="4.9" x2="6.7" y2="6.7" />
-                <line x1="17.3" y1="17.3" x2="19.1" y2="19.1" />
-                <line x1="4.9" y1="19.1" x2="6.7" y2="17.3" />
-                <line x1="17.3" y1="4.9" x2="19.1" y2="6.7" />
-              </g>
-            </svg>
-          )}
-        </motion.span>
-      </AnimatePresence>
-    </motion.button>
-  );
-});
-
-/* ══════════════════════════════════════════════
-   OPTION BUTTON
-══════════════════════════════════════════════ */
-const OptionBtn = memo(({ letter, text, state, onClick, onHover, disabled }) => {
-  const getStyle = () => {
-    switch (state) {
-      case "correct":
-        return {
-          btn: "bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-bold",
-          badge: "bg-emerald-500 text-white border-transparent",
-        };
-      case "wrong":
-        return {
-          btn: "bg-red-50/80 dark:bg-red-900/20 border-red-500/40 text-red-700 dark:text-red-400 font-bold",
-          badge: "bg-red-500 text-white border-transparent",
-        };
-      case "dim":
-        return {
-          btn: "bg-stone-50/50 dark:bg-stone-900/30 border-stone-200 dark:border-stone-800 text-stone-400 dark:text-stone-600 font-medium",
-          badge: "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-600 border-stone-200 dark:border-stone-700",
-        };
-      default: // idle
-        return {
-          btn: "bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-md border-amber-900/10 dark:border-amber-100/10 text-amber-950 dark:text-amber-50 font-medium hover:bg-stone-50 dark:hover:bg-stone-800 shadow-sm",
-          badge: "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border-amber-900/5 dark:border-amber-100/5",
-        };
-    }
-  };
-
-  const s = getStyle();
-
-  return (
-    <motion.button
-      className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border-[1.5px] text-left text-[15px] transition-colors cursor-pointer select-none min-h-[56px] ${s.btn} ${disabled ? "pointer-events-none" : ""}`}
-      onClick={onClick}
-      onMouseEnter={onHover}
-      disabled={disabled}
-      whileTap={state === "idle" ? { scale: 0.98 } : {}}
-      animate={state === "wrong" ? { x: [0, -6, 6, -4, 4, -2, 2, 0] } : {}}
-      transition={state === "wrong" ? { duration: 0.35, ease: "easeInOut" } : { duration: 0.2, ease: APPLE_EASE }}
-    >
-      <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold border ${s.badge} transition-colors duration-300`}>
-        {state === "correct" ? "✓" : state === "wrong" ? "✕" : letter}
-      </span>
-      <span className="flex-1 leading-snug">{text}</span>
-    </motion.button>
-  );
-});
-
-/* ══════════════════════════════════════════════
-   STAT PILL
-══════════════════════════════════════════════ */
-function StatPill({ label, value, accent }) {
-  return (
-    <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-1.5 min-w-[56px] shadow-sm border ${
-      accent 
-        ? "bg-amber-100/80 dark:bg-amber-900/30 border-amber-200/50 dark:border-amber-800/30" 
-        : "bg-white/80 dark:bg-stone-900/40 border-amber-900/5 dark:border-amber-100/5"
-    }`}>
-      <span className={`text-[16px] font-extrabold font-serif leading-tight ${accent ? "text-amber-700 dark:text-amber-400" : "text-amber-950 dark:text-amber-50"}`}>
-        {value}
-      </span>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mt-0.5">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   RESULT SCREEN
-══════════════════════════════════════════════ */
-function ResultScreen({ score, total, onRetry }) {
-  const display = total ? ((score / total) * 10).toFixed(1) : "0.0";
-  const pct = total ? Math.round((score / total) * 100) : 0;
-  const wrong = total - score;
-
-  const grade =
-    pct >= 80
-      ? { label: "Xuất sắc!", sub: "Bạn thật tuyệt vời", color: "text-emerald-500", stroke: "#10b981", bg: "bg-emerald-50 dark:bg-emerald-900/20" }
-      : pct >= 60
-      ? { label: "Tốt lắm!", sub: "Tiếp tục phát huy", color: "text-blue-500", stroke: "#3b82f6", bg: "bg-blue-50 dark:bg-blue-900/20" }
-      : pct >= 40
-      ? { label: "Khá ổn", sub: "Ôn thêm nhé bạn", color: "text-amber-500", stroke: "#f59e0b", bg: "bg-amber-50 dark:bg-amber-900/20" }
-      : { label: "Cần cố gắng", sub: "Đừng bỏ cuộc nhé", color: "text-red-500", stroke: "#ef4444", bg: "bg-red-50 dark:bg-red-900/20" };
-
-  const circumference = 2 * Math.PI * 40;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-[100dvh] flex flex-col items-center justify-center p-6 gap-6 relative"
-    >
-      <div className="absolute top-6 right-6">
-        <ThemeToggle />
-      </div>
-
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.5, ease: APPLE_EASE }}
-        className="relative w-[150px] h-[150px]"
-      >
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="40" fill="none" className="stroke-stone-200 dark:stroke-stone-800" strokeWidth="8" />
-          <motion.circle
-            cx="50" cy="50" r="40" fill="none" stroke={grade.stroke} strokeWidth="8" strokeLinecap="round"
-            strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: circumference * (1 - pct / 100) }}
-            transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.span
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, ease: APPLE_EASE }}
-            className="text-[32px] font-extrabold font-serif text-amber-950 dark:text-amber-50 leading-none"
-          >
-            {display}
-          </motion.span>
-          <span className="text-[12px] font-medium text-stone-500 dark:text-stone-400 mt-1">/ 10 điểm</span>
-        </div>
-      </motion.div>
-
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, ease: APPLE_EASE }} className="text-center">
-        <div className={`inline-block px-5 py-2 rounded-full text-[14px] font-bold mb-2 shadow-sm ${grade.bg} ${grade.color}`}>
-          {grade.label}
-        </div>
-        <p className="text-[14.5px] font-medium text-stone-500 dark:text-stone-400 m-0">{grade.sub}</p>
-      </motion.div>
-
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, ease: APPLE_EASE }} className="grid grid-cols-3 gap-3 w-full max-w-[340px]">
-        {[
-          { label: "Tổng câu", value: total, accent: false },
-          { label: "Đúng", value: score, accent: true },
-          { label: "Sai", value: wrong, accent: false },
-        ].map((item) => (
-          <div key={item.label} className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-md rounded-2xl border border-amber-900/10 dark:border-amber-100/10 p-3 text-center shadow-sm">
-            <div className={`text-[22px] font-extrabold font-serif ${item.accent ? "text-amber-600 dark:text-amber-400" : "text-amber-950 dark:text-amber-50"}`}>
-              {item.value}
-            </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400 mt-1">
-              {item.label}
-            </div>
-          </div>
-        ))}
-      </motion.div>
-
-      <motion.button
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, ease: APPLE_EASE }}
-        onClick={onRetry} whileTap={{ scale: 0.97 }}
-        className="w-full max-w-[340px] p-4 rounded-xl bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[15px] font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all mt-2"
-      >
-        Làm lại ↺
-      </motion.button>
-    </motion.div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════ */
-export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
-  const { play, unlock, stopAll } = useSound();
-
-  const [phase, setPhase] = useState("quiz");
-  const [showGuide, setShowGuide] = useState(false);
-  const [showExit, setShowExit] = useState(false);
-  const [quizQ, setQuizQ] = useState([]);
-  const [current, setCurrent] = useState(0);
-  const [score, setScore] = useState(0);
-  const [timerOn, setTimerOn] = useState(false);
-  const [optStates, setOptStates] = useState({});
-
-  const lockedRef = useRef(false);
-  const quizQRef = useRef([]);
-  const currentRef = useRef(0);
-  const quizEndedRef = useRef(false);
-  const nextQTimerRef = useRef(null);
-  const hasInitRef = useRef(false);
-
-  /* ── Start quiz ── */
-  const startQuiz = useCallback(() => {
-    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
-    unlock();
-    const pool = Array.isArray(quizData) ? quizData : [];
-    const picked = getRandomItems(pool, Math.min(config.mcqCount || pool.length, pool.length));
-
-    quizQRef.current = picked;
-    currentRef.current = 0;
-    lockedRef.current = false;
-    quizEndedRef.current = false;
-
-    setQuizQ(picked);
-    setCurrent(0);
-    setScore(0);
-    setOptStates({});
-
-    if (localStorage.getItem(SKIP_GUIDE_KEY) === "1") {
-      setPhase("quiz"); setTimerOn(true);
-    } else {
-      setPhase("quiz"); setShowGuide(true); setTimerOn(false);
-    }
-  }, [quizData, config.mcqCount, unlock]);
-
-  useEffect(() => {
-    if (hasInitRef.current) return;
-    hasInitRef.current = true;
-    startQuiz();
-  }, [startQuiz]);
-
-  useEffect(() => () => { if (nextQTimerRef.current) clearTimeout(nextQTimerRef.current); }, []);
-
-  /* ── Callbacks ── */
-  const handleGuideConfirm = useCallback((skipNext) => {
-    if (skipNext) localStorage.setItem(SKIP_GUIDE_KEY, "1");
-    setShowGuide(false);
-    setTimerOn(true);
-  }, []);
-
-  const showResults = useCallback(() => {
-    if (quizEndedRef.current) return;
-    quizEndedRef.current = true;
-    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
-    setTimerOn(false);
-    play("win");
-    setPhase("result");
-  }, [play]);
-
-  const nextQuestion = useCallback(() => {
-    const next = currentRef.current + 1;
-    if (next < quizQRef.current.length) {
-      currentRef.current = next;
-      lockedRef.current = false;
-      setCurrent(next);
-      setOptStates({});
-      setTimerOn(true);
-    } else {
-      showResults();
-    }
-  }, [showResults]);
-
-  const handleAnswer = useCallback((selectedKey = null) => {
-    if (lockedRef.current) return;
-    lockedRef.current = true;
-    setTimerOn(false);
-
-    const q = quizQRef.current[currentRef.current];
-    if (!q) return;
-
-    const correct = q.correct;
-    const newStates = {};
-    Object.keys(q.choices).forEach((k) => {
-      if (k === correct) newStates[k] = "correct";
-      else if (k === selectedKey) newStates[k] = "wrong";
-      else newStates[k] = "dim";
-    });
-    setOptStates(newStates);
-
-    if (selectedKey === correct) { play("correct"); setScore((s) => s + 1); }
-    else { play("wrong"); }
-
-    nextQTimerRef.current = setTimeout(() => {
-      nextQTimerRef.current = null;
-      nextQuestion();
-    }, 1200);
-  }, [play, nextQuestion]);
-
-  const handleTimeUp = useCallback(() => {
-    if (lockedRef.current) return;
-    play("wrong");
-    handleAnswer(null);
-  }, [play, handleAnswer]);
-
-  const handleFinalRush = useCallback(() => {
-    play("tick1", 1.6);
-    setTimeout(() => play("tick2", 1.8), 350);
-  }, [play]);
-
-  const handleHover = useCallback(() => play("hover"), [play]);
-
-  const confirmExit = useCallback(() => {
-    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
-    setTimerOn(false);
-    stopAll();
-    lockedRef.current = true;
-    quizEndedRef.current = true;
-    setShowExit(false);
-    onExitToRoute?.();
-  }, [stopAll, onExitToRoute]);
-
-  const handleEarlyEnd = useCallback(() => {
-    if (nextQTimerRef.current) { clearTimeout(nextQTimerRef.current); nextQTimerRef.current = null; }
-    setTimerOn(false);
-    showResults();
-  }, [showResults]);
-
-  /* ── Derived ── */
   const q = quizQ[current];
   const totalQ = quizQ.length;
   const answered = Object.keys(optStates).length > 0;
 
-  /* ── Empty state ── */
+  /* ── 1. EMPTY STATE (Trạng thái Rỗng) ── */
   if (!Array.isArray(quizData) || quizData.length === 0) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 bg-[#FDFBF7] dark:bg-[#1C1917] p-6 text-center">
-        <div className="text-[54px] drop-shadow-sm">😕</div>
-        <p className="text-[16px] font-bold text-amber-950 dark:text-amber-50 m-0">Không có câu hỏi nào</p>
-        <button
-          onClick={() => onExitToRoute?.()}
-          className="mt-2 px-7 py-3.5 rounded-xl bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[15px] font-bold shadow-sm active:scale-95 transition-all"
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden bg-[#FDFBF7] dark:bg-[#1C1917]">
+        <div className="fixed inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ ease: APPLE_EASE, duration: 0.4 }}
+          className="max-w-[360px] w-full p-8 rounded-[32px] bg-white/80 dark:bg-stone-900/80 backdrop-blur-2xl border border-amber-900/10 dark:border-amber-100/10 shadow-2xl flex flex-col items-center"
         >
-          Quay lại
-        </button>
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-4xl mb-4 shadow-inner ring-1 ring-amber-500/20">
+            📚
+          </div>
+          <h3 className="text-[19px] font-black text-amber-950 dark:text-amber-50 m-0">
+            Bộ câu hỏi trống
+          </h3>
+          <p className="text-[13.5px] text-stone-500 dark:text-stone-400 mt-2 mb-6 leading-relaxed">
+            Chưa có câu hỏi nào trong bộ đề này. Vui lòng chọn bộ đố vui khác hoặc quay lại sau.
+          </p>
+          <button
+            onClick={() => onExitToRoute?.()}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-700 to-amber-900 dark:from-amber-600 dark:to-amber-500 text-white font-bold text-[14.5px] shadow-lg shadow-amber-900/20 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            Quay lại trang chủ
+          </button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#FDFBF7] dark:bg-[#1C1917] transition-colors duration-300">
+    <div className="relative min-h-[100dvh] bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-100 transition-colors duration-300 overflow-x-hidden select-none">
+      {/* 🌟 Ambient Glow Backdrop */}
+      <div className="fixed -top-32 -left-32 w-[420px] h-[420px] bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
+      <div className="fixed -bottom-32 -right-32 w-[420px] h-[420px] bg-amber-700/10 dark:bg-amber-600/15 rounded-full blur-[100px] pointer-events-none z-0" />
+
+      {/* Modals */}
       {showGuide && <GuideBox onConfirm={handleGuideConfirm} skipStorageKey={SKIP_GUIDE_KEY} />}
       {showExit && <ExitButton handleExit={confirmExit} handleClose={() => setShowExit(false)} />}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <LeaderboardModal
+            leaderboard={leaderboardData}
+            loading={leaderboardLoading}
+            period={leaderboardPeriod}
+            onPeriodChange={changeLeaderboardPeriod}
+            onClose={() => setShowLeaderboard(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ══════════════ QUIZ PHASE ══════════════ */}
       {phase === "quiz" && q && (
-        <div className="flex flex-col min-h-[100dvh] max-w-[480px] mx-auto px-4 pt-[max(env(safe-area-inset-top),16px)] pb-[max(env(safe-area-inset-bottom),20px)]">
+        <div className="relative z-10 flex flex-col min-h-[100dvh] max-w-[480px] mx-auto px-4 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),16px)]">
           
-          {/* ── Header bar — frosted, sticky ── */}
-          <div className="sticky top-0 z-10 flex items-center justify-between mb-4 pt-1 pb-3 gap-2 bg-white/70 dark:bg-[#1C1917]/70 backdrop-blur-xl border-b border-amber-900/5 dark:border-amber-100/5">
-            <button
-              onClick={() => setShowExit(true)}
-              aria-label="Thoát"
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5 flex items-center justify-center text-stone-500 dark:text-stone-400 cursor-pointer shadow-sm active:scale-90 transition-all"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
+          {/* ── 1. UNIFIED TOP HEADER BAR (Compact Gaming HUD) ── */}
+          <header className="sticky top-0 z-30 mb-3 pt-1 pb-2 bg-[#FDFBF7]/85 dark:bg-[#1C1917]/85 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowExit(true)}
+                aria-label="Thoát"
+                className="w-9 h-9 rounded-xl bg-white/80 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-xs hover:bg-stone-100 dark:hover:bg-stone-700 active:scale-90 transition-all cursor-pointer"
+                title="Thoát bài thi"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
 
-            <div className="flex-1 min-w-0 text-center">
-              <h1 className="text-[16px] font-extrabold font-serif text-amber-900 dark:text-amber-500 m-0 truncate px-2">
-                {config.title}
+              <button
+                onClick={() => openLeaderboard("all")}
+                className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs hover:bg-amber-500/20 active:scale-90 transition-all cursor-pointer"
+                title="Xem Bảng Xếp Hạng"
+              >
+                🏆
+              </button>
+            </div>
+
+            <div className="flex-1 min-w-0 text-center px-1">
+              <h1 className="text-[15px] font-black font-serif text-amber-950 dark:text-amber-50 m-0 truncate tracking-tight">
+                {config.title || "ĐỐ VUI GIÁO LÝ"}
               </h1>
             </div>
 
-            <ThemeToggle />
+            <div className="flex items-center gap-1.5">
+              <ThemeToggle />
+              <StatPill label="điểm" value={(totalPoints || score * 100).toLocaleString()} accent />
+            </div>
+          </header>
 
-            <div className="flex gap-2 flex-shrink-0">
-              <StatPill label="câu" value={`${current + 1}/${totalQ}`} />
-              <StatPill label="điểm" value={score} accent />
+          {/* ── 2. PROGRESS & POWER-UPS ACTION ROW ── */}
+          <div className="space-y-2.5 mb-3.5">
+            {/* Progress Segment Bar */}
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="flex items-center gap-1.5 text-[12px] font-black text-amber-900 dark:text-amber-200 font-mono">
+                <span>CÂU {current + 1}</span>
+                <span className="opacity-40">/</span>
+                <span className="opacity-60">{totalQ}</span>
+              </div>
+
+              {/* Streak Combo Indicator */}
+              {streak >= 2 && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[11px] shadow-sm animate-pulse"
+                >
+                  🔥 Combo x{streak}!
+                </motion.div>
+              )}
+            </div>
+
+            {/* Segmented Progress Line */}
+            <div className="flex gap-1">
+              {Array.from({ length: totalQ }).map((_, i) => {
+                const isDone = i < current;
+                const isCurrent = i === current;
+                return (
+                  <div key={i} className="flex-1 h-1.5 rounded-full bg-stone-200/80 dark:bg-stone-800/80 overflow-hidden relative">
+                    <motion.div
+                      className={`absolute inset-0 rounded-full ${
+                        isCurrent
+                          ? "bg-amber-500 shadow-sm ring-1 ring-amber-300"
+                          : isDone
+                          ? "bg-amber-700 dark:bg-amber-500"
+                          : "bg-transparent"
+                      }`}
+                      initial={{ width: isDone || isCurrent ? "100%" : "0%" }}
+                      animate={{ width: isDone || isCurrent ? "100%" : "0%" }}
+                      transition={{ duration: 0.3, ease: APPLE_EASE }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Power-up Assistance Bar */}
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <div className="flex items-center gap-2">
+                {/* 50:50 Powerup */}
+                <button
+                  onClick={handleFiftyFifty}
+                  disabled={usedFiftyFifty || answered}
+                  className={`px-3 py-1.5 rounded-xl text-[12px] font-black border flex items-center gap-1.5 transition-all cursor-pointer ${
+                    usedFiftyFifty
+                      ? "bg-stone-100 dark:bg-stone-800/40 text-stone-400 dark:text-stone-600 border-stone-200 dark:border-stone-800 opacity-50 cursor-not-allowed"
+                      : "bg-purple-500/10 dark:bg-purple-900/30 text-purple-900 dark:text-purple-200 border-purple-300/60 dark:border-purple-700/50 hover:bg-purple-500/20 active:scale-95 shadow-xs"
+                  }`}
+                  title="Loại bỏ 2 đáp án sai"
+                >
+                  <span>🪄 50:50</span>
+                  <span className={`text-[9.5px] px-1.5 py-0.2 rounded-md ${usedFiftyFifty ? "bg-stone-200 dark:bg-stone-800" : "bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-purple-100"}`}>
+                    {usedFiftyFifty ? "0" : "1"}
+                  </span>
+                </button>
+
+                {/* +10s Extra Time */}
+                <button
+                  onClick={handleAddExtraTime}
+                  disabled={usedExtraTime || answered}
+                  className={`px-3 py-1.5 rounded-xl text-[12px] font-black border flex items-center gap-1.5 transition-all cursor-pointer ${
+                    usedExtraTime
+                      ? "bg-stone-100 dark:bg-stone-800/40 text-stone-400 dark:text-stone-600 border-stone-200 dark:border-stone-800 opacity-50 cursor-not-allowed"
+                      : "bg-blue-500/10 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 border-blue-300/60 dark:border-blue-700/50 hover:bg-blue-500/20 active:scale-95 shadow-xs"
+                  }`}
+                  title="Cộng thêm 10 giây suy nghĩ"
+                >
+                  <span>⏱️ +10s</span>
+                  <span className={`text-[9.5px] px-1.5 py-0.2 rounded-md ${usedExtraTime ? "bg-stone-200 dark:bg-stone-800" : "bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100"}`}>
+                    {usedExtraTime ? "0" : "1"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Desktop Shortcut Indicator */}
+              <div className="hidden sm:flex items-center gap-1 text-[11px] text-stone-600 dark:text-stone-400 font-medium">
+                <span>Phím</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-mono text-[10px] font-bold">1-4</kbd>
+              </div>
             </div>
           </div>
 
-          {/* ── Segmented progress ── */}
-          <div className="flex gap-1 mb-5">
-            {Array.from({ length: totalQ }).map((_, i) => {
-              const isDone = i < current;
-              return (
-                <div key={i} className="flex-1 h-1.5 rounded-full bg-stone-200 dark:bg-stone-800 overflow-hidden relative shadow-inner">
-                  <motion.div
-                    className="absolute inset-y-0 left-0 bg-amber-600 dark:bg-amber-500 rounded-full"
-                    initial={{ width: isDone ? "100%" : "0%" }}
-                    animate={{ width: isDone ? "100%" : "0%" }}
-                    transition={{ duration: 0.4, ease: APPLE_EASE }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── Question card ── */}
+          {/* ── 3. QUESTION CARD WITH INTEGRATED TIMER ── */}
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              transition={{ duration: 0.3, ease: APPLE_EASE }}
-              className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[24px] p-5 border border-amber-900/10 dark:border-amber-100/10 shadow-sm mb-5 flex items-start gap-4"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: APPLE_EASE }}
+              className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-2xl rounded-[28px] p-5 border border-amber-900/10 dark:border-amber-100/10 shadow-xl shadow-amber-950/5 mb-4 relative overflow-hidden"
             >
-              <span className="flex-shrink-0 mt-0.5 w-8 h-8 rounded-xl bg-amber-100/80 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[13px] font-bold flex items-center justify-center border border-amber-200/50 dark:border-amber-800/30">
-                {current + 1}
-              </span>
-              <p className="flex-1 text-[16px] font-bold text-amber-950 dark:text-amber-50 leading-relaxed m-0">
+              {/* Top Accent Gradient Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500" />
+
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] font-black uppercase tracking-wider">
+                  Câu hỏi #{current + 1}
+                </span>
+
+                {/* Integrated Timer Ring */}
+                <div className="flex-shrink-0 -mt-1">
+                  <QuizTimerRing
+                    duration={questionDuration}
+                    running={timerOn && !showGuide}
+                    resetKey={`${current}-${extraTimeCount}`}
+                    onTimeUp={handleTimeUp}
+                    onFinalRush={handleFinalRush}
+                  />
+                </div>
+              </div>
+
+              <p className="text-[17px] font-extrabold text-amber-950 dark:text-amber-50 leading-relaxed m-0 pt-1">
                 {q.text}
               </p>
-              <div className="flex-shrink-0 -mt-1">
-                <QuizTimerRing
-                  duration={QUESTION_DURATION_MS}
-                  running={timerOn && !showGuide}
-                  resetKey={current}
-                  onTimeUp={handleTimeUp}
-                  onFinalRush={handleFinalRush}
-                />
-              </div>
             </motion.div>
           </AnimatePresence>
 
-          {/* ── Options ── */}
+          {/* ── 4. OPTION BUTTONS ── */}
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
               initial="hidden"
               animate="show"
-              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-              className="flex flex-col gap-3 mb-5"
+              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+              className="flex flex-col gap-2.5 mb-4"
             >
               {Object.entries(q.choices).map(([letter, text]) => (
                 <motion.div
                   key={letter}
-                  variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: APPLE_EASE } } }}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: APPLE_EASE } },
+                  }}
                 >
                   <OptionBtn
                     letter={letter}
                     text={text}
                     state={optStates[letter] ?? "idle"}
-                    onClick={() => handleAnswer(letter)}
+                    onClick={(rect) => handleAnswer(letter, rect)}
                     onHover={handleHover}
                     disabled={!!optStates[letter]}
                   />
@@ -508,44 +303,61 @@ export default function DoVui({ config, quizData, handleExit: onExitToRoute }) {
             </motion.div>
           </AnimatePresence>
 
-          {/* ── Bottom actions ── */}
-          <div className="mt-auto flex flex-col gap-3 pt-2">
-            <motion.button
+          {/* ── 5. BOTTOM UTILITY ACTIONS ── */}
+          <div className="mt-auto flex items-center justify-between gap-2 pt-2 border-t border-amber-900/5 dark:border-amber-100/5">
+            <button
               onClick={() => handleAnswer(null)}
               disabled={answered}
-              whileTap={{ scale: 0.98 }}
-              animate={{ opacity: answered ? 0 : 1 }}
-              transition={{ duration: 0.2 }}
-              className={`w-full p-4 rounded-xl bg-white/50 dark:bg-stone-900/30 border border-stone-200 dark:border-stone-800 text-stone-500 dark:text-stone-400 text-[15px] font-semibold transition-colors ${answered ? "pointer-events-none" : "hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer shadow-sm"}`}
+              className={`flex-1 py-2.5 px-4 rounded-xl bg-white/60 dark:bg-stone-900/40 border border-stone-200/80 dark:border-stone-800/80 text-stone-600 dark:text-stone-300 text-[13px] font-bold transition-all ${
+                answered ? "opacity-0 pointer-events-none" : "hover:bg-stone-100 dark:hover:bg-stone-800 active:scale-98 cursor-pointer"
+              }`}
             >
-              Bỏ qua câu này →
-            </motion.button>
+              Bỏ qua câu này <span className="text-[11px] opacity-60">(Space)</span>
+            </button>
 
-            <div className="flex gap-3">
-              <motion.button
+            <div className="flex items-center gap-1.5">
+              <button
                 onClick={handleEarlyEnd}
-                whileTap={{ scale: 0.97 }}
-                className="flex-1 p-3.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-[14.5px] font-bold shadow-sm active:scale-95 transition-all"
+                className="px-3.5 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 text-[12.5px] font-bold hover:bg-red-100/70 active:scale-95 transition-all cursor-pointer"
+                title="Dừng bài thi sớm"
               >
-                Kết thúc sớm
-              </motion.button>
+                Kết thúc
+              </button>
 
-              <motion.button
-                onClick={() => { setTimerOn(false); setShowGuide(true); }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Hướng dẫn"
-                className="flex-shrink-0 w-12 h-12 rounded-xl bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[18px] font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center"
+              <button
+                onClick={() => {
+                  setTimerOn(false);
+                  setShowGuide(true);
+                }}
+                className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-200 font-bold text-[15px] flex items-center justify-center hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer"
+                title="Hướng dẫn & Luật chơi"
               >
                 ?
-              </motion.button>
+              </button>
             </div>
           </div>
+
         </div>
       )}
 
       {/* ══════════════ RESULT PHASE ══════════════ */}
       {phase === "result" && (
-        <ResultScreen score={score} total={totalQ} onRetry={startQuiz} />
+        <ResultScreen
+          score={score}
+          total={totalQ}
+          totalPoints={totalPoints}
+          maxStreak={maxStreak}
+          history={history}
+          onRetry={startQuiz}
+          onExit={confirmExit}
+          onOpenLeaderboard={openLeaderboard}
+          leaderboardPeriod={leaderboardPeriod}
+          onLeaderboardPeriodChange={changeLeaderboardPeriod}
+          leaderboardData={leaderboardData}
+          leaderboardLoading={leaderboardLoading}
+          showLeaderboard={showLeaderboard}
+          onCloseLeaderboard={() => setShowLeaderboard(false)}
+        />
       )}
     </div>
   );

@@ -218,7 +218,6 @@ const TABS = [
   { to: "sổ-điểm",    label: "Bảng điểm",  icon: ClipboardCheck },
   { to: "báo-cáo",    label: "Báo cáo",    icon: BarChart3 },
   { to: "bài-viết",   label: "Duyệt bài",  icon: FileCheck,       pendingKey: "pendingBaiViet" },
-  { to: "lời-chúa",   label: "Lời Chúa",   icon: BookOpen },
 ];
 
 function YearPicker() {

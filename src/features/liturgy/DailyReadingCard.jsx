@@ -1,54 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, X, ArrowRight, Loader2, Copy, Check, Sparkles } from 'lucide-react';
+import { BookOpen, X, ArrowRight, Loader2, Copy, Check, Minimize2, Maximize2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getLiturgyInfo, getLiturgicalYear, getLiturgicalColor } from '../../utils/liturgyCalendar.js';
+import { getLiturgyInfo, getLiturgicalYear } from '../../utils/liturgyCalendar.js';
 import { supabase } from '../../lib/supabase.js';
 
-// BẢNG MÀU PHỤNG VỤ ĐỘNG (Đồng điệu với Home.jsx & Mùa Phụng Vụ)
-const LITURGICAL_THEMES = {
-  amber: {
-    btnBg: 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-900/20',
-    icon: 'text-amber-600 dark:text-amber-400',
-    badgeBg: 'bg-amber-100/90 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200',
-    accentText: 'text-amber-700 dark:text-amber-400',
-    headingText: 'text-amber-950 dark:text-amber-100',
-    bgGradient: 'from-amber-100/40 via-amber-50/20 to-transparent dark:from-amber-950/30',
-    pingBorder: 'border-amber-500',
-    iconBg: 'bg-amber-50 dark:bg-amber-900/40',
-  },
-  emerald: {
-    btnBg: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/20',
-    icon: 'text-emerald-600 dark:text-emerald-400',
-    badgeBg: 'bg-emerald-100/90 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700/60 text-emerald-900 dark:text-emerald-200',
-    accentText: 'text-emerald-700 dark:text-emerald-400',
-    headingText: 'text-emerald-950 dark:text-emerald-100',
-    bgGradient: 'from-emerald-100/40 via-emerald-50/20 to-transparent dark:from-emerald-950/30',
-    pingBorder: 'border-emerald-500',
-    iconBg: 'bg-emerald-50 dark:bg-emerald-900/40',
-  },
-  purple: {
-    btnBg: 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-900/20',
-    icon: 'text-purple-600 dark:text-purple-400',
-    badgeBg: 'bg-purple-100/90 dark:bg-purple-950/60 border-purple-300 dark:border-purple-700/60 text-purple-900 dark:text-purple-200',
-    accentText: 'text-purple-700 dark:text-purple-400',
-    headingText: 'text-purple-950 dark:text-purple-100',
-    bgGradient: 'from-purple-100/40 via-purple-50/20 to-transparent dark:from-purple-950/30',
-    pingBorder: 'border-purple-500',
-    iconBg: 'bg-purple-50 dark:bg-purple-900/40',
-  },
-  rose: {
-    btnBg: 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/20',
-    icon: 'text-rose-600 dark:text-rose-400',
-    badgeBg: 'bg-rose-100/90 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700/60 text-rose-900 dark:text-rose-200',
-    accentText: 'text-rose-700 dark:text-rose-400',
-    headingText: 'text-rose-950 dark:text-rose-100',
-    bgGradient: 'from-rose-100/40 via-rose-50/20 to-transparent dark:from-rose-950/30',
-    pingBorder: 'border-rose-500',
-    iconBg: 'bg-rose-50 dark:bg-rose-900/40',
-  }
-};
-
+// Hàm tính chu kỳ Năm Phụng Vụ
 function getLiturgicalCycles(year) {
   const sundayCycle = ["C", "A", "B"][year % 3];
   const weekdayCycle = (year % 2 === 0) ? "II" : "I";
@@ -57,6 +14,7 @@ function getLiturgicalCycles(year) {
 
 export default function DailyReadingCard() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [liturgyInfo, setLiturgyInfo] = useState(null);
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,45 +45,104 @@ export default function DailyReadingCard() {
         currentCycle = 'all';
       }
 
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const d = String(today.getDate()).padStart(2, '0');
-      const possibleFeastKey = `feast_${m}_${d}`;
+      const dayStr = String(today.getDate()).padStart(2, '0');
+      const monthStr = String(today.getMonth() + 1).padStart(2, '0');
+      const datePrefix = `Ngày ${dayStr} tháng ${monthStr}`;
+
+      const mPadded = monthStr;
+      const dPadded = dayStr;
+      const mNum = String(today.getMonth() + 1);
+      const dNum = String(today.getDate());
+
+      const keysToFetch = Array.from(new Set([
+        info.key,
+        `feast_${mPadded}_${dPadded}`,
+        `feast_${mNum}_${dNum}`,
+        `fixed_${mPadded}_${dPadded}`,
+        `fixed_${mNum}_${dNum}`,
+        info.seasonKey
+      ].filter(Boolean)));
 
       const { data, error } = await supabase
         .from('liturgy_contents')
         .select('*')
-        .in('liturgy_key', [info.key, possibleFeastKey])
-        .in('cycle', [currentCycle, 'all']);
+        .in('liturgy_key', keysToFetch);
 
       if (!error && data && data.length > 0) {
         const getDataForKey = (targetKey) => {
-          const specificData = data.find(d => d.cycle === currentCycle && d.liturgy_key === targetKey);
-          const allData = data.find(d => d.cycle === 'all' && d.liturgy_key === targetKey);
-          
-          if (specificData && allData) {
-            const merged = { ...specificData };
-            for (let k in allData) {
-              if (!merged[k] || merged[k].toString().trim() === "") merged[k] = allData[k];
+          if (!targetKey) return null;
+          const matches = data.filter(d => d.liturgy_key === targetKey);
+          if (matches.length === 0) return null;
+
+          // Ưu tiên 1: Lấy hàng theo chu kỳ năm I/II hoặc A/B/C (Bắt buộc không chọn 'all' ở đây để không bị đè bài đọc 1)
+          const cycleRow = matches.find(d => d.cycle === cycles.weekdayCycle || d.cycle === cycles.sundayCycle)
+                        || matches.find(d => d.cycle !== 'all')
+                        || matches[0];
+          const allRow = matches.find(d => d.cycle === 'all');
+
+          const merged = {};
+          const allFields = [
+            'title', 'quote', 
+            'r1_ref', 'r1_quote', 'r1_intro', 'r1_content', 
+            'psalm_ref', 'psalm_content', 
+            'r2_ref', 'r2_quote', 'r2_intro', 'r2_content', 
+            'gospel_ref', 'gospel_alleluia', 'gospel_intro', 'gospel_content', 
+            'reflection', 'extra_readings'
+          ];
+
+          for (const f of allFields) {
+            const valFromCycle = cycleRow?.[f];
+            const valFromAll = allRow?.[f];
+
+            if (valFromCycle && valFromCycle.toString().trim() !== "") {
+              merged[f] = valFromCycle;
+            } else if (valFromAll && valFromAll.toString().trim() !== "") {
+              merged[f] = valFromAll;
             }
-            return merged;
           }
-          return specificData || allData;
+
+          return Object.keys(merged).length > 0 ? merged : null;
         };
 
-        const infoData = getDataForKey(info.key);
-        const feastData = getDataForKey(possibleFeastKey);
+        const feastData = getDataForKey(info.key) 
+                       || getDataForKey(`feast_${mPadded}_${dPadded}`) 
+                       || getDataForKey(`fixed_${mPadded}_${dPadded}`)
+                       || getDataForKey(`feast_${mNum}_${dNum}`)
+                       || getDataForKey(`fixed_${mNum}_${dNum}`);
+
+        const weekdayData = info.seasonKey ? getDataForKey(info.seasonKey) : null;
         
         let selectedData = null;
-        if ((info.isFeast || info.rank <= 12) && infoData) {
-          selectedData = infoData;
-        } else if (feastData) {
+
+        if (feastData) {
+          // Ưu tiên bài đọc từ feastData, trường nào feastData trống mới bù từ weekdayData
+          const mergedContent = { ...(weekdayData || {}) };
+          for (let k in feastData) {
+            if (feastData[k] && feastData[k].toString().trim() !== "") {
+              mergedContent[k] = feastData[k];
+            }
+          }
+
+          const saintName = info.displayName || mergedContent.title || 'Lễ Nhớ';
+          const displayTitle = (info.feastType === 'memorial_obligatory' || info.feastType === 'memorial_optional')
+            ? `${datePrefix} - ${saintName} - ${info.feastTypeName || 'Lễ Nhớ'}`
+            : (feastData.title || mergedContent.title || `${datePrefix} - ${saintName}`);
+
           selectedData = {
-            ...feastData,
-            title: feastData.title || info.displayName
+            ...mergedContent,
+            title: displayTitle
           };
-          setLiturgyInfo(prev => ({ ...prev, displayName: feastData.title, isFeast: true }));
-        } else if (infoData) {
-          selectedData = infoData;
+        } else if (weekdayData) {
+          // Không có dữ liệu Lễ trong DB: dùng Bài đọc Ngày Thường
+          const saintName = info.displayName || weekdayData.title || 'Lễ Nhớ';
+          const displayTitle = (info.feastType === 'memorial_obligatory' || info.feastType === 'memorial_optional')
+            ? `${datePrefix} - ${saintName} - ${info.feastTypeName || 'Lễ Nhớ'}`
+            : (weekdayData.title?.toLowerCase().startsWith('ngày') ? weekdayData.title : `${datePrefix} - ${weekdayData.title || saintName}`);
+
+          selectedData = {
+            ...weekdayData,
+            title: displayTitle
+          };
         }
 
         setContent(selectedData);
@@ -148,53 +165,48 @@ export default function DailyReadingCard() {
     }
   };
 
-  // Làm sạch văn bản trích dẫn: Lấy đúng 1 CÂU và LỌC BỎ các chữ số đầu câu
-  const cleanSingleSentenceQuote = (rawQuote) => {
-    if (!rawQuote) return '';
+  // Làm sạch và trích xuất 1 đoạn ngắn từ nội dung chính của Lời Chúa
+  const cleanAndTruncateMainContent = (rawText, maxLength = 160) => {
+    if (!rawText) return '';
 
     // 1. Loại bỏ thẻ HTML
-    let text = rawQuote.replace(/<[^>]+>/g, '').trim();
+    let text = rawText.replace(/<[^>]+>/g, '').trim();
 
-    // 2. Lọc bỏ chữ số đầu câu (Ví dụ: "11 21b Hồi ấy...", "21b Hồi ấy...", "5 Đức Giê-su...")
-    text = text.replace(/^(\d{1,3}\s+\d{1,3}[a-d]{0,4}|\d{1,3}[a-d]{0,4})\s*/u, '');
+    // 2. Lọc bỏ các chữ số đánh số câu Kinh Thánh (ví dụ: "43 Khi ấy...", "44 ", "28b ")
+    text = text.replace(/(\b\d{1,3}[a-d]?\b|\b\d{1,3}\s+\d{1,3}[a-d]?\b)/g, ' ');
 
-    // 3. Loại bỏ ký tự ngoặc kép dính ở 2 đầu
+    // 3. Chuẩn hóa khoảng trắng và xuống dòng
+    text = text.replace(/\s+/g, ' ').trim();
+
+    // 4. Loại bỏ ký tự ngoặc kép dính ở 2 đầu
     text = text.replace(/^["«'‘\s]+|["»'’\s]+$/g, '').trim();
 
-    // 4. Lấy ĐÚNG 1 CÂU duy nhất (kết thúc bằng dấu . ! hoặc ?)
-    const sentenceMatch = text.match(/^[^.!?\n]+[.!?]/u);
-    if (sentenceMatch) {
-      text = sentenceMatch[0].trim();
-    } else {
-      const firstLine = text.split('\n')[0].trim();
-      text = firstLine.length > 120 ? firstLine.substring(0, 120) + '...' : firstLine;
+    // 5. Cắt ngắn văn bản theo maxLength mà không làm vỡ từ
+    if (text.length > maxLength) {
+      const truncated = text.substring(0, maxLength);
+      const lastSpaceIndex = truncated.lastIndexOf(' ');
+      if (lastSpaceIndex > 40) {
+        text = truncated.substring(0, lastSpaceIndex).trim() + '...';
+      } else {
+        text = truncated.trim() + '...';
+      }
     }
 
     return text;
   };
 
-  // Trích xuất trích đoạn Phúc Âm thông minh
+  // Trích xuất 1 đoạn từ nội dung chính Lời Chúa
   const getFeaturedQuote = () => {
     if (!content) return { quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.", ref: "Mt 5, 3" };
-    
-    if (content.gospel_quote && content.gospel_quote.trim()) {
-      return { 
-        quote: cleanSingleSentenceQuote(content.gospel_quote),
-        ref: content.gospel_ref || ''
-      };
-    }
 
-    if (content.gospel_content && content.gospel_content.trim()) {
-      return {
-        quote: cleanSingleSentenceQuote(content.gospel_content),
-        ref: content.gospel_ref || ''
-      };
-    }
+    // Ưu tiên lấy từ nội dung chính Phúc Âm (gospel_content), kế đến bài đọc 1 (r1_content), rồi các trường trích dẫn khác
+    const mainText = content.gospel_content || content.r1_content || content.gospel_quote || content.r1_quote || content.quote;
+    const mainRef = content.gospel_ref || content.r1_ref || '';
 
-    if (content.quote) {
+    if (mainText && mainText.trim()) {
       return {
-        quote: cleanSingleSentenceQuote(content.quote),
-        ref: content.gospel_ref || ''
+        quote: cleanAndTruncateMainContent(mainText, 160),
+        ref: mainRef
       };
     }
 
@@ -204,11 +216,7 @@ export default function DailyReadingCard() {
     };
   };
 
-  const colorKey = getLiturgicalColor(liturgyInfo);
-  const theme = LITURGICAL_THEMES[colorKey] || LITURGICAL_THEMES.amber;
   const featured = getFeaturedQuote();
-
-  // Tiêu đề lấy từ Database: content.title
   const displayTitle = content?.title || liturgyInfo?.displayName || "Lời Chúa Hằng Ngày";
 
   const handleCopyQuote = () => {
@@ -220,99 +228,136 @@ export default function DailyReadingCard() {
 
   return (
     <>
-      {/* Floating Badge (Nút nổi góc dưới trái - Phù hợp với màu sắc Home.jsx & Phụng vụ) */}
+      {/* Floating Badge (Góc dưới trái - Tối ưu di động) */}
       <AnimatePresence>
         {!isOpen && (
-          <motion.button
-            initial={{ opacity: 0, y: 50, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 group flex items-center gap-2.5 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full shadow-xl shadow-stone-900/10 border border-stone-200/90 dark:border-stone-800/90 transition-all"
-          >
-            <div className={`relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${theme.iconBg} ${theme.icon}`}>
-              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              {/* Ping effect màu Phụng vụ */}
-              <span className={`absolute inset-0 rounded-full border ${theme.pingBorder} animate-ping opacity-25`}></span>
-            </div>
-            <div className="flex flex-col items-start text-left">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                Lời Chúa
-              </span>
-              <span className={`text-[12px] sm:text-[13px] font-bold ${theme.accentText}`}>
-                Hôm Nay
-              </span>
-            </div>
-          </motion.button>
+          isMinimized ? (
+            <motion.div
+              key="minimized-badge"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed bottom-20 sm:bottom-6 left-3 sm:left-6 z-40 group flex items-center touch-manipulation"
+            >
+              <button
+                onClick={() => setIsOpen(true)}
+                title="Lời Chúa Hôm Nay (Nhấn để mở đọc)"
+                className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/95 dark:bg-stone-900/95 backdrop-blur-md shadow-lg shadow-amber-900/15 border border-amber-900/15 dark:border-amber-100/15 text-amber-600 dark:text-amber-400 active:scale-95 sm:hover:scale-110 transition-all"
+              >
+                <BookOpen className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                <span className="absolute inset-0 rounded-full border border-amber-500 animate-ping opacity-25 pointer-events-none"></span>
+              </button>
+              {/* Nút nhỏ để mở rộng lại badge - Tối ưu hiển thị dễ chạm trên mobile */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMinimized(false);
+                }}
+                title="Mở rộng đầy đủ"
+                className="absolute -top-1 -right-1 w-5.5 h-5.5 sm:w-5 sm:h-5 rounded-full bg-amber-700 text-white flex items-center justify-center shadow-md opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity active:scale-90"
+              >
+                <Maximize2 className="w-3 h-3" />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="expanded-badge"
+              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed bottom-20 sm:bottom-6 left-3 sm:left-6 z-40 group flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md pl-3.5 sm:pl-4 pr-1.5 sm:pr-2 py-2.5 sm:py-3 rounded-full shadow-lg shadow-amber-900/15 border border-amber-900/15 dark:border-amber-100/15 transition-all touch-manipulation active:scale-[0.98]"
+            >
+              <button
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2.5 sm:gap-3 text-left"
+              >
+                <div className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                  <BookOpen className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                  <span className="absolute inset-0 rounded-full border border-amber-500 animate-ping opacity-25"></span>
+                </div>
+                <span className="text-[14px] sm:text-[15px] font-bold text-amber-950 dark:text-amber-50 pr-0.5 sm:pr-1">
+                  Lời Chúa Hôm Nay
+                </span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMinimized(true);
+                }}
+                className="p-1.5 sm:p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-amber-100/70 dark:hover:bg-amber-900/50 transition-colors ml-0.5 active:bg-amber-200/60"
+                title="Thu nhỏ thành biểu tượng"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )
         )}
       </AnimatePresence>
 
-      {/* Modal Kính Mờ Sang Trọng */}
+      {/* Modal Kính Mờ Amber Hổ Phách - Tối ưu Mobile */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-stone-950/40 dark:bg-black/70 backdrop-blur-md"
+              className="absolute inset-0 bg-stone-900/40 dark:bg-black/70 backdrop-blur-sm"
             />
 
-            {/* Khối Nội Dung */}
+            {/* Khối Nội Dung Modal */}
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 15, scale: 0.95 }}
-              className="relative w-full max-w-sm bg-white/95 dark:bg-stone-900/95 backdrop-blur-2xl rounded-[32px] shadow-2xl border border-stone-200/80 dark:border-stone-800/80 overflow-hidden"
+              className="relative w-full max-w-sm max-h-[88vh] bg-white/90 dark:bg-stone-900/90 backdrop-blur-2xl rounded-[28px] sm:rounded-[32px] shadow-2xl border border-white/50 dark:border-white/10 overflow-y-auto"
             >
-              {/* Background gradient nhẹ màu Phụng Vụ */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${theme.bgGradient} pointer-events-none`} />
+              {/* Background gradient Amber */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-100/40 to-transparent dark:from-amber-900/20 pointer-events-none" />
               
-              <div className="relative p-6 sm:p-8 flex flex-col items-center text-center">
+              <div className="relative p-5 sm:p-8 flex flex-col items-center text-center">
                 {/* Header Actions: Copy & Close */}
-                <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1">
                   <button
                     onClick={handleCopyQuote}
-                    className="p-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors bg-stone-100/80 dark:bg-stone-800/80 rounded-full backdrop-blur-md"
+                    className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors bg-white/60 dark:bg-stone-800/60 rounded-full backdrop-blur-md active:scale-95"
                     title="Sao chép trích dẫn"
                   >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors bg-stone-100/80 dark:bg-stone-800/80 rounded-full backdrop-blur-md"
+                    className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors bg-white/60 dark:bg-stone-800/60 rounded-full backdrop-blur-md active:scale-95"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {loading ? (
-                  <div className="py-12 flex flex-col items-center justify-center">
-                    <Loader2 className={`w-8 h-8 animate-spin ${theme.icon} mb-4`} />
-                    <span className="text-[13px] font-medium text-stone-500">Đang tìm trang Kinh Thánh...</span>
+                  <div className="py-10 sm:py-12 flex flex-col items-center justify-center">
+                    <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 animate-spin text-amber-600 mb-3" />
+                    <span className="text-[12px] sm:text-[13px] font-medium text-stone-500">Đang tìm trang Kinh Thánh...</span>
                   </div>
                 ) : (
                   <>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border mb-3 flex items-center gap-1.5 ${theme.badgeBg}`}>
-                      <Sparkles className="w-3 h-3" /> Lời Chúa Hôm Nay
-                    </span>
+                    <p className="text-[11px] sm:text-[13px] font-extrabold uppercase tracking-[0.16em] text-amber-900/80 dark:text-amber-400 mb-1.5 sm:mb-2 mt-1">
+                      Lời Chúa Hôm Nay
+                    </p>
 
-                    {/* Tiêu đề lấy chính xác từ Database (content.title) */}
-                    <h3 className={`text-[15px] sm:text-[16px] font-bold ${theme.headingText} font-sans mb-6 px-3 leading-snug`}>
+                    {/* Tiêu đề từ Database */}
+                    <h3 className="text-[15px] sm:text-[16px] font-bold text-amber-950 dark:text-amber-50 font-sans mb-5 sm:mb-7 px-1 leading-snug">
                       {displayTitle}
                     </h3>
 
-                    {/* Khối Lời Chúa Trích Đoạn: Lấy ĐÚNG 1 CÂU và KHÔNG CÓ chữ số đầu câu */}
-                    <div className="mb-6 px-1">
-                      <p className="font-serif text-[18px] sm:text-[20px] leading-relaxed text-stone-900 dark:text-stone-100 mb-3 italic">
+                    {/* Khối Lời Chúa: Đoạn trích nội dung chính & Truncate */}
+                    <div className="mb-6 sm:mb-8 w-full">
+                      <p className="font-serif text-[14px] sm:text-[16px] leading-relaxed text-amber-950 dark:text-amber-100 mb-2.5 sm:mb-3 italic px-1">
                         « {featured.quote} »
                       </p>
                       {featured.ref && (
-                        <p className={`text-[12px] sm:text-[13px] font-bold font-sans ${theme.accentText}`}>
+                        <p className="text-[12px] sm:text-[13px] font-medium text-stone-500 dark:text-stone-400">
                           ({featured.ref})
                         </p>
                       )}
@@ -321,9 +366,9 @@ export default function DailyReadingCard() {
                     <Link
                       to="/lời-chúa-hàng-ngày"
                       onClick={() => setIsOpen(false)}
-                      className={`group flex items-center justify-center gap-2 w-full ${theme.btnBg} py-3.5 rounded-2xl text-[14px] font-bold shadow-lg transition-all active:scale-[0.98]`}
+                      className="group flex items-center justify-center gap-2 w-full bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-white py-3 sm:py-3.5 rounded-2xl text-[13px] sm:text-[14px] font-bold shadow-lg shadow-amber-900/20 transition-all active:scale-[0.97]"
                     >
-                      Đọc Toàn Bộ Bài Đọc
+                      Đọc tiếp
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </>

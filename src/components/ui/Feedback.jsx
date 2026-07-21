@@ -295,10 +295,11 @@ export function GuideBox({
   };
 
   const rules = [
-    <>Bài thi gồm <b>trắc nghiệm</b> và <b>tự luận</b>.</>,
-    <>Mỗi lần thi chọn <b>ngẫu nhiên</b> câu hỏi từ thư viện.</>,
-    <>Mỗi câu trắc nghiệm chỉ chọn <b>1 đáp án</b>.</>,
-    <>Có thể <b>bỏ qua</b> câu và làm tiếp sau.</>,
+    <>Mỗi câu làm đúng được <b>+100 điểm base</b> (hệ thống điểm x10).</>,
+    <>Trả lời đúng liên tiếp nhận <b>🔥 Combo Streak (+20đ/nấc)</b>.</>,
+    <>Trả lời thần tốc <b>&lt; 5 giây</b> nhận thêm <b>⚡ +50 điểm bonus</b>.</>,
+    <>Được dùng <b>1 lần 🪄 50:50</b> (ẩn 2 câu sai) và <b>1 lần ⏱️ +10s</b> mỗi lượt chơi.</>,
+    <>Tích lũy điểm vào <b>🏆 Bảng Xếp Hạng Tuần & Tháng</b>.</>,
   ];
 
   return (
