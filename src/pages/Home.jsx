@@ -18,10 +18,11 @@ import {
   Sprout,
   Cross,
   ChevronRight,
-  Sun
+  Sun,
+  Copy,
+  Check
 } from "lucide-react";
 import { motion } from "framer-motion";
-import DailyReadingCard from "../features/liturgy/DailyReadingCard.jsx";
 import { useDailyLiturgy } from "../features/liturgy/useDailyLiturgy.js";
 import "./Home.css";
 
@@ -165,6 +166,7 @@ const GALLERY_ITEMS = [
    COMPONENT CHÍNH: HOME
 ───────────────────────────────────────────── */
 export default function Home() {
+  const [copied, setCopied] = useState(false);
   const { loading: liturgyLoading, featured: dailyGospel, displayTitle: liturgyTitle } = useDailyLiturgy();
 
   useEffect(() => {
@@ -175,6 +177,14 @@ export default function Home() {
       document.title = prevTitle;
     };
   }, []);
+
+  const handleCopyQuote = () => {
+    if (!dailyGospel?.quote) return;
+    const textToCopy = `« ${dailyGospel.quote} » (${dailyGospel.ref || ""})\n- ${liturgyTitle}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const scrollToCurriculum = () => {
     const target = document.getElementById("hanh-trinh-giao-ly");
@@ -319,13 +329,34 @@ export default function Home() {
                     « {dailyGospel.quote} »
                   </blockquote>
 
-                  {dailyGospel.ref && (
-                    <cite className="home-gospel-cite">
-                      {dailyGospel.ref.includes("Phúc Âm") || dailyGospel.ref.includes("Tin Mừng") || dailyGospel.ref.includes("Bài đọc")
-                        ? dailyGospel.ref
-                        : `Tin Mừng · ${dailyGospel.ref}`}
-                    </cite>
-                  )}
+                  <div className="flex items-center justify-between flex-wrap gap-2.5 mt-2">
+                    {dailyGospel.ref && (
+                      <cite className="home-gospel-cite">
+                        {dailyGospel.ref.includes("Phúc Âm") || dailyGospel.ref.includes("Tin Mừng") || dailyGospel.ref.includes("Bài đọc")
+                          ? dailyGospel.ref
+                          : `Tin Mừng · ${dailyGospel.ref}`}
+                      </cite>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleCopyQuote}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-[#7c5c2d] dark:text-[#d4b47d] border border-amber-600/20 transition-all active:scale-95 cursor-pointer"
+                      title="Sao chép câu Lời Chúa này"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-emerald-700 dark:text-emerald-300 font-bold">Đã sao chép</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 opacity-80" />
+                          <span>Sao chép câu này</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -530,8 +561,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Widget Lời Chúa nổi góc màn hình */}
-      <DailyReadingCard />
     </div>
   );
 }
