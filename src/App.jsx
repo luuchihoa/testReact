@@ -55,8 +55,14 @@ const LichHoc       = lazyWithRetry(() => import("./pages/LichHoc.jsx"));
 const GioiTre       = lazyWithRetry(() => import("./pages/GioiTre.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 
-// ── Lời Chúa ──
-const LiturgyPage   = lazyWithRetry(() => import("./pages/LiturgyPage.jsx"));
+// ── External Redirect Component ──
+function ExternalRedirect({ url }) {
+  useEffect(() => {
+    window.location.replace(url);
+  }, [url]);
+  return null;
+}
+
 
 // ── Bài viết ──
 const ArticleList   = lazyWithRetry(() => import("./features/articles/ArticleList.jsx"));
@@ -181,7 +187,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout fontSize={fontSize} toggleModal={toggleModal} isLogin={isLogin} setIsLogin={setIsLogin} handleClose={handleClose}/>}>
           <Route index element={<Home />} />
-          <Route path="lời-chúa-hàng-ngày" element={<LiturgyPage />} />
+          <Route path="lời-chúa-hàng-ngày" element={<ExternalRedirect url="https://loichuamoingay.org" />} />
           <Route path="tuyển-sinh" element={<TuyenSinh />} />
           <Route path="giới-thiệu" element={<GioiThieu />} />
           <Route path="khối-chiên-con" element={<KhoiChienCon />} />

@@ -2,11 +2,16 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   GraduationCap, FileText, Play, Search, ChevronRight, 
-  Download, Clock, BookOpen, Sparkles, Flame, Heart, Church, Globe, X 
+  Download, Clock, BookOpen, Sparkles, Flame, Heart, Church, Globe, X, Eye, Compass
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePageMotion } from "../hooks/usePageMotion.js";
 import { useDebounce } from "../hooks/useDebounce";
+import { useToast } from "../components/ui/ToastContext.jsx";
+import DocumentReaderModal from "../components/shared/DocumentReaderModal.jsx";
+import BibleQuickNavigatorModal from "../components/bible/BibleQuickNavigatorModal.jsx";
+import { downloadDocument } from "../utils/documentDownloadHelper.js";
+import { DOCUMENTS_DATA } from "../data/documents/docData.js";
 
 const KHOI_LIST = [
   { id: "all",        label: "Tất cả" },
@@ -19,54 +24,56 @@ const KHOI_LIST = [
 ];
 
 const QUIZZES = [
+  // Khối Phụng Vụ (6 bộ đề định kỳ thực tế trong cơ sở dữ liệu)
   {
     title: "Ôn Tập 15 Phút — HK1",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-stone-600 dark:text-stone-400", iconBg: "bg-stone-100 dark:bg-stone-800",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-orange-600 dark:text-orange-400", iconBg: "bg-orange-50 dark:bg-orange-500/10",
     path: "/bài-kiểm-tra/ôn-tập-15-phút-học-kỳ-1",
     time: "15 phút", questions: "10 TN + 2 TL",
     badge: "HK1", badgeColor: "bg-amber-100/50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
   {
     title: "Ôn Tập 1 Tiết — HK1",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-stone-600 dark:text-stone-400", iconBg: "bg-stone-100 dark:bg-stone-800",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-orange-600 dark:text-orange-400", iconBg: "bg-orange-50 dark:bg-orange-500/10",
     path: "/bài-kiểm-tra/ôn-tập-1-tiết-học-kỳ-1",
     time: "45 phút", questions: "20 TN + 3 TL",
     badge: "HK1", badgeColor: "bg-amber-100/50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
   {
     title: "Ôn Tập Cuối HK1",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-stone-600 dark:text-stone-400", iconBg: "bg-stone-100 dark:bg-stone-800",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-orange-600 dark:text-orange-400", iconBg: "bg-orange-50 dark:bg-orange-500/10",
     path: "/bài-kiểm-tra/ôn-tập-cuối-học-kỳ-1",
     time: "45 phút", questions: "20 TN + 3 TL",
     badge: "HK1", badgeColor: "bg-amber-100/50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
   {
     title: "Ôn Tập 15 Phút — HK2",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
     path: "/bài-kiểm-tra/ôn-tập-15-phút-học-kỳ-2",
     time: "15 phút", questions: "10 TN + 2 TL",
     badge: "HK2", badgeColor: "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
   },
   {
     title: "Ôn Tập 1 Tiết — HK2",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
     path: "/bài-kiểm-tra/ôn-tập-1-tiết-học-kỳ-2",
     time: "45 phút", questions: "20 TN + 3 TL",
     badge: "HK2", badgeColor: "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
   },
   {
     title: "Ôn Tập Cuối HK2",
-    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
-    icon: BookOpen, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    icon: Church, iconColor: "text-emerald-600 dark:text-emerald-400", iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
     path: "/bài-kiểm-tra/ôn-tập-cuối-học-kỳ-2",
     time: "45 phút", questions: "20 TN + 3 TL",
     badge: "HK2", badgeColor: "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
   },
+  // Đố vui chung (mọi khối)
   {
     title: "Đố Vui Giáo Lý",
     khoi: "all", khoiLabel: "Tất cả",
@@ -78,41 +85,104 @@ const QUIZZES = [
 ];
 
 const DOCS = [
+  // Khối Chiên Con
   {
-    title: "Toát yếu Giáo lý Hội Thánh Công giáo",
-    khoi: "all", type: "PDF", icon: FileText,
-    desc: "Tổng hợp toàn bộ giáo lý Công giáo dưới dạng hỏi-đáp ngắn gọn, súc tích.",
-    url: "#", size: "2.4 MB",
+    id: "cam-nang-khai-tam-chien-con",
+    title: "Cẩm Nang Khai Tâm — Em Học Làm Dấu & Cầu Nguyện",
+    khoi: "chien-con", khoiLabel: "Chiên Con",
+    type: "PDF", icon: Heart,
+    desc: "Hướng dẫn ấu nhi cách bước vào nhà thờ, làm dấu Thánh Giá, chào Chúa Giêsu Thánh Thể.",
+    url: "#", size: "4.3 KB",
+    hasReader: true,
   },
+  // Khối Rước Lễ
   {
-    title: "Kinh Thánh — Bản dịch Nhóm CGKPV",
-    khoi: "kinh-thanh", type: "PDF", icon: BookOpen,
-    desc: "Toàn bộ Kinh Thánh 73 quyển, bản dịch Công giáo Việt Nam chính thức.",
-    url: "#", size: "18 MB",
+    id: "cam-nang-xet-minh-ruoc-le",
+    title: "Cẩm Nang Xét Mình & Dọn Lòng Rước Lễ Sốt Sắng",
+    khoi: "ruoc-le", khoiLabel: "Rước Lễ",
+    type: "PDF", icon: Sparkles,
+    desc: "Hướng dẫn 5 bước xưng tội nên và bản xét mình chi tiết theo 10 Điều Răn.",
+    url: "#", size: "4.2 KB",
+    hasReader: true,
   },
+  // Khối Thêm Sức
   {
-    title: "Hướng dẫn đọc Kinh Thánh mỗi ngày",
-    khoi: "kinh-thanh", type: "PDF", icon: FileText,
-    desc: "Phương pháp Lectio Divina đơn giản dành cho trẻ em và gia đình.",
-    url: "#", size: "1.1 MB",
-  },
-  {
-    title: "Sách lễ Rôma — Kinh Nguyện Thánh Thể",
-    khoi: "phung-vu", type: "PDF", icon: FileText,
-    desc: "Văn bản các Kinh nguyện Thánh Thể I–IV dùng trong Thánh Lễ.",
-    url: "#", size: "850 KB",
-  },
-  {
-    title: "Năm Phụng vụ — Lịch Công giáo 2025–2026",
-    khoi: "phung-vu", type: "PDF", icon: FileText,
-    desc: "Lịch toàn bộ năm Phụng vụ 2025–2026 với các lễ trọng, lễ kính.",
-    url: "#", size: "560 KB",
-  },
-  {
-    title: "7 ơn Chúa Thánh Thần — Tài liệu Thêm Sức",
-    khoi: "them-suc", type: "PDF", icon: Flame,
+    id: "7-on-chua-thanh-than",
+    title: "7 Ơn Chúa Thánh Thần & 12 Hoa Trái Thần Khí",
+    khoi: "them-suc", khoiLabel: "Thêm Sức",
+    type: "PDF", icon: Flame,
     desc: "Tài liệu học và suy niệm 7 ơn Chúa Thánh Thần dành riêng cho Khối Thêm Sức.",
-    url: "#", size: "1.3 MB",
+    url: "#", size: "5.9 KB",
+    hasReader: true,
+  },
+  // Khối Phụng Vụ
+  {
+    id: "so-tay-le-sinh",
+    title: "Sổ Tay Lễ Sinh & Thừa Tác Vụ Bàn Thờ",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    type: "PDF", icon: Church,
+    desc: "Cẩm nang tác phong, nghi thức giúp lễ và thứ tự phụng vụ thánh lễ trang nghiêm.",
+    url: "#", size: "3.0 KB",
+    hasReader: true,
+  },
+  {
+    id: "nam-phung-vu",
+    title: "Năm Phụng Vụ — Lịch Công Giáo & Các Mùa Thánh",
+    khoi: "phung-vu", khoiLabel: "Phụng Vụ",
+    type: "PDF", icon: FileText,
+    desc: "Chu kỳ Năm Phụng vụ, ý nghĩa các mùa thánh, màu phẩm phục và danh mục Lễ Trọng.",
+    url: "#", size: "4.7 KB",
+    hasReader: true,
+  },
+  // Khối Kinh Thánh
+  {
+    id: "phuong-phap-lectio-divina",
+    title: "Phương Pháp Cầu Nguyện Với Lời Chúa (Lectio Divina)",
+    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
+    type: "PDF", icon: BookOpen,
+    desc: "Phương pháp đọc và suy niệm Lời Chúa truyền thống của Hội Thánh qua 5 bước.",
+    url: "#", size: "2.8 KB",
+    hasReader: true,
+  },
+  {
+    id: "kinh-thanh-cgkpv",
+    title: "Kinh Thánh — Bản Dịch Nhóm CGKPV",
+    khoi: "kinh-thanh", khoiLabel: "Kinh Thánh",
+    type: "PDF", icon: BookOpen,
+    desc: "Toàn bộ Kinh Thánh 73 quyển (CGKPV) • Tra cứu nhanh, có audio nghe từng chương và ghi chú.",
+    url: "#",
+    size: "13.1 MB (73 Sách)",
+    hasReader: true,
+    isBibleNavigator: true,
+  },
+  // Khối Vào Đời
+  {
+    id: "dinh-huong-vao-doi",
+    title: "Cẩm Nang Bạn Trẻ Vào Đời — Đức Tin, Nghề Nghiệp & Tình Yêu",
+    khoi: "vao-doi", khoiLabel: "Vào Đời",
+    type: "PDF", icon: Globe,
+    desc: "Định hướng sống đức tin trưởng thành, phân định ơn gọi, đạo đức nghề nghiệp và hôn nhân Kitô giáo.",
+    url: "#", size: "5.1 KB",
+    hasReader: true,
+  },
+  // Tài Liệu Chung (Mọi Khối)
+  {
+    id: "ban-kinh-can-thuoc-da-nang",
+    title: "Bản Tóm Lược Các Kinh Cần Thuộc — Giáo Phận Đà Nẵng",
+    khoi: "all", khoiLabel: "Tất cả",
+    type: "PDF", icon: FileText,
+    desc: "Tổng hợp toàn văn các kinh nguyện cốt lõi theo quy chuẩn Giáo phận Đà Nẵng.",
+    url: "#", size: "11 KB",
+    hasReader: true,
+  },
+  {
+    id: "toat-yeu-giao-ly",
+    title: "Toát Yếu Giáo Lý Hội Thánh Công Giáo",
+    khoi: "all", khoiLabel: "Tất cả",
+    type: "PDF", icon: FileText,
+    desc: "Tổng hợp toàn bộ giáo lý Công giáo dưới dạng hỏi-đáp ngắn gọn, súc tích.",
+    url: "#", size: "5.2 KB",
+    hasReader: true,
   },
 ];
 
@@ -136,18 +206,38 @@ export const KHOI_LINKS = [
 ];
 
 export default function TaiLieu() {
+  const { showToast } = useToast();
   const [activeKhoi, setActiveKhoi] = useState("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300); // 300ms delay
-  const [isLoading, setIsLoading] = useState(false);
   const { mc, fadeUp, heroReveal, vp } = usePageMotion();
-  
-  // Simulate network request when filter changes
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 300); // simulate 300ms load
-    return () => clearTimeout(timer);
-  }, [activeKhoi, debouncedSearch]);
+
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [isBibleModalOpen, setIsBibleModalOpen] = useState(false);
+
+  const handleOpenReader = (doc) => {
+    if (doc.id === "kinh-thanh-cgkpv" || doc.isBibleNavigator) {
+      setIsBibleModalOpen(true);
+      return;
+    }
+    const fullDoc = DOCUMENTS_DATA[doc.id] || {
+      ...doc,
+      chapters: [{ id: "preview", title: doc.title, content: doc.desc }]
+    };
+    setSelectedDoc(fullDoc);
+    setIsReaderOpen(true);
+  };
+
+  const handleDownloadDoc = (doc) => {
+    if (doc.id === "kinh-thanh-cgkpv" || doc.isBibleNavigator) {
+      setIsBibleModalOpen(true);
+      showToast?.("Vui lòng chọn quyển sách bạn muốn tải PDF trong danh mục 73 cuốn.", "info");
+      return;
+    }
+    const fullDoc = DOCUMENTS_DATA[doc.id] || doc;
+    downloadDocument(fullDoc, showToast);
+  };
 
   const filteredQuizzes = useMemo(() => {
     return QUIZZES.filter(q =>
@@ -177,11 +267,6 @@ export default function TaiLieu() {
     });
     return counts;
   }, []);
-
-  const handleDownload = (e, title) => {
-    e.preventDefault(); // Prevent standard # link navigation
-    alert(`[Mô phỏng] Đang tải tài liệu: ${title}\n(Tính năng tải file thực từ server sẽ được cập nhật sau khi tích hợp Supabase)`);
-  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900 transition-colors duration-500 relative">
@@ -326,33 +411,20 @@ export default function TaiLieu() {
             </p>
           </motion.div>
 
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div key="loading-q" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-[180px] bg-white/40 dark:bg-stone-800/20 backdrop-blur-sm rounded-3xl border border-amber-900/5 dark:border-amber-100/5 p-6 animate-pulse">
-                    <div className="flex justify-between mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-amber-900/5 dark:bg-stone-700/30" />
-                      <div className="w-12 h-5 rounded-full bg-amber-900/5 dark:bg-stone-700/30" />
-                    </div>
-                    <div className="w-3/4 h-5 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-2" />
-                    <div className="w-1/2 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-6" />
-                    <div className="h-px bg-amber-900/5 dark:bg-stone-700/30 w-full mb-3" />
-                    <div className="flex justify-between">
-                      <div className="w-16 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
-                      <div className="w-16 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            ) : filteredQuizzes.length > 0 ? (
-              <motion.div key={activeKhoi + search}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <AnimatePresence mode="popLayout">
+            {filteredQuizzes.length > 0 ? (
+              <motion.div
+                key={activeKhoi + debouncedSearch}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="grid sm:grid-cols-2 md:grid-cols-3 gap-4"
+              >
                 {filteredQuizzes.map((quiz, i) => {
                   const Icon = quiz.icon;
                   return (
-                    <motion.div key={quiz.path} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04}>
+                    <motion.div key={quiz.title} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04}>
                       <Link to={quiz.path}
                         className="group flex flex-col justify-between h-full bg-white/90 dark:bg-stone-800/50 backdrop-blur-md rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 active:scale-[0.98] transition-all duration-300 text-left"
                       >
@@ -390,9 +462,15 @@ export default function TaiLieu() {
                 })}
               </motion.div>
             ) : (
-              <motion.div key="empty-q" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="text-sm text-stone-500 dark:text-stone-400 font-medium py-10 px-4 text-center bg-white/60 dark:bg-stone-900/40 rounded-3xl border border-dashed border-amber-900/20 dark:border-amber-100/20">
-                <p>Không tìm thấy đề thi phù hợp với bộ lọc hiện tại.</p>
+              <motion.div
+                key="empty-q"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm text-stone-500 dark:text-stone-400 font-medium py-10 px-4 text-center bg-white/60 dark:bg-stone-900/40 rounded-3xl border border-dashed border-amber-900/20 dark:border-amber-100/20"
+              >
+                <p>Chưa có đề thi phù hợp với bộ lọc này.</p>
                 {search && (
                   <button onClick={() => setSearch("")} className="mt-3 text-xs font-bold text-amber-700 dark:text-amber-400 underline">
                     Xóa tìm kiếm
@@ -425,23 +503,14 @@ export default function TaiLieu() {
             </p>
           </motion.div>
 
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div key="loading-d" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 bg-white/40 dark:bg-stone-800/20 backdrop-blur-sm rounded-2xl border border-amber-900/5 dark:border-amber-100/5 px-5 py-4 animate-pulse">
-                     <div className="w-11 h-11 rounded-[14px] bg-amber-900/5 dark:bg-stone-700/30 flex-shrink-0" />
-                     <div className="flex-1">
-                        <div className="w-1/2 h-4 bg-amber-900/5 dark:bg-stone-700/30 rounded mb-2" />
-                        <div className="w-3/4 h-3 bg-amber-900/5 dark:bg-stone-700/30 rounded" />
-                     </div>
-                     <div className="w-10 h-10 rounded-full bg-amber-900/5 dark:bg-stone-700/30 flex-shrink-0" />
-                  </div>
-                ))}
-              </motion.div>
-            ) : filteredDocs.length > 0 ? (
-              <motion.div key={activeKhoi + search + "d"}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <AnimatePresence mode="popLayout">
+            {filteredDocs.length > 0 ? (
+              <motion.div
+                key={activeKhoi + debouncedSearch + "d"}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
                 className="grid gap-3 w-full max-w-full overflow-hidden"
               >
                 {filteredDocs.map((doc, i) => {
@@ -449,18 +518,30 @@ export default function TaiLieu() {
                   const khoiMeta = KHOI_ICON_MAP[doc.khoi] || KHOI_ICON_MAP["all"];
                   const KhoiIcon = khoiMeta.icon;
                   return (
-                    <motion.div key={doc.title} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04} className="w-full min-w-0">
-                      <a href={doc.url} onClick={(e) => handleDownload(e, doc.title)}
-                        className="group flex items-center justify-between w-full max-w-full min-w-0 gap-3 sm:gap-4 bg-white/90 dark:bg-stone-800/50 backdrop-blur-md rounded-2xl border border-amber-900/10 dark:border-amber-100/10 p-3 sm:px-5 sm:py-4 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 active:scale-[0.99] transition-all duration-300 text-left overflow-hidden"
+                    <motion.div key={doc.id || doc.title} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.04} className="w-full min-w-0">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleOpenReader(doc)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenReader(doc); }}
+                        className="group flex items-center justify-between w-full max-w-full min-w-0 gap-3 sm:gap-4 bg-white/90 dark:bg-stone-800/50 backdrop-blur-md rounded-2xl border border-amber-900/10 dark:border-amber-100/10 p-3 sm:px-5 sm:py-4 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 active:scale-[0.99] transition-all duration-300 text-left overflow-hidden cursor-pointer"
                       >
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[14px] bg-amber-50 dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center flex-shrink-0 text-amber-800 dark:text-amber-400 shadow-sm">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[14px] bg-amber-50 dark:bg-stone-800 border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center flex-shrink-0 text-amber-800 dark:text-amber-400 shadow-sm group-hover:scale-105 transition-transform">
                           <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <h3 className="text-[13.5px] sm:text-[15px] font-bold text-amber-950 dark:text-amber-50 truncate group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
-                            {doc.title}
-                          </h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-[13.5px] sm:text-[15px] font-bold text-amber-950 dark:text-amber-50 truncate group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                              {doc.title}
+                            </h3>
+                            {doc.hasReader && (
+                              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/30">
+                                {doc.isBibleNavigator ? <Compass className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                {doc.isBibleNavigator ? "Tra cứu & Đọc ngay" : "Đọc trực tiếp"}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[11.5px] sm:text-[12.5px] text-stone-500 dark:text-stone-400 truncate font-medium mt-0.5">
                             {doc.desc}
                           </p>
@@ -472,6 +553,12 @@ export default function TaiLieu() {
                               <span>{khoiMeta.label}</span>
                             </span>
                             <span className="text-[10.5px] text-stone-400 dark:text-stone-500 font-semibold">{doc.size}</span>
+                            {doc.hasReader && (
+                              <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold text-amber-600 dark:text-amber-400">
+                                {doc.isBibleNavigator ? <Compass className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
+                                {doc.isBibleNavigator ? "Tra cứu" : "Đọc ngay"}
+                              </span>
+                            )}
                           </div>
                         </div>
                         
@@ -485,19 +572,34 @@ export default function TaiLieu() {
                           <span className="hidden sm:inline-block text-[12px] text-stone-500 dark:text-stone-400 font-bold select-none">{doc.size}</span>
                           
                           {/* Nút Download chuẩn Touch Target */}
-                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-amber-100/60 dark:bg-stone-800 group-hover:bg-amber-200/80 dark:group-hover:bg-amber-500/20 border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center flex-shrink-0 active:scale-95 transition-all shadow-sm">
+                          <button
+                            type="button"
+                            aria-label={`Tải xuống ${doc.title}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadDoc(doc);
+                            }}
+                            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-amber-100/60 dark:bg-stone-800 hover:bg-amber-200/80 dark:hover:bg-amber-500/20 border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center flex-shrink-0 active:scale-95 transition-all shadow-sm"
+                            title="Tải tài liệu về máy"
+                          >
                             <Download className="w-4 h-4 text-amber-800 dark:text-amber-400 transition-colors" />
-                          </div>
+                          </button>
                         </div>
-                      </a>
+                      </div>
                     </motion.div>
                   );
                 })}
               </motion.div>
             ) : (
-              <motion.div key="empty-d" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="text-sm text-stone-500 dark:text-stone-400 font-medium py-10 px-4 text-center bg-white/60 dark:bg-stone-900/40 rounded-3xl border border-dashed border-amber-900/20 dark:border-amber-100/20">
-                <p>Không tìm thấy tài liệu phù hợp.</p>
+              <motion.div
+                key="empty-d"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm text-stone-500 dark:text-stone-400 font-medium py-10 px-4 text-center bg-white/60 dark:bg-stone-900/40 rounded-3xl border border-dashed border-amber-900/20 dark:border-amber-100/20"
+              >
+                <p>Chưa có tài liệu phù hợp.</p>
                 {search && (
                   <button onClick={() => setSearch("")} className="mt-3 text-xs font-bold text-amber-700 dark:text-amber-400 underline">
                     Xóa tìm kiếm
@@ -554,6 +656,21 @@ export default function TaiLieu() {
         </section>
 
       </div>
+
+      {/* DOCUMENT READER MODAL */}
+      <DocumentReaderModal
+        doc={selectedDoc}
+        isOpen={isReaderOpen}
+        onClose={() => setIsReaderOpen(false)}
+        onDownload={handleDownloadDoc}
+      />
+
+      {/* BIBLE QUICK NAVIGATOR MODAL */}
+      <BibleQuickNavigatorModal
+        isOpen={isBibleModalOpen}
+        onClose={() => setIsBibleModalOpen(false)}
+        initialTestament="all"
+      />
     </div>
   );
 }

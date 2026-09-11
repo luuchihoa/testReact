@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, X, ArrowRight, Loader2, Copy, Check, Minimize2, Maximize2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { getLiturgyInfo, getLiturgicalYear } from '../../utils/liturgyCalendar.js';
-import { supabase } from '../../lib/supabase.js';
-
-// Hàm tính chu kỳ Năm Phụng Vụ
-function getLiturgicalCycles(year) {
-  const sundayCycle = ["C", "A", "B"][year % 3];
-  const weekdayCycle = (year % 2 === 0) ? "II" : "I";
-  return { sundayCycle, weekdayCycle };
-}
+import { getLiturgyInfo } from '../../utils/liturgyCalendar.js';
+import { resolveLiturgyContentForDate } from '../../utils/liturgyContentResolver.js';
+import { liturgySupabase } from '../../lib/liturgySupabase.js';
 
 export default function DailyReadingCard() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +13,7 @@ export default function DailyReadingCard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Tải dữ liệu ngầm (Prefetching) ngay khi vừa mount component
+  // Tải dữ liệu ngầm khi vừa mount component
   useEffect(() => {
     fetchReading();
   }, []);
@@ -32,177 +25,101 @@ export default function DailyReadingCard() {
       const info = getLiturgyInfo(today);
       setLiturgyInfo(info);
 
-      const lityear = getLiturgicalYear(today);
-      const cycles = getLiturgicalCycles(lityear);
-      const isSpecialABCFeast = info.key === 'feast_thanh_tam' || info.key === 'feast_gia_that' || info.key === 'feast_tet_1';
-      
-      let currentCycle;
-      if (info.isSunday || isSpecialABCFeast) {
-        currentCycle = cycles.sundayCycle;
-      } else if (info.season === 'thuong') {
-        currentCycle = cycles.weekdayCycle;
-      } else {
-        currentCycle = 'all';
+      // Kiểm tra cache trong ngày
+      const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const cacheKey = `liturgy_daily_card_${dayKey}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.quote || parsed.gospel_content || parsed.r1_content)) {
+            setContent(parsed);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {}
       }
 
       const dayStr = String(today.getDate()).padStart(2, '0');
       const monthStr = String(today.getMonth() + 1).padStart(2, '0');
-      const datePrefix = `Ngày ${dayStr} tháng ${monthStr}`;
-
-      const mPadded = monthStr;
-      const dPadded = dayStr;
       const mNum = String(today.getMonth() + 1);
       const dNum = String(today.getDate());
 
+      const is30TetDate = (
+        info.key === 'feast_tat_nien' ||
+        info.key === 'feast_giao_thua' ||
+        (info.displayName && (info.displayName.includes('Tất Niên') || info.displayName.includes('Giao Thừa')))
+      );
+
+      // Chuẩn bị danh sách key chuẩn xác từ loi-chua-hang-ngay
       const keysToFetch = Array.from(new Set([
         info.key,
-        `feast_${mPadded}_${dPadded}`,
+        is30TetDate ? 'feast_tat_nien' : null,
+        is30TetDate ? 'feast_giao_thua' : null,
+        `feast_${monthStr}_${dayStr}`,
         `feast_${mNum}_${dNum}`,
-        `fixed_${mPadded}_${dPadded}`,
+        `fixed_${monthStr}_${dayStr}`,
         `fixed_${mNum}_${dNum}`,
         info.seasonKey
       ].filter(Boolean)));
 
-      const { data, error } = await supabase
+      // Chỉ fetch đúng các trường hiển thị cần thiết, không dư thừa
+      const { data, error } = await liturgySupabase
         .from('liturgy_contents')
-        .select('*')
+        .select('liturgy_key, cycle, title, mass_title, quote, gospel_ref, gospel_content, r1_ref, r1_quote, r1_content, reflection')
         .in('liturgy_key', keysToFetch);
 
       if (!error && data && data.length > 0) {
-        const getDataForKey = (targetKey) => {
-          if (!targetKey) return null;
-          const matches = data.filter(d => d.liturgy_key === targetKey);
-          if (matches.length === 0) return null;
-
-          // Ưu tiên 1: Lấy hàng theo chu kỳ năm I/II hoặc A/B/C (Bắt buộc không chọn 'all' ở đây để không bị đè bài đọc 1)
-          const cycleRow = matches.find(d => d.cycle === cycles.weekdayCycle || d.cycle === cycles.sundayCycle)
-                        || matches.find(d => d.cycle !== 'all')
-                        || matches[0];
-          const allRow = matches.find(d => d.cycle === 'all');
-
-          const merged = {};
-          const allFields = [
-            'title', 'quote', 
-            'r1_ref', 'r1_quote', 'r1_intro', 'r1_content', 
-            'psalm_ref', 'psalm_content', 
-            'r2_ref', 'r2_quote', 'r2_intro', 'r2_content', 
-            'gospel_ref', 'gospel_alleluia', 'gospel_intro', 'gospel_content', 
-            'reflection', 'extra_readings'
-          ];
-
-          for (const f of allFields) {
-            const valFromCycle = cycleRow?.[f];
-            const valFromAll = allRow?.[f];
-
-            if (valFromCycle && valFromCycle.toString().trim() !== "") {
-              merged[f] = valFromCycle;
-            } else if (valFromAll && valFromAll.toString().trim() !== "") {
-              merged[f] = valFromAll;
-            }
-          }
-
-          return Object.keys(merged).length > 0 ? merged : null;
-        };
-
-        const feastData = getDataForKey(info.key) 
-                       || getDataForKey(`feast_${mPadded}_${dPadded}`) 
-                       || getDataForKey(`fixed_${mPadded}_${dPadded}`)
-                       || getDataForKey(`feast_${mNum}_${dNum}`)
-                       || getDataForKey(`fixed_${mNum}_${dNum}`);
-
-        const weekdayData = info.seasonKey ? getDataForKey(info.seasonKey) : null;
-        
-        let selectedData = null;
-
-        if (feastData) {
-          // Ưu tiên bài đọc từ feastData, trường nào feastData trống mới bù từ weekdayData
-          const mergedContent = { ...(weekdayData || {}) };
-          for (let k in feastData) {
-            if (feastData[k] && feastData[k].toString().trim() !== "") {
-              mergedContent[k] = feastData[k];
-            }
-          }
-
-          const saintName = info.displayName || mergedContent.title || 'Lễ Nhớ';
-          const displayTitle = (info.feastType === 'memorial_obligatory' || info.feastType === 'memorial_optional')
-            ? `${datePrefix} - ${saintName} - ${info.feastTypeName || 'Lễ Nhớ'}`
-            : (feastData.title || mergedContent.title || `${datePrefix} - ${saintName}`);
-
-          selectedData = {
-            ...mergedContent,
-            title: displayTitle
-          };
-        } else if (weekdayData) {
-          // Không có dữ liệu Lễ trong DB: dùng Bài đọc Ngày Thường
-          const saintName = info.displayName || weekdayData.title || 'Lễ Nhớ';
-          const displayTitle = (info.feastType === 'memorial_obligatory' || info.feastType === 'memorial_optional')
-            ? `${datePrefix} - ${saintName} - ${info.feastTypeName || 'Lễ Nhớ'}`
-            : (weekdayData.title?.toLowerCase().startsWith('ngày') ? weekdayData.title : `${datePrefix} - ${weekdayData.title || saintName}`);
-
-          selectedData = {
-            ...weekdayData,
-            title: displayTitle
-          };
+        // Áp dụng logic giải quyết nội dung chuẩn từ loi-chua-hang-ngay
+        const { content: resolved } = resolveLiturgyContentForDate(today, data);
+        if (resolved) {
+          setContent(resolved);
+          localStorage.setItem(cacheKey, JSON.stringify(resolved));
         }
-
-        setContent(selectedData);
-      } else {
-        setContent({
-          title: "Lời Chúa Hằng Ngày",
-          gospel_quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.",
-          gospel_ref: "Mt 5, 3"
-        });
       }
     } catch (err) {
-      console.error(err);
-      setContent({
-        title: "Lời Chúa Hằng Ngày",
-        gospel_quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.",
-        gospel_ref: "Mt 5, 3"
-      });
+      console.error('[DailyReadingCard] Fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Làm sạch và trích xuất 1 đoạn ngắn từ nội dung chính của Lời Chúa
+  // Làm sạch và cắt ngắn văn bản
   const cleanAndTruncateMainContent = (rawText, maxLength = 160) => {
     if (!rawText) return '';
-
-    // 1. Loại bỏ thẻ HTML
     let text = rawText.replace(/<[^>]+>/g, '').trim();
-
-    // 2. Lọc bỏ các chữ số đánh số câu Kinh Thánh (ví dụ: "43 Khi ấy...", "44 ", "28b ")
     text = text.replace(/(\b\d{1,3}[a-d]?\b|\b\d{1,3}\s+\d{1,3}[a-d]?\b)/g, ' ');
-
-    // 3. Chuẩn hóa khoảng trắng và xuống dòng
     text = text.replace(/\s+/g, ' ').trim();
-
-    // 4. Loại bỏ ký tự ngoặc kép dính ở 2 đầu
     text = text.replace(/^["«'‘\s]+|["»'’\s]+$/g, '').trim();
-
-    // 5. Cắt ngắn văn bản theo maxLength mà không làm vỡ từ
     if (text.length > maxLength) {
       const truncated = text.substring(0, maxLength);
       const lastSpaceIndex = truncated.lastIndexOf(' ');
-      if (lastSpaceIndex > 40) {
-        text = truncated.substring(0, lastSpaceIndex).trim() + '...';
-      } else {
-        text = truncated.trim() + '...';
-      }
+      text = (lastSpaceIndex > 40 ? truncated.substring(0, lastSpaceIndex).trim() : truncated.trim()) + '...';
     }
-
     return text;
   };
 
-  // Trích xuất 1 đoạn từ nội dung chính Lời Chúa
+  // Trích xuất câu nổi bật và tham chiếu
   const getFeaturedQuote = () => {
-    if (!content) return { quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.", ref: "Mt 5, 3" };
+    if (!content) {
+      return {
+        quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.",
+        ref: "Mt 5, 3"
+      };
+    }
 
-    // Ưu tiên lấy từ nội dung chính Phúc Âm (gospel_content), kế đến bài đọc 1 (r1_content), rồi các trường trích dẫn khác
-    const mainText = content.gospel_content || content.r1_content || content.gospel_quote || content.r1_quote || content.quote;
     const mainRef = content.gospel_ref || content.r1_ref || '';
 
+    // Ưu tiên câu trích dẫn quote có sẵn trong database
+    if (content.quote && content.quote.trim()) {
+      return {
+        quote: cleanAndTruncateMainContent(content.quote, 180),
+        ref: mainRef
+      };
+    }
+
+    // Nếu không có quote, trích 1 đoạn từ Tin Mừng hoặc Bài đọc 1
+    const mainText = content.gospel_content || content.r1_content || content.gospel_quote || content.r1_quote;
     if (mainText && mainText.trim()) {
       return {
         quote: cleanAndTruncateMainContent(mainText, 160),
@@ -247,7 +164,7 @@ export default function DailyReadingCard() {
                 <BookOpen className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                 <span className="absolute inset-0 rounded-full border border-amber-500 animate-ping opacity-25 pointer-events-none"></span>
               </button>
-              {/* Nút nhỏ để mở rộng lại badge - Tối ưu hiển thị dễ chạm trên mobile */}
+              {/* Nút nhỏ để mở rộng lại badge */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -351,7 +268,7 @@ export default function DailyReadingCard() {
                       {displayTitle}
                     </h3>
 
-                    {/* Khối Lời Chúa: Đoạn trích nội dung chính & Truncate */}
+                    {/* Khối Lời Chúa: Đoạn trích nội dung chính */}
                     <div className="mb-6 sm:mb-8 w-full">
                       <p className="font-serif text-[14px] sm:text-[16px] leading-relaxed text-amber-950 dark:text-amber-100 mb-2.5 sm:mb-3 italic px-1">
                         « {featured.quote} »
@@ -363,14 +280,17 @@ export default function DailyReadingCard() {
                       )}
                     </div>
 
-                    <Link
-                      to="/lời-chúa-hàng-ngày"
+                    {/* Nút Đọc tiếp: Chuyển hướng sang loichuamoingay.org */}
+                    <a
+                      href="https://loichuamoingay.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={() => setIsOpen(false)}
                       className="group flex items-center justify-center gap-2 w-full bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-white py-3 sm:py-3.5 rounded-2xl text-[13px] sm:text-[14px] font-bold shadow-lg shadow-amber-900/20 transition-all active:scale-[0.97]"
                     >
                       Đọc tiếp
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    </a>
                   </>
                 )}
               </div>

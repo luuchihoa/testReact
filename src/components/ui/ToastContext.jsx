@@ -27,6 +27,12 @@ const injectKeyframes = (() => {
     s.textContent = `
       @keyframes _tin  { from { opacity:0; transform:translateY(10px) scale(.96) } to { opacity:1; transform:none } }
       @keyframes _tout { from { opacity:1; transform:none } to { opacity:0; transform:translateY(6px) scale(.97) } }
+      @media print {
+        .toast-container-print-hidden, [aria-label="Thông báo"] {
+          display: none !important;
+          visibility: hidden !important;
+        }
+      }
     `;
     document.head.appendChild(s);
   };
@@ -126,9 +132,10 @@ export function ToastProvider({ children }) {
 
       {/* Container: bottom-right, click-through vùng trống, Fix #6 màu khớp design system */}
       <div
+        className="toast-container-print-hidden print:hidden"
         aria-label="Thông báo"
         style={{
-          position: "fixed", top: "24px", right: "20px", zIndex: 9999,
+          position: "fixed", top: "24px", right: "20px", zIndex: 999999,
           display: "flex", flexDirection: "column", gap: "10px",
           alignItems: "flex-end", pointerEvents: "none",
         }}

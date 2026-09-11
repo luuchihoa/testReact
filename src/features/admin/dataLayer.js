@@ -5,6 +5,7 @@
    ============================================================ */
 import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../../components/ui/StudentShared.jsx";
+import { sortStudentsByTen } from "./gradeUtils.js";
 
 // Thay thế hàm fetchAllUsers() cũ bằng 2 hàm sau:
 
@@ -62,17 +63,39 @@ export async function fetchStudents() {
     .eq("role", "student")
     .order("ho_va_ten", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((u) => ({
+  const list = (data ?? []).map((u) => ({
     username: u.username,
     hoTen:    u.ho_va_ten || "",
     tenThanh: u.ten_thanh || "",
     avatar:   u.avatar || "",
   }));
+  return sortStudentsByTen(list);
 }
 
 export async function updateUserRole(username, role) {
   const { error } = await supabase.from("users").update({ role }).eq("username", username);
   if (error) throw error;
+}
+
+// Xoá người dùng (gọi RPC admin_delete_user để dọn sạch public.users và auth.users)
+export async function deleteUser(username) {
+  const { data, error } = await supabase.rpc("admin_delete_user", {
+    p_username: username,
+  });
+
+  if (error) {
+    console.warn("RPC admin_delete_user error, trying direct delete fallback:", error);
+    const { error: directErr } = await supabase
+      .from("users")
+      .delete()
+      .eq("username", username);
+
+    if (directErr) {
+      throw new Error(error.message || directErr.message || "Xoá người dùng thất bại");
+    }
+  }
+
+  return data;
 }
 
 // Danh sách TẤT CẢ năm học đã từng có dữ liệu (gộp từ enrollments +
@@ -88,13 +111,17 @@ export async function fetchAvailableNamHocList() {
   if (enrollRes.error) throw enrollRes.error;
   if (ctRes.error) throw ctRes.error;
 
+  const currentNH = getCurrentNamHocFallback();
+  const startYear = parseInt(currentNH.split("-")[0], 10);
+  const nextNH = !isNaN(startYear) ? `${startYear + 1}-${startYear + 2}` : null;
+
   const set = new Set([
     ...(enrollRes.data ?? []).map((r) => r.nam_hoc),
     ...(ctRes.data ?? []).map((r) => r.nam_hoc),
-    getCurrentNamHocFallback(),
+    currentNH,
+    ...(nextNH ? [nextNH] : []),
   ]);
-  // Sắp xếp giảm dần theo năm bắt đầu ("2025-2026" -> so theo "2025") để năm
-  // mới nhất luôn nằm đầu danh sách trong <select>.
+  // Sắp xếp giảm dần theo năm bắt đầu để năm mới nhất luôn nằm đầu danh sách trong <select>.
   return Array.from(set).sort((a, b) => b.localeCompare(a));
 }
 
@@ -183,18 +210,17 @@ export async function unassignTeacher(teacherUsername, namHoc) {
   if (error) throw error;
 }
 
-// Chỉ định rõ cột của users thay vì "users(*)" — tránh kéo về các trường
-// nhạy cảm không dùng đến ở UI (ngay_sinh, sdt, ten_cha, ten_me, gioi_tinh...).
+// Lấy danh sách học sinh thuộc lớp, kèm thông tin chi tiết để hiển thị & xuất file Excel
 export async function fetchClassRoster(lop, namHoc) {
   const { data, error } = await supabase
     .from("enrollments")
-    .select("username, users(username, ho_va_ten, ten_thanh, avatar)")
+    .select("username, users(username, ho_va_ten, ten_thanh, avatar, ngay_sinh, gioi_tinh, ngay_rua_toi, ngay_ruoc_le, ngay_them_suc, ten_cha, ten_me, sdt, giao_xom)")
     .eq("lop", lop).eq("nam_hoc", namHoc);
   if (error) throw error;
-  return (data ?? [])
+  const list = (data ?? [])
     .map((r) => normalizeStudent(r.users))
-    .filter((s) => s.username)
-    .sort((a, b) => (a.hoTen || "").localeCompare(b.hoTen || "", "vi"));
+    .filter((s) => s.username);
+  return sortStudentsByTen(list);
 }
 
 // Giả định enrollments có unique (username, nam_hoc) -> 1 học sinh chỉ thuộc 1 lớp / năm học.
@@ -209,6 +235,18 @@ export async function removeStudentFromClass(username, namHoc) {
   const { error } = await supabase.from("enrollments").delete().eq("username", username).eq("nam_hoc", namHoc);
   if (error) throw error;
 }
+
+// Import danh sách học sinh vào lớp và tự động tạo tài khoản Auth qua RPC admin_import_class_roster
+export async function importClassRoster(lop, namHoc, students) {
+  const { data, error } = await supabase.rpc("admin_import_class_roster", {
+    p_lop: lop,
+    p_nam_hoc: namHoc,
+    p_students: students,
+  });
+  if (error) throw error;
+  return data;
+}
+
 
 /* ============================================================
    MODULE D — SỔ ĐIỂM & HỌC BẠ

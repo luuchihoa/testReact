@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { School, Search, ChevronLeft, FileSpreadsheet, Printer, Users, Lock, AlertCircle, RefreshCw } from "lucide-react";
+import { School, Search, ChevronLeft, FileSpreadsheet, FileText, Printer, Users, Lock, AlertCircle, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminContext } from "./AdminContext.jsx";
 import { AVATAR_FALLBACK, handleAvatarError } from "./constants.js";
 import { fetchClassRoster, fetchGradesMap, fetchClassAcademicSummary } from "./dataLayer.js";
-import { CardsGridSkeleton, TableSkeleton } from "../../components/ui/Skeleton.jsx";
+import { CardsGridSkeleton, TableSkeleton, Spinner } from "../../components/ui/Skeleton.jsx";
 import { HK_INT_MAP, GRADE_FIELDS, sortStudentsByTen, tbColorClass } from "./gradeUtils.js";
+import { preloadXLSX, getXLSX, triggerSafeExcelDownload } from "./utils/excelRosterHelper.js";
+import { preloadPDFLibs, exportGradesReportPdf, triggerSafePdfDownload } from "./utils/pdfExportHelper.js";
 
 // Hằng số Easing chuẩn
 const APPLE_EASE = [0.16, 1, 0.3, 1];
@@ -130,7 +132,7 @@ function ClassPicker({ classes, loading, onPick }) {
 // kỳ, xuất Excel/PDF). Tách riêng khỏi ClassGradeBook để dễ đọc, dễ test độc
 // lập, và để việc thêm hành động mới (vd. gửi email báo cáo) không phải sửa
 // vào giữa một component quá lớn.
-function GradeBookToolbar({ lop, isLocked, hocKy, onChangeHocKy, exporting, loading, onExportExcel, onExportPdf, onBack }) {
+function GradeBookToolbar({ lop, isLocked, hocKy, onChangeHocKy, exporting, exportingPdf, loading, onExportExcel, onExportPdf, onBack }) {
   return (
     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 px-3 py-4 md:px-5 md:py-5 border-b border-amber-900/10 dark:border-amber-100/10 ag-no-print">
       <div className="flex flex-wrap items-center gap-4">
@@ -148,24 +150,24 @@ function GradeBookToolbar({ lop, isLocked, hocKy, onChangeHocKy, exporting, load
           Lớp {lop}
         </h2>
 
-        <div className="hidden sm:block w-px h-6 bg-amber-900/10 dark:bg-amber-100/10" />
-
-        {isLocked && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 bg-amber-100/50 dark:bg-amber-900/30 rounded-full px-3 py-1 flex-shrink-0 ml-2 shadow-sm">
-            <Lock className="w-3.5 h-3.5" strokeWidth={2.5} /> Đã khóa sổ
-          </span>
-        )}
+        <span
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+            isLocked
+              ? "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20"
+              : "bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20"
+          }`}
+        >
+          <Lock className="w-3.5 h-3.5" />
+          {isLocked ? "Đã khoá sổ điểm" : "Đang mở nhập điểm"}
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-        {/* Tabs Học kỳ */}
-        <div className="flex gap-1 bg-stone-100/80 dark:bg-stone-800/80 p-1 rounded-xl backdrop-blur-sm" role="tablist" aria-label="Chọn học kỳ">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center p-1 bg-stone-100 dark:bg-stone-800 rounded-xl border border-black/5 dark:border-white/5">
           {Object.entries(HOC_KY_LABELS).map(([k, label]) => (
             <button
               key={k}
               type="button"
-              role="tab"
-              aria-selected={hocKy === k}
               onClick={() => onChangeHocKy(k)}
               className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ease-out active:scale-[0.97] ${
                 hocKy === k
@@ -183,17 +185,21 @@ function GradeBookToolbar({ lop, isLocked, hocKy, onChangeHocKy, exporting, load
             type="button"
             disabled={exporting || loading}
             onClick={onExportExcel}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-emerald-600 text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:bg-emerald-700 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-emerald-700 text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:bg-emerald-800 disabled:opacity-50 cursor-pointer"
+            title="Xuất bảng điểm ra file Excel (.xlsx)"
           >
-            <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">{exporting ? "Đang xuất..." : "Xuất Excel"}</span>
+            {exporting ? <Spinner className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
+            <span className="hidden sm:inline">{exporting ? "Đang xuất..." : "Xuất Excel"}</span>
           </button>
           <button
             type="button"
-            disabled={exporting || loading}
+            disabled={exporting || exportingPdf || loading}
             onClick={onExportPdf}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-200 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50 cursor-pointer"
+            title="Xuất bảng điểm ra file PDF (.pdf)"
           >
-            <Printer className="w-4 h-4" /> <span className="hidden sm:inline">In / PDF</span>
+            {exportingPdf ? <Spinner className="w-4 h-4" /> : <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />}
+            <span className="hidden sm:inline">{exportingPdf ? "Đang xuất..." : "Xuất PDF"}</span>
           </button>
         </div>
       </div>
@@ -418,11 +424,15 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
   }, [rosterStudents, gradeRows]);
 
   const [exporting, setExporting] = useState(false);
+  useEffect(() => {
+    preloadXLSX();
+    preloadPDFLibs();
+  }, []);
 
   const exportExcel = useCallback(async () => {
     setExporting(true);
     try {
-      const XLSX = await import("xlsx");
+      const XLSX = await getXLSX();
       const data = rowsWithWarning.map((r, idx) => ({
         "STT": idx + 1,
         "Họ & Tên": `${r.student.tenThanh ? r.student.tenThanh + " " : ""}${r.student.hoTen || r.student.username}`,
@@ -442,8 +452,15 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
       ws["!cols"] = [{ wch: 5 }, { wch: 26 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 13 }, { wch: 15 }, { wch: 14 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, HOC_KY_LABELS[hocKy]);
-      XLSX.writeFile(wb, `BangDiem_${lop}_${hocKy}_${namHoc}.xlsx`);
-      showToast("Đã xuất file Excel thành công", "success");
+      const fileName = `BangDiem_${lop}_${hocKy}_${namHoc}.xlsx`;
+      const res = await triggerSafeExcelDownload(XLSX, wb, fileName);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+      } else if (res?.method === "picker") {
+        showToast("Đã lưu bảng điểm thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
     } catch (err) {
       console.error("export excel error:", err);
       showToast("Xuất Excel thất bại", "error");
@@ -452,9 +469,43 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
     }
   }, [rowsWithWarning, hocKy, lop, namHoc, showToast]);
 
-  const exportPDF = useCallback(() => {
-    requestAnimationFrame(() => window.print());
-  }, []);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  const exportPDF = useCallback(async () => {
+    if (exportingPdf) return;
+    if (rowsWithWarning.length === 0) {
+      showToast("Lớp chưa có học sinh để xuất bảng điểm", "warning");
+      return;
+    }
+    setExportingPdf(true);
+    try {
+      const safeLop = String(lop || "Lop").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `BangDiem_${safeLop}_${hocKy}_${namHoc}.pdf`;
+      const blob = await exportGradesReportPdf({
+        lop,
+        namHoc,
+        hocKy,
+        teacherName: classInfo?.displayTeacherName || "",
+        scoreFields,
+        rows: rowsWithWarning,
+      });
+      const res = await triggerSafePdfDownload(blob, fileName);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+        return;
+      }
+      if (res?.method === "picker") {
+        showToast("Đã lưu bảng điểm PDF thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export grades PDF error:", err);
+      showToast("Xuất PDF thất bại", "error");
+    } finally {
+      setExportingPdf(false);
+    }
+  }, [exportingPdf, lop, hocKy, namHoc, classInfo, scoreFields, rowsWithWarning, showToast]);
 
   return (
     <motion.div
@@ -463,7 +514,6 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.4, ease: APPLE_EASE }}
       className="md:bg-white/80 dark:md:bg-[#1C1917]/80 md:backdrop-blur-xl md:rounded-[28px] md:border md:border-amber-900/10 dark:md:border-amber-100/10 md:shadow-sm overflow-hidden print:overflow-visible print:bg-white print:shadow-none print:border-0 print:rounded-none print:backdrop-blur-none flex flex-col"
-      // className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden print:overflow-visible print:bg-white print:shadow-none print:border-0 print:rounded-none print:backdrop-blur-none flex flex-col"
     >
       <style>{`
         @media print {
@@ -480,6 +530,7 @@ function ClassGradeBook({ lop, namHoc, classInfo, showToast, onBack }) {
         hocKy={hocKy}
         onChangeHocKy={setHocKy}
         exporting={exporting}
+        exportingPdf={exportingPdf}
         loading={loading}
         onExportExcel={exportExcel}
         onExportPdf={exportPDF}

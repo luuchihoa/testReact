@@ -65,10 +65,14 @@ export default function ModalLogin({ handleClose, setIsLogin }) {
       });
 
       if (authError) {
-        if (authError.message.includes("Invalid login credentials")) {
+        console.error("Login authError:", authError);
+        const msg = typeof authError.message === "string" ? authError.message : "";
+        if (msg.includes("Invalid login credentials") || msg === "{}" || !msg) {
           setError("Tên đăng nhập, email hoặc mật khẩu không đúng.");
+        } else if (msg.includes("Database error") || authError.status === 500) {
+          setError("Lỗi máy chủ xác thực (500). Vui lòng kiểm tra cấu hình auth.");
         } else {
-          setError(authError.message);
+          setError(msg);
         }
         return;
       }

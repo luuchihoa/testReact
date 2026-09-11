@@ -29,6 +29,9 @@ export default function RosterTab() {
       <div className={selectedStudent ? "hidden lg:block" : "block"}>
         <StudentListPanel
           students={filteredStudents}
+          allStudents={students}
+          lop={context?.lop}
+          namHoc={context?.namHoc}
           loading={loadingStudents}
           search={search}
           setSearch={setSearch}

@@ -32,9 +32,32 @@ const formatDateStr = (date) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+const cleanVerseSpacingInLine = (line) => {
+  if (!line) return line;
+  const startMatch = line.match(/^(\s*\d+[a-zA-Z]*[\s\u00A0]+)/);
+  let prefix = "";
+  let restOfLine = line;
+  if (startMatch) {
+    prefix = startMatch[1];
+    restOfLine = line.substring(prefix.length);
+  }
+  const cleanedRest = restOfLine.replace(/([^\n\s\u00A0])[\s\u00A0]+(\d+[a-zA-Z]*)(?=[\s\u00A0\p{P}]|$)/gu, '$1$2');
+  return prefix + cleanedRest;
+};
+
+const cleanNbspAndQuotes = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  let cleaned = text.replace(/\u00A0/g, ' ');
+  cleaned = cleaned.replace(/([“\(\[])\s+/g, '$1');
+  cleaned = cleaned.replace(/\s+([”\)\.]])/g, '$1');
+  return cleaned;
+};
+
 const cleanText = (text) => {
   if (!text) return '';
-  return text.normalize('NFC').split('\n').map(l => l.trim().replace(/[ \t\r]+/g, ' ')).join('\n').trim();
+  const normalized = text.normalize('NFC').split('\n').map(l => l.trim().replace(/[ \t\r]+/g, ' ')).join('\n').trim().replace(/✠([^\s])/g, '✠ $1');
+  const cleanedVerses = normalized.split('\n').map(cleanVerseSpacingInLine).join('\n');
+  return cleanNbspAndQuotes(cleanedVerses);
 };
 
 // Hàm cào dữ liệu của một ngày từ Vatican News
@@ -49,8 +72,18 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
   const lityear = getLiturgicalYear(dateObj);
   const cycles = getLiturgicalCycles(lityear);
   
-  // Xử lý ngoại lệ Lễ Thánh Tâm, Lễ Thánh Gia Thất, Thứ Bảy Tuần Thánh (luân phiên tuân theo chu kỳ Năm A, B, C)
-  const isSpecialABCFeast = info.key === 'feast_thanh_tam' || info.key === 'feast_gia_that' || info.key === 'feast_thu7_tuan_thanh';
+  // Xử lý ngoại lệ Lễ có chu kỳ năm A, B, C (Lễ Chúa Chịu Phép Rửa, Thánh Tâm, Gia Thất, Tết, Chúa Ba Ngôi, Mình Máu Chúa, Thăng Thiên, Hiện Xuống, Thứ 7 Tuần Thánh)
+  const isSpecialABCFeast = [
+    'feast_phep_rua',
+    'feast_thanh_tam',
+    'feast_gia_that',
+    'feast_tet_1',
+    'feast_ba_ngoi',
+    'feast_minh_mau_chua',
+    'feast_hien_xuong',
+    'feast_chua_thang_thien',
+    'tuan_thanh_thu7'
+  ].includes(info.key) || (info.key && info.key.includes('phep_rua'));
   
   let currentCycle;
   if (info.isSunday || isSpecialABCFeast) {
@@ -329,29 +362,36 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
     let finalGospelCycle = gospelCycle;
     let finalReadingCycle = readingCycle;
 
+    const isMovableFeastKey = info.key && (info.key.startsWith('feast_') || info.key.startsWith('fixed_'));
     const feastMatch = finalTitle.match(/^Ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})/i);
-    if (feastMatch || info.isFeast) {
-      if (feastMatch) {
-        const d = feastMatch[1].padStart(2, '0');
-        const m = feastMatch[2].padStart(2, '0');
-        finalLiturgyKey = `feast_${m}_${d}`;
-      }
-      
+
+    if (isMovableFeastKey) {
+      finalLiturgyKey = info.key;
+    } else if (feastMatch) {
+      const d = feastMatch[1].padStart(2, '0');
+      const m = feastMatch[2].padStart(2, '0');
+      finalLiturgyKey = `feast_${m}_${d}`;
+    }
+
+    if (feastMatch || info.isFeast || isMovableFeastKey) {
       // Lễ cố định thường dùng chung một chu kỳ ('all')
       // NGOẠI TRỪ các Chúa Nhật Đặc Biệt và các Lễ Trọng có chia chu kỳ A, B, C
       const cyclicFeasts = [
+        'feast_phep_rua',
         'feast_cn_le_la', 
         'feast_chua_thang_thien', 
         'feast_hien_xuong', 
         'feast_ba_ngoi', 
         'feast_minh_mau_chua', 
         'feast_thanh_tam', 
-        'feast_gia_that'
+        'feast_gia_that',
+        'feast_tet_1',
+        'feast_hien_linh'
       ];
       
-      if (finalLiturgyKey === 'feast_thu7_tuan_thanh') {
+      if (finalLiturgyKey === 'tuan_thanh_thu7') {
         finalReadingCycle = 'all'; // Đêm Canh thức: Bài đọc cố định (all), Phúc Âm chia A/B/C
-      } else if (!cyclicFeasts.includes(finalLiturgyKey)) {
+      } else if (!info.isSunday && !isSpecialABCFeast && !cyclicFeasts.includes(finalLiturgyKey)) {
         finalGospelCycle = 'all';  
         finalReadingCycle = 'all'; 
       }
@@ -399,7 +439,7 @@ async function scrapeDate(browser, dateObj, previewMode, scrapedResults) {
     let payloads = [];
 
     // 2. Chỉ tách riêng Bài đọc và Phúc âm nếu là Ngày Thường của MÙA THƯỜNG NIÊN hoặc Thứ Bảy Tuần Thánh
-    const shouldSplit = finalLiturgyKey === 'feast_thu7_tuan_thanh' || (!info.isSunday && !feastMatch && !info.isFeast && finalLiturgyKey !== 'feast_thanh_tam' && finalLiturgyKey !== 'feast_gia_that' && info.season === 'thuong');
+    const shouldSplit = finalLiturgyKey === 'tuan_thanh_thu7' || (!info.isSunday && !feastMatch && !info.isFeast && finalLiturgyKey !== 'feast_thanh_tam' && finalLiturgyKey !== 'feast_gia_that' && info.season === 'thuong');
     
     if (shouldSplit) {
       const readingPayload = {

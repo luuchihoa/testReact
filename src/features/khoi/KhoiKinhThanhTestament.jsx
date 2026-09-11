@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Flame } from "lucide-react";
+import { Flame, ExternalLink, BookOpen } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
+import BibleQuickNavigatorModal from "../../components/bible/BibleQuickNavigatorModal.jsx";
+import { ALL_BIBLE_BOOKS } from "../../data/bibleBooksData.js";
 
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 const MOBILE_BREAKPOINT = 768;
 
 export default function KhoiKinhThanhTestament({ items }) {
   const [selectedTestament, setSelectedTestament] = useState(null);
+  const [navModalBookId, setNavModalBookId] = useState(null);
+  const [isNavModalOpen, setIsNavModalOpen] = useState(false);
   const { fadeUp, vp, lenis } = usePageMotion();
   const sheetY = useMotionValue(0);
 
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
   );
+
+  const findMatchedBook = (name, abbr) => {
+    const cleanAbbr = (abbr || "").toLowerCase().replace(/\s+/g, "");
+    const cleanName = (name || "").toLowerCase().trim();
+    return ALL_BIBLE_BOOKS.find(b => 
+      b.short.toLowerCase().replace(/\s+/g, "") === cleanAbbr ||
+      b.name.toLowerCase() === cleanName ||
+      cleanName.includes(b.name.toLowerCase())
+    );
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -193,21 +207,64 @@ export default function KhoiKinhThanhTestament({ items }) {
                             const match = item.match(/^(.*?)\s*\((.*?)\)$/);
                             const name = match ? match[1] : item;
                             const abbr = match ? match[2] : "";
+                            const matchedBook = findMatchedBook(name, abbr);
                             
                             return (
-                              <div key={k} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-[#1C1917] border border-stone-200/50 dark:border-stone-700/50 shadow-sm text-[13px] font-medium text-stone-700 dark:text-stone-300">
-                                <span className="truncate">{name}</span>
+                              <button
+                                key={k}
+                                type="button"
+                                onClick={() => {
+                                  if (matchedBook) {
+                                    setNavModalBookId(matchedBook.id);
+                                  } else {
+                                    setNavModalBookId(null);
+                                  }
+                                  setIsNavModalOpen(true);
+                                }}
+                                className="group/book flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-[#1C1917] border border-stone-200/60 dark:border-stone-700/60 hover:border-amber-600/50 dark:hover:border-amber-400/50 hover:bg-amber-50/60 dark:hover:bg-amber-950/30 shadow-sm text-[13px] font-medium text-stone-700 dark:text-stone-300 transition-all active:scale-95 text-left cursor-pointer"
+                                title={matchedBook ? `Xem ${matchedBook.chapters} chương sách ${name}` : name}
+                              >
+                                <span className="truncate group-hover/book:text-amber-900 dark:group-hover/book:text-amber-200 font-medium">{name}</span>
                                 {abbr && (
-                                  <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded">
+                                  <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded group-hover/book:bg-amber-100 dark:group-hover/book:bg-amber-900/50 group-hover/book:text-amber-800 dark:group-hover/book:text-amber-300 transition-colors">
                                     {abbr}
                                   </span>
                                 )}
-                              </div>
+                                <ExternalLink className="w-3 h-3 text-stone-400 dark:text-stone-500 group-hover/book:text-amber-600 dark:group-hover/book:text-amber-400 transition-colors ml-0.5 opacity-70 group-hover/book:opacity-100" />
+                              </button>
                             );
                           })}
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Banner CTA ở cuối Modal */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 dark:bg-stone-900/60 border border-amber-900/10 dark:border-amber-100/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="text-[13.5px] font-bold text-amber-950 dark:text-amber-50">
+                          Đọc Kinh Thánh trọn bộ trực tuyến
+                        </h5>
+                        <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium">
+                          Bản dịch CGKPV với tính năng nghe audio từng chương và ghi chú.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNavModalBookId(null);
+                        setIsNavModalOpen(true);
+                      }}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 text-[12px] font-bold hover:bg-amber-800 dark:hover:bg-white shadow-sm transition-all flex-shrink-0 active:scale-95"
+                    >
+                      <span>Tra cứu 73 cuốn</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -215,6 +272,14 @@ export default function KhoiKinhThanhTestament({ items }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Modal Tra Cứu & Đọc Kinh Thánh */}
+      <BibleQuickNavigatorModal
+        isOpen={isNavModalOpen}
+        onClose={() => setIsNavModalOpen(false)}
+        initialBookId={navModalBookId}
+        initialTestament={selectedTestament?.id === "cuu-uoc" ? "old" : "new"}
+      />
     </>
   );
 }

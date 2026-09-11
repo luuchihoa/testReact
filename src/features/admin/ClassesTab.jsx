@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLenis } from "lenis/react";
-import { Search, Users, Plus, Trash2, ChevronLeft, ChevronDown, Lock, LockOpen, School, Settings, X, UserPlus, Phone, User, AlertTriangle } from "lucide-react";
+import { Search, Users, Plus, Trash2, ChevronLeft, ChevronDown, Lock, LockOpen, School, Settings, X, UserPlus, Phone, User, AlertTriangle, FileSpreadsheet, Download } from "lucide-react";
 import { useAdminContext } from "./AdminContext.jsx";
 import { AVATAR_FALLBACK, handleAvatarError } from "./constants.js";
 import { SplitListSkeleton, TableSkeleton, Spinner } from "../../components/ui/Skeleton.jsx";
@@ -9,8 +9,11 @@ import {
   fetchClassRoster, fetchStudents, assignStudentToClass, removeStudentFromClass,
   assignTeacherToClass, unassignTeacher, lockTerm, unlockTerm, fetchAllTeachers, fetchClassTeacherRows
 } from "./dataLayer.js";
+import ExcelImportModal from "./components/ExcelImportModal.jsx";
+import { exportClassRosterExcel, preloadXLSX } from "./utils/excelRosterHelper.js";
 
-const MAX_TEACHERS_PER_CLASS = 2;
+
+const MAX_TEACHERS_PER_CLASS = 3;
 const EMPTY_ARRAY = [];
 
 function layTenNgan(hoTen) {
@@ -75,13 +78,15 @@ const PortalConfirmDialog = React.memo(({ open, title, message, confirmLabel, da
 /* ============================================================
    PANEL: QUẢN LÝ DANH SÁCH LỚP (ROSTER) 
    ============================================================ */
-function ClassRosterPanel({ lop, namHoc, onBack, showToast }) {
+function ClassRosterPanel({ lop, namHoc, onBack, onRosterChange, showToast }) {
   const [roster, setRoster] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [busyUsername, setBusyUsername] = useState(null);
   const [confirmState, setConfirmState] = useState(null); 
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -100,6 +105,7 @@ function ClassRosterPanel({ lop, namHoc, onBack, showToast }) {
   }, [lop, namHoc, showToast]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => { preloadXLSX(); }, []);
 
   const rosterUsernames = useMemo(() => new Set(roster.map((s) => s.username)), [roster]);
 
@@ -123,6 +129,7 @@ function ClassRosterPanel({ lop, namHoc, onBack, showToast }) {
         showToast("Đã rút học sinh khỏi lớp", "success");
       }
       setRoster(await fetchClassRoster(lop, namHoc));
+      if (onRosterChange) onRosterChange();
     } catch (err) {
       showToast("Thao tác thất bại", "error");
     } finally {
@@ -131,19 +138,64 @@ function ClassRosterPanel({ lop, namHoc, onBack, showToast }) {
     }
   };
 
+  const handleExportRoster = async () => {
+    if (!roster || roster.length === 0) {
+      showToast("Lớp chưa có học sinh để tải", "warning");
+      return;
+    }
+    setExporting(true);
+    try {
+      const res = await exportClassRosterExcel(lop, namHoc, roster);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+      } else if (res?.method === "picker") {
+        showToast("Đã lưu file Excel thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export roster error:", err);
+      showToast("Xuất file thất bại", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const targetStudentName = confirmState?.student?.hoTen || confirmState?.student?.username || "";
 
   return (
     <div className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden transition-colors relative">
-      <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 sticky top-0 z-10">
+      <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 sticky top-0 z-10 flex-wrap sm:flex-nowrap">
         <button type="button" onClick={onBack}
           className="inline-flex items-center gap-1 text-[13px] font-bold text-amber-800/70 dark:text-amber-400/70 md:hover:text-amber-950 dark:md:hover:text-amber-50 active:scale-95 transition-all flex-shrink-0 -ml-1.5 px-2 py-1.5 rounded-lg bg-white/50 dark:bg-stone-900/40 shadow-sm border border-black/5 dark:border-white/5">
           <ChevronLeft className="w-4 h-4" /> Trở lại
         </button>
-        <div className="w-px h-5 bg-amber-900/20 dark:bg-amber-100/20 mx-1" />
+        <div className="w-px h-5 bg-amber-900/20 dark:bg-amber-100/20 mx-1 hidden sm:block" />
         <h3 className="text-[16px] font-bold text-amber-950 dark:text-amber-50 truncate font-serif">Danh sách Lớp {lop}</h3>
-        <span className="ml-auto text-[11px] font-bold text-stone-500 bg-white dark:bg-stone-800 border border-black/5 dark:border-white/5 px-2.5 py-1 rounded-full flex-shrink-0 shadow-sm uppercase tracking-wider">{roster.length} HS</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportRoster}
+            disabled={exporting || roster.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 border border-stone-200/80 dark:border-stone-700 text-[12px] font-bold shadow-sm active:scale-95 transition-all flex-shrink-0 disabled:opacity-40 disabled:pointer-events-none"
+            title={roster.length === 0 ? "Lớp chưa có học sinh để tải" : `Tải file Excel danh sách học sinh Lớp ${lop}`}
+          >
+            {exporting ? <Spinner className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />}
+            <span className="hidden xs:inline">Tải danh sách</span>
+            <span className="xs:hidden">Tải file</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setExcelModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[12px] font-bold shadow-sm active:scale-95 transition-all flex-shrink-0"
+            title="Nhập danh sách học sinh từ file Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Nhập Excel
+          </button>
+          <span className="text-[11px] font-bold text-stone-500 bg-white dark:bg-stone-800 border border-black/5 dark:border-white/5 px-2.5 py-1 rounded-full flex-shrink-0 shadow-sm uppercase tracking-wider">{roster.length} HS</span>
+        </div>
       </div>
+
 
       {loading ? (
         <SplitListSkeleton rows={6} />
@@ -212,6 +264,18 @@ function ClassRosterPanel({ lop, namHoc, onBack, showToast }) {
         onConfirm={executeAction}
         onCancel={() => setConfirmState(null)}
         busy={!!busyUsername}
+      />
+
+      <ExcelImportModal
+        open={excelModalOpen}
+        onClose={() => setExcelModalOpen(false)}
+        currentLop={lop}
+        namHoc={namHoc}
+        onSuccess={() => {
+          loadAll();
+          if (onRosterChange) onRosterChange();
+        }}
+        showToast={showToast}
       />
     </div>
   );
@@ -382,7 +446,7 @@ const TeacherMultiSelect = React.memo(({ lop, assignedUsernames, teachers, teach
   const pick = useCallback((username) => { setOpen(false); onAdd(lop, username); }, [lop, onAdd]);
 
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 ${compact ? "w-full" : "max-w-[260px]"}`}>
+    <div className={`flex flex-wrap items-center gap-1.5 ${compact ? "w-full" : "max-w-[340px]"}`}>
       {assignedTeachers.map((t) => (
         <TeacherChip key={t.username} t={t} lop={lop} rowBusy={rowBusy} busyKey={busyKey} onRemove={onRemove} />
       ))}
@@ -510,6 +574,15 @@ export default function ClassesTab() {
 
   useEffect(() => { loadTeacherAssignments(); }, [loadTeacherAssignments]);
 
+  // Luôn làm mới dữ liệu lớp học và sĩ số 1 lần mỗi khi chuyển sang tab Lớp học
+  const hasRefreshedRef = useRef(false);
+  useEffect(() => {
+    if (!hasRefreshedRef.current) {
+      hasRefreshedRef.current = true;
+      loadAll();
+    }
+  }, [loadAll]);
+
   const teachersByLop = useMemo(() => {
     const map = {};
     teacherRows.forEach((r) => {
@@ -528,6 +601,7 @@ export default function ClassesTab() {
   const [newLop, setNewLop] = useState("");
   const [rosterLop, setRosterLop] = useState(null);
   const [busyKey, setBusyKey] = useState(null);
+  const [mainExcelModalOpen, setMainExcelModalOpen] = useState(false);
 
   // Thêm State quản lý Modal Xác Nhận Phân công GV
   const [confirmTeacherState, setConfirmTeacherState] = useState(null);
@@ -589,7 +663,15 @@ export default function ClassesTab() {
     setRosterLop(lop);
   }, []);
 
-  if (rosterLop) return <ClassRosterPanel lop={rosterLop} namHoc={namHoc} onBack={() => { setRosterLop(null); loadAll(); }} showToast={showToast} />;
+  if (rosterLop) return (
+    <ClassRosterPanel
+      lop={rosterLop}
+      namHoc={namHoc}
+      onBack={() => { setRosterLop(null); loadAll(); }}
+      onRosterChange={loadAll}
+      showToast={showToast}
+    />
+  );
 
   // Lấy tên hiển thị cho modal xác nhận
   const targetTeacher = teachers.find(t => t.username === confirmTeacherState?.teacherUsername);
@@ -606,6 +688,11 @@ export default function ClassesTab() {
         <button type="button" onClick={handleAddClass}
           className="inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-amber-900 dark:bg-amber-600 text-amber-50 dark:text-white text-[14px] font-bold shadow-sm md:hover:opacity-90 active:scale-[0.98] transition-all flex-shrink-0">
           <Plus className="w-4 h-4 stroke-[2.5]" /> Khởi tạo lớp
+        </button>
+        <button type="button" onClick={() => setMainExcelModalOpen(true)}
+          className="inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[14px] font-bold shadow-sm active:scale-[0.98] transition-all flex-shrink-0"
+          title="Nhập danh sách học sinh từ file Excel">
+          <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" /> Nhập từ Excel
         </button>
       </div>
 
@@ -646,7 +733,7 @@ export default function ClassesTab() {
               <thead>
                 <tr className="text-[11px] font-bold text-amber-800/70 dark:text-amber-400/70 uppercase tracking-widest">
                   <th className="px-6 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10">Tên Lớp học</th>
-                  <th className="px-4 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10 w-[280px]">GV đứng lớp</th>
+                  <th className="px-4 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10 w-[320px]">GV đứng lớp</th>
                   <th className="px-4 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10 text-center w-[100px]">Sĩ số</th>
                   <th className="px-4 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10 text-center">Bảo mật sổ điểm</th>
                   <th className="px-6 py-4 sticky top-0 bg-amber-50/80 dark:bg-[#252220] backdrop-blur-md z-10 border-b border-amber-900/10 dark:border-amber-100/10 text-right w-[140px] whitespace-nowrap">Tuỳ chỉnh</th>
@@ -693,6 +780,17 @@ export default function ClassesTab() {
         onConfirm={executeTeacherAction}
         onCancel={() => setConfirmTeacherState(null)}
         busy={!!busyKey}
+      />
+
+      {/* Modal Nhập Học Sinh từ Excel (Toolbar) */}
+      <ExcelImportModal
+        open={mainExcelModalOpen}
+        onClose={() => setMainExcelModalOpen(false)}
+        currentLop={null}
+        namHoc={namHoc}
+        availableClasses={classes}
+        onSuccess={() => loadAll()}
+        showToast={showToast}
       />
     </div>
   );

@@ -178,7 +178,7 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          className="absolute left-1/2 -translate-x-[40%] top-full mt-3 w-[720px] rounded-[2rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute left-1/2 -translate-x-[40%] top-full mt-3 w-[720px] rounded-[2rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
         >
           <div className="flex">
             {/* Cột Danh sách Khối (2/3 chiều rộng) */}
@@ -192,7 +192,7 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
                   const isActive = currentPath === khoi.path;
                   return (
                     <button key={khoi.path} type="button" onClick={() => { navigate(khoi.path); onClose(); }}
-                      className={`flex items-center gap-3 px-4 py-3 text-left rounded-2xl bg-[#FDFBF7] dark:bg-[#1C1917] hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors group ${isActive ? "bg-amber-50 dark:bg-amber-900/20 shadow-sm" : ""}`}
+                      className={`flex items-center gap-3 px-4 py-3 text-left rounded-2xl bg-[#FDFBF7] dark:bg-[#161c18] hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors group ${isActive ? "bg-amber-50 dark:bg-amber-900/20 shadow-sm" : ""}`}
                     >
                       <div className={`flex-shrink-0 w-10 h-10 rounded-[14px] flex items-center justify-center ${khoi.bg} ring-1 ${isActive ? khoi.ring : "ring-transparent"} group-hover:ring-1 group-hover:${khoi.ring} transition-all`}>
                         <Icon className="w-4 h-4" style={{ color: khoi.accent }} />
@@ -242,7 +242,7 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
         >
           {COMMUNITY_ITEMS.map((item, i) => {
             const Icon     = item.icon;
@@ -271,7 +271,7 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-2xl dark:shadow-black/40 z-50 overflow-hidden flex flex-col"
+          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-2xl dark:shadow-black/40 z-50 overflow-hidden flex flex-col"
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 shrink-0">
             <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
@@ -323,7 +323,7 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
           </div>
 
           {!loading && notifications.length > 0 && (
-            <div className="p-3 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shrink-0 text-center">
+            <div className="p-3 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shrink-0 text-center">
               <button 
                 onClick={() => { navigate("/tài-khoản/thông-báo"); onClose(); }} 
                 className="text-[12px] font-bold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
@@ -348,7 +348,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-56 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#1C1917] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-3 w-56 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
             <div className="flex items-center gap-2.5">
@@ -433,7 +433,7 @@ function KhoiSheet({ open, onClose, navigate }) {
             animate={{ y: 0 }} 
             exit={{ y: "100%" }} 
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-[#FDFBF7] dark:bg-[#1C1917] rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col max-h-[85vh]"
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-[#FDFBF7] dark:bg-[#161c18] rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col max-h-[85vh]"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
             <div className="flex justify-center pt-3.5 pb-5 touch-none flex-shrink-0">
@@ -514,7 +514,7 @@ function MoreMenuSheet({
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
             className="
-              fixed z-[51] flex flex-col bg-[#FDFBF7] dark:bg-[#1C1917] shadow-2xl dark:shadow-black/50
+              fixed z-[51] flex flex-col bg-[#FDFBF7] dark:bg-[#161c18] shadow-2xl dark:shadow-black/50
               inset-x-0 bottom-0 rounded-t-[2rem] max-h-[85vh]
               sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2
               sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md
@@ -699,7 +699,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
         ACCOUNT_ITEMS={ACCOUNT_ITEMS}
       />
       
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl border-t border-amber-900/10 dark:border-amber-100/10 shadow-[0_-4px_20px_rgba(146,64,14,0.05)] dark:shadow-black/30"
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 dark:bg-[#161c18]/95 backdrop-blur-xl border-t border-amber-900/10 dark:border-stone-800/80 shadow-[0_-4px_20px_rgba(146,64,14,0.05)] dark:shadow-black/30"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex h-18 items-stretch justify-around px-2">
@@ -969,7 +969,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
       <header 
         className={`sticky top-0 z-50 w-full antialiased transition-all duration-300 ${
           isScrolled 
-            ? "bg-[#FDFBF7]/85 dark:bg-[#1C1917]/85 backdrop-blur-lg border-b border-amber-900/10 dark:border-amber-100/10 shadow-sm" 
+            ? "bg-[#FDFBF7]/85 dark:bg-[#161c18]/90 backdrop-blur-lg border-b border-amber-900/10 dark:border-stone-800/80 shadow-sm" 
             : "bg-transparent border-b border-transparent"
         }`} 
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -977,7 +977,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           
           <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors hover:bg-amber-900/5 dark:hover:bg-amber-100/5">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-gradient-to-br from-amber-50 to-[#FDFBF7] dark:from-amber-900/20 dark:to-[#1C1917] shadow-sm transition-all group-hover:scale-105">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-gradient-to-br from-amber-50 to-[#FDFBF7] dark:from-amber-900/20 dark:to-[#161c18] shadow-sm transition-all group-hover:scale-105">
               <img src="/images/logo_htdc.avif" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:rotate-6" />
             </div>
             <div className="flex flex-col items-start text-left">
@@ -1013,32 +1013,50 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
           </nav>
 
           <div className="flex items-center gap-2">
-            <div ref={notifRef} className="relative">
+            {isLogin ? (
+              <div ref={notifRef} className="relative">
+                <button
+                  type="button"
+                  onClick={handleBellClick}
+                  className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                    isScrolled ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10" : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
+                  } ${isRinging ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`}
+                  aria-label="Thông báo"
+                  aria-expanded={openMenu === "notif"}
+                >
+                  <Bell className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#FDFBF7] dark:ring-[#161c18]" />
+                  )}
+                </button>
+                <NotificationDropdown
+                  isOpen={openMenu === "notif"}
+                  onClose={() => setOpenMenu(null)}
+                  notifications={notifications}
+                  loading={notifLoading}
+                  onItemClick={handleNotifItemClick}
+                  onMarkAllRead={handleMarkAllRead}
+                  hasUnread={notifications.some((n) => !n.read)}
+                  navigate={navigate}
+                />
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={handleBellClick}
-                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  isScrolled ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10" : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
-                } ${isRinging ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`}
-                aria-label="Thông báo"
-                aria-expanded={openMenu === "notif"}
+                onClick={() => navigate("/cài-đặt")}
+                className={`hidden md:flex relative w-9 h-9 items-center justify-center rounded-full transition-colors ${
+                  location.pathname === "/cài-đặt"
+                    ? "text-amber-800 dark:text-amber-300 bg-amber-900/10 dark:bg-amber-100/10"
+                    : isScrolled
+                    ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
+                    : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
+                }`}
+                title="Cài đặt & Tùy chỉnh"
+                aria-label="Cài đặt"
               >
-                <Bell className="w-[18px] h-[18px]" strokeWidth={1.8} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#FDFBF7] dark:ring-[#1C1917]" />
-                )}
+                <Settings className="w-[18px] h-[18px]" strokeWidth={1.8} />
               </button>
-              <NotificationDropdown
-                isOpen={openMenu === "notif"}
-                onClose={() => setOpenMenu(null)}
-                notifications={notifications}
-                loading={notifLoading}
-                onItemClick={handleNotifItemClick}
-                onMarkAllRead={handleMarkAllRead}
-                hasUnread={notifications.some((n) => !n.read)}
-                navigate={navigate}
-              />
-            </div>
+            )}
             <div ref={accountRef} className="relative hidden md:block">
               <AccountTriggerButton isLogin={isLogin} avatar={avatar} username={username} role={role} isOpen={openMenu === "account"} onToggle={(e) => toggle("account", e)} onLogin={toggleModal} />
               {isLogin && <AccountDropdown isOpen={openMenu === "account"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} avatar={avatar} username={username} role={role} onLogout={handleLogout} onOpenProfile={handleProfilePress} />}

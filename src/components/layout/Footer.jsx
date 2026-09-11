@@ -112,7 +112,7 @@ export default function Footer() {
   const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <footer className="mt-auto relative z-10 w-full overflow-hidden border-t border-amber-900/10 bg-[#FDFBF7]/80 pb-[calc(env(safe-area-inset-bottom)+6rem)] antialiased backdrop-blur-xl md:pb-12 md:pt-16 dark:border-amber-100/10 dark:bg-[#1C1917]/80">
+    <footer className="mt-auto relative z-10 w-full overflow-hidden border-t border-amber-900/10 bg-[#FDFBF7]/90 pb-[calc(env(safe-area-inset-bottom)+6rem)] antialiased backdrop-blur-xl md:pb-12 md:pt-16 dark:border-stone-800/80 dark:bg-[#161c18]/90">
       {/* Decorative gradient blur background */}
       <div className="absolute inset-x-0 -top-24 -z-10 flex justify-center opacity-40 dark:opacity-20 pointer-events-none">
         <div className="h-[200px] w-[800px] bg-gradient-to-r from-amber-100 via-amber-200/50 to-amber-100 blur-[80px] dark:from-amber-900/40 dark:via-amber-800/20 dark:to-amber-900/40" />
@@ -212,7 +212,7 @@ export default function Footer() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={subscribing}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-700 to-amber-900 py-3.5 text-[14px] font-bold text-white shadow-md shadow-amber-900/20 transition-all hover:shadow-lg hover:shadow-amber-900/30 disabled:opacity-70 dark:from-amber-600 dark:to-amber-800"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-900 hover:bg-amber-800 dark:bg-amber-600 dark:hover:bg-amber-500 text-white py-3.5 text-[14px] font-bold shadow-sm transition-all disabled:opacity-70 active:scale-[0.98]"
               >
                 {subscribing ? (
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

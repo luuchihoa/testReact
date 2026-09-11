@@ -3,7 +3,7 @@ import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-route
 import {
   LayoutDashboard, UserCog, School, ClipboardCheck, BarChart3, Megaphone, FileCheck,
   ChevronDown, CalendarDays, Check, UserPlus, MessageSquare, MoreHorizontal,
-  Search, Bell, AlertTriangle, ChevronLeft, BookOpen
+  Search, Bell, AlertTriangle, ChevronLeft, BookOpen, Plus
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { AuthGateSkeleton, AdminTabSkeleton } from "../../components/ui/Skeleton.jsx";
@@ -221,11 +221,40 @@ const TABS = [
 ];
 
 function YearPicker() {
-  const { namHoc, setNamHoc, namHocList } = useAdminContext();
+  const { namHoc, setNamHoc, namHocList, setNamHocList } = useAdminContext();
   const [open, setOpen] = useState(false);
-  const wrapRef = useDismissableDropdown(open, () => setOpen(false));
+  const [isAdding, setIsAdding] = useState(false);
+  const [customYear, setCustomYear] = useState("");
+  const wrapRef = useDismissableDropdown(open, () => {
+    setOpen(false);
+    setIsAdding(false);
+    setCustomYear("");
+  });
 
   const isCurrent = (nh) => nh === getCurrentNamHoc();
+
+  const handleAddYear = (e) => {
+    e.preventDefault();
+    const val = customYear.trim();
+    // Validate định dạng YYYY-YYYY (ví dụ: 2027-2028)
+    const regex = /^\d{4}-\d{4}$/;
+    if (!regex.test(val)) {
+      alert("Định dạng năm học phải là YYYY-YYYY (ví dụ: 2027-2028)");
+      return;
+    }
+    const [y1, y2] = val.split("-").map(Number);
+    if (y2 !== y1 + 1) {
+      alert("Năm kết thúc phải lớn hơn năm bắt đầu đúng 1 năm (ví dụ: 2027-2028)");
+      return;
+    }
+    if (setNamHocList && !namHocList.includes(val)) {
+      setNamHocList((prev) => Array.from(new Set([...prev, val])).sort((a, b) => b.localeCompare(a)));
+    }
+    setNamHoc(val);
+    setIsAdding(false);
+    setCustomYear("");
+    setOpen(false);
+  };
 
   return (
     <div className="relative flex-shrink-0" ref={wrapRef}>
@@ -251,34 +280,67 @@ function YearPicker() {
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 z-50 mt-2 min-w-[205px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
         >
-          {namHocList.map((nh) => {
-            const active = nh === namHoc;
-            return (
+          <div className="max-h-[220px] overflow-y-auto" data-lenis-prevent>
+            {namHocList.map((nh) => {
+              const active = nh === namHoc;
+              return (
+                <button
+                  key={nh}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => { setNamHoc(nh); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13px] font-bold text-left transition-colors ${
+                    active ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50" : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {nh}
+                    {isCurrent(nh) && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-amber-600 dark:bg-amber-400"
+                        title="Năm học hiện tại"
+                      />
+                    )}
+                  </span>
+                  {active && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="pt-1.5 mt-1 border-t border-amber-900/10 dark:border-amber-100/10">
+            {!isAdding ? (
               <button
-                key={nh}
                 type="button"
-                role="option"
-                aria-selected={active}
-                onClick={() => { setNamHoc(nh); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-bold text-left transition-colors ${
-                  active ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50" : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
-                }`}
+                onClick={() => setIsAdding(true)}
+                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-[12.5px] font-bold text-amber-800 dark:text-amber-400 hover:bg-amber-100/40 dark:hover:bg-amber-900/20 transition-colors"
               >
-                <span className="flex items-center gap-2">
-                  {nh}
-                  {isCurrent(nh) && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-amber-600 dark:bg-amber-400"
-                      title="Năm học hiện tại"
-                    />
-                  )}
-                </span>
-                {active && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />}
+                <Plus className="w-3.5 h-3.5" /> Thêm niên khoá khác
               </button>
-            );
-          })}
+            ) : (
+              <form onSubmit={handleAddYear} className="p-1 flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={customYear}
+                    onChange={(e) => setCustomYear(e.target.value)}
+                    placeholder="vd: 2028-2029"
+                    className="w-full px-2.5 py-1.5 text-[12px] rounded-lg border border-amber-900/20 dark:border-amber-100/20 bg-white dark:bg-stone-800 text-amber-950 dark:text-amber-50 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2.5 py-1.5 rounded-lg bg-amber-800 hover:bg-amber-900 text-white text-[11.5px] font-bold shadow-sm transition-colors flex-shrink-0"
+                  >
+                    Chọn
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

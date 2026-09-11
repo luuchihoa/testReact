@@ -1,17 +1,124 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Search, ChevronDown, Users as UsersIcon, ArrowLeft, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, ChevronDown, Users as UsersIcon, ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLenis } from "lenis/react";
 import { useAdminContext } from "./AdminContext.jsx";
 import { TableSkeleton, Spinner } from "../../components/ui/Skeleton.jsx";
 import {
   ROLE_OPTIONS, ROLE_LABELS_VI, ROLE_BADGE, AVATAR_FALLBACK,
   DOWNGRADE_ROLES, handleAvatarError,
 } from "./constants.js";
-import { updateUserRole, fetchUsersPaginated } from "./dataLayer.js";
+import { updateUserRole, fetchUsersPaginated, deleteUser } from "./dataLayer.js";
 
 // Hằng số Easing chuẩn
 const APPLE_EASE = [0.16, 1, 0.3, 1];
+
+/* ============================================================
+   COMPONENT MODAL XÁC NHẬN XOÁ NGƯỜI DÙNG (PORTAL)
+   ============================================================ */
+const DeleteUserModal = React.memo(({ user, isOpen, isDeleting, onConfirm, onCancel }) => {
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      lenis?.stop();
+    } else {
+      document.body.style.overflow = "";
+      lenis?.start();
+    }
+    return () => {
+      document.body.style.overflow = "";
+      lenis?.start();
+    };
+  }, [isOpen, lenis]);
+
+  if (!isOpen || !user) return null;
+
+  return createPortal(
+    <div
+      data-lenis-prevent
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm transition-all"
+      onClick={!isDeleting ? onCancel : undefined}
+    >
+      <motion.div
+        data-lenis-prevent
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-[440px] bg-white dark:bg-[#1C1917] rounded-[28px] p-6 sm:p-7 shadow-2xl border border-amber-900/10 dark:border-amber-100/10 flex flex-col gap-4 text-stone-800 dark:text-stone-200"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <Trash2 className="w-6 h-6" strokeWidth={2} />
+          </div>
+          <div className="flex-1 min-w-0 mt-0.5">
+            <h3 className="text-[18px] font-bold text-amber-950 dark:text-amber-50 font-serif leading-snug">
+              Xác nhận xoá người dùng?
+            </h3>
+            <p className="text-[13.5px] font-medium text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">
+              Thao tác này sẽ xoá tài khoản và toàn bộ dữ liệu liên quan khỏi hệ thống.
+            </p>
+          </div>
+        </div>
+
+        {/* Thông tin người dùng sẽ xoá */}
+        <div className="p-3.5 rounded-2xl bg-amber-50/50 dark:bg-stone-900/70 border border-amber-900/10 dark:border-amber-100/10 flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white dark:border-stone-800 flex-shrink-0 bg-stone-100 shadow-sm">
+            <img
+              src={user.avatar || AVATAR_FALLBACK}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={handleAvatarError}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14.5px] font-bold text-amber-950 dark:text-amber-50 truncate">
+              {user.tenThanh && <span className="text-stone-500 font-medium mr-1">{user.tenThanh}</span>}
+              {user.hoTen || user.username}
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[12px] font-semibold text-stone-500 dark:text-stone-400">
+                @{user.username}
+              </span>
+              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-black/5 dark:border-white/5 ${ROLE_BADGE[user.role] || ROLE_BADGE.user}`}>
+                {ROLE_LABELS_VI[user.role] || user.role}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[12px] font-medium text-red-600/90 dark:text-red-400/90 bg-red-50/60 dark:bg-red-950/20 p-3 rounded-xl border border-red-500/10">
+          ⚠️ Điểm danh, điểm học tập, hồ sơ lớp học và tài khoản đăng nhập của người này sẽ bị xoá vĩnh viễn và không thể khôi phục.
+        </p>
+
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-bold text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors disabled:opacity-50"
+          >
+            Huỷ bỏ
+          </button>
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onConfirm}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold text-white bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50"
+          >
+            {isDeleting && <Spinner className="w-4 h-4 text-white" />}
+            {isDeleting ? "Đang xoá..." : "Xác nhận xoá"}
+          </button>
+        </div>
+      </motion.div>
+    </div>,
+    document.body
+  );
+});
 
 /* ============================================================
    COMPONENT TÁCH RỜI (Tránh Anti-pattern Unmount/Remount)
@@ -38,7 +145,7 @@ const RoleSelect = React.memo(({ userRole, username, isSaving, compact, onChange
 ));
 
 export default function UsersTab() {
-  const { classes, showToast, handleRoleChanged } = useAdminContext();
+  const { classes, showToast, handleRoleChanged, loadAll } = useAdminContext();
   const navigate = useNavigate();
   const currentUsername = useMemo(() => localStorage.getItem("username") || "", []);
 
@@ -94,7 +201,7 @@ export default function UsersTab() {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const homeroomLopOf = useCallback(
-    (username) => classes.find((c) => c.teacherUsername === username)?.lop || null,
+    (username) => classes.find((c) => c.teacherUsernames?.includes(username) || c.teacherUsername === username)?.lop || null,
     [classes]
   );
 
@@ -102,6 +209,49 @@ export default function UsersTab() {
     localStorage.removeItem("role");
     navigate("/", { replace: true });
   }, [navigate]);
+
+  // Quản lý trạng thái xoá người dùng
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+    const username = userToDelete.username;
+
+    if (username === currentUsername) {
+      showToast("Không thể tự xoá tài khoản quản trị đang đăng nhập", "error");
+      return;
+    }
+
+    const lop = homeroomLopOf(username);
+    if (lop) {
+      showToast(`Không thể xoá: đang phụ trách lớp "${lop}". Hãy gỡ khỏi lớp ở tab Lớp học trước.`, "error");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteUser(username);
+
+      setLocalUsers((prev) => prev.filter((u) => u.username !== username));
+      setTotalCount((c) => Math.max(0, c - 1));
+
+      if (localUsers.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      }
+
+      if (handleRoleChanged) handleRoleChanged();
+      if (loadAll) loadAll();
+
+      showToast(`Đã xoá người dùng "${userToDelete.hoTen || username}" (@${username})`, "success");
+      setUserToDelete(null);
+    } catch (err) {
+      console.error("delete user error:", err);
+      showToast(err?.message || "Xoá người dùng thất bại", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [userToDelete, currentUsername, homeroomLopOf, localUsers.length, page, handleRoleChanged, loadAll, showToast]);
 
   // Tối ưu hoá bộ nhớ: Bọc logic đổi quyền bằng useCallback
   const handleRoleChange = useCallback(async (username, newRole, currentRole) => {
@@ -137,6 +287,7 @@ export default function UsersTab() {
       setLocalUsers((prev) => prev.map(u => u.username === username ? { ...u, role: newRole } : u));
       
       if (handleRoleChanged) handleRoleChanged(username, newRole);
+      if (loadAll) loadAll();
       showToast("Đã cập nhật vai trò", "success");
 
       if (isSelfDemote) {
@@ -149,7 +300,7 @@ export default function UsersTab() {
     } finally {
       setSavingUser(null);
     }
-  }, [homeroomLopOf, currentUsername, handleRoleChanged, handleSelfDemoted, showToast]);
+  }, [homeroomLopOf, currentUsername, handleRoleChanged, loadAll, handleSelfDemoted, showToast]);
 
   return (
     <motion.div 
@@ -213,7 +364,7 @@ export default function UsersTab() {
                   </p>
                 </div>
                 
-                <div className="flex-shrink-0 ml-2">
+                <div className="flex-shrink-0 flex items-center gap-1.5 ml-2">
                   <RoleSelect 
                     userRole={u.role} 
                     username={u.username} 
@@ -221,6 +372,16 @@ export default function UsersTab() {
                     compact={true} 
                     onChange={handleRoleChange} 
                   />
+                  {u.username !== currentUsername && (
+                    <button
+                      type="button"
+                      title={`Xoá người dùng ${u.username}`}
+                      onClick={() => setUserToDelete(u)}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 active:scale-95 transition-all flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -228,12 +389,13 @@ export default function UsersTab() {
 
           {/* ---- Desktop / tablet: bảng ---- */}
           <div className="hidden sm:block overflow-auto max-h-[65vh] px-0" data-lenis-prevent>
-            <table className="w-full text-sm border-collapse min-w-[600px]">
+            <table className="w-full text-sm border-collapse min-w-[640px]">
               <thead>
                 <tr className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
                   <th className="text-left px-5 py-4 sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10">Người dùng</th>
                   <th className="text-center px-4 py-4 sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10">Vai trò</th>
                   <th className="text-center px-4 py-4 sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10">Trạng thái</th>
+                  <th className="text-center px-4 py-4 sticky top-0 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl z-10 border-b border-amber-900/10 dark:border-amber-100/10 w-24">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-900/5 dark:divide-amber-100/5">
@@ -264,6 +426,22 @@ export default function UsersTab() {
                       />
                     </td>
                     <td className="px-4 py-3.5 text-center text-[13px] font-medium text-stone-500 dark:text-stone-400">{u.trangThai}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      {u.username === currentUsername ? (
+                        <span className="text-[11px] font-medium text-stone-400 dark:text-stone-500 italic select-none">
+                          (Bạn)
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          title={`Xoá người dùng ${u.username}`}
+                          onClick={() => setUserToDelete(u)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-stone-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -307,6 +485,19 @@ export default function UsersTab() {
           </div>
         </>
       )}
+
+      {/* Modal xác nhận xoá người dùng */}
+      <AnimatePresence>
+        {userToDelete && (
+          <DeleteUserModal
+            user={userToDelete}
+            isOpen={!!userToDelete}
+            isDeleting={isDeleting}
+            onConfirm={handleDeleteUser}
+            onCancel={() => !isDeleting && setUserToDelete(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../../components/ui/StudentShared.jsx";
-import { buildSundayList, getCurrentNamHoc } from "./utils.js";
+import { buildSundayList, getCurrentNamHoc, sortStudentsByTen } from "./utils.js";
 
 export async function fetchTeacherContext(authId, requestedNamHoc) {
   const { data: teacherRow, error: teacherErr } = await supabase
@@ -51,10 +51,11 @@ export async function fetchClassStudents(lop, namHoc) {
 
   if (error) throw error;
 
-  return (data ?? [])
+  const list = (data ?? [])
     .map((row) => normalizeStudent(row.users))
-    .filter((s) => s.username)
-    .sort((a, b) => (a.hoTen || "").localeCompare(b.hoTen || "", "vi"));
+    .filter((s) => s.username);
+
+  return sortStudentsByTen(list);
 }
 
 // Điểm + tổng kết học kỳ + các buổi điểm danh ngoại lệ của 1 học sinh

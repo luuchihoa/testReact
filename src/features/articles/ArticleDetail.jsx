@@ -250,7 +250,7 @@ export default function ArticleDetail() {
           prose-p:leading-relaxed prose-p:text-stone-700 dark:prose-p:text-stone-300
           prose-a:text-amber-800 dark:prose-a:text-amber-500 prose-a:font-semibold hover:prose-a:text-amber-600
           prose-img:rounded-[20px] prose-img:shadow-sm prose-img:mx-auto prose-img:border prose-img:border-amber-900/5 dark:prose-img:border-amber-100/5
-          prose-li:marker:text-amber-900/50 dark:prose-li:marker:text-amber-500/50 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
+          prose-li:marker:text-amber-900/50 dark:prose-li:marker:text-amber-500/50 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl prose-blockquote:before:content-none prose-blockquote:after:content-none prose-blockquote:not-italic w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

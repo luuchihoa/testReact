@@ -1,222 +1,609 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  CalendarDays, MapPin, Users, ChevronRight,
-  Heart, Church, BookOpen, Sparkles, Flame, Globe, GraduationCap, Info
+  CalendarDays, Clock, MapPin, Users, Search, X,
+  LayoutGrid, ListFilter, GraduationCap, Sparkles,
+  ArrowUpRight, ChevronRight, Info, Church, DoorOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePageMotion } from "../hooks/usePageMotion.js";
-
-const KHOI_LIST = [
-  { id: "all",        label: "Tất cả" },
-  { id: "chien-con",  label: "Chiên Con" },
-  { id: "ruoc-le",    label: "Rước Lễ" },
-  { id: "them-suc",   label: "Thêm Sức" },
-  { id: "phung-vu",   label: "Phụng Vụ" },
-  { id: "kinh-thanh", label: "Kinh Thánh" },
-  { id: "vao-doi",    label: "Vào Đời" },
-];
-
-const KHOI_META = {
-  "chien-con":  { icon: Heart,    color: "text-rose-600 dark:text-rose-400",     bg: "bg-rose-50 dark:bg-rose-500/10",      border: "border-rose-100 dark:border-rose-500/20" },
-  "ruoc-le":    { icon: Sparkles, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-500/10",  border: "border-yellow-100 dark:border-yellow-500/20" },
-  "them-suc":   { icon: Flame,    color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-500/10",    border: "border-amber-100 dark:border-amber-500/20" },
-  "phung-vu":   { icon: Church,   color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/10",  border: "border-orange-100 dark:border-orange-500/20" },
-  "kinh-thanh": { icon: BookOpen, color: "text-stone-600 dark:text-stone-400",   bg: "bg-stone-100 dark:bg-stone-500/10",   border: "border-stone-200 dark:border-stone-500/20" },
-  "vao-doi":    { icon: Globe,    color: "text-red-600 dark:text-red-400",       bg: "bg-red-50 dark:bg-red-500/10",        border: "border-red-100 dark:border-red-500/20" },
-};
-
-const SCHEDULE = [
-  { khoi: "chien-con",  name: "Khối Chiên Con",    age: "Lớp 1 – 2",    day: "Chủ Nhật", time: "07:00 – 08:00", room: "Phòng A1 – A2",       teacher: "Cô Maria Nguyễn",    path: "/khối-chiên-con" },
-  { khoi: "ruoc-le",    name: "Rước Lễ Lần Đầu",   age: "Lớp 3 – 4",    day: "Chủ Nhật", time: "08:15 – 09:30", room: "Phòng B1 – B2",       teacher: "Anh Giuse Trần",     path: "/khối-rước-lễ" },
-  { khoi: "them-suc",   name: "Khối Thêm Sức",     age: "Lớp 5 – 6",    day: "Chủ Nhật", time: "08:15 – 09:45", room: "Phòng E1 – E2",       teacher: "Anh Phaolô Đặng",    path: "/khối-thêm-sức" },
-  { khoi: "phung-vu",   name: "Khối Phụng Vụ",     age: "Lớp 7",        day: "Chủ Nhật", time: "08:15 – 09:30", room: "Phòng D1 – D2",       teacher: "Thầy Phêrô Vũ",      path: "/khối-phụng-vụ" },
-  { khoi: "kinh-thanh", name: "Khối Kinh Thánh",   age: "Lớp 8 – 9",    day: "Chủ Nhật", time: "08:15 – 09:30", room: "Phòng C1 – C3",       teacher: "Chị Anna Lê",        path: "/khối-kinh-thánh" },
-  { khoi: "vao-doi",    name: "Khối Vào Đời",      age: "Lớp 10 – 11",  day: "Thứ Bảy",  time: "19:00 – 20:30", room: "Hội trường Giáo xứ",  teacher: "Anh Augustino Hồ",   path: "/khối-vào-đời" },
-];
-
-const DAYS = ["Thứ Bảy", "Chủ Nhật"];
+import {
+  SCHEDULE_CLASSES,
+  CA_HOC,
+  CENTRAL_MASS,
+  NGANH_LIST,
+  ROOMS_DIRECTORY,
+  ACADEMIC_YEAR,
+  TOTAL_STUDENTS,
+  TOTAL_TEACHERS,
+  TOTAL_CLASSES
+} from "../data/lichHocData.js";
+import "./LichHoc.css";
 
 export default function LichHoc() {
-  const [activeKhoi, setActiveKhoi] = useState("all");
-  
-  const { fadeUp, heroReveal, vp } = usePageMotion();
+  const [selectedCa, setSelectedCa] = useState("all");
+  const [selectedNganh, setSelectedNganh] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [viewMode, setViewMode] = useState("cards"); // 'cards' | 'table'
 
-  const filtered = SCHEDULE.filter((s) => activeKhoi === "all" || s.khoi === activeKhoi);
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = `Thời Gian Biểu & Phân Công Lớp Học ${ACADEMIC_YEAR} | Giáo xứ An Ngãi`;
+    return () => {
+      document.title = prevTitle;
+    };
+  }, []);
+
+  // Lọc danh sách lớp theo Ca, Ngành, Phòng và Tìm kiếm
+  const filteredClasses = useMemo(() => {
+    return SCHEDULE_CLASSES.filter((item) => {
+      // Lọc theo ca
+      if (selectedCa !== "all" && item.ca !== Number(selectedCa)) {
+        return false;
+      }
+      // Lọc theo ngành
+      if (selectedNganh !== "all" && item.nganhId !== selectedNganh) {
+        return false;
+      }
+      // Lọc theo phòng nếu được chọn
+      if (selectedRoom && item.room !== selectedRoom) {
+        return false;
+      }
+      // Lọc theo từ khóa tìm kiếm
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = item.name.toLowerCase().includes(q);
+        const matchKhoi = item.khoiName.toLowerCase().includes(q);
+        const matchRoom = item.room.toLowerCase().includes(q);
+        const matchYear = String(item.birthYear).includes(q);
+        const matchTeacher = item.teachers.some((t) => t.toLowerCase().includes(q));
+        if (!matchName && !matchKhoi && !matchRoom && !matchYear && !matchTeacher) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [selectedCa, selectedNganh, selectedRoom, searchQuery]);
+
+  // Đếm số lớp theo từng ca
+  const countCa1 = useMemo(() => SCHEDULE_CLASSES.filter((c) => c.ca === 1).length, []);
+  const countCa2 = useMemo(() => SCHEDULE_CLASSES.filter((c) => c.ca === 2).length, []);
+
+  const resetFilters = () => {
+    setSelectedCa("all");
+    setSelectedNganh("all");
+    setSelectedRoom(null);
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters = selectedCa !== "all" || selectedNganh !== "all" || selectedRoom !== null || searchQuery !== "";
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-950 dark:selection:text-amber-50 transition-colors duration-500 font-sans">
+    <div className="sched-page">
+      {/* ════ HERO SECTION ════ */}
+      <section className="sched-hero" aria-labelledby="sched-hero-title">
+        <div className="sched-shell">
+          <div className="sched-hero-copy">
+            <div className="sched-hero-eyebrow">
+              <span className="dot" aria-hidden="true" />
+              <span className="sched-eyebrow">NIÊN KHÓA {ACADEMIC_YEAR} · XỨ ĐOÀN MẸ MÂN CÔI</span>
+            </div>
+            <h1 id="sched-hero-title">
+              Thời Gian Biểu &<br />
+              <em>Phân Công Lớp Học</em>
+            </h1>
+            <p className="sched-hero-desc">
+              Bảng phân bố thời gian, phòng học và danh sách các anh chị Giáo lý viên &amp; Huynh trưởng phụ trách {TOTAL_CLASSES} lớp giáo lý của Giáo xứ An Ngãi.
+            </p>
+          </div>
 
-      {/* ══ HERO SECTION ══ */}
-      <section className="relative overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
+          {/* Metric Stats Ribbon */}
+          <div className="sched-stats-grid">
+            <div className="sched-stat-pill">
+              <div className="sched-stat-icon">
+                <GraduationCap size={22} />
+              </div>
+              <div>
+                <div className="sched-stat-value">{TOTAL_CLASSES} Lớp</div>
+                <div className="sched-stat-label">Các khối giáo lý</div>
+              </div>
+            </div>
 
-        <div className="max-w-5xl mx-auto px-6">
-          <div>
-            <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0}>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-6 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
-                <CalendarDays className="w-3.5 h-3.5" /> Lịch Học
-              </span>
-            </motion.div>
+            <div className="sched-stat-pill">
+              <div className="sched-stat-icon">
+                <Users size={22} />
+              </div>
+              <div>
+                <div className="sched-stat-value">{TOTAL_TEACHERS} GLV</div>
+                <div className="sched-stat-label">Giáo lý viên &amp; Huynh trưởng</div>
+              </div>
+            </div>
 
-            <motion.h1 variants={heroReveal} initial="hidden" animate="visible" custom={0.05}
-              className="text-4xl md:text-6xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 leading-[1.08] mb-5 font-serif">
-              Thời gian biểu<br />
-              <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
-                các lớp giáo lý
-              </span>
-            </motion.h1>
+            <div className="sched-stat-pill">
+              <div className="sched-stat-icon">
+                <Sparkles size={22} />
+              </div>
+              <div>
+                <div className="sched-stat-value">{TOTAL_STUDENTS}</div>
+                <div className="sched-stat-label">Đoàn sinh thiếu nhi</div>
+              </div>
+            </div>
 
-            <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.1}
-              className="text-base md:text-lg text-stone-600 dark:text-stone-400 leading-relaxed max-w-xl font-medium">
-              Lịch sinh hoạt hàng tuần của tất cả các khối — kiểm tra giờ học, phòng học và giáo lý viên phụ trách trước khi đến lớp.
-            </motion.p>
+            <div className="sched-stat-pill">
+              <div className="sched-stat-icon">
+                <Clock size={22} />
+              </div>
+              <div>
+                <div className="sched-stat-value">2 Ca Học</div>
+                <div className="sched-stat-label">Sáng Chúa Nhật</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══ FILTER TABS ══ */}
-      <div className="sticky top-0 z-40 bg-[#FDFBF7]/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border-b border-amber-900/10 dark:border-amber-100/10">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex gap-2 overflow-x-auto py-3 scrollbar-none snap-x snap-mandatory" style={{ WebkitOverflowScrolling: "touch" }}>
-            {KHOI_LIST.map((k) => (
-              <button key={k.id} onClick={() => setActiveKhoi(k.id)}
-                className={`snap-center flex-shrink-0 px-5 py-2 rounded-full text-[13px] font-bold transition-all duration-300 active:scale-95 ${
-                  activeKhoi === k.id 
-                  ? "bg-amber-900 text-amber-50 dark:bg-amber-100 dark:text-amber-950 shadow-sm border border-transparent" 
-                  : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-stone-800/80 bg-white/50 dark:bg-stone-800/50 border border-amber-900/5 dark:border-amber-100/5"
-                }`}>
-                {k.label}
+      {/* ════ LITURGICAL TIMELINE STRIP ════ */}
+      <section className="sched-timeline-section" aria-label="Nhịp cầu phụng vụ sáng Chúa Nhật">
+        <div className="sched-shell">
+          <div className="sched-timeline-container">
+            <div className="sched-timeline-header">
+              <div>
+                <span className="sched-eyebrow">NHỊP CẦU PHỤNG VỤ CHÚA NHẬT</span>
+                <h2 style={{ fontSize: "22px", marginTop: "4px" }}>
+                  Mô hình <em>Học – Lễ – Học</em>
+                </h2>
+              </div>
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700">
+                Sáng Chúa Nhật hàng tuần
+              </span>
+            </div>
+
+            <div className="sched-timeline-grid">
+              {/* Ca 1 */}
+              <div className="sched-timeline-card">
+                <div>
+                  <div className="time-tag">
+                    <Clock size={16} /> 07:00 – 07:45
+                  </div>
+                  <h3 className="card-title">Ca 1: Khối Lớn</h3>
+                  <p className="card-desc">
+                    Học trước Thánh Lễ gồm các lớp <strong>Vào Đời</strong>, <strong>Kinh Thánh</strong> và <strong>Phụng Vụ</strong>.
+                  </p>
+                </div>
+                <span className="card-badge bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                  14 Lớp · 34 GLV
+                </span>
+              </div>
+
+              {/* Thánh Lễ Trung Tâm */}
+              <div className="sched-timeline-card central-mass">
+                <div>
+                  <div className="time-tag">
+                    <Church size={17} /> 08:00 – 09:00
+                  </div>
+                  <h3 className="card-title">{CENTRAL_MASS.name}</h3>
+                  <p className="card-desc">
+                    Tâm điểm hiệp nhất tại <strong>{CENTRAL_MASS.location}</strong>. Toàn thể 29 lớp và 70 GLV quy tụ dâng Lễ.
+                  </p>
+                </div>
+                <span className="card-badge bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                  Trọng tâm đời sống Đức tin
+                </span>
+              </div>
+
+              {/* Ca 2 */}
+              <div className="sched-timeline-card">
+                <div>
+                  <div className="time-tag">
+                    <Clock size={16} /> 09:15 – 10:00
+                  </div>
+                  <h3 className="card-title">Ca 2: Khối Nhỏ</h3>
+                  <p className="card-desc">
+                    Học sau Thánh Lễ gồm các lớp <strong>Thêm Sức</strong>, <strong>Rước Lễ</strong>, <strong>Khai Tâm</strong> và <strong>Vườn Trẻ</strong>.
+                  </p>
+                </div>
+                <span className="card-badge bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                  16 Lớp · 36 GLV
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════ TOOLBAR / CONTROLS (STICKY) ════ */}
+      <div className="sched-toolbar-sticky">
+        <div className="sched-shell">
+          <div className="sched-toolbar-row">
+            {/* Shift Tabs */}
+            <div className="sched-shift-tabs" role="tablist" aria-label="Chọn ca học">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={selectedCa === "all"}
+                className={`sched-shift-btn ${selectedCa === "all" ? "active" : ""}`}
+                onClick={() => setSelectedCa("all")}
+              >
+                Tất cả ({TOTAL_CLASSES})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={selectedCa === "1"}
+                className={`sched-shift-btn ${selectedCa === "1" ? "active" : ""}`}
+                onClick={() => setSelectedCa("1")}
+              >
+                Ca 1 (7h00) <span className="opacity-70">({countCa1})</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={selectedCa === "2"}
+                className={`sched-shift-btn ${selectedCa === "2" ? "active" : ""}`}
+                onClick={() => setSelectedCa("2")}
+              >
+                Ca 2 (9h15) <span className="opacity-70">({countCa2})</span>
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="sched-search-box">
+              <Search size={16} className="search-icon" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm tên lớp, GLV, phòng học..."
+                aria-label="Tìm kiếm lớp học"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="clear-btn"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Xoá tìm kiếm"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="sched-view-toggles" aria-label="Chế độ hiển thị">
+              <button
+                type="button"
+                className={`sched-view-btn ${viewMode === "cards" ? "active" : ""}`}
+                onClick={() => setViewMode("cards")}
+                title="Dạng Thẻ"
+                aria-label="Dạng Thẻ"
+              >
+                <LayoutGrid size={17} />
+              </button>
+              <button
+                type="button"
+                className={`sched-view-btn ${viewMode === "table" ? "active" : ""}`}
+                onClick={() => setViewMode("table")}
+                title="Dạng Bảng"
+                aria-label="Dạng Bảng"
+              >
+                <ListFilter size={17} />
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary Filter: Ngành chips & Room active tag */}
+          <div className="sched-chips-row" style={{ marginTop: "10px" }}>
+            {NGANH_LIST.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                aria-pressed={selectedNganh === n.id}
+                className={`sched-chip ${selectedNganh === n.id ? "active" : ""}`}
+                onClick={() => setSelectedNganh(n.id)}
+              >
+                {n.dotClass && (
+                  <span
+                    className={`w-2 h-2 rounded-full ${n.dotClass}`}
+                    aria-hidden="true"
+                  />
+                )}
+                {n.shortName}
               </button>
             ))}
+
+            {selectedRoom && (
+              <button
+                type="button"
+                className="sched-chip active"
+                style={{ background: "var(--sched-accent)", color: "#fff" }}
+                onClick={() => setSelectedRoom(null)}
+                title="Bấm để huỷ lọc theo phòng"
+              >
+                Phòng: {selectedRoom} <X size={13} />
+              </button>
+            )}
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="sched-chip text-stone-500 hover:text-red-600"
+                onClick={resetFilters}
+                style={{ marginLeft: "auto", borderStyle: "dashed" }}
+              >
+                Đặt lại
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12 md:py-16 space-y-20">
+      {/* ════ MAIN CONTENT: CARDS OR TABLE VIEW ════ */}
+      <main className="sched-shell">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "18px" }}>
+          <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+            Hiển thị <strong>{filteredClasses.length}</strong> / {TOTAL_CLASSES} lớp học
+            {selectedCa !== "all" && ` · Ca ${selectedCa}`}
+            {selectedRoom && ` · Phòng ${selectedRoom}`}
+          </p>
+        </div>
 
-        {/* ══ LỊCH TUẦN ══ */}
-        <section>
-          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.15} className="mb-8">
-            <h2 className="text-2xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif">Lịch theo tuần</h2>
-            <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">Tổng quan các lớp diễn ra trong tuần.</p>
-          </motion.div>
+        {filteredClasses.length === 0 ? (
+          <div className="text-center py-20 bg-white/60 dark:bg-stone-900/40 rounded-3xl border border-stone-200 dark:border-stone-800 p-8">
+            <GraduationCap size={44} className="mx-auto text-stone-400 mb-3" />
+            <h3 className="text-lg font-bold text-stone-800 dark:text-stone-200 font-serif mb-1">
+              Không tìm thấy lớp học nào
+            </h3>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-5 max-w-sm mx-auto">
+              Không có kết quả phù hợp với từ khóa "{searchQuery}". Vui lòng thử tìm kiếm khác hoặc đặt lại bộ lọc.
+            </p>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-900 text-amber-50 dark:bg-amber-600 hover:opacity-90 transition"
+            >
+              Đặt lại tất cả bộ lọc
+            </button>
+          </div>
+        ) : viewMode === "cards" ? (
+          /* ── DẠNG THẺ (CARD VIEW) ── */
+          <div className="sched-cards-grid">
+            <AnimatePresence mode="popLayout">
+              {filteredClasses.map((item) => (
+                <motion.article
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2 }}
+                  className="sched-card"
+                >
+                  <div>
+                    <div className="sched-card-top">
+                      <span className={`sched-card-ca-badge ${item.ca === 1 ? "ca-1" : "ca-2"}`}>
+                        <Clock size={12} /> Ca {item.ca}
+                      </span>
+                      <button
+                        type="button"
+                        className="sched-card-room-badge"
+                        onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
+                        title={`Lọc các lớp học tại phòng ${item.room}`}
+                      >
+                        <MapPin size={13} className="text-amber-700 dark:text-amber-400" />
+                        <span>{item.room}</span>
+                      </button>
+                    </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div key={activeKhoi} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid lg:grid-cols-2 gap-8">
-              {DAYS.map((day) => {
-                const classesOfDay = filtered.filter((s) => s.day === day);
-                if (classesOfDay.length === 0) return null;
-                return (
-                  <div key={day} className="flex flex-col">
-                    <h3 className="text-[13px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-3 ml-2">
-                      {day}
-                    </h3>
-                    <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-sm rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-amber-900/10 dark:border-amber-100/10 overflow-hidden flex flex-col">
-                      <div className="divide-y divide-amber-900/5 dark:divide-amber-100/5">
-                        {classesOfDay.map((s) => {
-                            const meta = KHOI_META[s.khoi];
-                            const Icon = meta.icon;
-                            return (
-                              <Link key={s.khoi} to={s.path} className="flex items-center gap-4 p-4 md:p-5 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors group active:bg-amber-100/50 dark:active:bg-amber-900/20">
-                                <div className={`w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0 ${meta.bg}`}>
-                                  <Icon className={`w-5 h-5 ${meta.color}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-base font-bold text-stone-900 dark:text-stone-100 truncate">{s.name}</p>
-                                  <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400 mt-0.5">{s.time} · {s.room}</p>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-stone-300 dark:text-stone-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex-shrink-0" />
-                              </Link>
-                            );
-                          })}
+                    <h3 className="sched-card-title">{item.name}</h3>
+                    <div className="sched-card-subtitle">
+                      <span>{item.khoiName}</span>
+                      <span>·</span>
+                      <span>Sinh năm {item.birthYear}</span>
+                    </div>
+
+                    <div className="sched-card-meta-list">
+                      <div className="sched-card-meta-item">
+                        <span className="sched-card-meta-label">
+                          <Users size={14} /> GLV Phụ trách
+                        </span>
+                        <div className="sched-teachers-wrap">
+                          {item.teachers.map((t, idx) => (
+                            <span key={idx} className="sched-teacher-tag">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="sched-card-meta-item">
+                        <span className="sched-card-meta-label">
+                          <GraduationCap size={14} /> Sĩ số &amp; Độ tuổi
+                        </span>
+                        <span className="sched-card-meta-value">
+                          {item.studentsCount ? (
+                            <span>{item.studentsCount} học sinh · {item.ageText}</span>
+                          ) : (
+                            <span className="text-amber-700 dark:text-amber-400 italic">Đang tuyển sinh</span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </motion.div>
-          </AnimatePresence>
-        </section>
 
-        {/* ══ CHI TIẾT TỪNG KHỐI ══ */}
-        <section>
-          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.15} className="mb-8">
-            <h2 className="text-2xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif">Chi tiết các lớp</h2>
-            <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">Thông tin đầy đủ về độ tuổi, giáo lý viên và phòng học.</p>
-          </motion.div>
-
-          <AnimatePresence mode="wait">
-            {filtered.length > 0 ? (
-              <motion.div key={activeKhoi + "-detail"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filtered.map((s, i) => {
-                  const meta = KHOI_META[s.khoi];
-                  const Icon = meta.icon;
-                  return (
-                    <motion.div key={s.khoi} variants={fadeUp} initial="hidden" animate="visible" custom={i * 0.06}>
-                      <Link to={s.path} className={`group flex flex-col h-full bg-white/90 dark:bg-stone-800/50 backdrop-blur-sm rounded-[1.75rem] border border-amber-900/10 dark:border-amber-100/10 p-6 shadow-sm hover:shadow-md hover:border-amber-900/20 dark:hover:border-amber-100/20 transition-all duration-300 active:scale-[0.97]`}>
-                        <div className="flex items-start justify-between mb-5">
-                          <div className={`w-12 h-12 rounded-[1rem] flex items-center justify-center ${meta.bg}`}>
-                            <Icon className={`w-6 h-6 ${meta.color}`} />
-                          </div>
-                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border ${meta.border} ${meta.bg} ${meta.color}`}>
-                            {s.age}
+                  <div className="sched-card-footer">
+                    <span className="sched-card-time">
+                      <CalendarDays size={14} /> {item.time}
+                    </span>
+                    <Link to={item.path} className="sched-card-link">
+                      Chi tiết khối <ChevronRight size={14} />
+                    </Link>
+                  </div>
+                </motion.article>
+              ))}
+            </AnimatePresence>
+          </div>
+        ) : (
+          /* ── DẠNG BẢNG (TABLE VIEW) ── */
+          <div className="sched-table-wrapper">
+            <div className="sched-table-scroll">
+              <table className="sched-table">
+                <thead>
+                  <tr>
+                    <th scope="col" style={{ width: "50px", textAlign: "center" }}>STT</th>
+                    <th scope="col">Lớp Học</th>
+                    <th scope="col">Ca &amp; Giờ</th>
+                    <th scope="col">Giáo Lý Viên Phụ Trách</th>
+                    <th scope="col" style={{ textAlign: "center" }}>Sĩ Số</th>
+                    <th scope="col" style={{ textAlign: "center" }}>Năm Sinh</th>
+                    <th scope="col">Phòng Học</th>
+                    <th scope="col" style={{ textAlign: "right" }}>Trang Khối</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClasses.map((item) => (
+                    <tr key={item.id}>
+                      <td style={{ textAlign: "center", fontWeight: "600", color: "var(--sched-muted)" }}>
+                        {item.stt}
+                      </td>
+                      <td>
+                        <strong style={{ display: "block", fontSize: "14px" }}>{item.name}</strong>
+                        <span style={{ fontSize: "12px", color: "var(--sched-muted)" }}>{item.khoiName}</span>
+                      </td>
+                      <td>
+                        <span
+                          className={`sched-card-ca-badge ${item.ca === 1 ? "ca-1" : "ca-2"}`}
+                          style={{ marginBottom: "3px", display: "inline-block" }}
+                        >
+                          Ca {item.ca}
+                        </span>
+                        <div style={{ fontSize: "12px", color: "var(--sched-muted)" }}>{item.time}</div>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                          {item.teachers.map((t, idx) => (
+                            <span key={idx} className="sched-teacher-tag">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "center", fontWeight: "700" }}>
+                        {item.studentsCount ? (
+                          item.studentsCount
+                        ) : (
+                          <span style={{ fontSize: "12px", color: "var(--sched-accent)", fontStyle: "italic" }}>
+                            Tuyển sinh
                           </span>
-                        </div>
-                        <h3 className="text-lg font-bold text-amber-950 dark:text-amber-50 mb-4">{s.name}</h3>
-                        <div className="space-y-3 text-[13px] font-medium text-stone-600 dark:text-stone-400 mb-6">
-                          <div className="flex items-center gap-3"><CalendarDays className="w-4 h-4 text-amber-900/40 dark:text-amber-100/40 flex-shrink-0" /><span>{s.day}, {s.time}</span></div>
-                          <div className="flex items-center gap-3"><MapPin className="w-4 h-4 text-amber-900/40 dark:text-amber-100/40 flex-shrink-0" /><span>{s.room}</span></div>
-                          <div className="flex items-center gap-3"><Users className="w-4 h-4 text-amber-900/40 dark:text-amber-100/40 flex-shrink-0" /><span>{s.teacher}</span></div>
-                        </div>
-                        <div className="mt-auto flex items-center gap-1.5 text-[13px] font-bold text-amber-700 dark:text-amber-400 opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0 transition-all">
-                          Xem chi tiết <ChevronRight className="w-4 h-4" />
-                        </div>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            ) : (
-              <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium text-stone-400 py-12 text-center">Không có lớp nào trong mục này.</motion.p>
-            )}
-          </AnimatePresence>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center", color: "var(--sched-muted)" }}>
+                        {item.birthYear}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="sched-card-room-badge"
+                          onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
+                          title="Bấm để lọc theo phòng này"
+                        >
+                          <MapPin size={12} className="text-amber-700 dark:text-amber-400" />
+                          <span>{item.room}</span>
+                        </button>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <Link to={item.path} className="sched-card-link">
+                          Xem <ArrowUpRight size={13} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ════ CAMPUS ROOM DIRECTORY ════ */}
+        <section className="sched-rooms-section" aria-labelledby="sched-rooms-title">
+          <div className="sched-rooms-header">
+            <span className="sched-eyebrow">CHỈ DẪN KHUÔN VIÊN GIÁO XỨ</span>
+            <h2 id="sched-rooms-title" style={{ fontSize: "24px", marginTop: "4px" }}>
+              Danh Mục &amp; Sơ Đồ <em>Phòng Học</em>
+            </h2>
+            <p style={{ fontSize: "13.5px", color: "var(--sched-muted)", marginTop: "4px" }}>
+              Bấm vào từng phòng dưới đây để lọc nhanh các lớp học diễn ra tại phòng đó trong 2 ca sáng Chúa Nhật.
+            </p>
+          </div>
+
+          <div className="sched-rooms-grid">
+            {ROOMS_DIRECTORY.map((room) => {
+              const isActive = selectedRoom === room.id;
+              const classesInRoom = SCHEDULE_CLASSES.filter((c) => c.room === room.id);
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  aria-pressed={isActive}
+                  className={`sched-room-button ${isActive ? "active" : ""}`}
+                  onClick={() => setSelectedRoom(isActive ? null : room.id)}
+                >
+                  <strong>
+                    <DoorOpen size={16} className="text-amber-700 dark:text-amber-400" />
+                    {room.name}
+                  </strong>
+                  <span>{room.zone} · {classesInRoom.length} lớp học</span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
-        {/* ══ LƯU Ý ══ */}
-        <motion.section variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.3}
-          className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/30 rounded-[2rem] p-6 sm:p-8 backdrop-blur-sm"
-        >
-          <div className="flex flex-col sm:flex-row items-start gap-5">
-            <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center flex-shrink-0 bg-amber-200/50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
-              <Info className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-amber-950 dark:text-amber-50 mb-2 font-serif">Lưu ý khi đến lớp</h3>
-              <ul className="text-[14px] font-medium text-stone-600 dark:text-stone-400 leading-relaxed space-y-2 list-disc list-inside">
-                <li>Các em vui lòng có mặt trước giờ học <strong className="text-amber-900 dark:text-amber-200">10–15 phút</strong>.</li>
-                <li>Lịch học có thể thay đổi vào các lễ trọng — vui lòng theo dõi thông báo trên Fanpage.</li>
-                <li>Phụ huynh cần hoàn tất đăng ký ghi danh trước khi cho con tham gia lớp mới.</li>
-              </ul>
-            </div>
+        {/* ════ GUIDELINES FOR STUDENTS & PARENTS ════ */}
+        <div className="sched-guidelines">
+          <div className="sched-guidelines-icon">
+            <Info size={22} />
           </div>
-        </motion.section>
+          <div>
+            <h3 style={{ fontFamily: "Georgia, serif", fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
+              Lưu Ý Khi Đến Lớp Giáo Lý
+            </h3>
+            <ul style={{ fontSize: "13.5px", lineHeight: "1.7", color: "var(--sched-muted)", paddingLeft: "18px", margin: 0 }}>
+              <li>
+                Các em vui lòng có mặt trước giờ học <strong>10–15 phút</strong> để ổn định hàng ngũ, điểm danh và chuẩn bị tâm hồn.
+              </li>
+              <li>
+                Mặc đồng phục Thiếu Nhi Thánh Thể chỉnh tề, đeo khăn quàng đúng ngành, mang đầy đủ Kinh Thánh, sách giáo lý và tập vở.
+              </li>
+              <li>
+                Lịch học có thể điều chỉnh vào các dịp Lễ Trọng hoặc kỳ thi giáo lý. Phụ huynh vui lòng theo dõi thông báo trực tiếp từ Ban Giáo Lý.
+              </li>
+            </ul>
+          </div>
+        </div>
 
-        {/* ══ CTA SECTION ══ */}
-        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={0.4} className="text-center py-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-white dark:bg-stone-800 shadow-sm border border-amber-900/10 dark:border-amber-100/10 mb-6">
-            <GraduationCap className="w-8 h-8 text-amber-600 dark:text-amber-400" />
-          </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 mb-3 font-serif">Chưa đăng ký lớp nào?</h3>
-          <p className="text-base font-medium text-stone-600 dark:text-stone-400 mb-8 max-w-md mx-auto">
-            Ghi danh ngay để các em được sắp xếp vào lớp phù hợp với độ tuổi và lộ trình Đức tin.
+        {/* ════ CALL TO ACTION ════ */}
+        <section className="sched-cta" aria-labelledby="sched-cta-title">
+          <span className="sched-eyebrow">HÀNH TRÌNH ĐỨC TIN</span>
+          <h2 id="sched-cta-title" style={{ fontSize: "28px", marginTop: "8px", marginBottom: "8px" }}>
+            Chưa Tìm Thấy Lớp Hoặc Cần <em>Ghi Danh Mới?</em>
+          </h2>
+          <p style={{ fontSize: "15px", color: "var(--sched-muted)", maxWidth: "560px", margin: "0 auto" }}>
+            Ban Tuyển Sinh Giáo Lý Giáo xứ An Ngãi luôn chào đón các em thiếu nhi mới đến độ tuổi đến lớp hoặc mới chuyển về giáo xứ.
           </p>
-          <Link to="/tuyển-sinh"
-            className="inline-flex items-center justify-center gap-2 h-14 px-10 rounded-full text-[15px] font-bold text-amber-50 bg-amber-900 hover:bg-amber-950 dark:bg-amber-600 dark:hover:bg-amber-500 shadow-sm active:scale-[0.97] transition-all duration-300">
-            Đăng ký ngay <ChevronRight className="w-4 h-4" />
-          </Link>
-        </motion.div>
-      </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap", marginTop: "20px" }}>
+            <Link to="/tuyển-sinh" className="sched-cta-btn">
+              Tìm hiểu tuyển sinh <ArrowUpRight size={17} />
+            </Link>
+            <Link
+              to="/liên-hệ"
+              className="sched-cta-btn"
+              style={{ background: "transparent", border: "1px solid var(--sched-line)", color: "var(--sched-ink)" }}
+            >
+              Liên hệ Ban Giáo Lý
+            </Link>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

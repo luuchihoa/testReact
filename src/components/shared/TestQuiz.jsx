@@ -5,67 +5,99 @@ import QuizBox from "./QuizBox.jsx";
 import DoVui from "../../pages/DoVui.jsx";
 import { AnimatePresence } from "framer-motion";
 
-const quizConfig = {
+import { supabase } from "../../lib/supabase.js";
+
+const DEFAULT_QUIZ_CONFIG = {
   "ôn-tập-15-phút-học-kỳ-1": {
     title: "ÔN TẬP 15 PHÚT",
-    api: "https://script.google.com/macros/s/AKfycbzs823Exjgop4XQHd90PVcjSMD3INg2j4V0Iy3uN0zAhZfvwHZIonpIEW0HdD8YOE4Y/exec",
     time: 900, mcqCount: 10, mcqPoint: 5, essayCount: 2, essayPoint: 5,
   },
   "ôn-tập-1-tiết-học-kỳ-1": {
     title: "ÔN TẬP 1 TIẾT",
-    api: "https://script.google.com/macros/s/AKfycbwOuqPMsL1VjVy78FpeTEAMaYjWMkp6UqTBe9KSjaqu-f16F8RyO5iNc3xYqluEB9LyyA/exec",
     time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 3, essayPoint: 5,
   },
   "ôn-tập-cuối-học-kỳ-1": {
     title: "ÔN TẬP HỌC KỲ I",
-    api: "https://script.google.com/macros/s/AKfycbxgznZnvG0OhZr7p8nFxLAdoXhKMYpZNISmRhAnONoIW3SxYwDDP65olJEB7jN_pCGu/exec",
     time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 3, essayPoint: 5,
   },
   "ôn-tập-15-phút-học-kỳ-2": {
     title: "ÔN TẬP 15 PHÚT",
-    api: "https://script.google.com/macros/s/AKfycbyZLxxsneEBeuNuAybHV4lT9vRXu2fhAusQKSA8pS2AAZLbo_wqFo1OC0DS-2kQRy0orw/exec",
     time: 900, mcqCount: 10, mcqPoint: 5, essayCount: 2, essayPoint: 5,
   },
   "ôn-tập-1-tiết-học-kỳ-2": {
     title: "ÔN TẬP 1 TIẾT",
-    api: "https://script.google.com/macros/s/AKfycbwdT_yb2wPsgGetQOcTkogPaVB3JQQ73AJijeVTGSQ6O-lX5m8weIqyl8ItL2yS519ukA/exec",
     time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 3, essayPoint: 5,
   },
   "ôn-tập-cuối-học-kỳ-2": {
     title: "ÔN TẬP HỌC KỲ II",
-    api: "https://script.google.com/macros/s/AKfycby6EZi44bGG2cQvR_YvdeuAIaKrit6u_KOjxLExzMbsjARTJ6mrZ1eqzQQqnzk_eEme/exec",
     time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 3, essayPoint: 5,
   },
   "đố-vui-giáo-lý": {
     title: "ĐỐ VUI GIÁO LÝ",
-    api: "https://script.google.com/macros/s/AKfycbzouvhKjvjxsOKv2xAm74bmvwFVhM8M9FWe0eiOMiuYv1hRItRzsyz7eokfz5Oz8lI/exec",
-    time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 3, essayPoint: 5,
+    time: 2700, mcqCount: 20, mcqPoint: 5, essayCount: 0, essayPoint: 0,
   },
 };
 
 export default function TestQuiz() {
   const { type } = useParams();
   const navigate = useNavigate();
+  const baseConfig = DEFAULT_QUIZ_CONFIG[type];
+  const [config, setConfig] = useState(baseConfig);
   const [quizData, setQuizData] = useState(null);
   const [started, setStarted] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   
-  const config = quizConfig[type];
-  
   useEffect(() => {
-    if (!config) navigate(-1);
-  }, [config, navigate]);
+    if (!baseConfig) {
+      navigate(-1);
+      return;
+    }
 
-  if (!config) return null;
-
-  useEffect(() => {
+    let isMounted = true;
     setQuizData(null);
     setFetchError(false);
-    fetch(config.api)
-      .then((res) => res.json())
-      .then((data) => setQuizData(data))
-      .catch(() => setFetchError(true));
-  }, [config.api]);
+    setConfig(baseConfig);
+
+    async function loadQuiz() {
+      try {
+        const { data, error } = await supabase
+          .from("quizzes")
+          .select("*")
+          .eq("slug", type)
+          .single();
+
+        if (error || !data || !data.data) {
+          throw error || new Error("Không tìm thấy dữ liệu đề thi trên Supabase");
+        }
+
+        if (isMounted) {
+          setQuizData(data.data);
+          setConfig({
+            ...baseConfig,
+            title: data.title || baseConfig.title,
+            time: data.time || baseConfig.time,
+            mcqCount: data.mcq_count || baseConfig.mcqCount,
+            mcqPoint: data.mcq_point ? parseFloat(data.mcq_point) : baseConfig.mcqPoint,
+            essayCount: data.essay_count ?? baseConfig.essayCount,
+            essayPoint: data.essay_point ? parseFloat(data.essay_point) : baseConfig.essayPoint,
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải bộ đề từ Supabase:", err);
+        if (isMounted) {
+          setFetchError(true);
+        }
+      }
+    }
+
+    loadQuiz();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [type, baseConfig, navigate]);
+
+  if (!config) return null;
 
   if (fetchError) {
     return (

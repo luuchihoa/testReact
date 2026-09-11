@@ -34,9 +34,11 @@ export function getTenRieng(hoTen) {
 
 export function sortStudentsByTen(students) {
   return [...students].sort((a, b) => {
-    const cmp = getTenRieng(a.hoTen).localeCompare(getTenRieng(b.hoTen), "vi");
+    const nameA = a.hoTen || a.ho_va_ten || a.username || "";
+    const nameB = b.hoTen || b.ho_va_ten || b.username || "";
+    const cmp = getTenRieng(nameA).localeCompare(getTenRieng(nameB), "vi");
     if (cmp !== 0) return cmp;
-    return (a.hoTen || "").localeCompare(b.hoTen || "", "vi");
+    return nameA.localeCompare(nameB, "vi");
   });
 }
 

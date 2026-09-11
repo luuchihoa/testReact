@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from "react";
-import { BarChart3, FileSpreadsheet, Printer, Filter } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { BarChart3, FileSpreadsheet, FileText, Printer, Filter } from "lucide-react";
 import { useAdminContext } from "../AdminContext.jsx";
-import { TableSkeleton } from "../../../components/ui/Skeleton.jsx";
+import { TableSkeleton, Spinner } from "../../../components/ui/Skeleton.jsx";
 import { REPORT_TYPES, REPORT_CONFIGS, TERMS, TERM_LABELS } from "./reportConfig.js";
 import { useReportStats } from "./useReportStats.js";
 import { exportReportsToExcel } from "./exportReportsExcel.js";
 import { StatCell } from "./StatCell.jsx";
 import { ReportPrintStyles } from "./ReportPrintStyles.jsx";
+import { preloadXLSX } from "../utils/excelRosterHelper.js";
+import { preloadPDFLibs, exportStatsReportPdf, triggerSafePdfDownload } from "../utils/pdfExportHelper.js";
 
 const FIXED_COLUMN_COUNT = 3; // Lớp, Sĩ số, Đã xếp loại
 
@@ -16,6 +18,7 @@ export default function ReportsTab() {
   const [reportType, setReportType] = useState(REPORT_TYPES.HOC_LUC);
   const [term, setTerm] = useState(TERMS.CN);
   const [exporting, setExporting] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const config = REPORT_CONFIGS[reportType];
   const totalCols = FIXED_COLUMN_COUNT + config.columns.length;
@@ -33,10 +36,22 @@ export default function ReportsTab() {
     onError: handleFetchError,
   });
 
+  useEffect(() => {
+    preloadXLSX();
+    preloadPDFLibs();
+  }, []);
+
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      await exportReportsToExcel({ stats, reportType, term, namHoc });
+      const res = await exportReportsToExcel({ stats, reportType, term, namHoc });
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+      } else if (res?.method === "picker") {
+        showToast("Đã lưu báo cáo thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
     } catch (err) {
       console.error("export excel error:", err);
       showToast("Xuất Excel thất bại", "error");
@@ -45,15 +60,45 @@ export default function ReportsTab() {
     }
   };
 
-  const handleExportPDF = () => {
-    requestAnimationFrame(() => window.print());
+  const handleExportPDF = async () => {
+    if (exportingPdf) return;
+    if (!stats || stats.length === 0) {
+      showToast("Chưa có dữ liệu thống kê để xuất", "warning");
+      return;
+    }
+    setExportingPdf(true);
+    try {
+      const safeType = String(reportType || "BaoCao").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `BaoCao_${safeType}_${term}_${namHoc}.pdf`;
+      const blob = await exportStatsReportPdf({
+        namHoc,
+        term,
+        config,
+        stats,
+      });
+      const res = await triggerSafePdfDownload(blob, fileName);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+        return;
+      }
+      if (res?.method === "picker") {
+        showToast("Đã lưu báo cáo PDF thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export report PDF error:", err);
+      showToast("Xuất PDF thất bại", "error");
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   if (contextLoading) {
     return <TableSkeleton rows={6} columns={totalCols} />;
   }
 
-  const exportDisabled = exporting || loadingStats || stats.length === 0;
+  const exportDisabled = exporting || exportingPdf || loadingStats || stats.length === 0;
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 fade-in-up">
@@ -63,69 +108,63 @@ export default function ReportsTab() {
       <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div className="flex flex-wrap gap-3">
           {/* Chọn Loại Báo Cáo */}
-          <div
-            role="group"
-            aria-label="Chọn loại báo cáo"
-            className="flex bg-white/60 dark:bg-stone-900/40 rounded-2xl p-1.5 border border-amber-900/10 dark:border-amber-100/10 shadow-sm backdrop-blur-sm w-full sm:w-auto"
-          >
-            {Object.entries(REPORT_CONFIGS).map(([key, cfg]) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={reportType === key}
-                onClick={() => setReportType(key)}
-                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[13.5px] font-bold transition-all duration-300 active:scale-[0.97] ${
-                  reportType === key
-                    ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm"
-                    : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
-                }`}
-              >
-                {cfg.label}
-              </button>
-            ))}
+          <div className="relative">
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="appearance-none bg-stone-100 dark:bg-stone-800 border border-black/5 dark:border-white/5 rounded-xl px-4 py-2.5 pr-9 text-[13.5px] font-bold text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-800/20 cursor-pointer"
+            >
+              {Object.values(REPORT_TYPES).map((type) => (
+                <option key={type} value={type}>
+                  {REPORT_CONFIGS[type].label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
           </div>
 
-          {/* Chọn Học Kỳ */}
-          <div
-            role="group"
-            aria-label="Chọn học kỳ"
-            className="flex bg-white/60 dark:bg-stone-900/40 rounded-2xl p-1.5 border border-amber-900/10 dark:border-amber-100/10 shadow-sm backdrop-blur-sm w-full sm:w-auto"
-          >
-            {Object.values(TERMS).map((k) => (
+          {/* Chọn Học Kỳ / Cả Năm */}
+          <div className="flex bg-stone-100 dark:bg-stone-800 p-1 rounded-xl border border-black/5 dark:border-white/5">
+            {Object.values(TERMS).map((t) => (
               <button
-                key={k}
+                key={t}
                 type="button"
-                aria-pressed={term === k}
-                onClick={() => setTerm(k)}
-                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[13.5px] font-bold transition-all duration-300 active:scale-[0.97] ${
-                  term === k
-                    ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm"
+                onClick={() => setTerm(t)}
+                className={`px-4 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-300 ${
+                  term === t
+                    ? "bg-white text-amber-900 dark:bg-stone-700 dark:text-amber-400 shadow-sm"
                     : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
                 }`}
               >
-                {TERM_LABELS[k]}
+                {TERM_LABELS[t]}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Nút Xuất File */}
-        <div className="flex gap-2.5 w-full sm:w-auto">
+        {/* Nút Xuất Báo Cáo */}
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             disabled={exportDisabled}
             onClick={handleExportExcel}
             className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-all duration-300 active:scale-[0.98] md:hover:-translate-y-0.5 disabled:opacity-50 disabled:active:scale-100 disabled:md:hover:translate-y-0"
+            title="Xuất báo cáo thống kê ra file Excel (.xlsx)"
           >
-            <FileSpreadsheet className="w-4 h-4" strokeWidth={2.5} /> Excel
+            {exporting ? <Spinner className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" strokeWidth={2.5} />}
+            <span>{exporting ? "Đang xuất..." : "Xuất Excel"}</span>
           </button>
           <button
             type="button"
             disabled={exportDisabled}
             onClick={handleExportPDF}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50 disabled:active:scale-100 disabled:md:hover:translate-y-0"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50 disabled:active:scale-100 disabled:md:hover:translate-y-0 cursor-pointer"
+            title="Xuất báo cáo thống kê ra file PDF (.pdf)"
           >
-            <Printer className="w-4 h-4" strokeWidth={2.5} /> In / PDF
+            {exportingPdf ? <Spinner className="w-4 h-4" /> : <FileText className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2.5} />}
+            <span>{exportingPdf ? "Đang xuất..." : "Xuất PDF"}</span>
           </button>
         </div>
       </div>

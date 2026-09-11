@@ -43,6 +43,7 @@ export function AdminProvider({ children }) {
 
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isFirstLoad = useRef(true);
 
   const [pendingDangKy, setPendingDangKy] = useState(0);
   const [roleCounts, setRoleCounts] = useState({ admin: 0, teacher: 0, student: 0, user: 0 });
@@ -78,8 +79,13 @@ export function AdminProvider({ children }) {
     refreshPendingBaiViet();
   }, [refreshPendingDangKy, refreshPendingGopY, refreshPendingBaiViet]);
 
-  const loadAll = useCallback(async () => {
-    setLoading(true);
+  const loadAll = useCallback(async (opts = {}) => {
+    // Chỉ kích hoạt loading toàn trang ở lần đầu mở trang quản trị.
+    // Các lần làm mới sau (chuyển tab, đổi dữ liệu, xoá người dùng...) chạy ngầm để không unmount tab gây loop refresh.
+    const shouldShowLoading = opts?.showLoading ?? isFirstLoad.current;
+    if (shouldShowLoading) {
+      setLoading(true);
+    }
     try {
       const [teacherList, ctRows, enrollCounts, termLocks, counts] = await Promise.all([
         fetchAllTeachers(),
@@ -131,6 +137,7 @@ export function AdminProvider({ children }) {
           return {
             lop,
             teacherUsernames: usernames, // Giữ lại mảng gốc để dùng cho logic xử lý (nếu cần)
+            teacherUsername: usernames[0] || null, // Hỗ trợ tương thích ngược
             displayTeacherName,          // Chuỗi hiển thị: "Giuse A & Maria B"
             studentCount: enrollCounts[lop] || 0,
             locks: termLocks[lop] || {},
@@ -145,6 +152,7 @@ export function AdminProvider({ children }) {
       console.error("load admin data error:", err);
       stableShowToast("Không tải được dữ liệu quản trị", "error");
     } finally {
+      isFirstLoad.current = false;
       setLoading(false);
     }
   }, [namHoc, stableShowToast]);
@@ -163,7 +171,7 @@ export function AdminProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    namHoc, setNamHoc, namHocList,
+    namHoc, setNamHoc, namHocList, setNamHocList,
     roleCounts,
     classes, setClasses,
     loading, loadAll,

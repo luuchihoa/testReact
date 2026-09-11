@@ -165,7 +165,10 @@ export default function DashboardTab() {
   const navigate = useNavigate(); // Khởi tạo điều hướng
 
   const classesNoTeacher = useMemo(() => 
-    classes.filter((c) => !c.teacherUsername), 
+    classes.filter((c) => {
+      const teachers = c.teacherUsernames || (c.teacherUsername ? [c.teacherUsername] : []);
+      return teachers.length === 0;
+    }), 
   [classes]);
 
   const lockedClasses = useMemo(() => 
@@ -220,7 +223,7 @@ export default function DashboardTab() {
             value={classes.length} 
             icon={School} 
             tone="neutral" 
-            onClick={() => navigate("lớp-học")} // Điều hướng sang tab Lớp học
+            onClick={() => navigate("/quan-tri/lớp-học")} // Điều hướng sang tab Lớp học
           />
         </div>
 
@@ -233,7 +236,7 @@ export default function DashboardTab() {
               icon={AlertTriangle} 
               tone="amber"
               actionLabel="Phân công ngay"
-              onAction={() => navigate("/quản-trị/lớp-học")} // Điều hướng sang tab Lớp học để phân công
+              onAction={() => navigate("/quan-tri/lớp-học")} // Điều hướng sang tab Lớp học để phân công
             >
               Có <strong>{classesNoTeacher.length} lớp</strong> chưa có giáo viên chủ nhiệm năm học {namHoc}:{" "}
               {classesNoTeacher.map((c) => c.lop).join(", ")}.
@@ -253,7 +256,7 @@ export default function DashboardTab() {
               icon={Lock} 
               tone="neutral"
               actionLabel="Đến Bảng điểm"
-              onAction={() => navigate("/quản-trị/sổ-điểm")} // Điều hướng sang tab Bảng điểm dựa theo cấu hình TABS
+              onAction={() => navigate("/quan-tri/sổ-điểm")} // Điều hướng sang tab Bảng điểm
             >
               Có <strong>{lockedClasses.length} lớp</strong> đã khóa sổ ít nhất 1 học kỳ. Xem chi tiết trong mục <strong>Bảng điểm</strong>.
             </InfoBanner>

@@ -14,6 +14,18 @@
   }
 }
 
+/* Vô hiệu hóa việc Tailwind Typography tự động chèn dấu ngoặc kép trên blockquote */
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after,
+.prose blockquote::before,
+.prose blockquote::after {
+  content: none !important;
+}
+
+.prose blockquote {
+  font-style: normal;
+}
+
 @theme {
   --animate-wiggle: wiggle 1s ease-in-out infinite;
 

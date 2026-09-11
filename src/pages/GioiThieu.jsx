@@ -1,92 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Sprout, Cross, Flame, BookOpen, Church, Compass, Users, 
-  Library, ArrowRight, Sunrise, Sunset, Star, Droplets, 
-  Heart, Leaf, CheckCircle2, ChevronRight, Play, X
-} from "lucide-react";
-
-// ─── Animations ───────────────────────────────────────────────────────────
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
-};
-
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } }
-};
-
-const scaleUp = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
-};
-
-// ─── Data ────────────────────────────────────────────────────────────────
-const stats = [
-  { label: "Thiếu Nhi", value: 500, suffix: "+" },
-  { label: "Huynh Trưởng", value: 50, suffix: "+" },
-  { label: "Ngành", value: 5, suffix: "" },
-  { label: "Khối Lớp", value: 8, suffix: "" }
-];
-
-const values = [
-  {
-    id: "trang",
-    title: "Trắng Tinh Tuyền",
-    desc: "Sự thanh khiết tuyệt đối và tinh thần hy sinh phục vụ vô điều kiện.",
-    icon: Droplets,
-    color: "from-stone-100 to-white",
-    textColor: "text-stone-700",
-    iconBg: "bg-stone-100",
-    iconColor: "text-stone-500",
-    border: "border-stone-200"
-  },
-  {
-    id: "xanh",
-    title: "Xanh Sức Sống",
-    desc: "Tâm hồn căng tràn năng lượng, mang niềm hy vọng hướng về tương lai.",
-    icon: Leaf,
-    color: "from-emerald-500 to-teal-500",
-    textColor: "text-white",
-    iconBg: "bg-white/20",
-    iconColor: "text-emerald-50",
-    border: "border-emerald-400"
-  },
-  {
-    id: "hong",
-    title: "Sắc Hoa Hồng",
-    desc: "Biểu trưng sâu sắc cho tình yêu — sự chở che của Mẹ Maria.",
-    icon: Heart,
-    color: "from-rose-400 to-pink-500",
-    textColor: "text-white",
-    iconBg: "bg-white/20",
-    iconColor: "text-rose-50",
-    border: "border-rose-400"
-  }
-];
-
-const leadership = [
-  {
-    role: "Linh mục Quản xứ",
-    name: "Cha Đa-minh Trần Công Hạnh",
-    quote: "Hãy để các trẻ nhỏ đến cùng Ta, đừng ngăn cấm chúng.",
-    avatar: "https://i.pravatar.cc/150?img=11"
-  },
-  {
-    role: "Linh mục Phó xứ",
-    name: "Cha Phê-rô Nguyễn Thái",
-    quote: "Phục vụ trong niềm vui và tình yêu thương.",
-    avatar: "https://i.pravatar.cc/150?img=3"
-  },
-  {
-    role: "Xứ Đoàn Trưởng",
-    name: "Anh Giu-se Lê Hữu Phát",
-    quote: "Noi gương Mẹ Maria, chúng ta cùng hiệp hành.",
-    avatar: "https://i.pravatar.cc/150?img=14"
-  }
-];
+import { Sprout, Cross, Flame, BookOpen, Church, Compass, Users, ArrowRight, ArrowUpRight, Sunrise, Sunset, Star, Heart, Leaf, ChevronLeft, ChevronRight, X, Images, CalendarDays, MapPin } from "lucide-react";
+import "./GioiThieu.css";
 
 const nganhList = [
   {
@@ -148,364 +63,175 @@ const lichCuoiTuan = [
   { ten: "Thánh Lễ IV",  gio: "15:00", khi: "Chiều Chủ Nhật",ghiChu: "Lễ Cộng đoàn",                     icon: Sunset,  noiBat: false }
 ];
 
+const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+const photo = (name, width = 1280) => asset(`images/gioi-thieu/${name}-${width}.webp`);
 const galleryImages = [
-  "https://images.unsplash.com/photo-1548625361-ec85382ff2f6?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1502444330042-d1a1ddf9bb5b?auto=format&fit=crop&q=80&w=800",
+  { name: "cung-nhau", title: "Cùng nhau lưu giữ thanh xuân", category: "Sinh hoạt", desc: "Nụ cười và những chiếc khăn quàng trong một buổi sinh hoạt tập thể." },
+  { name: "doi-trong", title: "Nhịp trống trước thánh đường", category: "Phụng vụ", desc: "Đội trống trong trang phục đồng bộ, tập trung trước sân nhà thờ." },
+  { name: "cong-doan", title: "Một cộng đoàn, một niềm tin", category: "Phụng vụ", desc: "Khoảnh khắc chụp ảnh chung của cộng đoàn trước thánh đường." },
+  { name: "hoi-trai", title: "Bước vào ngày hội", category: "Sinh hoạt", desc: "Cổng trại được trang trí dưới những tán cây trong khuôn viên." },
+  { name: "thanh-duong", title: "Thánh đường thân thương", category: "Giáo xứ", desc: "Hai tháp chuông vươn cao, sân nhà thờ rực rỡ cờ hoa." },
+  { name: "nu-cuoi", title: "Niềm vui được ở bên nhau", category: "Sinh hoạt", desc: "Các thành viên cùng lưu lại một bức ảnh bên cổng trang trí bóng bay." },
+  { name: "thanh-le", title: "Quây quần trong lời nguyện", category: "Phụng vụ", desc: "Cộng đoàn quy tụ trong không gian trang nghiêm của thánh đường." },
+  { name: "don-tiep", title: "Hân hoan chào đón", category: "Giáo xứ", desc: "Những hàng người chào đón trên lối đi vào nhà thờ." },
+  { name: "phung-vu", title: "Hiệp nhất trong phục vụ", category: "Phụng vụ", desc: "Tập thể trong lễ phục chụp ảnh kỷ niệm trước cửa nhà thờ." },
+  { name: "dem-hoi", title: "Thánh đường lên đèn", category: "Giáo xứ", desc: "Ánh sáng và sắc màu trên mặt tiền nhà thờ trong buổi sinh hoạt buổi tối." },
+];
+const categories = ["Tất cả", "Sinh hoạt", "Phụng vụ", "Giáo xứ"];
+const leaders = [
+  { name: "Cha Phaolô Maria Trần Quốc Việt", role: "Linh mục Quản xứ", image: "cha_quan_xu.jpg" },
+  { name: "Cha Giuse Võ Ngọc Thân", role: "Linh mục Phó xứ", image: "cha_pho_xu.jpg" },
 ];
 
-function CountUp({ to, suffix = "" }) {
-  const nodeRef = useRef(null);
-  const isInView = useInView(nodeRef, { once: true, margin: "-50px" });
-
-  useEffect(() => {
-    if (isInView && nodeRef.current) {
-      const controls = animate(0, to, {
-        duration: 2,
-        ease: "easeOut",
-        onUpdate(value) {
-          if (nodeRef.current) {
-            nodeRef.current.textContent = Math.round(value) + suffix;
-          }
-        }
-      });
-      return () => controls.stop();
-    }
-  }, [isInView, to, suffix]);
-
-  return <span ref={nodeRef}>0{suffix}</span>;
+function Photo({ name, alt, eager = false, sizes = "(max-width: 640px) 100vw, 50vw", ...props }) {
+  return <img src={photo(name)} srcSet={`${photo(name, 640)} 640w, ${photo(name)} 1280w, ${photo(name, 1920)} 1920w`} sizes={sizes} alt={alt} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : undefined} decoding="async" width="2048" height="1365" {...props} />;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────
-export default function GioiThieu() {
-  const [videoOpen, setVideoOpen] = useState(false);
+function PhotoViewer({ items, initialIndex, onClose }) {
+  const [index, setIndex] = useState(initialIndex);
+  const dialogRef = useRef(null);
+  const item = items[index];
+  const move = (direction) => setIndex((current) => (current + direction + items.length) % items.length);
 
-  const scrollToBlocks = () => {
-    const el = document.getElementById("khoi-hoc-section");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    const overflow = document.body.style.overflow;
+    const lenis = window.lenis;
+    const resumeLenis = lenis && !lenis.isStopped;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    if (resumeLenis) lenis.stop();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = overflow;
+      if (resumeLenis) lenis.start();
+      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus({ preventScroll: true });
+    };
+  }, []);
 
-  return (
-    <div className="bg-[#FDFBF7] dark:bg-stone-950 text-stone-800 dark:text-stone-200 min-h-screen font-sans overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-950 dark:selection:text-amber-50 transition-colors duration-500">
-      
-      {/* 1. HERO SECTION */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-amber-400/10 dark:bg-amber-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-rose-400/10 dark:bg-rose-900/10 blur-[100px]" />
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.02]" />
-        </div>
-
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-8 items-center">
-            
-            <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="text-center lg:text-left">
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-800/50 text-amber-700 dark:text-amber-400 text-[11px] font-bold tracking-widest uppercase mb-6">
-                <Star size={14} /> Giáo Phận Đà Nẵng · Giáo Xứ An Ngãi
-              </motion.div>
-              
-              <motion.h1 variants={fadeUp} className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-stone-900 dark:text-white mb-6 leading-[1.1] tracking-tight font-serif">
-                Xứ Đoàn <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600 dark:from-amber-400 dark:to-rose-400">
-                  Mẹ Mân Côi
-                </span>
-              </motion.h1>
-              
-              <motion.p variants={fadeUp} className="text-[16px] sm:text-[18px] text-stone-600 dark:text-stone-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Đổi mới phương thức giảng dạy, phát huy sứ vụ Thiếu Nhi Tông Đồ, đồng hành kiến tạo và lan tỏa Tin Mừng Nước Chúa.
-              </motion.p>
-              
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <button onClick={scrollToBlocks} className="w-full sm:w-auto bg-stone-900 dark:bg-white text-white dark:text-stone-900 px-8 py-4 rounded-[1.25rem] font-bold shadow-xl shadow-stone-900/10 dark:shadow-white/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
-                  Khám phá khối học <ArrowRight size={18} />
-                </button>
-                <button onClick={() => setVideoOpen(true)} className="w-full sm:w-auto bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 px-8 py-4 rounded-[1.25rem] font-bold hover:bg-stone-50 dark:hover:bg-stone-800 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group">
-                  <span className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                    <Play size={14} fill="currentColor" />
-                  </span>
-                  Xem Video
-                </button>
-              </motion.div>
-            </motion.div>
-
-            {/* Quick Stats Grid */}
-            <motion.div initial="hidden" animate="visible" variants={scaleUp} className="grid grid-cols-2 gap-4">
-              {stats.map((stat, i) => (
-                <div key={i} className="bg-white/60 dark:bg-stone-900/40 backdrop-blur-xl border border-white/20 dark:border-stone-800 p-6 rounded-[2rem] shadow-sm flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300">
-                  <span className="text-3xl sm:text-4xl font-extrabold text-amber-600 dark:text-amber-500 mb-1 font-serif">
-                    <CountUp to={stat.value} suffix={stat.suffix} />
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{stat.label}</span>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. ĐẤNG BẢO TRỢ & TRIẾT LÝ (3D Cards) */}
-      <section className="py-24 px-6 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="text-center mb-16 max-w-3xl mx-auto">
-            <h2 className="text-amber-700 dark:text-amber-500 font-bold tracking-widest uppercase text-xs mb-3">Triết lý Giáo dục</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white font-serif mb-6">Đức Mẹ Mân Côi</h3>
-            <p className="text-stone-600 dark:text-stone-400 leading-relaxed text-[15px] sm:text-[16px]">
-              Đức Mẹ Mân Côi — danh hiệu cao quý của Đức Trinh Nữ Maria. Dưới sự chở che của Mẹ, Xứ đoàn định hình 3 giá trị cốt lõi làm kim chỉ nam cho mọi hoạt động giáo dục và phục vụ.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {values.map((v, i) => {
-              const Icon = v.icon;
-              return (
-                <motion.div 
-                  key={v.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className={`group relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${v.color} p-8 sm:p-10 shadow-lg md:hover:-translate-y-2 transition-all duration-500`}
-                >
-                  {/* Decorative blur */}
-                  <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                  
-                  <div className="relative z-10 flex flex-col h-full">
-                    <div className={`w-14 h-14 rounded-2xl ${v.iconBg} backdrop-blur-md flex items-center justify-center mb-8 border border-white/20 shadow-sm`}>
-                      <Icon size={28} className={v.iconColor} strokeWidth={2} />
-                    </div>
-                    <h4 className={`text-2xl font-extrabold ${v.textColor} mb-4 font-serif`}>{v.title}</h4>
-                    <p className={`${v.textColor} opacity-90 leading-relaxed text-[15px]`}>
-                      {v.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. BAN ĐIỀU HÀNH */}
-      <section className="py-24 px-6 bg-stone-100 dark:bg-stone-900/50">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="text-center mb-16">
-            <h2 className="text-amber-700 dark:text-amber-500 font-bold tracking-widest uppercase text-xs mb-3">Người Dẫn Dắt</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white font-serif">Ban Điều Hành Xứ Đoàn</h3>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {leadership.map((person, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-white dark:bg-stone-800 rounded-[2.5rem] p-8 text-center shadow-sm border border-stone-200/50 dark:border-stone-700/50 group hover:shadow-xl transition-all duration-500"
-              >
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400 to-rose-400 animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
-                  <img src={person.avatar} alt={person.name} className="relative w-full h-full object-cover rounded-full border-4 border-white dark:border-stone-800 z-10 grayscale group-hover:grayscale-0 transition-all duration-500" />
-                </div>
-                <span className="block text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2">{person.role}</span>
-                <h4 className="text-xl font-extrabold text-stone-900 dark:text-white mb-4">{person.name}</h4>
-                <p className="text-stone-500 dark:text-stone-400 italic text-[14px]">"{person.quote}"</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. HÀNH TRÌNH ĐỨC TIN (Tối ưu Timeline) */}
-      <section id="khoi-hoc-section" className="py-24 px-6 scroll-mt-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="text-center mb-16">
-            <h2 className="text-amber-700 dark:text-amber-500 font-bold tracking-widest uppercase text-xs mb-3">Hành Trình Đức Tin</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white font-serif mb-4">Các Ngành Đào Tạo</h3>
-            <p className="text-stone-600 dark:text-stone-400 max-w-xl mx-auto leading-relaxed">
-              Xuyên suốt từ thuở ấu thơ đến tuổi trưởng thành, mỗi ngành đánh dấu một chặng lớn lên trong đức tin.
-            </p>
-          </motion.div>
-
-          <div className="relative">
-            {/* Glowing progress line */}
-            <div className="absolute left-[27px] sm:left-[39px] top-4 bottom-4 w-[2px] bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
-              <motion.div 
-                className="w-full bg-gradient-to-b from-amber-400 via-rose-500 to-emerald-500 origin-top"
-                initial={{ scaleY: 0 }}
-                whileInView={{ scaleY: 1 }}
-                viewport={{ once: true, margin: "-10%" }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-                style={{ height: "100%" }}
-              />
-            </div>
-
-            <div className="space-y-12">
-              {nganhList.map((nhom, i) => {
-                const c = accentStyles[nhom.accent];
-                return (
-                  <motion.div 
-                    key={nhom.nganh} 
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="relative pl-16 sm:pl-24"
-                  >
-                    {/* Timeline Node */}
-                    <span className={`absolute left-[16px] sm:left-[28px] top-1 w-6 h-6 rounded-full bg-white dark:bg-stone-900 border-[6px] ${c.border} z-10 shadow-sm`} />
-
-                    <h4 className={`text-sm font-black tracking-widest uppercase mb-6 ${c.text}`}>
-                      {nhom.nganh}
-                    </h4>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {nhom.khoi.map((k) => {
-                        const Icon = k.icon;
-                        return (
-                          <Link key={k.ten} to={k.to} className={`group block bg-white dark:bg-stone-900/50 rounded-[2rem] p-6 border border-stone-200/60 dark:border-stone-800 hover:border-transparent dark:hover:border-transparent shadow-sm hover:shadow-xl transition-all duration-300`}>
-                            <div className="flex items-center justify-between mb-5">
-                              <span className={`w-12 h-12 rounded-2xl ${c.bg} flex items-center justify-center ${c.text}`}>
-                                <Icon size={24} strokeWidth={2} />
-                              </span>
-                              <span className="text-[11px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 dark:text-stone-400 rounded-full px-3 py-1">
-                                {k.tuoi}
-                              </span>
-                            </div>
-                            <h5 className="text-[18px] font-extrabold text-stone-900 dark:text-white mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                              {k.ten}
-                            </h5>
-                            <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed mb-4">
-                              {k.moTa}
-                            </p>
-                            <span className={`inline-flex items-center gap-1.5 text-[13px] font-bold ${c.text} opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0`}>
-                              Tìm hiểu thêm <ArrowRight size={14} />
-                            </span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Tài liệu CTA */}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-16 text-center">
-            <Link to="/tài-liệu" className="inline-flex items-center gap-3 px-8 py-4 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
-              <Library size={20} />
-              Truy cập Tủ sách số
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 5. HÌNH ẢNH HOẠT ĐỘNG (Gallery) */}
-      <section className="py-24 px-6 bg-stone-950 text-white overflow-hidden rounded-t-[3rem] sm:rounded-t-[5rem]">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
-            <div>
-              <h2 className="text-amber-500 font-bold tracking-widest uppercase text-xs mb-3">Hình ảnh & Khoảnh khắc</h2>
-              <h3 className="text-3xl sm:text-4xl font-extrabold font-serif">Ký Ức Xứ Đoàn</h3>
-            </div>
-            <button className="text-sm font-bold text-stone-400 hover:text-white transition-colors flex items-center gap-2">
-              Xem tất cả <ArrowRight size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {galleryImages.map((img, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`relative rounded-[2rem] overflow-hidden group ${i === 0 || i === 3 ? "md:col-span-2 aspect-[16/9]" : "aspect-square"}`}
-              >
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
-                <img src={img} alt="Gallery" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. LỊCH PHỤNG VỤ */}
-      <section className="py-24 px-6 bg-[#FDFBF7] dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800">
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="text-center mb-16">
-            <h2 className="text-amber-700 dark:text-amber-500 font-bold tracking-widest uppercase text-xs mb-3">Nhịp Sống Phụng Vụ</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white font-serif">Thánh Lễ Cộng Đoàn</h3>
-          </motion.div>
- 
-          <div className="grid md:grid-cols-[1fr_1.5fr] gap-8">
-            <motion.div variants={fadeUp} className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-[2.5rem] p-8 shadow-sm">
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-6 flex items-center justify-between">
-                Ngày Thường
-                <span className="text-[11px] bg-stone-100 dark:bg-stone-800 px-3 py-1 rounded-full text-stone-500 font-bold uppercase tracking-wider">T2 - T7</span>
-              </h3>
-              <div className="space-y-4">
-                {lichNgayThuong.map((l) => (
-                  <div key={l.nhan} className="flex items-center justify-between bg-stone-50 dark:bg-stone-800/50 rounded-2xl p-4 border border-stone-100 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-900/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <l.icon size={20} className="text-amber-600 dark:text-amber-400" />
-                      <span className="font-semibold text-stone-700 dark:text-stone-300">{l.nhan}</span>
-                    </div>
-                    <span className="text-lg font-black text-stone-900 dark:text-white">{l.gio}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
- 
-            <motion.div variants={fadeUp} className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-[2.5rem] p-8 shadow-sm">
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-6 flex items-center justify-between">
-                Cuối Tuần
-                <span className="text-[11px] bg-amber-100 dark:bg-amber-900/50 px-3 py-1 rounded-full text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">Chúa Nhật</span>
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {lichCuoiTuan.map((l) => (
-                  <div key={l.ten} className={`relative p-5 rounded-2xl border-2 transition-all ${l.noiBat ? "border-amber-400 bg-amber-50 dark:bg-amber-900/10 shadow-md" : "border-stone-100 dark:border-stone-800 hover:border-stone-200 dark:hover:border-stone-700"}`}>
-                    {l.noiBat && (
-                      <span className="absolute -top-3 right-4 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
-                        Lễ Thiếu Nhi
-                      </span>
-                    )}
-                    <div className="flex items-center gap-2 mb-3">
-                      <l.icon size={16} className={l.noiBat ? "text-amber-600 dark:text-amber-400" : "text-stone-400"} />
-                      <span className={`text-[12px] font-bold uppercase tracking-wider ${l.noiBat ? "text-amber-700 dark:text-amber-500" : "text-stone-500"}`}>{l.ten}</span>
-                    </div>
-                    <span className={`block text-3xl font-black mb-1 ${l.noiBat ? "text-amber-950 dark:text-amber-50" : "text-stone-900 dark:text-white"}`}>{l.gio}</span>
-                    <span className="text-sm font-medium text-stone-500 dark:text-stone-400">{l.khi}</span>
-                    {l.ghiChu && <span className="block mt-2 text-[12px] text-stone-400 dark:text-stone-500 italic">{l.ghiChu}</span>}
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Video Modal Placeholder */}
-      <AnimatePresence>
-        {videoOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setVideoOpen(false)} className="absolute inset-0 bg-stone-900/90 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-              <button onClick={() => setVideoOpen(false)} className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md transition-colors z-10">
-                <X size={20} />
-              </button>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50">
-                <Play size={48} className="mb-4 opacity-20" />
-                <p>Video giới thiệu đang cập nhật...</p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+  return <dialog ref={dialogRef} className="about-viewer" aria-labelledby="about-photo-title" aria-describedby="about-photo-desc" data-lenis-prevent
+    onCancel={(event) => { event.preventDefault(); onClose(); }}
+    onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    onKeyDown={(event) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1);
+      }
+    }}>
+    <div className="about-viewer-panel">
+      <div className="about-viewer-toolbar"><span>{item.category} <span aria-live="polite">· {index + 1} / {items.length}</span></span><button type="button" autoFocus onClick={onClose} aria-label="Đóng xem ảnh"><X size={22} /></button></div>
+      <div className="about-viewer-stage">
+        <Photo key={item.name} name={item.name} alt={item.title} eager sizes="90vw" />
+        <button type="button" className="about-viewer-prev" aria-label="Ảnh trước" onClick={() => move(-1)}><ChevronLeft /></button>
+        <button type="button" className="about-viewer-next" aria-label="Ảnh kế tiếp" onClick={() => move(1)}><ChevronRight /></button>
+      </div>
+      <div className="about-viewer-caption"><h2 id="about-photo-title">{item.title}</h2><p id="about-photo-desc">{item.desc}</p></div>
     </div>
-  );
+  </dialog>;
+}
+
+export default function GioiThieu() {
+  const [category, setCategory] = useState("Tất cả");
+  const [viewer, setViewer] = useState(null);
+  const filteredImages = galleryImages.filter((item) => category === "Tất cả" || item.category === category);
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "Giới thiệu Xứ đoàn Mẹ Mân Côi | Giáo xứ An Ngãi";
+    const existing = document.querySelector('meta[name="description"]');
+    const description = existing || document.createElement("meta");
+    const previousDescription = description.getAttribute("content");
+    description.name = "description";
+    description.content = "Tìm hiểu Xứ đoàn Mẹ Mân Côi, Giáo xứ An Ngãi: hành trình giáo lý, người đồng hành, hình ảnh hoạt động và lịch thánh lễ.";
+    if (!existing) document.head.appendChild(description);
+    return () => {
+      document.title = previousTitle;
+      if (!existing) description.remove();
+      else if (previousDescription === null) description.removeAttribute("content");
+      else description.setAttribute("content", previousDescription);
+    };
+  }, []);
+
+  function jumpTo(event, id) {
+    event.preventDefault();
+    const target = document.getElementById(id);
+    if (!target) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "start" });
+  }
+
+  return <div className="about-page">
+    <section className="about-hero about-shell" aria-labelledby="about-title">
+      <div className="about-hero-copy">
+        <p className="about-eyebrow"><span /> GIÁO PHẬN ĐÀ NẴNG · GIÁO XỨ AN NGÃI</p>
+        <p className="about-overline">Chào mừng đến với</p>
+        <h1 id="about-title">Xứ đoàn<br /><em>Mẹ Mân Côi</em></h1>
+        <p className="about-intro">Cùng lớn lên trong đức tin.<br />Cùng trao đi yêu thương.</p>
+        <p className="about-description">Một mái nhà để các em học giáo lý, tìm thấy tình bạn và lớn lên trong tinh thần yêu thương, phục vụ.</p>
+        <div className="about-actions">
+          <Link className="about-button about-button-primary" to="/tuyển-sinh">Tìm hiểu tuyển sinh <ArrowUpRight size={18} /></Link>
+          <a className="about-text-link" href="#ky-uc-section" onClick={(event) => jumpTo(event, "ky-uc-section")}><Images size={18} /> Những khoảnh khắc</a>
+        </div>
+        <div className="about-hero-note"><MapPin size={16} /><span>Xứ đoàn Mẹ Mân Côi · Giáo xứ An Ngãi</span></div>
+      </div>
+      <figure className="about-hero-photo">
+        <Photo name="thanh-duong" alt="Thánh đường với hai tháp chuông và cờ hoa trước sân" eager sizes="(max-width: 900px) 100vw, 55vw" />
+        <figcaption><span>ĐỨC TIN KẾT NỐI CHÚNG TA</span><strong>Nơi những hành trình bắt đầu.</strong></figcaption>
+        <div className="about-photo-seal" aria-hidden="true"><Cross size={23} /><span>TIN YÊU<br />& PHỤC VỤ</span></div>
+      </figure>
+    </section>
+
+    <nav className="about-shortcuts about-shell" aria-label="Khám phá trang giới thiệu">
+      <a href="#khoi-hoc-section" onClick={(event) => jumpTo(event, "khoi-hoc-section")}><BookOpen /><span><small>HÀNH TRÌNH GIÁO LÝ</small>Khối học phù hợp với em</span><ArrowUpRight /></a>
+      <Link to="/lịch-học"><CalendarDays /><span><small>DÀNH CHO PHỤ HUYNH</small>Theo dõi lịch học</span><ArrowUpRight /></Link>
+      <a href="#gio-le-section" onClick={(event) => jumpTo(event, "gio-le-section")}><Church /><span><small>ĐỜI SỐNG CỘNG ĐOÀN</small>Xem giờ thánh lễ</span><ArrowUpRight /></a>
+    </nav>
+
+    <section className="about-shell about-section about-story" aria-labelledby="about-story-title">
+      <div><p className="about-eyebrow">TIN YÊU · ĐỒNG HÀNH · PHỤC VỤ</p><h2 id="about-story-title">Một đức tin được nuôi dưỡng<br /><em>từ những điều giản dị.</em></h2></div>
+      <div><p>Dưới sự chở che của Đức Mẹ Mân Côi, Xứ đoàn đồng hành cùng các em qua từng giờ giáo lý, lời cầu nguyện và những sinh hoạt chung.</p><p>Ở đây, bài học không chỉ nằm trên trang sách, mà còn trong cách chúng ta lắng nghe, sẻ chia và chăm sóc nhau mỗi ngày.</p></div>
+      <div className="about-values">
+        {[{ icon: BookOpen, title: "Học hỏi đức tin", text: "Tìm hiểu Lời Chúa, tập cầu nguyện và đem điều đã học vào cuộc sống." }, { icon: Heart, title: "Lớn lên trong yêu thương", text: "Biết lắng nghe, nâng đỡ bạn bè và cùng nhau xây dựng tình thân." }, { icon: Leaf, title: "Sẵn sàng phục vụ", text: "Bắt đầu từ những việc nhỏ, góp niềm vui cho gia đình và cộng đoàn." }].map((value, index) => { const { icon: Icon, title, text } = value; return <div className="about-value" key={title}><span className="about-value-number">0{index + 1}</span><Icon size={24} /><h3>{title}</h3><p>{text}</p></div>; })}
+      </div>
+    </section>
+
+    <section id="khoi-hoc-section" tabIndex={-1} className="about-section about-pathways" aria-labelledby="about-path-title">
+      <div className="about-shell">
+        <div className="about-section-heading"><div><p className="about-eyebrow">TỪ NHỮNG BƯỚC CHÂN ĐẦU TIÊN</p><h2 id="about-path-title">Mỗi độ tuổi,<br /><em>một chặng đường đức tin.</em></h2></div><div><p>Khám phá các khối giáo lý và sinh hoạt. Phụ huynh có thể liên hệ Ban Giáo lý để được hướng dẫn xếp lớp phù hợp.</p><Link className="about-text-link" to="/liên-hệ">Nhận hướng dẫn <ArrowRight size={17} /></Link></div></div>
+        <div className="about-path-list">{nganhList.map((group, index) => <div className="about-path-row" key={group.nganh}>
+          <div className="about-path-label"><span>0{index + 1}</span><h3>{group.nganh}</h3></div>
+          <div className="about-path-cards">{group.khoi.map((block) => { const { ten, tuoi, moTa, icon: Icon, to } = block; return <Link to={to} key={ten} className="about-path-card"><span className={`about-path-icon ${accentStyles[group.accent].bg} ${accentStyles[group.accent].text}`}><Icon size={23} /></span><div><span className="about-age">{tuoi}</span><h4>{ten}</h4><p>{moTa}</p></div><ArrowUpRight size={19} className="about-card-arrow" /></Link>; })}</div>
+        </div>)}</div>
+        <div className="about-path-footer"><span>Cùng học hỏi và thực hành Lời Chúa mỗi ngày.</span><Link className="about-text-link" to="/tài-liệu">Khám phá tủ sách số <ArrowRight size={17} /></Link></div>
+      </div>
+    </section>
+
+    <section id="ky-uc-section" tabIndex={-1} className="about-section about-gallery" aria-labelledby="about-gallery-title">
+      <div className="about-shell">
+        <div className="about-section-heading"><div><p className="about-eyebrow">NHỮNG GƯƠNG MẶT, NHỮNG CÂU CHUYỆN</p><h2 id="about-gallery-title">Thanh xuân có nhau.<br /><em>Ký ức còn mãi.</em></h2></div><p>Từ những giờ phụng vụ trang nghiêm đến ngày hội rộn ràng, mỗi bức ảnh là một phần đời sống cộng đoàn.</p></div>
+        <div className="about-gallery-tools"><div className="about-filters" role="group" aria-label="Lọc ảnh theo chủ đề">{categories.map((name) => <button type="button" key={name} aria-pressed={category === name} onClick={() => setCategory(name)}>{name}</button>)}</div><span className="about-image-count" role="status">{filteredImages.length} khoảnh khắc</span></div>
+        <div className="about-gallery-grid">{filteredImages.map((item, index) => <button type="button" className="about-gallery-card" key={item.name} aria-label={`Xem ảnh: ${item.title}`} onClick={() => setViewer({ items: filteredImages, index })}>
+          <Photo name={item.name} alt={item.title} sizes={index === 0 ? "(max-width: 800px) 100vw, 66vw" : "(max-width: 600px) 100vw, (max-width: 800px) 50vw, 33vw"} />
+          <span className="about-gallery-overlay"><small>{item.category}</small><strong>{item.title}</strong></span><span className="about-gallery-expand" aria-hidden="true"><ArrowUpRight size={20} /></span>
+        </button>)}</div>
+        <p className="about-gallery-hint"><Images size={16} /> Chọn một bức ảnh để xem trọn khoảnh khắc.</p>
+      </div>
+    </section>
+
+    <section className="about-section about-shell" aria-labelledby="about-leaders-title">
+      <div className="about-section-heading"><div><p className="about-eyebrow">CÙNG NHAU TRÊN HÀNH TRÌNH</p><h2 id="about-leaders-title">Những người <em>đồng hành.</em></h2></div><p>Quý Cha cùng các anh chị giáo lý viên, huynh trưởng đồng hành với các em trong đời sống đức tin.</p></div>
+      <div className="about-leaders">{leaders.map((person) => <article className="about-leader" key={person.name}><img src={asset(`images/${person.image}`)} alt={person.name} width="112" height="112" loading="lazy" decoding="async" /><div><p className="about-eyebrow">{person.role}</p><h3>{person.name}</h3></div></article>)}</div>
+      <div className="about-companions"><Photo name="nu-cuoi" alt="Các thành viên quây quần chụp ảnh trong buổi sinh hoạt" /><div><Users size={28} /><h3>Có những người anh, người chị<br />luôn sẵn lòng bên em.</h3><p>Các anh chị giáo lý viên và huynh trưởng cùng chuẩn bị bài học, tổ chức sinh hoạt và chia sẻ niềm vui phục vụ.</p><Link className="about-text-link" to="/liên-hệ">Kết nối với Ban Giáo lý <ArrowRight size={17} /></Link></div></div>
+    </section>
+
+    <section id="gio-le-section" tabIndex={-1} className="about-section about-schedule" aria-labelledby="about-mass-title"><div className="about-shell">
+      <div className="about-section-heading"><div><p className="about-eyebrow">NHỊP SỐNG PHỤNG VỤ</p><h2 id="about-mass-title">Hẹn nhau nơi <em>thánh đường.</em></h2></div><Link className="about-text-link" to="/lịch-sinh-hoạt">Xem lịch sinh hoạt <ArrowUpRight size={18} /></Link></div>
+      <div className="about-schedule-grid"><div className="about-weekday"><Church size={30} /><h3>Ngày thường</h3><p>Thứ Hai – Thứ Bảy</p>{lichNgayThuong.map((mass) => { const { nhan, gio, icon: Icon } = mass; return <div className="about-mass-time" key={nhan}><span><Icon size={18} />{nhan}</span><strong>{gio}</strong></div>; })}</div><div className="about-weekend"><h3>Cuối tuần</h3><div>{lichCuoiTuan.map((mass) => <article className={mass.noiBat ? "about-mass featured" : "about-mass"} key={mass.ten}><span>{mass.khi}</span><strong>{mass.gio}</strong><p>{mass.noiBat ? "Thánh lễ Thiếu nhi" : mass.ghiChu}</p></article>)}</div></div></div>
+      <p className="about-schedule-note">Giờ lễ có thể thay đổi vào các dịp đặc biệt. Vui lòng theo dõi thông báo của giáo xứ.</p>
+    </div></section>
+
+    <section className="about-shell about-final"><span className="about-eyebrow">MỘT HÀNH TRÌNH MỚI ĐANG CHỜ</span><h2>Cùng em viết tiếp<br /><em>câu chuyện đức tin.</em></h2><p>Tìm hiểu tuyển sinh hoặc kết nối với Ban Giáo lý<br className="about-desktop-break" /> để được hướng dẫn trước khi tham gia.</p><div className="about-actions"><Link className="about-button about-button-primary" to="/tuyển-sinh">Tìm hiểu tuyển sinh <ArrowUpRight size={18} /></Link><Link className="about-button about-button-outline" to="/liên-hệ">Liên hệ Ban Giáo lý <ArrowRight size={18} /></Link></div><Cross className="about-final-cross" aria-hidden="true" /></section>
+    {viewer && <PhotoViewer items={viewer.items} initialIndex={viewer.index} onClose={() => setViewer(null)} />}
+  </div>;
 }

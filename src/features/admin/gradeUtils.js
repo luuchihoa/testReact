@@ -45,17 +45,19 @@ export function computeDiemTB(g) {
 }
 
 // Lấy "Tên" riêng (từ cuối cùng) trong Họ và Tên đầy đủ — dùng để xếp danh
-// sách lớp theo thói quen VN: xếp theo Tên trước, không theo Họ.
-function getTenRieng(hoTen) {
+// sách lớp theo thói quen VN: xếp theo Tên trước (ví dụ: Anh đứng trước Bình).
+export function getTenRieng(hoTen) {
   const parts = (hoTen || "").trim().split(/\s+/).filter(Boolean);
   return parts.length ? parts[parts.length - 1] : (hoTen || "");
 }
 
 export function sortStudentsByTen(students) {
   return [...students].sort((a, b) => {
-    const cmp = getTenRieng(a.hoTen).localeCompare(getTenRieng(b.hoTen), "vi");
+    const nameA = a.hoTen || a.ho_va_ten || a.username || "";
+    const nameB = b.hoTen || b.ho_va_ten || b.username || "";
+    const cmp = getTenRieng(nameA).localeCompare(getTenRieng(nameB), "vi");
     if (cmp !== 0) return cmp;
-    return (a.hoTen || "").localeCompare(b.hoTen || "", "vi");
+    return nameA.localeCompare(nameB, "vi");
   });
 }
 

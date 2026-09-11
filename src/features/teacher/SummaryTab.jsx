@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LayoutDashboard,
-  Printer,
   FileSpreadsheet,
+  FileText,
   Info,
   AlertTriangle,
   CheckCircle2,
@@ -13,11 +13,14 @@ import {
   Medal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TableSkeleton } from "../../components/ui/Skeleton.jsx";
+import { TableSkeleton, Spinner } from "../../components/ui/Skeleton.jsx";
+import { useToast } from "../../components/ui/ToastContext.jsx";
 import { useTeacherContext } from "./TeacherContext.jsx";
 import { fetchClassSummary, fetchYearSummary } from "./api.js";
 import { sortStudentsByTen, tbColorClass } from "./utils.js";
 import { HK_INT_MAP } from "./constants.js";
+import { preloadXLSX, getXLSX, triggerSafeExcelDownload } from "../admin/utils/excelRosterHelper.js";
+import { preloadPDFLibs, exportSummaryReportPdf, triggerSafePdfDownload } from "../admin/utils/pdfExportHelper.js";
 
 // Hằng số Easing chuẩn của Design System
 const APPLE_EASE = [0.16, 1, 0.3, 1];
@@ -33,6 +36,7 @@ export default function SummaryTab() {
   const { students, context, initialSummary } = useTeacherContext();
   const namHoc = context.namHoc;
   const lop    = context.lop;
+  const { showToast } = useToast();
 
   const [hocKy, setHocKy] = useState("HK1");
   const hocKyInt = HK_INT_MAP[hocKy];
@@ -41,7 +45,15 @@ export default function SummaryTab() {
   const hasUsableInitial = initialSummary && initialSummary.hocKyInt === hocKyInt;
   const [summary, setSummary] = useState(() => (hasUsableInitial ? initialSummary.data : {}));
   const [loading, setLoading] = useState(() => !hasUsableInitial);
+  const [exporting, setExporting] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const isFirstRun = useRef(true);
+
+  // Tải trước thư viện XLSX và PDF để giữ User Gesture không bị browser chặn
+  useEffect(() => {
+    preloadXLSX();
+    preloadPDFLibs();
+  }, []);
 
   // Hook giả lập kiểm tra Mobile 
   const isMobile = window.innerWidth < 768;
@@ -93,44 +105,63 @@ export default function SummaryTab() {
   }, [rosterStudents, summary, isCaNam]);
 
   const exportExcel = async () => {
-    const XLSX = await import("xlsx");
-    const data = rows.map((r, idx) => {
-      const base = {
-        "STT": idx + 1,
-        "Họ & Tên": `${r.student.tenThanh ? r.student.tenThanh + " " : ""}${r.student.hoTen || r.student.username}`,
-      };
-      if (isCaNam) {
-        const kq = getKetQua(r.hocLuc);
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const XLSX = await getXLSX();
+      const data = rows.map((r, idx) => {
+        const base = {
+          "STT": idx + 1,
+          "Họ & Tên": `${r.student.tenThanh ? r.student.tenThanh + " " : ""}${r.student.hoTen || r.student.username}`,
+        };
+        if (isCaNam) {
+          const kq = getKetQua(r.hocLuc);
+          return {
+            ...base,
+            "Điểm TB": r.diemTB ?? "",
+            "Học Lực": r.hocLuc ?? "",
+            "Hạnh Kiểm": r.hanhKiem ?? "",
+            "Vắng Có Phép": r.vangCoPhep || 0,
+            "Vắng Không Phép": r.vangKhongPhep || 0,
+            "Vị Thứ": r.viThu ?? "",
+            "Kết Quả": kq?.label ?? "",
+          };
+        }
         return {
           ...base,
+          "Điểm Thi": r.diemThi ?? "",
           "Điểm TB": r.diemTB ?? "",
           "Học Lực": r.hocLuc ?? "",
           "Hạnh Kiểm": r.hanhKiem ?? "",
           "Vắng Có Phép": r.vangCoPhep || 0,
           "Vắng Không Phép": r.vangKhongPhep || 0,
-          "Vị Thứ": r.viThu ?? "",
-          "Kết Quả": kq?.label ?? "",
+          "Trạng Thái Học Tập": r.warning ? "Cần theo dõi" : "Ổn định",
         };
-      }
-      return {
-        ...base,
-        "Điểm Thi": r.diemThi ?? "",
-        "Điểm TB": r.diemTB ?? "",
-        "Học Lực": r.hocLuc ?? "",
-        "Hạnh Kiểm": r.hanhKiem ?? "",
-        "Vắng Có Phép": r.vangCoPhep || 0,
-        "Vắng Không Phép": r.vangKhongPhep || 0,
-        "Trạng Thái Học Tập": r.warning ? "Cần theo dõi" : "Ổn định",
-      };
-    });
-    const ws = XLSX.utils.json_to_sheet(data);
-    const sheetName = isCaNam ? "Cả năm" : (hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II");
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, `TongKetLop_${lop}_${hocKy}_${namHoc}.xlsx`);
-  };
+      });
+      const ws = XLSX.utils.json_to_sheet(data);
+      const sheetName = isCaNam ? "Cả năm" : (hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II");
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      const safeLop = String(lop || "Lop").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `TongKetLop_${safeLop}_${hocKy}_${namHoc}.xlsx`;
 
-  const handlePrint = () => window.print();
+      const res = await triggerSafeExcelDownload(XLSX, wb, fileName);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+        return;
+      }
+      if (res?.method === "picker") {
+        showToast("Đã lưu bảng tổng kết thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export summary excel error:", err);
+      showToast("Xuất file thất bại", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const classStats = useMemo(() => {
     let sum = 0, count = 0;
@@ -150,6 +181,42 @@ export default function SummaryTab() {
       gioi, kha, tb, yeuKem
     };
   }, [rows]);
+
+  const handleExportPDF = async () => {
+    if (exportingPdf) return;
+    if (rows.length === 0) {
+      showToast("Lớp chưa có học sinh để xuất bảng tổng kết", "warning");
+      return;
+    }
+    setExportingPdf(true);
+    try {
+      const safeLop = String(lop || "Lop").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const fileName = `TongKetLop_${safeLop}_${hocKy}_${namHoc}.pdf`;
+      const blob = await exportSummaryReportPdf({
+        lop,
+        namHoc,
+        hocKy,
+        isCaNam,
+        classStats,
+        rows,
+      });
+      const res = await triggerSafePdfDownload(blob, fileName);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+        return;
+      }
+      if (res?.method === "picker") {
+        showToast("Đã lưu bảng tổng kết PDF thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export summary PDF error:", err);
+      showToast("Xuất PDF thất bại", "error");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -243,14 +310,34 @@ export default function SummaryTab() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:w-auto flex-shrink-0">
-          <button type="button" onClick={exportExcel}
-            className="group relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-b from-amber-800 to-amber-900 dark:from-amber-500 dark:to-amber-600 text-white dark:text-white text-[13px] font-semibold shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 overflow-hidden">
-            <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-500 ease-in-out" />
-            <FileSpreadsheet className="w-4 h-4 relative z-10" /> <span className="relative z-10">Xuất Excel</span>
+          <button
+            type="button"
+            onClick={exportExcel}
+            disabled={exporting || loading}
+            title="Xuất bảng tổng kết lớp ra file Excel (.xlsx)"
+            className="group relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-b from-amber-800 to-amber-900 dark:from-amber-500 dark:to-amber-600 text-white text-[13px] font-semibold shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-500 ease-in-out pointer-events-none" />
+            {exporting ? (
+              <Spinner className="w-4 h-4 relative z-10 text-white" />
+            ) : (
+              <FileSpreadsheet className="w-4 h-4 relative z-10" />
+            )}
+            <span className="relative z-10">{exporting ? "Đang xuất..." : "Xuất Excel"}</span>
           </button>
-          <button type="button" onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold bg-white dark:bg-stone-900 text-amber-950 dark:text-amber-50 border border-amber-900/10 dark:border-amber-100/10 shadow-sm hover:border-amber-900/20 dark:hover:border-amber-100/20 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all duration-200 active:scale-[0.98]">
-            <Printer className="w-4 h-4" /> <span>In / PDF</span>
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            disabled={loading || exportingPdf || exporting}
+            title="Xuất bảng tổng kết lớp ra file PDF (.pdf)"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold bg-white dark:bg-stone-900 text-amber-950 dark:text-amber-50 border border-amber-900/10 dark:border-amber-100/10 shadow-sm hover:border-amber-900/20 dark:hover:border-amber-100/20 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {exportingPdf ? (
+              <Spinner className="w-4 h-4" />
+            ) : (
+              <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />
+            )}
+            <span>{exportingPdf ? "Đang xuất..." : "Xuất PDF"}</span>
           </button>
         </div>
       </div>

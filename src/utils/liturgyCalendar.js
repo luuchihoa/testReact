@@ -259,9 +259,9 @@ function getMovableFeast(d, ms) {
     [ms.trung_thu,           "trung_thu",         "Tết Trung Thu: Lễ Cầu cho Thiếu Nhi", 14],
     [ms.ashWednesday,        "le_tro",            "Thứ Tư Lễ Tro", 4],
     [ms.palmSunday,          "cn_le_la",          "Chúa Nhật Lễ Lá", 1],
-    [ms.holyThursday,        "thu5_tuan_thanh",   "Thứ Năm Tuần Thánh", 1],
-    [ms.goodFriday,          "thu6_tuan_thanh",   "Thứ Sáu Tuần Thánh", 1],
-    [ms.holySaturday,        "thu7_tuan_thanh",   "Thứ Bảy Tuần Thánh", 1],
+    [ms.holyThursday,        "tuan_thanh_thu5",   "Thứ Năm Tuần Thánh", 1],
+    [ms.goodFriday,          "tuan_thanh_thu6",   "Thứ Sáu Tuần Thánh", 1],
+    [ms.holySaturday,        "tuan_thanh_thu7",   "Thứ Bảy Tuần Thánh", 1],
     [ms.easterSunday,        "phuc_sinh",         "Chúa Nhật Phục Sinh", 1],
     [ms.ascension,           "chua_thang_thien",  "Lễ Chúa Thăng Thiên", 2],
     [ms.pentecost,           "hien_xuong",        "Lễ Chúa Thánh Thần Hiện Xuống", 2],
@@ -275,7 +275,9 @@ function getMovableFeast(d, ms) {
   const matches = [];
   for (const [feast, key, name, rank] of pairs) {
     if (feast && sameDay(d, feast)) {
-      matches.push({ key: `feast_${key}`, displayName: name, season: "feast", week: null, isSunday: d.getDay()===0, isFeast: true, rank });
+      const fullKey = key.startsWith("tuan_thanh_") ? key : `feast_${key}`;
+      const seasonVal = key.startsWith("tuan_thanh_") ? "tuan_thanh" : "feast";
+      matches.push({ key: fullKey, displayName: name, season: seasonVal, week: null, isSunday: d.getDay()===0, isFeast: true, rank });
     }
   }
   return matches;
@@ -529,4 +531,51 @@ export function getLiturgicalColor(liturgyInfo) {
   }
 
   return 'amber';
+}
+
+export function findDateForLiturgyKey(targetKey, baseYear = new Date().getFullYear(), targetCycle = null) {
+  if (!targetKey) return null;
+
+  let yearsToScan = [baseYear];
+  if (targetCycle && ['A', 'B', 'C'].includes(targetCycle)) {
+    const candidates = [];
+    for (let offset = 0; offset <= 15; offset++) {
+      if (offset === 0) candidates.push(baseYear);
+      else {
+        candidates.push(baseYear - offset);
+        candidates.push(baseYear + offset);
+      }
+    }
+    yearsToScan = candidates.filter(y => {
+      const litYear = getLiturgicalYear(new Date(y, 5, 1));
+      const cycle = ['C', 'A', 'B'][litYear % 3];
+      return cycle === targetCycle;
+    });
+    if (yearsToScan.length === 0) {
+      yearsToScan = [baseYear];
+    }
+  }
+
+  for (const yearToSearch of yearsToScan) {
+    const matchFixed = targetKey.match(/(?:feast|fixed)_(\d{1,2})_(\d{1,2})/);
+    if (matchFixed) {
+      const month = parseInt(matchFixed[1], 10) - 1;
+      const day = parseInt(matchFixed[2], 10);
+      return new Date(yearToSearch, month, day);
+    }
+
+    const startOfYear = new Date(yearToSearch, 0, 1);
+    for (let i = 0; i < 366; i++) {
+      const d = new Date(startOfYear);
+      d.setDate(d.getDate() + i);
+      if (d.getFullYear() !== yearToSearch) break;
+
+      const info = getLiturgyInfo(d);
+      if (info.key === targetKey || info.seasonKey === targetKey) {
+        return d;
+      }
+    }
+  }
+
+  return null;
 }

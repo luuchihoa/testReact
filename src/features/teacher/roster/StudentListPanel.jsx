@@ -1,15 +1,71 @@
-import React from "react";
-import { Search } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Spinner } from "../../../components/ui/Skeleton.jsx";
+import { useToast } from "../../../components/ui/ToastContext.jsx";
+import { exportClassRosterExcel, preloadXLSX } from "../../admin/utils/excelRosterHelper.js";
 
-function StudentListPanel({ students, loading, search, setSearch, selectedUsername, onSelect }) {
+function StudentListPanel({
+  students,
+  allStudents,
+  lop,
+  namHoc,
+  loading,
+  search,
+  setSearch,
+  selectedUsername,
+  onSelect,
+}) {
+  const { showToast } = useToast();
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    preloadXLSX();
+  }, []);
+
+  const handleExport = async () => {
+    const targetList = (search?.trim() ? students : allStudents) || students || [];
+    if (targetList.length === 0) {
+      showToast("Lớp chưa có học sinh để tải", "warning");
+      return;
+    }
+    setExporting(true);
+    try {
+      const res = await exportClassRosterExcel(lop || "Lop", namHoc || "", targetList);
+      if (res?.cancelled) {
+        showToast("Đã huỷ lưu file", "info");
+      } else if (res?.method === "picker") {
+        showToast("Đã lưu file Excel thành công", "success");
+      } else {
+        showToast("Đang tải file về máy...", "info");
+      }
+    } catch (err) {
+      console.error("Export class roster error:", err);
+      showToast("Xuất file thất bại", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl rounded-[28px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden flex flex-col max-h-[75vh] lg:max-h-[calc(100vh-180px)] min-h-0">
       <div className="p-5 border-b border-amber-900/10 dark:border-amber-100/10">
-        <div className="mb-4">
-          <h2 className="text-xl font-extrabold text-amber-950 dark:text-amber-50 font-serif">Danh sách lớp</h2>
-          <p className="text-[13px] text-stone-500 dark:text-stone-400 font-medium mt-0.5">{students?.length || 0} học sinh</p>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-xl font-extrabold text-amber-950 dark:text-amber-50 font-serif">Danh sách lớp</h2>
+            <p className="text-[13px] text-stone-500 dark:text-stone-400 font-medium mt-0.5">{students?.length || 0} học sinh</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting || (allStudents?.length === 0 && students?.length === 0)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-amber-50 dark:hover:bg-stone-700 text-amber-950 dark:text-amber-100 border border-amber-900/15 dark:border-amber-100/15 text-[12px] font-bold shadow-sm active:scale-95 transition-all flex-shrink-0 disabled:opacity-40 disabled:pointer-events-none mt-0.5"
+            title="Tải file Excel danh sách học sinh của lớp (.xlsx)"
+          >
+            {exporting ? <Spinner className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />}
+            <span className="hidden xs:inline">Tải danh sách</span>
+            <span className="xs:hidden">Tải file</span>
+          </button>
         </div>
         <div className="relative">
           <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2" />
