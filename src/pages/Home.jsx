@@ -248,19 +248,19 @@ export default function Home() {
           <div className="home-metrics-bar" role="region" aria-label="Số liệu hoạt động xứ đoàn">
             <div className="home-metric-item">
               <span className="home-metric-value">900+</span>
-              <span className="home-metric-label">Thiếu Nhi Giáo Lý</span>
+              <span className="home-metric-label">Thiếu Nhi</span>
             </div>
             <div className="home-metric-item">
               <span className="home-metric-value">70+</span>
-              <span className="home-metric-label">Giáo Lý Viên & Huynh Trưởng</span>
+              <span className="home-metric-label">Giáo Lý Viên</span>
             </div>
             <div className="home-metric-item">
               <span className="home-metric-value">30</span>
-              <span className="home-metric-label">Lớp Học Niên Khóa 2026–2027</span>
+              <span className="home-metric-label">Lớp Học</span>
             </div>
             <div className="home-metric-item">
               <span className="home-metric-value">2 Ca</span>
-              <span className="home-metric-label">Chúa Nhật (07h00 & 09h15)</span>
+              <span className="home-metric-label">Chúa Nhật</span>
             </div>
           </div>
         </div>
