@@ -95,35 +95,35 @@ const NGANH_SECTIONS = [
 const QUICK_ACTIONS = [
   {
     title: "Lịch Học 30 Lớp",
-    badge: "Niên khóa 2026–2027",
-    desc: "Tra cứu thời gian biểu Ca 1 & Ca 2, danh sách 70 GLV phụ trách và phòng học P1–P13.",
+    badge: "2026–2027",
+    desc: "Tra cứu thời gian biểu Ca 1 & Ca 2, danh sách 70 GLV và phòng học.",
     path: "/lịch-học",
     icon: CalendarDays,
-    cta: "Tra cứu lịch học"
+    cta: "Tra cứu"
   },
   {
     title: "Thánh Lễ Chúa Nhật",
-    badge: "Tâm điểm Phụng vụ",
-    desc: "Thánh lễ toàn xứ đoàn lúc 08h00 Chúa Nhật hàng tuần và các thánh lễ phụng vụ tại Giáo xứ.",
+    badge: "Lễ 08:00",
+    desc: "Thánh lễ toàn xứ đoàn 08h00 Chúa Nhật và các thánh lễ phụng vụ tuần.",
     path: "/giới-thiệu#gio-le-section",
     icon: Church,
     cta: "Xem giờ lễ"
   },
   {
     title: "Tài Liệu & Đề Thi",
-    badge: "Kho tư liệu ôn tập",
-    desc: "Ngân hàng đề thi trực quan, câu hỏi trắc nghiệm và tài liệu học hỏi chuẩn hóa theo từng khối.",
+    badge: "Kho ôn tập",
+    desc: "Ngân hàng đề thi trực quan, trắc nghiệm chuẩn hóa 6 khối giáo lý.",
     path: "/tài-liệu",
     icon: BookOpen,
-    cta: "Vào kho tài liệu"
+    cta: "Vào kho"
   },
   {
     title: "Ghi Danh Tuyển Sinh",
-    badge: "Đang mở đơn",
-    desc: "Tiếp nhận học viên mới khối Khai Tâm, Vườn Trẻ và các em chuyển xứ gia nhập Xứ đoàn.",
+    badge: "Đang mở",
+    desc: "Tiếp nhận học viên mới khối Khai Tâm, Vườn Trẻ và chuyển xứ.",
     path: "/tuyển-sinh",
     icon: Sparkles,
-    cta: "Đăng ký ngay"
+    cta: "Đăng ký"
   }
 ];
 
@@ -278,15 +278,21 @@ export default function Home() {
                   to={item.path}
                   className="home-hub-card group"
                 >
-                  <div className="home-hub-icon-wrap">
-                    <Icon className="w-5 h-5" />
+                  <div className="home-hub-card-top">
+                    <div className="home-hub-icon-wrap">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="home-hub-badge">{item.badge}</span>
                   </div>
-                  <span className="home-hub-badge">{item.badge}</span>
-                  <h3 className="home-hub-title">{item.title}</h3>
-                  <p className="home-hub-desc">{item.desc}</p>
-                  <span className="home-hub-link">
-                    {item.cta} <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
+                  <div className="home-hub-card-body">
+                    <h3 className="home-hub-title">{item.title}</h3>
+                    <p className="home-hub-desc">{item.desc}</p>
+                  </div>
+                  <div className="home-hub-card-footer">
+                    <span className="home-hub-link">
+                      {item.cta} <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
                 </Link>
               );
             })}
