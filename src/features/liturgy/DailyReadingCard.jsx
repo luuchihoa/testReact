@@ -1,140 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, X, ArrowRight, Loader2, Copy, Check, Minimize2, Maximize2 } from 'lucide-react';
-import { getLiturgyInfo } from '../../utils/liturgyCalendar.js';
-import { resolveLiturgyContentForDate } from '../../utils/liturgyContentResolver.js';
-import { liturgySupabase } from '../../lib/liturgySupabase.js';
+import { useDailyLiturgy } from './useDailyLiturgy.js';
 
 export default function DailyReadingCard() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [liturgyInfo, setLiturgyInfo] = useState(null);
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Tải dữ liệu ngầm khi vừa mount component
-  useEffect(() => {
-    fetchReading();
-  }, []);
-
-  const fetchReading = async () => {
-    setLoading(true);
-    try {
-      const today = new Date();
-      const info = getLiturgyInfo(today);
-      setLiturgyInfo(info);
-
-      // Kiểm tra cache trong ngày
-      const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const cacheKey = `liturgy_daily_card_${dayKey}`;
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed && (parsed.quote || parsed.gospel_content || parsed.r1_content)) {
-            setContent(parsed);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {}
-      }
-
-      const dayStr = String(today.getDate()).padStart(2, '0');
-      const monthStr = String(today.getMonth() + 1).padStart(2, '0');
-      const mNum = String(today.getMonth() + 1);
-      const dNum = String(today.getDate());
-
-      const is30TetDate = (
-        info.key === 'feast_tat_nien' ||
-        info.key === 'feast_giao_thua' ||
-        (info.displayName && (info.displayName.includes('Tất Niên') || info.displayName.includes('Giao Thừa')))
-      );
-
-      // Chuẩn bị danh sách key chuẩn xác từ loi-chua-hang-ngay
-      const keysToFetch = Array.from(new Set([
-        info.key,
-        is30TetDate ? 'feast_tat_nien' : null,
-        is30TetDate ? 'feast_giao_thua' : null,
-        `feast_${monthStr}_${dayStr}`,
-        `feast_${mNum}_${dNum}`,
-        `fixed_${monthStr}_${dayStr}`,
-        `fixed_${mNum}_${dNum}`,
-        info.seasonKey
-      ].filter(Boolean)));
-
-      // Chỉ fetch đúng các trường hiển thị cần thiết, không dư thừa
-      const { data, error } = await liturgySupabase
-        .from('liturgy_contents')
-        .select('liturgy_key, cycle, title, mass_title, quote, gospel_ref, gospel_content, r1_ref, r1_quote, r1_content, reflection')
-        .in('liturgy_key', keysToFetch);
-
-      if (!error && data && data.length > 0) {
-        // Áp dụng logic giải quyết nội dung chuẩn từ loi-chua-hang-ngay
-        const { content: resolved } = resolveLiturgyContentForDate(today, data);
-        if (resolved) {
-          setContent(resolved);
-          localStorage.setItem(cacheKey, JSON.stringify(resolved));
-        }
-      }
-    } catch (err) {
-      console.error('[DailyReadingCard] Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Làm sạch và cắt ngắn văn bản
-  const cleanAndTruncateMainContent = (rawText, maxLength = 160) => {
-    if (!rawText) return '';
-    let text = rawText.replace(/<[^>]+>/g, '').trim();
-    text = text.replace(/(\b\d{1,3}[a-d]?\b|\b\d{1,3}\s+\d{1,3}[a-d]?\b)/g, ' ');
-    text = text.replace(/\s+/g, ' ').trim();
-    text = text.replace(/^["«'‘\s]+|["»'’\s]+$/g, '').trim();
-    if (text.length > maxLength) {
-      const truncated = text.substring(0, maxLength);
-      const lastSpaceIndex = truncated.lastIndexOf(' ');
-      text = (lastSpaceIndex > 40 ? truncated.substring(0, lastSpaceIndex).trim() : truncated.trim()) + '...';
-    }
-    return text;
-  };
-
-  // Trích xuất câu nổi bật và tham chiếu
-  const getFeaturedQuote = () => {
-    if (!content) {
-      return {
-        quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.",
-        ref: "Mt 5, 3"
-      };
-    }
-
-    const mainRef = content.gospel_ref || content.r1_ref || '';
-
-    // Ưu tiên câu trích dẫn quote có sẵn trong database
-    if (content.quote && content.quote.trim()) {
-      return {
-        quote: cleanAndTruncateMainContent(content.quote, 180),
-        ref: mainRef
-      };
-    }
-
-    // Nếu không có quote, trích 1 đoạn từ Tin Mừng hoặc Bài đọc 1
-    const mainText = content.gospel_content || content.r1_content || content.gospel_quote || content.r1_quote;
-    if (mainText && mainText.trim()) {
-      return {
-        quote: cleanAndTruncateMainContent(mainText, 160),
-        ref: mainRef
-      };
-    }
-
-    return {
-      quote: "Phúc cho những ai có tâm hồn nghèo khó, vì Nước Trời là của họ.",
-      ref: "Mt 5, 3"
-    };
-  };
-
-  const featured = getFeaturedQuote();
-  const displayTitle = content?.title || liturgyInfo?.displayName || "Lời Chúa Hằng Ngày";
+  const { loading, content, featured, displayTitle } = useDailyLiturgy();
 
   const handleCopyQuote = () => {
     const textToCopy = `« ${featured.quote} » (${featured.ref})\n- ${displayTitle}`;

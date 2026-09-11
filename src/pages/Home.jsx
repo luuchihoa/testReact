@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import DailyReadingCard from "../features/liturgy/DailyReadingCard.jsx";
-import { getLiturgyInfo } from "../utils/liturgyCalendar.js";
+import { useDailyLiturgy } from "../features/liturgy/useDailyLiturgy.js";
 import "./Home.css";
 
 /* ─────────────────────────────────────────────
@@ -165,19 +165,11 @@ const GALLERY_ITEMS = [
    COMPONENT CHÍNH: HOME
 ───────────────────────────────────────────── */
 export default function Home() {
-  const [liturgyToday, setLiturgyToday] = useState(null);
+  const { loading: liturgyLoading, featured: dailyGospel, displayTitle: liturgyTitle } = useDailyLiturgy();
 
   useEffect(() => {
     const prevTitle = document.title;
     document.title = "Trang Chủ | Xứ Đoàn Thiếu Nhi Thánh Thể Mẹ Mân Côi - Giáo Xứ An Ngãi";
-
-    try {
-      const today = new Date();
-      const info = getLiturgyInfo(today);
-      setLiturgyToday(info);
-    } catch (err) {
-      console.warn("Could not load liturgy info:", err);
-    }
 
     return () => {
       document.title = prevTitle;
@@ -313,14 +305,29 @@ export default function Home() {
               </div>
 
               <h2 id="home-gospel-title" className="text-2xl sm:text-3xl font-semibold text-[#293d32] dark:text-[#ecece0]">
-                {liturgyToday?.displayName || "Lắng Nghe Lời Chúa & Sống Đạo Mỗi Ngày"}
+                {liturgyTitle}
               </h2>
 
-              <blockquote className="home-gospel-quote">
-                « Cứ để trẻ nhỏ đến với Thầy, đừng ngăn cấm chúng, vì Nước Trời là của những ai giống như chúng. »
-              </blockquote>
+              {liturgyLoading ? (
+                <div className="py-6 flex items-center gap-3 text-stone-500 dark:text-stone-400">
+                  <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Đang tải Lời Chúa hôm nay...</span>
+                </div>
+              ) : (
+                <>
+                  <blockquote className="home-gospel-quote">
+                    « {dailyGospel.quote} »
+                  </blockquote>
 
-              <cite className="home-gospel-cite">Phúc Âm theo Thánh Mát-thêu · Mt 19, 14</cite>
+                  {dailyGospel.ref && (
+                    <cite className="home-gospel-cite">
+                      {dailyGospel.ref.includes("Phúc Âm") || dailyGospel.ref.includes("Tin Mừng") || dailyGospel.ref.includes("Bài đọc")
+                        ? dailyGospel.ref
+                        : `Tin Mừng · ${dailyGospel.ref}`}
+                    </cite>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="mt-6 md:mt-0 flex flex-col sm:flex-row md:flex-col gap-3 flex-shrink-0">
