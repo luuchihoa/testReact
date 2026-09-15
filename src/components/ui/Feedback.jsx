@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence, useDragControls } from "framer-motion";
 import Backdrop from "./Backdrop.jsx";
 
 // Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
@@ -63,6 +63,8 @@ function StatusPill({ children }) {
 }
 
 function Sheet({ onClose, showClose = true, maxWidth = "sm:max-w-md", children }) {
+  const dragControls = useDragControls();
+
   const handleDragEnd = (_e, info) => {
     if (onClose && (info.offset.y > 80 || info.velocity.y > 400)) onClose();
   };
@@ -72,6 +74,8 @@ function Sheet({ onClose, showClose = true, maxWidth = "sm:max-w-md", children }
       role="dialog"
       aria-modal="true"
       drag="y"
+      dragListener={false}
+      dragControls={dragControls}
       dragDirectionLock
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0, bottom: 0.6 }}
@@ -82,7 +86,6 @@ function Sheet({ onClose, showClose = true, maxWidth = "sm:max-w-md", children }
       transition={{ duration: 0.4, ease: APPLE_EASE }}
       // TỐI ƯU MOBILE: rounded-t-[32px] mượt mà, viền border thích ứng, min width thoải mái
       className={`relative w-full ${maxWidth} rounded-t-[32px] sm:rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] sm:max-h-[88vh] sm:!translate-y-0 bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237]`}
-      style={{ touchAction: "pan-y" }}
       onClick={(e) => e.stopPropagation()}
     >
       {showClose && onClose && (
@@ -99,15 +102,21 @@ function Sheet({ onClose, showClose = true, maxWidth = "sm:max-w-md", children }
         </button>
       )}
 
-      {/* TỐI ƯU MOBILE: Thanh kéo Pull-Tab to hơn một chút giúp định hướng thao tác vuốt cho người dùng */}
-      <div className="flex justify-center pt-4 pb-1 sm:hidden flex-shrink-0 touch-none cursor-grab active:cursor-grabbing">
+      {/* TỐI ƯU MOBILE: Thanh kéo Pull-Tab điều khiển cử chỉ kéo vuốt đóng Sheet */}
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="flex justify-center pt-4 pb-1 sm:hidden flex-shrink-0 touch-none cursor-grab active:cursor-grabbing"
+      >
         <div className="w-12 h-1.5 rounded-full bg-[#dedfd4] dark:bg-[#354237]" />
       </div>
 
-      {/* TỐI ƯU MOBILE: Thêm overscroll-contain chặn cuộn trang nền ngầm, pb tính thêm tai thỏ/bottom bar */}
+      {/* TỐI ƯU MOBILE: Cuộn native hoàn toàn tự do và mượt mà, không bị drag listener cản trở */}
       <div
-        className="px-5 sm:px-6 pt-3 sm:pt-6 overflow-y-auto overscroll-contain flex-1"
-        style={{ paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))" }}
+        className="px-5 sm:px-6 pt-3 sm:pt-6 overflow-y-auto overscroll-contain flex-1 touch-pan-y"
+        style={{
+          paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         {children}
       </div>
@@ -241,14 +250,16 @@ export function LoadingBox() {
   );
 }
 
-// ====================== START BOX (NÂNG CẤP THÔNG SỐ & TỐI ƯU MOBILE THEO AGENTS.MD) =========================
-export function StartBox({ startQuiz, config, isOpen = true, onClose }) {
+// ====================== START BOX (HỖ TRỢ CẢ BÀI THI & ĐỐ VUI THEO AGENTS.MD) =========================
+export function StartBox({ startQuiz, config, isOpen = true, onClose, mode = "quiz" }) {
+  const isGame = mode === "game" || Boolean(config?.isGame) || config?.type === "đố-vui-giáo-lý";
   const durationMinutes = Math.round((config?.time || 900) / 60);
   const mcqCount = config?.mcqCount ?? 10;
   const essayCount = config?.essayCount ?? 0;
-  const title = config?.title || "ÔN TẬP GIÁO LÝ";
-  const khoiBadge = config?.khoiLabel || config?.badge || null;
-  const semesterBadge = config?.semesterLabel || null;
+  const title = config?.title || (isGame ? "ĐỐ VUI GIÁO LÝ" : "ÔN TẬP GIÁO LÝ");
+  const khoiBadge = config?.khoiLabel || config?.badge || (isGame ? "Đố Vui Giáo Lý" : null);
+  const semesterBadge = !isGame ? (config?.semesterLabel || null) : null;
+  const maxScore = config?.maxScore ?? ((config?.mcqPoint || 0) + (config?.essayPoint || 0) || 10.0);
 
   return (
     <AnimatePresence>
@@ -262,60 +273,94 @@ export function StartBox({ startQuiz, config, isOpen = true, onClose }) {
                 </Motion.div>
 
                 <div className="space-y-1.5">
-                  {(khoiBadge || semesterBadge) && (
-                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                      {khoiBadge && <StatusPill>{khoiBadge}</StatusPill>}
-                      {semesterBadge && <StatusPill>{semesterBadge}</StatusPill>}
-                    </div>
-                  )}
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    {khoiBadge && <StatusPill>{khoiBadge}</StatusPill>}
+                    {semesterBadge && <StatusPill>{semesterBadge}</StatusPill>}
+                    {isGame && <StatusPill>Đua Top Bảng Vàng</StatusPill>}
+                  </div>
                   <h2 className="text-2xl font-extrabold font-serif tracking-tight leading-tight text-[#293d32] dark:text-[#ecece0]">
                     {title}
                   </h2>
                 </div>
 
                 <p className="text-[13.5px] font-medium leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
-                  Chúc bạn làm bài thật tốt! Đọc kỹ thông số đề thi trước khi bắt đầu tính giờ nhé.
+                  {isGame
+                    ? "Sẵn sàng thử thách kiến thức Giáo lý với chuỗi câu hỏi nhanh, tích lũy combo điểm thưởng và đua top bảng vàng!"
+                    : "Chúc bạn làm bài thật tốt! Đọc kỹ thông số đề thi trước khi bắt đầu tính giờ nhé."}
                 </p>
 
-                {/* BẢNG THÔNG SỐ ĐỀ THI (TỐI ƯU MOBILE & ĐỘ TƯƠNG PHẢN CAO THEO AGENTS.MD) */}
+                {/* BẢNG THÔNG SỐ (PHÂN BIỆT RÕ RÀNG ĐỐ VUI vs BÀI THI) */}
                 <div className="grid grid-cols-2 gap-2.5 p-3.5 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-left text-[12.5px]">
+                  {/* Ô 1: Thời gian */}
                   <div className="flex items-center gap-2 p-1">
                     <span className="text-base flex-shrink-0">⏱️</span>
                     <div>
-                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">Thời lượng</div>
-                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">{durationMinutes} phút</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-1">
-                    <span className="text-base flex-shrink-0">📝</span>
-                    <div>
-                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">Cấu trúc</div>
+                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">
+                        {isGame ? "Thời gian" : "Thời lượng"}
+                      </div>
                       <div className="font-bold text-[#293d32] dark:text-[#ecece0]">
-                        {mcqCount} TN{essayCount > 0 ? ` + ${essayCount} TL` : ""}
+                        {isGame
+                          ? (config?.timerSeconds ? `${config.timerSeconds}s / câu` : "15 giây / câu")
+                          : `${durationMinutes} phút`}
                       </div>
                     </div>
                   </div>
+
+                  {/* Ô 2: Cấu trúc / Số câu */}
                   <div className="flex items-center gap-2 p-1">
-                    <span className="text-base flex-shrink-0">🎯</span>
+                    <span className="text-base flex-shrink-0">📝</span>
                     <div>
-                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">Thang điểm</div>
-                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">10.0 điểm</div>
+                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">
+                        {isGame ? "Số lượng" : "Cấu trúc"}
+                      </div>
+                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">
+                        {isGame
+                          ? `${mcqCount} câu trắc nghiệm`
+                          : `${mcqCount} TN${essayCount > 0 ? ` + ${essayCount} TL` : ""}`}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Ô 3: Điểm số (Game: Thưởng tốc độ, Quiz: Thang điểm 10) */}
                   <div className="flex items-center gap-2 p-1">
-                    <span className="text-base flex-shrink-0">🔄</span>
+                    <span className="text-base flex-shrink-0">{isGame ? "⚡" : "🎯"}</span>
                     <div>
-                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">Chấm điểm</div>
-                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">Tự động</div>
+                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">
+                        {isGame ? "Cơ chế điểm" : "Thang điểm"}
+                      </div>
+                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">
+                        {isGame ? "+100đ & Thưởng tốc độ" : `${Number(maxScore).toFixed(1)} điểm`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ô 4: Xếp hạng / Chấm điểm */}
+                  <div className="flex items-center gap-2 p-1">
+                    <span className="text-base flex-shrink-0">{isGame ? "🏆" : "🔄"}</span>
+                    <div>
+                      <div className="text-[#575e55] dark:text-[#b0b9ac] text-[11px] font-medium">
+                        {isGame ? "Xếp hạng" : "Chấm điểm"}
+                      </div>
+                      <div className="font-bold text-[#293d32] dark:text-[#ecece0]">
+                        {isGame ? "Tuần & Tháng" : "Tự động"}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* HỘP LƯU Ý TÍNH GIỜ */}
+                {/* HỘP LƯU Ý / MẸO TRỢ GIÚP */}
                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#927140]/10 dark:bg-[#d4b47d]/15 border border-[#927140]/25 dark:border-[#d4b47d]/30 text-left text-[12.5px] leading-relaxed text-[#7c5c2d] dark:text-[#d4b47d]">
                   <span className="text-sm mt-0.5 flex-shrink-0">💡</span>
                   <div>
-                    Đồng hồ đếm ngược sẽ <strong>bắt đầu chạy ngay lập tức</strong> khi bạn bấm nút Bắt đầu.
+                    {isGame ? (
+                      <>
+                        Có 2 quyền trợ giúp: <strong>🪄 50:50</strong> và <strong>⏱️ +10s</strong>. Bấm nút <strong>[ ? ]</strong> trong khi chơi để xem lại luật tính điểm.
+                      </>
+                    ) : (
+                      <>
+                        Đồng hồ đếm ngược sẽ <strong>bắt đầu chạy ngay lập tức</strong> khi bạn bấm nút Bắt đầu.
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -328,8 +373,8 @@ export function StartBox({ startQuiz, config, isOpen = true, onClose }) {
                     transition={{ duration: 0.2, ease: APPLE_EASE }}
                     className="w-full min-h-[48px] py-3.5 rounded-xl text-[15px] font-bold tracking-wide transition-all duration-200 bg-[#314e3e] text-[#ffffff] hover:bg-[#273e31] dark:bg-[#d6b883] dark:text-[#19251d] dark:hover:bg-[#cbb07c] shadow-xs cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <span>Bắt đầu làm bài</span>
-                    <span>→</span>
+                    <span>{isGame ? "Sẵn sàng, bắt đầu chơi" : "Bắt đầu làm bài"}</span>
+                    <span>{isGame ? "🚀" : "→"}</span>
                   </Motion.button>
                   {onClose && (
                     <button

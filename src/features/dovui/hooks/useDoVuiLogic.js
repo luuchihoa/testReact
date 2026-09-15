@@ -74,7 +74,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
   const nextQTimerRef = useRef(null);
   const hasInitRef = useRef(false);
   const scoreSavedRef = useRef(false);
-  const questionStartTimeRef = useRef(Date.now());
+  const questionStartTimeRef = useRef(0);
   const allRawScoresRef = useRef([]);
 
   /* ── Mô Hình 2 Tầng: Save Score (Upsert Tổng Trọn Đời + Insert Lịch Sử) ── */
@@ -89,7 +89,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
     try {
       const { data: authData } = await supabase.auth.getUser();
       user = authData?.user;
-    } catch (e) {}
+    } catch { /* Keep the existing guest/local fallback. */ }
 
     const localUsername = localStorage.getItem("username");
     let username = "Khách";
@@ -108,7 +108,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
         if (profile) {
           username = profile.username || profile.ho_va_ten || username;
         }
-      } catch (e) {}
+      } catch { /* Keep the existing guest/local fallback. */ }
     } else if (localUsername && localUsername.trim() !== "") {
       isGuest = false;
       username = localUsername.trim();
@@ -185,7 +185,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
       } else {
         console.log("[DoVui] Saved short-term score to dovui_scores:", data);
       }
-    } catch (err) {}
+    } catch { /* Keep the existing local fallback. */ }
   }, []);
 
   /* ── Client In-Memory Filter & Aggregation Cho Tuần/Tháng ── */
@@ -269,7 +269,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
             };
           });
         }
-      } catch (e) {}
+      } catch { /* Keep the existing guest/local fallback. */ }
 
       // 2. Gom thêm từ LocalStorage (cho khách/local offline)
       try {
@@ -292,7 +292,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
             listMap[key].isGuest = false;
           }
         });
-      } catch (e) {}
+      } catch { /* Keep the existing guest/local fallback. */ }
 
       const allList = Object.values(listMap);
       allList.sort((a, b) => {
@@ -321,7 +321,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
           createdAt: s.createdAt || new Date().toISOString(),
         });
       });
-    } catch (e) {}
+    } catch { /* Keep the existing guest/local fallback. */ }
 
     try {
       const { data, error } = await supabase.from("dovui_scores").select("*");
@@ -338,7 +338,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
           });
         });
       }
-    } catch (err) {}
+    } catch { /* Keep the existing local fallback. */ }
 
     allRawScoresRef.current = rawScores;
     const computed = filterAndAggregateLeaderboard(rawScores, initialPeriod);
@@ -389,15 +389,16 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
     setExtraTimeCount(0);
     setQuestionDuration(config.timerSeconds ? config.timerSeconds * 1000 : DEFAULT_QUESTION_DURATION_MS);
 
-    if (localStorage.getItem(SKIP_GUIDE_KEY) === "1") {
+    if (config?.autoShowGuide === false || localStorage.getItem(SKIP_GUIDE_KEY) === "1") {
       setPhase("quiz");
       setTimerOn(true);
+      setShowGuide(false);
     } else {
       setPhase("quiz");
       setShowGuide(true);
       setTimerOn(false);
     }
-  }, [quizData, config.mcqCount, config.timerSeconds, unlock]);
+  }, [quizData, config.mcqCount, config.timerSeconds, config.autoShowGuide, unlock]);
 
   useEffect(() => {
     if (hasInitRef.current) return;
@@ -577,7 +578,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setTimerOn(false);
-      } else if (phase === "quiz" && !showGuide && !showExit && !showLeaderboard && !lockedRef.current) {
+      } else if (phase === "quiz" && !showGuide && !showExit && !showLeaderboard && !lockedRef.current && !document.querySelector("dialog[open]")) {
         setTimerOn(true);
       }
     };
@@ -590,6 +591,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
     if (phase !== "quiz" || showGuide || showExit || showLeaderboard || lockedRef.current) return;
 
     const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector("dialog[open]")) return;
       const q = quizQ[current];
       if (!q) return;
       const choicesArr = Object.keys(q.choices);
@@ -604,7 +606,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
         if (choicesArr[3] && !optStates[choicesArr[3]]) handleAnswer(choicesArr[3]);
       } else if (e.code === "Space") {
         e.preventDefault();
-        if (Object.keys(optStates).length === 0) handleAnswer(null);
+        if (!lockedRef.current) handleAnswer(null);
       }
     };
 

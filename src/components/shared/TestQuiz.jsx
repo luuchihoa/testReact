@@ -159,18 +159,26 @@ export default function TestQuiz() {
     );
   }
 
-  const QuizMap = type === "đố-vui-giáo-lý" ? DoVui : QuizBox;
+  const isGame = type === "đố-vui-giáo-lý";
+  const QuizMap = isGame ? DoVui : QuizBox;
+  const mergedConfig = { ...config, isGame, autoShowGuide: false };
 
   return (
     <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] transition-colors duration-500">
       <AnimatePresence mode="wait">
         {!started ? (
-          <StartBox key="start" startQuiz={() => setStarted(true)} config={config} onClose={() => navigate(-1)}/>
+          <StartBox
+            key="start"
+            mode={isGame ? "game" : "quiz"}
+            startQuiz={() => setStarted(true)}
+            config={mergedConfig}
+            onClose={() => navigate(-1)}
+          />
         ) : (
           <QuizMap
             key="quiz"
             handleExit={() => navigate(-1)}
-            config={config}
+            config={mergedConfig}
             quizData={quizData}
           />
         )}
