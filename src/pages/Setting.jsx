@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { usePageMotion } from "../hooks/usePageMotion.js";
+import { usePWAInstall } from "../components/ui/PWAInstallContext.jsx";
 import { useNavigate } from "react-router-dom";
 import {
   Type, Moon, Sun, Bell, CalendarDays, Trophy,
-  ShieldCheck, FileText, Info, ChevronRight, Settings as SettingsIcon
+  ShieldCheck, FileText, Info, ChevronRight, Settings as SettingsIcon,
+  Smartphone, Download
 } from "lucide-react";
 
 const FONT_OPTIONS = [
@@ -117,8 +120,13 @@ export default function Setting({ fontSize, setFontSize }) {
   const { heroReveal } = usePageMotion();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { install, isInstalled } = usePWAInstall();
   
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const saved = localStorage.getItem("theme");
+    return saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
   const [notifSystem, setNotifSystem] = useState(true);
   const [notifSchedule, setNotifSchedule] = useState(true);
   const [notifScore, setNotifScore] = useState(true);
@@ -127,7 +135,6 @@ export default function Setting({ fontSize, setFontSize }) {
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const isDark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setDarkMode(isDark);
     document.documentElement.classList.toggle("dark", isDark);
 
     const loadPreferences = async () => {
@@ -216,6 +223,33 @@ export default function Setting({ fontSize, setFontSize }) {
 
         <SectionLabel>Ứng dụng</SectionLabel>
         <SettingCard>
+          <Row
+            icon={<Smartphone />}
+            iconBg="#059669"
+            iconColor="#FFFFFF"
+            label="Cài đặt ứng dụng PWA"
+            sub={isInstalled ? "Ứng dụng đã được thêm vào màn hình chính" : "Mở nhanh không cần duyệt web, hỗ trợ ngoại tuyến"}
+            onClick={install}
+            right={
+              isInstalled ? (
+                <span className="text-[12px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full">
+                  Đã cài đặt
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    install();
+                  }}
+                  className="flex items-center gap-1 text-[12px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 active:scale-95 px-3 py-1.5 rounded-lg shadow-xs transition-transform"
+                >
+                  <Download size={13} strokeWidth={2.5} />
+                  <span>Cài đặt</span>
+                </button>
+              )
+            }
+          />
           <Row icon={<Info />} iconBg="#78716C" iconColor="#FFFFFF" label="Phiên bản phần mềm" right={<span className="text-[13px] font-medium text-stone-400 dark:text-stone-500 pr-2">1.0.0 (Build 2026)</span>} />
           <Row icon={<ShieldCheck />} iconBg="#10B981" iconColor="#FFFFFF" label="Bảo mật & quyền riêng tư" onClick={() => navigate("/bảo-mật")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />
           <Row icon={<FileText />} iconBg="#3B82F6" iconColor="#FFFFFF" label="Quy định sử dụng" onClick={() => navigate("/quy-định")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />

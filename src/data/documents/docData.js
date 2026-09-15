@@ -99,52 +99,56 @@ Trong Tin Mừng, Chúa Giêsu đặc biệt yêu quý các em thiếu nhi. Ngư
         content: `
 Bí tích Giải Tội (Giao Hòa) là dòng suối Lòng Thương Xót tuôn đổ ơn tha thứ của Chúa. Để việc lãnh nhận Bí tích được trọn vẹn, em hãy thực hiện đủ 5 bước sau:
 
-1. **Xét mình:** Dành vài phút thinh lặng trước Thánh Giá, xin Chúa soi sáng để nhớ lại những tư tưởng, lời nói và hành vi sai trái đã phạm từ lần xưng tội trước.
-2. **Ăn năn tội:** Là bước quan trọng nhất — thực lòng đau buồn, hối tiếc vì tội lỗi của mình đã làm buồn lòng Chúa là Cha chí nhân vô cùng.
-3. **Dốc lòng chừa:** Quyết tâm bằng hành động cụ thể không tái phạm tội ấy nữa và kiên quyết tránh xa các dịp dễ dẫn ta sa ngã phạm tội.
-4. **Xưng tội:** Tiến vào tòa giải tội, thành thật, khiêm tốn xưng hết các tội của mình với linh mục đại diện Chúa, không giấu giếm hay quanh co.
-5. **Đền tội:** Sốt sắng làm việc đền tội theo lời dặn của linh mục (như đọc một đoạn kinh, làm một việc lành bác ái) và sửa chữa những thiệt hại do lỗi lầm mình gây ra.
+1. **Xét mình:** Nhớ lại những tội lỗi đã phạm từ lần xưng tội trước qua tư tưởng, lời nói, việc làm và những điều thiếu sót.
+2. **Ăn năn tội:** Đau đớn trong lòng vì đã làm mất lòng Chúa là Đấng vô cùng nhân từ và trọn tốt trọn lành.
+3. **Dốc lòng chừa:** Quyết tâm thật lòng từ nay xa lánh dịp tội và không tái phạm.
+4. **Xưng tội cùng Linh mục:** Thú nhận thành thật, rõ ràng và đầy đủ các tội trọng trước mặt Cha giải tội (với thái độ khiêm nhường).
+5. **Làm việc đền tội:** Mau mắn hoàn thành việc kinh nguyện hoặc việc bác ái mà Cha giải tội đã chỉ định.
 `
       },
       {
-        id: "bang-xet-minh",
-        title: "2. Bảng Xét Mình Dành Cho Thiếu Nhi",
+        id: "xet-minh-10-dieu-ran",
+        title: "2. Bản Xét Mình Chi Tiết Dành Cho Thiếu Nhi",
         content: `
-### Bổn phận đối với Chúa:
-- Em có lười biếng bỏ đọc kinh sớm tối không?
-- Em có chia trí, nghịch ngợm, nói chuyện hay dùng điện thoại trong giờ Thánh Lễ không?
-- Em có vô cớ kêu tên Chúa, Đức Mẹ hay các Thánh trong những câu nói đùa vô bổ không?
-- Em có xấu hổ không dám làm dấu Thánh Giá và nhận mình là người Công giáo trước mặt bạn bè không?
+### Đối với Chúa:
+- Tôi có bỏ lễ Chúa Nhật hoặc lễ trọng mà không có lý do chính đáng không?
+- Trong thánh lễ, tôi có chia trí, nói chuyện riêng, cười đùa hay bấm điện thoại không?
+- Tôi có lười biếng đọc kinh sáng, tối hay trước bữa ăn không?
+- Tôi có kêu tên Chúa vô cớ, nói lời phạm thượng hay tin vào bói toán, mê tín không?
 
-### Bổn phận đối với Cha Mẹ, Thầy Cô & Bề Trên:
-- Em có cãi lời, hỗn láo, bực bội hay làm cha mẹ phải buồn lòng khóc vì mình không?
-- Em có trốn học giáo lý, đi lễ trễ giờ hay lười biếng không làm bài tập được giao không?
-- Em có nói dối cha mẹ, thầy cô để bao che cho khuyết điểm của mình không?
+### Đối với Cha Mẹ & Thầy Cô:
+- Tôi có cãi lời, vô lễ, cau có hay làm buồn lòng ông bà cha mẹ không?
+- Tôi có lười biếng làm việc nhà giúp đỡ ba mẹ không?
+- Ở trường, tôi có thiếu tôn trọng thầy cô, nói leo hay không chú ý nghe giảng không?
 
-### Bổn phận đối với Bạn Bè & Tha Nhân:
-- Em có đánh nhau, bắt nạt, nói xấu sau lưng hay cô lập bạn bè trong lớp không?
-- Em có trộm cắp tiền bạc, đồ chơi hay đồ dùng học tập của người khác không?
-- Em có ghen tị, tức tối khi thấy người khác học giỏi hơn hay được khen thưởng không?
-- Em có xem các hình ảnh, video xấu độc hại trên mạng Internet không?
+### Đối với Tha Nhân & Bản Thân:
+- Tôi có đánh nhau, chửi thề, nói tục hay bắt nạt bạn bè không?
+- Tôi có nói dối, vu oan giáng họa hay đổ lỗi cho người khác không?
+- Tôi có gian lận thi cử, quay cóp bài tập của bạn không?
+- Tôi có lấy trộm tiền bạc, đồ dùng của ai mà chưa trả lại không?
+- Tôi có xem những hình ảnh xấu, bậy bạ trên mạng internet không?
+- Tôi có ghen tị khi thấy bạn giỏi hơn hay có đồ chơi đẹp hơn tôi không?
 `
       },
       {
-        id: "ruoc-le",
+        id: "ruoc-le-sot-sang",
         title: "3. Tâm Tình Khi Rước Mình Thánh Chúa",
         content: `
-Khi tiến lên rước Chúa, em hãy nhớ rằng đây chính là **Đức Giêsu Kitô hằng sống** ngự vào lòng em thật sự dưới hình Bánh:
+Chúa Giêsu Thánh Thể chính là Thần Lương nuôi sống linh hồn. Khi lên rước lễ, em đang đón rước chính Chúa Cả Trời Đất vào lòng mình.
 
-### 1. Chuẩn bị chu đáo:
-- Giữ chay Thánh Thể ít nhất 1 giờ trước khi rước lễ (không ăn quà vặt, bánh kẹo hay uống nước ngọt; chỉ được uống nước lọc hoặc dùng thuốc chữa bệnh).
-- Tâm hồn sạch tội trọng (nếu lỡ phạm tội nặng thì phải xưng tội trước khi lên rước lễ).
+### Chuẩn bị trước khi rước lễ:
+- **Giữ chay Thánh Thể:** Không ăn uống bất cứ thứ gì (trừ nước lọc và thuốc men) ít nhất 1 giờ trước khi rước lễ.
+- **Sạch tội trọng:** Nếu mắc tội trọng, phải xưng tội trước khi lên rước lễ.
+- **Tâm thế trang nghiêm:** Xếp hàng ngay ngắn, chắp tay trước ngực, mắt hướng về Bàn Thờ với lòng yêu mến thiết tha.
 
-### 2. Tư thế tiến lên rước Chúa:
-- Xếp hàng ngay ngắn, hai tay chắp trước ngực ngang tầm tim.
-- Khi Linh mục hay Thừa tác viên giơ Mình Thánh và nói: *"Mình Thánh Chúa Kitô"*, em ngước nhìn với lòng tin kính và thưa dõng dạc: *"Amen!"* (nghĩa là: Con tin thật!).
+### Khi đón nhận Mình Thánh:
+- Khi Linh mục/Thừa tác viên nâng Mình Thánh lên và nói: *"Mình Thánh Chúa Kitô"*, em thưa rõ ràng: *"Amen!"*.
+- **Rước bằng tay:** Đặt lòng bàn tay trái ngửa lên trên bàn tay phải thành hình chiếc ngai đón rước Chúa. Sau khi rước, lập tức dùng tay phải kiễng Mình Thánh vào miệng trước mặt Thừa tác viên, kiểm tra xem có mẩu vụn nào rơi trên tay không.
+- **Rước bằng miệng:** Há miệng vừa đủ, đưa đầu lưỡi ra nhẹ nhàng để Thừa tác viên đặt Mình Thánh lên lưỡi.
 
-### 3. Cầu nguyện sau khi rước lễ:
-- Trở về ghế, quỳ gối sốt sắng, nhắm mắt lại để trò chuyện thân mật với Chúa Giêsu đang ở ngay trong tâm hồn mình.
-- Dâng lời cảm tạ: *"Lạy Chúa Giêsu, con cảm tạ Chúa vì Chúa đã đến ngự trong lòng con. Xin gìn giữ linh hồn con luôn tinh sạch để Chúa vui thích ở lại cùng con mãi mãi."*
+### Tạ ơn sau khi rước lễ:
+Trở về chỗ, quỳ gối sốt sắng, nhắm mắt lại và trò chuyện thân mật với Chúa Giêsu:
+> "Lạy Chúa Giêsu Thánh Thể, con tạ ơn Chúa đã ngự vào lòng con. Xin biến đổi trái tim con nên giống trái tim Chúa: biết vâng lời, biết yêu thương và biết tha thứ cho mọi người xung quanh. Amen."
 `
       }
     ]
@@ -159,94 +163,51 @@ Khi tiến lên rước Chúa, em hãy nhớ rằng đây chính là **Đức Gi
     khoi: "them-suc",
     khoiLabel: "Khối Thêm Sức",
     badge: "Thêm Sức",
-    author: "Ủy Ban Giáo Lý Đức Tin — HĐGMVN",
-    readTime: "8 phút đọc",
+    author: "Ban Giáo Lý Nghĩa Sĩ — Giáo Xứ An Ngãi",
+    readTime: "7 phút đọc",
     size: "5.9 KB",
-    description: "Tài liệu học và suy niệm 7 ơn Chúa Thánh Thần cùng 12 hoa trái Thần Khí dành riêng cho các em chuẩn bị lãnh nhận Bí tích Thêm Sức.",
+    description: "Ý nghĩa thần học, dấu chỉ và hướng dẫn cụ thể cách sống 7 Ơn Cả Chúa Thánh Thần cùng 12 Hoa Trái Thần Khí dành cho người trẻ sắp lãnh nhận Bí tích Thêm Sức.",
     chapters: [
       {
-        id: "intro",
-        title: "1. Ý Nghĩa Bí Tích Thêm Sức",
+        id: "7-on-chua-thanh-than",
+        title: "1. Bảy Ơn Chúa Thánh Thần (Is 11, 2-3)",
         content: `
-Bí tích Thêm Sức là một trong ba Bí tích Khai Tâm Kitô giáo (cùng với Bí tích Rửa Tội và Bí tích Thánh Thể). Nếu Bí tích Rửa Tội sinh chúng ta vào đời sống mới trong Đức Kitô, thì Bí tích Thêm Sức kiện toàn ân sủng đó, ghi vào linh hồn người tín hữu một dấu ấn thiêng liêng không thể tẩy xóa, và đổ tràn ơn Chúa Thánh Thần để họ trở nên những chứng nhân can đảm của Tin Mừng.
+Chúa Thánh Thần là Đấng Ban Sự Sống, là nguồn sức mạnh biến đổi các Tông đồ nhút nhát thành những chứng nhân anh dũng. Bảy ơn thiêng của Ngài gồm:
 
-> "Khi Đấng Bảo Trợ đến, Đấng mà Thầy sẽ sai đến với anh em từ nơi Chúa Cha, Người là Thần Khí sự thật phát xuất từ Chúa Cha, Người sẽ làm chứng về Thầy."  
-> — *Tin Mừng theo Thánh Gioan (Ga 15, 26)*
-
-Qua việc Giám mục đặt tay và xức Dầu Thánh Chrisma trên trán, người Kitô hữu được lãnh nhận dồi dào 7 ơn thiêng của Chúa Thánh Thần, giúp họ sống đức tin kiên định giữa đời.
+1. **Ơn Khôn Ngoan (*Sapientia*):** Giúp ta nếm cảm sự ngọt ngào của Thiên Chúa, biết nhìn vạn vật dưới ánh sáng vĩnh cửu của Người và nhận ra giá trị đích thực của cuộc sống.
+2. **Ơn Hiểu Biết (*Intellectus*):** Soi sáng trí khôn giúp ta thấu hiểu sâu xa những mầu nhiệm đức tin mà trí tuệ loài người tự nhiên không thể lãnh hội được.
+3. **Ơn Lo Liệu (*Consilium*):** Hướng dẫn ta biết phân định đâu là ý Chúa trong những tình huống khó khăn, chọn lựa điều lành và đưa ra lời khuyên khôn ngoan cho người khác.
+4. **Ơn Sức Mạnh (*Fortitudo*):** Ban sự can đảm vượt qua sợ hãi, cám dỗ, đứng vững trước dư luận xấu và trung thành làm chứng cho Chúa dù phải chịu thiệt thòi.
+5. **Ơn Thông Minh (*Scientia*):** Giúp ta nhận biết trật tự và vẻ đẹp của thế giới tạo thành, biết sử dụng của cải trần gian để tôn vinh Thiên Chúa chứ không bị lệ thuộc vào chúng.
+6. **Ơn Đạo Đức (*Pietas*):** Gieo vào lòng ta tâm tình hiếu thảo mến yêu Cha trên trời, và thúc đẩy ta đối xử với tha nhân bằng tình huynh đệ chân thành.
+7. **Ơn Kính Sợ Chúa (*Timor Domini*):** Không phải là nỗi sợ hãi trừng phạt, mà là lòng kính trọng sâu xa trước Đấng Toàn Năng, sợ làm tổn thương mối tình nghĩa cao quý với Thiên Chúa.
 `
       },
       {
-        id: "bay-on",
-        title: "2. Bảy Ơn Chúa Thánh Thần",
+        id: "12-hoa-trai-than-khi",
+        title: "2. Mười Hai Hoa Trái Của Chúa Thánh Thần (Gl 5, 22-23)",
         content: `
-Dựa theo sách ngôn sứ Isaia (Is 11, 1-2), Hội Thánh dạy chúng ta về 7 hồng ân đặc biệt mà Chúa Thánh Thần trao ban:
+Khi một tâm hồn mở rộng đón nhận và để Chúa Thánh Thần hướng dẫn, đời sống người đó sẽ trổ sinh những hoa trái ngọt ngào sau đây:
 
-### 1. Ơn Khôn Ngoan (Sapientia)
-- **Ý nghĩa:** Nhìn thấy mọi sự theo nhãn quan của Thiên Chúa, biết phân định điều gì thực sự có giá trị vĩnh cửu và đặt Chúa lên trên hết mọi của cải trần gian.
-- **Thực hành sống:** Một bạn trẻ từ chối nói dối hoặc gian lận dù bị bạn bè lôi kéo, vì biết sống chân thật làm đẹp lòng Chúa.
-
-### 2. Ơn Hiểu Biết (Intellectus)
-- **Ý nghĩa:** Giúp trí khôn thấu hiểu sâu sắc các mầu nhiệm đức tin, Lời Chúa trong Kinh Thánh và nhận ra sự hiện diện của Chúa trong cuộc sống thường ngày.
-- **Thực hành sống:** Khi đọc một đoạn Phúc Âm hay nghe giảng lễ, em tự nhiên hiểu được Chúa đang nhắn nhủ điều gì cho chính bản thân mình hôm nay.
-
-### 3. Ơn Biết Lo Liệu (Consilium)
-- **Ý nghĩa:** Ơn phân định và hướng dẫn ta biết lựa chọn con đường tốt lành, hành động đúng đắn theo thánh ý Chúa trong những tình huống bối rối, khó khăn.
-- **Thực hành sống:** Biết khi nào nên khuyên nhủ bạn bè, khi nào nên im lặng cầu nguyện; biết chọn cách ứng xử bác ái thay vì nóng giận.
-
-### 4. Ơn Sức Mạnh (Fortitudo)
-- **Ý nghĩa:** Ban cho ta lòng dũng cảm, can trường để vượt qua các cơn cám dỗ, đau khổ, và không sợ hãi khi phải làm chứng cho đức tin trước mặt người đời.
-- **Thực hành sống:** Dám công khai làm dấu Thánh Giá và cầu nguyện trước bữa ăn ở trường học, đám đông mà không hề e ngại hay xấu hổ.
-
-### 5. Ơn Thông Minh (Scientia)
-- **Ý nghĩa:** Nhận biết vẻ đẹp của thế giới tạo thành và nhìn ra dấu vết yêu thương của Thiên Chúa trong vạn vật; dùng tài năng trí tuệ để phụng sự tha nhân.
-- **Thực hành sống:** Chăm chỉ học tập không phải để kiêu ngạo, mà để trở thành người có ích, phục vụ cộng đoàn và làm sáng danh Chúa.
-
-### 6. Ơn Đạo Đức (Pietas)
-- **Ý nghĩa:** Đặt nền móng trên tình yêu thảo hiếu sâu sắc đối với Thiên Chúa là Cha, và lòng nhân ái chân thành đối với mọi người là anh chị em trong Chúa.
-- **Thực hành sống:** Sốt sắng tham dự Thánh Lễ và rước Chúa mỗi Chúa Nhật với tâm tình con thảo, sẵn sàng giúp đỡ người già yếu và các bạn cơ nhỡ.
-
-### 7. Ơn Kính Sợ Chúa (Timor Domini)
-- **Ý nghĩa:** Không phải là nỗi sợ hãi trừng phạt hay khiếp sợ, mà là lòng tôn kính sâu xa trước Đấng Toàn Năng cực thánh và sợ làm buồn lòng Người là Cha nhân từ.
-- **Thực hành sống:** Tránh xa các thói quen xấu, không xem những nội dung độc hại vì yêu mến và muốn gìn giữ tâm hồn thanh sạch trước nhan Chúa.
-`
-      },
-      {
-        id: "hoa-trai",
-        title: "3. Mười Hai Hoa Trái Chúa Thánh Thần",
-        content: `
-Khi một tâm hồn biết ngoan ngùy cộng tác với ơn Chúa Thánh Thần, đời sống của người ấy sẽ trổ sinh 12 hoa trái thánh thiện (Gl 5, 22-23 theo bản Phổ Thông):
-
-1. **Bác ái (Caritas):** Yêu thương Chúa trên hết mọi sự và yêu thương tha nhân như chính mình.
-2. **Hoan lạc (Gaudium):** Niềm vui sâu xa trong tâm hồn vì luôn có Chúa ở cùng.
-3. **Bình an (Pax):** Sự thanh thản, an tĩnh dù cuộc sống gặp sóng gió.
-4. **Nhẫn nại (Patientia):** Kiên tâm chịu đựng thử thách và bao dung với lỗi lầm của người khác.
-5. **Nhân từ (Benignitas):** Lòng tốt lành, luôn sẵn sàng tha thứ và nâng đỡ.
-6. **Lương thiện (Bonitas):** Làm điều lành một cách quảng đại, không toan tính vụ lợi.
-7. **Khoan dung (Longanimitas):** Kiên nhẫn chờ đợi kẻ tội lỗi ăn năn hối cải.
-8. **Hiền hòa (Mansuetudo):** Ôn hòa, khiêm tốn trong lời ăn tiếng nói và hành xử.
-9. **Trung tín (Fides):** Trung kiên trong lời hứa, giữ vững đức tin đến cùng.
-10. **Khiêm tốn (Modestia):** Giản dị, trang nhã, không kiêu căng tự mãn.
-11. **Tiết độ (Continentia):** Biết kiềm chế những ước muốn bất chính và làm chủ bản thân.
-12. **Thanh khiết (Castitas):** Giữ gìn thân xác và linh hồn trong sạch xứng đáng là đền thờ Chúa Thánh Thần.
-`
-      },
-      {
-        id: "prayer",
-        title: "4. Kinh Xin Ơn Chúa Thánh Thần",
-        content: `
-*Lạy Chúa Thánh Thần, xin ngự đến làm mới lại lòng chúng con.*  
-*Xin soi sáng tâm trí, đốt lên ngọn lửa tình yêu nồng nàn trong trái tim chúng con.*  
-*Xin ban cho chúng con 7 ơn Thánh thiện của Ngài,*  
-*để chúng con nên những Kitô hữu trưởng thành, can đảm làm chứng cho Chúa Kitô*  
-*bằng lời nói và trọn cả cuộc sống của chúng con. Amen.*
+1. **Bác ái (*Caritas*):** Tình yêu vô điều kiện noi gương Đức Kitô.
+2. **Hoan lạc (*Gaudium*):** Niềm vui sâu thẳm trong tâm hồn ngay cả giữa thử thách.
+3. **Bình an (*Pax*):** Sự thanh thản nội tâm vì biết mình thuộc trọn về Chúa.
+4. **Nhẫn nhục (*Patientia*):** Kiên tâm chịu đựng những nghịch cảnh và tha nhân.
+5. **Nhân từ (*Benignitas*):** Thái độ dịu dàng, quan tâm và sẵn sàng giúp đỡ.
+6. **Từ tâm (*Bonitas*):** Lòng quảng đại làm điều thiện lành cho mọi người.
+7. **Khoan dung (*Longanimitas*):** Lòng vị tha, không cố chấp trước lỗi lầm của người khác.
+8. **Hiền hòa (*Mansuetudo*):** Ôn tồn, không nóng nảy, không dùng bạo lực.
+9. **Trung tín (*Fides*):** Đáng tin cậy, giữ đúng lời hứa và trung thành với đức tin.
+10. **Khiêm nhu (*Modestia*):** Giản dị, đúng mực trong lời ăn tiếng nói và trang phục.
+11. **Tiết độ (*Continentia*):** Tiết chế các ham muốn, làm chủ bản thân trước cám dỗ.
+12. **Khiết tịnh (*Castitas*):** Giữ gìn thân xác và tâm hồn thanh sạch, thánh thiện.
 `
       }
     ]
   },
 
   // ==========================================================================
-  // KHỐI PHỤNG VỤ
+  // KHỐI PHỤNG VỤ (LỄ SINH & CA ĐOÀN)
   // ==========================================================================
   "so-tay-le-sinh": {
     id: "so-tay-le-sinh",
@@ -254,139 +215,86 @@ Khi một tâm hồn biết ngoan ngùy cộng tác với ơn Chúa Thánh Thầ
     khoi: "phung-vu",
     khoiLabel: "Khối Phụng Vụ",
     badge: "Phụng Vụ",
-    author: "Ban Phụng Vụ Giáo Xứ An Ngãi",
-    readTime: "7 phút đọc",
+    author: "Ban Phụng Vụ Thánh — Giáo Xứ An Ngãi",
+    readTime: "8 phút đọc",
     size: "3.0 KB",
-    description: "Cẩm nang hướng dẫn tác phong, nghi thức giúp lễ, ý nghĩa phẩm phục và thứ tự phụng vụ thánh lễ trang nghiêm, sốt sắng.",
+    description: "Quy chuẩn tác phong, nghi thức giúp lễ, phân công nhiệm vụ và thứ tự rước kiệu trong Thánh Lễ tại Bàn Thờ Giáo xứ An Ngãi.",
     chapters: [
       {
-        id: "vai-tro",
-        title: "1. Ơn Gọi & Tác Phong Người Lễ Sinh",
+        id: "tac-phong-le-sinh",
+        title: "1. Tác Phong & Nhân Cách Người Giúp Lễ",
         content: `
-Lễ sinh là những người được diễm phúc phụng sự bàn thờ Chúa gần gũi nhất bên cạnh vị chủ tế. Tác phong của em ảnh hưởng trực tiếp đến sự trang nghiêm và tâm tình sốt sắng của cả cộng đoàn phụng vụ.
+Được phục vụ quanh Bàn Thờ Chúa là một vinh dự thiêng liêng đặc biệt. Người lễ sinh đại diện cho cộng đoàn để cận kề bên Chúa Giêsu Thượng Tế.
 
-### Những Tiêu Chuẩn Cần Có:
-1. **Đến sớm trước lễ:** Ít nhất 15 phút để chuẩn bị tâm hồn, mặc áo lễ sạch sẽ, thắp nến và chuẩn bị đồ thánh.
-2. **Tác phong chững chạc:** Đi đứng khoan thai, hai bàn tay chắp trước ngực ngang tầm tim. Không nhìn dáo dác hay nói chuyện riêng trên cung thánh.
-3. **Tôn kính Nhà Tạm:** Luôn bái gối sâu trước Nhà Tạm có Mình Thánh Chúa khi bước vào hay rời khỏi cung thánh.
+### Quy chuẩn tác phong:
+- **Thời gian:** Có mặt tại phòng thánh ít nhất 15 phút trước giờ lễ để mặc áo giúp lễ, cầu nguyện chuẩn bị và phụ giúp chuẩn bị bàn thờ.
+- **Trang phục:** Áo giúp lễ sạch sẽ, cài nút cẩn thận; đi giày hoặc dép có quai hậu lịch sự; tóc tai cắt tỉa gọn gàng.
+- **Cử chỉ:** Đi đứng khoan thai, không chạy nhảy hay hấp tấp; hai tay chắp trước ngực ngang tầm tim khi đứng hoặc đi; mắt nhìn thẳng trang nghiêm.
+- **Cúi mình:** Cúi sâu trước Bàn Thờ khi đi ngang qua (Bàn Thờ tượng trưng cho chính Đức Kitô). Quỳ gối tôn thờ trước Nhà Tạm.
 `
       },
       {
-        id: "do-phung-vu",
-        title: "2. Các Đồ Dùng Phụng Vụ Cơ Bản",
+        id: "nhiem-vu-trong-thanh-le",
+        title: "2. Phân Công & Nhiệm Vụ Trong Thánh Lễ",
         content: `
-- **Chén Thánh (Calix):** Chén quý dùng đựng Rượu Nho sẽ trở thành Máu Thánh Chúa Kitô.
-- **Đĩa Thánh (Patena):** Đĩa đựng Bánh Thánh sẽ trở thành Mình Thánh Chúa Kitô.
-- **Bình Thánh (Ciborium):** Bình có nắp dùng đựng Mình Thánh Chúa trao cho cộng đoàn và cất giữ trong Nhà Tạm.
-- **Bình Nước & Rượu (Ampullae):** Hai bình nhỏ đựng rượu và nước dâng lên bàn thờ trong phần Phụng vụ Thánh Thể.
-- **Khăn Lau Chén (Purificatorium):** Khăn vải trắng có thêu thánh giá ở giữa dùng để lau chén thánh và đĩa thánh.
-- **Khăn Thánh (Corporale):** Khăn vuông gấp 9 phần, trải trên bàn thờ để đặt chén thánh và bình thánh.
-- **Bình Hương & Tàu Hương (Thuribulum & Navicula):** Dùng đốt than và trầm hương tỏa hương thơm tượng trưng cho lời cầu nguyện bay lên trước nhan Chúa.
-`
-      },
-      {
-        id: "dien-tien",
-        title: "3. Thứ Tự Giúp Lễ Trong Thánh Lễ",
-        content: `
-1. **Đoàn rước nhập lễ:** Đi đầu là hương trầm, tiếp theo là Thánh giá nến cao, các lễ sinh, thầy phó tế và linh mục chủ tế.
-2. **Phụng vụ Lời Chúa:** Giữ tư thế ngồi nghiêm trang khi đọc Bài đọc và Thánh vịnh; đứng cầm nến sáng hai bên khi Linh mục công bố Tin Mừng.
-3. **Chuẩn bị lễ vật:** Mang khăn thánh, chén thánh, bình rượu và nước lên bàn thờ sau Lời nguyện tín hữu. Giúp Linh mục rửa tay (*Rửa tay thanh tẩy tâm hồn*).
-4. **Kinh nguyện Thánh Thể:** Quỳ sốt sắng, rung chuông theo hiệu lệnh:
-   - Khi Linh mục đặt tay trên lễ vật cầu xin Chúa Thánh Thần (1 hồi ngắn).
-   - Khi Linh mục nâng Mình Thánh Chúa lên cao (3 hồi dõng dạc).
-   - Khi Linh mục nâng Chén Máu Thánh lên cao (3 hồi dõng dạc).
-5. **Hiệp lễ & Kết lễ:** Giúp rước nến tháp tùng khi trao Mình Thánh Chúa và đưa bình nước tráng chén sau hiệp lễ.
+### 1. Đoàn rước nhập lễ:
+- Đi đầu: Lễ sinh mang bình hương (nếu có xông hương).
+- Tiếp theo: Lễ sinh cầm Thánh Giá nến cao (đi giữa hai ngọn nến sáng).
+- Lễ sinh thừa tác viên khác đi theo hàng đôi.
+- Đi cuối: Linh mục chủ tế.
+
+### 2. Phụng vụ Lời Chúa:
+- Đứng nghiêm trang nghe bài đọc 1, đáp ca và bài đọc 2.
+- Khi xướng Alleluia: Hai lễ sinh cầm nến đến đứng hai bên giảng đài để cung nghinh Lời Chúa trong Tin Mừng.
+
+### 3. Phụng vụ Thánh Thể:
+- **Dọn bàn thờ:** Đem khăn thánh, khăn lau chén, chén thánh và sách lễ đặt cẩn thận lên bàn thờ theo hiệu lệnh của Cha chủ tế.
+- **Rửa tay:** Lễ sinh nâng bình nước và khay đựng nước, một em cầm khăn lau tay đưa cho Linh mục. Cúi chào Cha trước và sau khi thực hiện.
+- **Chuông Thánh Thể:** Rung chuông một hồi dài khi Linh mục đặt tay trên của lễ (xin ơn Thánh Thần biến đổi). Rung 3 hồi chuông khi Linh mục nâng Mình Thánh và nâng Chén Máu Thánh lên cao.
 `
       }
     ]
   },
-
   "nam-phung-vu": {
     id: "nam-phung-vu",
     title: "Năm Phụng Vụ — Lịch Công Giáo & Các Mùa Thánh",
     khoi: "phung-vu",
     khoiLabel: "Khối Phụng Vụ",
     badge: "Phụng Vụ",
-    author: "Ủy Ban Phụng Tự — Hội Đồng Giám Mục Việt Nam",
-    readTime: "8 phút đọc",
+    author: "Ủy Ban Phụng Tự — HĐGMVN",
+    readTime: "7 phút đọc",
     size: "4.7 KB",
-    description: "Cẩm nang tìm hiểu chu kỳ Năm Phụng vụ, ý nghĩa các mùa thánh, quy luật màu sắc phẩm phục và danh mục các ngày Lễ Trọng trong năm Công giáo.",
+    description: "Tổng hợp chu kỳ Năm Phụng Vụ, ý nghĩa các mùa thánh, bảng màu phẩm phục phụng vụ và danh mục các Đại Lễ Trọng trong năm.",
     chapters: [
       {
-        id: "y-nghia-nam-phung-vu",
-        title: "1. Ý Nghĩa Năm Phụng Vụ & Chu Kỳ Cứu Độ",
+        id: "cac-mua-thanh",
+        title: "1. Chu Kỳ Các Mùa Trong Năm Phụng Vụ",
         content: `
-Năm Phụng Vụ không tính theo lịch dương thông thường, mà là chu kỳ cử hành toàn bộ mầu nhiệm cứu chuộc của Đức Kitô — từ sự trông đợi Người giáng sinh, cuộc đời công khai, cuộc khổ nạn, cái chết, sự phục sinh vinh quang, cho tới ngày Người ngự đến trong vinh quang.
+Năm Phụng Vụ khởi đầu từ **Chúa Nhật I Mùa Vọng** (khoảng cuối tháng 11 hoặc đầu tháng 12) và kết thúc bằng **Đại Lễ Chúa Kitô Vua Vũ Trụ**. Năm Phụng Vụ gồm 5 mùa chính:
 
-### Khởi đầu và kết thúc:
-- **Khởi đầu:** Vào chiều Chúa Nhật I Mùa Vọng (thường cuối tháng 11 hoặc đầu tháng 12 dương lịch).
-- **Kết thúc:** Vào thứ Bảy sau Chúa Nhật Lễ Chúa Kitô Vua Vũ Trụ (Chúa Nhật cuối cùng của Mùa Thường Niên).
-
-### Chu kỳ các bài đọc Kinh Thánh:
-- **Ngày Chúa Nhật (Chu kỳ 3 năm):**
-  - **Năm A:** Đọc Tin Mừng theo Thánh Mát-thêu.
-  - **Năm B:** Đọc Tin Mừng theo Thánh Mác-cô (xen kẽ chương 6 Tin Mừng Gio-an).
-  - **Năm C:** Đọc Tin Mừng theo Thánh Lu-ca.
-- **Ngày Trong Tuần (Chu kỳ 2 năm):**
-  - **Năm I (Năm lẻ):** Ví dụ 2025, 2027...
-  - **Năm II (Năm chẵn):** Ví dụ 2026, 2028...
+1. **Mùa Vọng (4 tuần):** Mùa trông đợi, chuẩn bị tâm hồn đón mừng kỷ niệm Con Thiên Chúa giáng sinh và mong chờ Chúa lại đến trong vinh quang.
+2. **Mùa Giáng Sinh:** Bắt đầu từ Lễ Giáng Sinh (25/12) đến Lễ Chúa Giêsu Chịu Phép Rửa. Mừng mầu nhiệm Con Thiên Chúa Nhập Thể ở cùng nhân loại.
+3. **Mùa Chay (40 ngày):** Khởi đầu từ Thứ Tư Lễ Tro đến hết Thứ Bảy Tuần Thánh. Mùa hoán cải, ăn chay, cầu nguyện và làm việc bác ái để cùng Chúa bước vào mầu nhiệm Thập Giá.
+4. **Mùa Phục Sinh (50 ngày):** Từ Đêm Vọng Phục Sinh đến Đại Lễ Chúa Thánh Thần Hiện Xuống. Mùa hoan hỷ mừng Chúa Kitô khải hoàn chiến thắng tử thần.
+5. **Mùa Thường Niên (33 hoặc 34 tuần):** Chia làm 2 giai đoạn (giữa Giáng Sinh - Mùa Chay, và sau Lễ Hiện Xuống). Thời gian sống và làm chứng cho Tin Mừng giữa cuộc sống đời thường.
 `
       },
       {
-        id: "cac-mua-phung-vu",
-        title: "2. Sáu Mùa Phụng Vụ Thánh Trong Năm",
+        id: "mau-pham-phuc",
+        title: "2. Ý Nghĩa Các Màu Phẩm Phục Phụng Vụ",
         content: `
-1. **Mùa Vọng (Advent):** Gồm 4 tuần lễ trước Đại lễ Giáng Sinh. Là thời gian tỉnh thức, hoán cải tâm hồn đón mừng biến cố Con Thiên Chúa nhập thể làm người và đợi trông ngày Chúa quang lâm.
-2. **Mùa Giáng Sinh (Christmas):** Bắt đầu từ lễ Vọng Giáng Sinh (đêm 24/12) đến hết Lễ Chúa Giêsu Chịu Phép Rửa. Cử hành mầu nhiệm Con Thiên Chúa làm người ở cùng nhân loại.
-3. **Mùa Chay (Lent):** Gồm 40 ngày (từ Thứ Tư Lễ Tro đến trước Thánh Lễ Tiệc Ly chiều Thứ Năm Tuần Thánh). Là thời gian cầu nguyện, ăn chay, hãm mình và chia sẻ bác ái để cùng Đức Kitô bước vào mầu nhiệm Vượt Qua.
-4. **Tam Nhật Vượt Qua (Triduum Paschale):** Đỉnh cao và tâm điểm của toàn bộ Năm Phụng vụ:
-   - **Thứ Năm Tuần Thánh:** Tưởng niệm Bí tích Thánh Thể, Bí tích Truyền Chức và Rửa chân bác ái.
-   - **Thứ Sáu Tuần Thánh:** Tưởng niệm cuộc khổ nạn và cái chết của Chúa Giêsu trên Thập Giá (giữ chay và kiêng thịt).
-   - **Đêm Vọng Phục Sinh & Chúa Nhật Phục Sinh:** Mừng Đức Kitô chiến thắng sự chết sống lại khải hoàn.
-5. **Mùa Phục Sinh (Easter):** Kéo dài trọn vẹn 50 ngày trong niềm vui hoan lạc, kết thúc vào Lễ Chúa Thánh Thần Hiện Xuống (Ngũ Tuần).
-6. **Mùa Thường Niên (Ordinary Time):** Gồm 33 hoặc 34 tuần, chia làm 2 giai đoạn: giữa Mùa Giáng Sinh và Mùa Chay, và từ sau Lễ Hiện Xuống đến Mùa Vọng mới. Giúp các tín hữu suy niệm và sống trọn vẹn đời sống thường ngày theo lời dạy của Chúa Giêsu.
-`
-      },
-      {
-        id: "mau-sac-pham-phuc",
-        title: "3. Ý Nghĩa Các Màu Phẩm Phục Phụng Vụ",
-        content: `
-Mỗi màu áo lễ của Linh mục và khăn trải bàn thờ đều mang ý nghĩa thiêng liêng sâu sắc:
-
-- **Màu Trắng (hoặc Vàng):** Biểu tượng của ánh sáng, sự tinh tuyền và niềm vui Phục Sinh. Dùng trong Mùa Giáng Sinh, Mùa Phục Sinh, các Lễ kính Chúa Giêsu, Đức Mẹ, các Thiên thần và các Thánh không tử đạo.
-- **Màu Đỏ:** Biểu tượng của ngọn lửa tình yêu, Chúa Thánh Thần và máu tử đạo. Dùng trong Chúa Nhật Lễ Lá, Thứ Sáu Tuần Thánh, Lễ Chúa Thánh Thần Hiện Xuống và các Lễ kính các Thánh Tử Đạo.
-- **Màu Xanh Lá Cây:** Biểu tượng của hy vọng và sự sống mới đang sinh sôi nảy nở. Dùng trong suốt Mùa Thường Niên.
-- **Màu Tím:** Biểu tượng của sự hoán cải, thống hối và trông đợi. Dùng trong Mùa Vọng, Mùa Chay và các Lễ Cầu Hồn / An Táng.
-- **Màu Hồng:** Biểu tượng của niềm vui le lói giữa mùa sám hối. Dùng duy nhất vào 2 ngày trong năm: Chúa Nhật III Mùa Vọng (*Chúa Nhật Gaudete*) và Chúa Nhật IV Mùa Chay (*Chúa Nhật Laetare*).
-`
-      },
-      {
-        id: "cac-le-trong",
-        title: "4. Các Ngày Lễ Trọng & Lễ Buộc Tại Việt Nam",
-        content: `
-Hội đồng Giám mục Việt Nam quy định 4 ngày Lễ Trọng buộc mọi tín hữu phải tham dự Thánh Lễ và nghỉ việc xác:
-
-1. **Lễ Chúa Giáng Sinh (25 tháng 12)**
-2. **Lễ Đức Maria Mẹ Thiên Chúa (01 tháng 01)**
-3. **Lễ Chúa Thăng Thiên (Dời vào Chúa Nhật thứ VII Phục Sinh)**
-4. **Lễ Đức Mẹ Hồn Xác Lên Trời (15 tháng 08)**
-
-### Các ngày Lễ Trọng quan trọng khác trong năm:
-- **Lễ Thánh Cả Giuse (19/03)** — Bạn trăm năm Đức Maria & Bổn mạng Giáo hội Việt Nam.
-- **Lễ Truyền Tin (25/03)**
-- **Đại Lễ Phục Sinh & Chúa Nhật Hiện Xuống**
-- **Lễ Chúa Ba Ngôi & Lễ Mình Máu Thánh Chúa**
-- **Lễ Thánh Phêrô và Phaolô Tông Đồ (29/06)**
-- **Lễ Các Thánh Nam Nữ (01/11)** & Lễ Cầu Cho Các Linh Hồn (02/11)
-- **Lễ Các Thánh Tử Đạo Việt Nam (24/11)**
-- **Lễ Đức Mẹ Vô Nhiễm Nguyên Tội (08/12)**
+- **Màu Trắng / Vàng:** Tượng trưng cho ánh sáng, sự thanh sạch, niềm vui phục sinh và vinh quang. Dùng trong Mùa Giáng Sinh, Mùa Phục Sinh, các lễ về Chúa Giêsu (không mang tính thương khó), Đức Mẹ và các Thánh không tử đạo.
+- **Màu Đỏ:** Tượng trưng cho tình yêu hiến tế, máu tử đạo và ngọn lửa Chúa Thánh Thần. Dùng trong Lễ Chúa Nhật Lễ Lá, Thứ Sáu Tuần Thánh, Lễ Hiện Xuống và các Thánh Tử Đạo.
+- **Màu Tím:** Tượng trưng cho sự ăn năn, sám hối, chờ đợi và cầu nguyện. Dùng trong Mùa Vọng, Mùa Chay và các lễ Cầu Hồn.
+- **Màu Xanh Lá:** Tượng trưng cho sự sống, niềm hy vọng và sự tăng trưởng đức tin. Dùng trong Mùa Thường Niên.
+- **Màu Hồng:** Tượng trưng cho niềm vui dịu dàng le lói giữa mùa sám hối. Dùng trong Chúa Nhật III Mùa Vọng (*Gaudete*) và Chúa Nhật IV Mùa Chay (*Laetare*).
 `
       }
     ]
   },
 
   // ==========================================================================
-  // KHỐI KINH THÁNH
+  // KHỐI KINH THÁNH (16 - 18 TUỔI)
   // ==========================================================================
   "phuong-phap-lectio-divina": {
     id: "phuong-phap-lectio-divina",
@@ -394,135 +302,174 @@ Hội đồng Giám mục Việt Nam quy định 4 ngày Lễ Trọng buộc m�
     khoi: "kinh-thanh",
     khoiLabel: "Khối Kinh Thánh",
     badge: "Kinh Thánh",
-    author: "Truyền Thống Đan Viện Kitô Giáo",
+    author: "Ban Huấn Giáo — Tỉnh Dòng Biển Đức & GP Đà Nẵng",
     readTime: "6 phút đọc",
     size: "2.8 KB",
-    description: "Phương pháp đọc và suy niệm Lời Chúa truyền thống của Hội Thánh qua 5 bước: Đọc, Suy niệm, Cầu nguyện, Chiêm niệm và Thực hành.",
+    description: "Cẩm nang 5 bước cầu nguyện truyền thống đan tu: Đọc, Suy niệm, Cầu nguyện, Chiêm niệm và Hành động, giúp biến Lời Chúa thành kim chỉ nam đời sống.",
     chapters: [
       {
-        id: "tong-quan",
-        title: "1. Lectio Divina Là Gì?",
+        id: "y-nghia-lectio",
+        title: "1. Nguồn Gốc & Ý Nghĩa Của Lectio Divina",
         content: `
-**Lectio Divina** (nghĩa là *Đọc Lời Chúa trong Thần Khí*) là một phương pháp cầu nguyện cổ kính có từ thời các Giáo phụ và các Đan viện Biển Đức. Đây không phải là việc nghiên cứu Kinh Thánh thuần lý trí, mà là cuộc gặp gỡ thân tình giữa linh hồn với Thiên Chúa hằng sống qua Lời của Người.
+Lectio Divina (Đọc Kinh Thánh trong tinh thần cầu nguyện) là phương pháp đọc và tiếp xúc Lời Chúa cổ kính từ các Giáo Phụ và các Đan sĩ Dòng Biển Đức từ thế kỷ thứ VI.
 
-> "Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường con đi."  
-> — *Thánh Vịnh 119, 105*
+Đây không phải là việc nghiên cứu Kinh Thánh thuần túy về mặt học thuật hay ngữ pháp, mà là cuộc gặp gỡ thân tình và sống động với chính Đấng đang phán truyền qua từng trang Sách Thánh.
 `
       },
       {
-        id: "5-buoc",
-        title: "2. Năm Bước Thực Hành Lectio Divina",
+        id: "5-buoc-thuc-hanh",
+        title: "2. Năm Bước Thực Hành Cụ Thể Mỗi Ngày",
         content: `
-### Bước 1: Lectio (Đọc — Chúa nói gì trong bản văn?)
-- Chọn một đoạn Tin Mừng ngắn (tốt nhất là bài Tin Mừng trong ngày).
-- Lắng đọng tâm hồn, làm dấu Thánh Giá và xin Chúa Thánh Thần soi sáng.
-- Đọc đoạn văn chậm rãi từ 2 đến 3 lần. Chú ý từng câu chữ, bối cảnh và hành động của Chúa Giêsu.
+### 1. Đọc (Lectio):
+Lắng đọng tâm hồn, làm dấu Thánh Giá và xin ơn Chúa Thánh Thần. Đọc chậm rãi, to nhỏ tùy ý, từng câu từng chữ của đoạn Tin Mừng ngày hôm đó từ 2 đến 3 lần. Đọc như thể Lời này đang được viết ra riêng cho chính bạn lúc này.
 
-### Bước 2: Meditatio (Suy niệm — Chúa muốn nói gì với tôi hôm nay?)
-- Hãy để một từ, một câu hoặc một hình ảnh đánh động tâm hồn bạn.
-- Tự hỏi: Đoạn Lời Chúa này đang chiếu sáng điều gì trong hoàn cảnh hiện tại của tôi? Chúa đang nhắc nhở, an ủi hay mời gọi tôi hoán cải điều gì?
+### 2. Suy niệm (Meditatio):
+Dừng lại ở từ ngữ, hình ảnh hoặc câu nói đánh động bạn nhất. Đừng vội vàng lướt qua. Hãy nhai đi nhai lại Lời ấy trong tâm trí: *"Chúa muốn nói gì với hoàn cảnh hiện tại của con qua lời này?"*.
 
-### Bước 3: Oratio (Cầu nguyện — Tôi thưa gì với Chúa?)
-- Từ những điều đã suy niệm, hãy giãi bày lòng mình với Chúa một cách chân thành như với một người bạn thân.
-- Có thể là lời tạ ơn, lời xin tha thứ, lời cầu xin ơn can đảm, hoặc phó thác gánh nặng trong lòng cho Chúa.
+### 3. Cầu nguyện (Oratio):
+Biến những suy nghĩ thành lời thưa chuyện chân thành cùng Chúa. Có thể là lời cảm tạ, lời xin ơn trợ giúp vượt qua cám dỗ, hay lời ăn năn thống hối vì đã sống nghịch lại Lời Chúa.
 
-### Bước 4: Contemplatio (Chiêm niệm — Nghỉ ngơi trong tình yêu Chúa)
-- Tạm dừng mọi suy nghĩ và lời nói, chỉ đơn sơ ở lại trong sự hiện diện đầy yêu thương của Chúa.
-- Hãy để tâm hồn được sưởi ấm và biến đổi trong bình an sâu thẳm của Thần Khí.
+### 4. Chiêm niệm (Contemplatio):
+Tạm ngưng mọi suy nghĩ và lý luận. Hãy để lòng mình hoàn toàn thinh lặng trong tình yêu của Thiên Chúa, ngắm nhìn Chúa và cảm nhận Chúa đang trìu mến nhìn mình.
 
-### Bước 5: Actio (Hành động — Tôi sẽ sống Lời Chúa thế nào?)
-- Đưa Lời Chúa vào đời thực bằng một quyết tâm cụ thể trong ngày:
-  - Tha thứ cho một người bạn đã làm mình buồn.
-  - Làm một việc bác ái nhỏ âm thầm.
-  - Từ bỏ một thói quen xấu.
+### 5. Hành động (Actio):
+Lời Chúa là ngọn đèn soi cho con bước (Tv 119, 105). Hãy chọn cho mình **MỘT quyết tâm rất cụ thể** trong ngày: tha thứ cho một người bạn, làm lành với người thân, giúp đỡ việc nhà hay kiềm chế một lời nói tiêu cực.
 `
       }
     ]
   },
 
   // ==========================================================================
-  // KHỐI VÀO ĐỜI (16 - 18 TUỔI)
+  // KHỐI VÀO ĐỜI (LỚP 10 & 11) — GIÁO TRÌNH YOUCAT & DOCAT CHUẨN MỰC
   // ==========================================================================
-  "dinh-huong-vao-doi": {
-    id: "dinh-huong-vao-doi",
-    title: "Cẩm Nang Bạn Trẻ Vào Đời — Đức Tin, Nghề Nghiệp & Tình Yêu",
+  "youcat-vietnam": {
+    id: "youcat-vietnam",
+    title: "Youcat — Giáo Lý Hội Thánh Dành Cho Người Trẻ",
     khoi: "vao-doi",
     khoiLabel: "Khối Vào Đời",
-    badge: "Vào Đời",
-    author: "Ban Mục Vụ Giới Trẻ & Giáo Lý Vào Đời",
-    readTime: "9 phút đọc",
-    size: "5.1 KB",
-    description: "Định hướng sống đức tin trưởng thành, phân định ơn gọi, đạo đức nghề nghiệp và chuẩn bị nền tảng cho tình yêu, hôn nhân gia đình Kitô giáo trước ngưỡng cửa cuộc đời.",
+    badge: "Youcat",
+    author: "Ủy Ban Giáo Lý Đức Tin — HĐGMVN · Youcat Foundation (Lời tựa: ĐTC Biển Đức XVI)",
+    readTime: "25 phút đọc trọn bộ",
+    size: "527 Câu Hỏi (8 Chương Giáo Trình)",
+    description: "Ấn bản Giáo lý Hội Thánh Công giáo dành cho bạn trẻ: Hệ thống hóa các câu hỏi sống còn về đức tin, bí tích, đời sống luân lý và cầu nguyện qua 8 chương giáo trình toàn diện.",
+    officialSourceUrl: "https://hdgmvietnam.com",
     chapters: [
       {
-        id: "ban-sac-nguoi-tre",
-        title: "1. Bản Sắc Người Trẻ Kitô Giáo Giữa Xã Hội Hiện Đại",
-        content: `
-Tuổi trẻ là mùa xuân của cuộc đời và là hồng ân quý giá Thiên Chúa ban tặng. Tuy nhiên, trước làn sóng tục hóa, chủ nghĩa hưởng thụ và thuyết tương đối luân lý, bạn trẻ đối diện với nhiều thách thức lớn lao.
-
-### Những Cám Dỗ Cần Vượt Qua:
-- **Vô thần thực hành:** Không chối bỏ Chúa bằng lời nói, nhưng sống và làm việc như thể Chúa không hề hiện hữu.
-- **Ảo tưởng mạng xã hội:** Đánh mất bản thân sau những lượt "like", chạy theo các trào lưu bề nổi mà bỏ quên chiều sâu tâm hồn.
-- **Chủ nghĩa thực dụng:** Coi tiền bạc, danh vọng và hưởng thụ cá nhân là thước đo duy nhất của sự thành công.
-
-### Trụ Cột Nuôi Dưỡng Đức Tin Người Trẻ:
-1. **Đời sống nội tâm:** Duy trì giờ cầu nguyện riêng tư mỗi ngày, tham dự Thánh Lễ Chúa Nhật và xưng tội định kỳ.
-2. **Lắng nghe Lời Chúa:** Biến Lời Chúa thành kim chỉ nam soi sáng mọi quyết định trong học tập và tương lai.
-3. **Cộng đoàn đức tin:** Tham gia các phong trào giới trẻ, huynh trưởng thiếu nhi để được nâng đỡ và cùng nhau tiến bước.
-`
+            "id": "youcat-chuong-1-khat-vong",
+            "title": "1. Lời Tựa ĐTC Biển Đức XVI & Khát Vọng Đức Tin (Câu 1 - 24)",
+            "content": "### Lời Tựa Của Đức Thánh Cha Biển Đức XVI Gửi Người Trẻ Thế Giới\n\n> *\"Các con thân mến, hôm nay Cha trao cho các con cuốn sách Youcat... Cha mời gọi các con: Hãy nghiên cứu giáo lý! Đó là ước nguyện tha thiết của con tim Cha. Các con hãy đọc giáo lý này trong sự tĩnh lặng của căn phòng mình; hãy cùng đọc với nhau từng đôi một; hãy lập các nhóm và mạng lưới học hỏi giáo lý, trao đổi với nhau trên mạng internet... Các con phải hiểu biết đức tin của mình với cùng độ chính xác và chuyên nghiệp như một chuyên gia tin học hiểu biết về hệ điều hành máy tính.\"*  \n> — **Đức Giáo Hoàng Biển Đức XVI** *(Lời tựa cuốn YOUCAT)*\n\n---\n\n#### [ CÂU 1 ] Con người hiện hữu trên đời để làm gì?\n**Đáp:** Con người ở trên đời là để nhận biết và yêu mến Thiên Chúa, làm điều thiện theo ý Người, và ngày sau được hưởng hạnh phúc đời đời trên Thiên Đàng.  \nThiên Chúa tạo dựng con người theo hình ảnh và giống như Người, ban cho chúng ta tự do và lý trí để yêu thương.\n\n#### [ CÂU 2 ] Tại sao Thiên Chúa lại tạo dựng con người?\n**Đáp:** Thiên Chúa tạo dựng con người hoàn toàn do tình yêu nhưng không. Người không cần đến chúng ta để được vinh quang hơn, nhưng vì tình yêu thương vô biên, Người muốn chia sẻ sự sống thần linh và hạnh phúc của Người cho chúng ta.\n\n#### [ CÂU 4 ] Lý trí con người có thể nhận biết Thiên Chúa không?\n**Đáp:** Có. Bằng lý trí tự nhiên, khi chiêm ngắm trật tự kỳ diệu, vẻ đẹp hài hòa của vũ trụ và lắng nghe tiếng nói luân lý nơi sâu thẳm lương tâm mình, con người có thể nhận biết chắc chắn sự hiện hữu của một Thiên Chúa là nguồn gốc và cùng đích của muôn loài.\n\n#### [ CÂU 7 ] Thiên Chúa mạc khải chính Người như thế nào?\n**Đáp:** Thiên Chúa không chỉ để con người tìm kiếm Người qua thiên nhiên, mà Người đã chủ động bước vào lịch sử loài người: Người ngỏ lời với các Tổ phụ, các Ngôn sứ trong Cựu Ước, và cuối cùng mạc khải trọn vẹn tình yêu của Người qua chính Đức Giêsu Kitô — Con Một hằng hữu của Thiên Chúa.\n\n#### [ CÂU 14 ] Kinh Thánh là gì và có cấu trúc như thế nào?\n**Đáp:** Kinh Thánh là Lời Thiên Chúa được ghi chép lại dưới sự linh hứng của Chúa Thánh Thần, gồm 73 cuốn sách:\n- **Cựu Ước (46 cuốn):** Chuẩn bị cho công cuộc cứu độ, ghi lại giao ước của Thiên Chúa với dân tộc Israel.\n- **Tân Ước (27 cuốn):** Mạc khải trọn vẹn cuộc đời, lời giảng dạy, cuộc khổ nạn, phục sinh của Chúa Giêsu và thời kỳ phôi thai của Hội Thánh. Trung tâm của Kinh Thánh là bốn sách Tin Mừng (Mát-thêu, Mác-cô, Lu-ca, Gio-an).\n\n#### [ CÂU 29 ] Đức Tin và Khoa Học có mâu thuẫn nhau không?\n**Đáp:** Hoàn toàn không! Không thể có bất kỳ sự mâu thuẫn thực sự nào giữa đức tin chân chính và khoa học đích thực. Cả hai cùng xuất phát từ một Đấng Sáng Tạo duy nhất. Khoa học khám phá trật tự vật lý và quy luật của thế giới tự nhiên, còn Đức Tin giải đáp những câu hỏi tối hậu về ý nghĩa cuộc đời, nguồn gốc và cùng đích của con người."
       },
       {
-        id: "on-goi-va-nghe-nghiep",
-        title: "2. Phân Định Ơn Gọi & Đạo Đức Nghề Nghiệp",
-        content: `
-Thiên Chúa có một kế hoạch độc nhất vô nhị và tràn đầy yêu thương cho cuộc đời của mỗi người chúng ta.
-
-### Ba Ơn Gọi Cốt Lõi:
-1. **Ơn gọi Hôn Nhân Gia Đình:** Con đường phổ biến nhất — kết hợp với một người bạn đời để xây dựng tổ ấm hạnh phúc, cộng tác với Thiên Chúa truyền ban sự sống và giáo dục con cái.
-2. **Ơn gọi Thánh Hiến (Linh mục & Tu sĩ):** Dâng trọn vẹn con tim và cuộc đời để phụng sự Thiên Chúa và phục vụ tha nhân.
-3. **Ơn gọi Độc Thân Tận Hiến Giữa Đời:** Dùng sự tự do và khả năng chuyên môn để phục vụ xã hội và làm chứng cho Tin Mừng.
-
-### Đạo Đức Nghề Nghiệp Của Người Tín Hữu:
-- Chọn nghề nghiệp chân chính, lương thiện, đem lại giá trị cho cộng đồng.
-- Luôn trung thực, không tham nhũng, không gian lận thương mại hay làm hàng giả hại người.
-- Xem công việc lao động không chỉ để mưu sinh, mà là cộng tác với Thiên Chúa hoàn thiện vũ trụ tạo thành.
-`
+            "id": "youcat-chuong-2-thien-chua-ba-ngoi",
+            "title": "2. Chúng Tôi Tin: Thiên Chúa Ba Ngôi & Công Trình Sáng Tạo (Câu 25 - 55)",
+            "content": "### Tuyên Xưng Đức Tin Vào Thiên Chúa Hằng Sống\n\n#### [ CÂU 25 ] Đức tin là gì?\n**Đáp:** Đức tin là sự gắn bó cá vị của con người với Thiên Chúa; là sự ưng thuận trọn vẹn của lý trí và ý chí trước chân lý mà Thiên Chúa đã mạc khải. Người tin không chỉ nắm giữ các tín điều trên lý thuyết, mà là phó thác trọn vẹn cuộc đời mình vào bàn tay Đấng hằng yêu thương họ.\n\n#### [ CÂU 35 ] Mầu nhiệm Một Chúa Ba Ngôi là gì?\n**Đáp:** Chúng ta tin vào một Thiên Chúa duy nhất trong Ba Ngôi vị: **Chúa Cha, Chúa Con và Chúa Thánh Thần**. Ba Ngôi không phải là ba vị thần, mà là một Thiên Chúa duy nhất cùng một bản tính thần linh, hiệp nhất trọn vẹn trong tình yêu trao ban vô biên. Đây là mầu nhiệm trung tâm của đức tin và đời sống Kitô giáo.\n\n#### [ CÂU 41 ] Thiên Chúa sáng tạo vũ trụ như thế nào?\n**Đáp:** Thiên Chúa tự do tạo dựng vũ trụ từ hư không (*creatio ex nihilo*) chỉ bằng Lời quyền năng của Người. Vũ trụ không phải là kết quả của sự ngẫu nhiên mù quáng hay sự xung đột hỗn mang, mà là công trình của sự khôn ngoan và tình yêu Thiên Chúa.\n\n#### [ CÂU 51 ] Nếu Thiên Chúa tốt lành, tại sao lại có sự dữ và đau khổ?\n**Đáp:** Thiên Chúa không tạo ra sự dữ. Sự dữ là sự thiếu vắng hoặc làm biến chất điều thiện. Sự dữ luân lý phát sinh từ việc con người lạm dụng tự do để chống lại Thiên Chúa. Thiên Chúa tôn trọng tự do con người, và trong sự quan phòng khôn ngoan mầu nhiệm, Người có thể rút ra điều thiện lành lớn lao hơn từ những đau khổ — đỉnh cao là việc biến đổi Thập Giá Đức Kitô thành nguồn ơn cứu độ nhân loại.\n\n#### [ CÂU 54 ] Con người có linh hồn không?\n**Đáp:** Có. Mỗi con người được Thiên Chúa tạo thành gồm cả thể xác vật chất và linh hồn thiêng liêng bất tử. Linh hồn là nguyên lý sự sống, mang lại cho con người lý trí, ý chí tự do và khả năng yêu thương, hiệp thông với Thiên Chúa. Linh hồn không chết theo thể xác."
       },
       {
-        id: "tinh-yeu-hon-nhan",
-        title: "3. Tình Yêu, Giới Tính & Hôn Nhân Công Giáo",
-        content: `
-Thân xác con người là công trình kỳ diệu của Thiên Chúa, và tình yêu nam nữ là hình ảnh phản chiếu tình yêu chung thủy giữa Đức Kitô và Hội Thánh.
-
-> "Anh em lại không biết rằng thân xác anh em là Đền Thờ của Thánh Thần sao? Thần Khí ấy anh em đã nhận được từ Thiên Chúa."  
-> — *Thư thứ nhất gửi tín hữu Cô-rin-tô (1 Cr 6, 19)*
-
-### Tình Yêu Đích Thực vs Cảm Xúc Nhất Thời:
-- **Tình yêu đích thực:** Đòi hỏi trách nhiệm, hy sinh, sự tôn trọng thân xác và mong muốn điều tốt đẹp nhất cho người mình yêu.
-- **Sống trong sạch trước hôn nhân:** Giữ gìn sự trinh khiết không phải là cổ hủ, mà là bảo vệ món quà thiêng liêng nhất để trao trọn vẹn cho người phối ngẫu trọn đời trong ngày cưới.
-
-### Đặc Tính Bí Tích Hôn Phối:
-- **Đơn nhất:** Một vợ một chồng — bình đẳng về phẩm giá và yêu thương nhau đến cùng.
-- **Bất khả phân ly:** "Sự gì Thiên Chúa đã phối hợp, loài người không được phân ly" (Mt 19, 6).
-- **Mở ra cho sự sống:** Sẵn sàng đón nhận con cái Chúa ban như gia tài quý giá nhất.
-`
+            "id": "youcat-chuong-3-duc-giesu-kito",
+            "title": "3. Đức Giêsu Kitô: Đấng Cứu Độ & Hội Thánh (Câu 56 - 165)",
+            "content": "### Mầu Nhiệm Nhập Thể, Vượt Qua & Hội Thánh\n\n#### [ CÂU 64 ] Tại sao Thiên Chúa lại làm người nơi Đức Giêsu Kitô?\n**Đáp:** Con Thiên Chúa làm người vì chúng ta và để cứu độ chúng ta:\n1. Để hòa giải chúng ta với Thiên Chúa qua việc đền thay tội lỗi.\n2. Để chúng ta nhận biết tình yêu thương vô biên của Thiên Chúa.\n3. Để trở nên mẫu gương thánh thiện cho chúng ta noi theo.\n4. Để cho chúng ta được thông phần bản tính thần linh của Người.\n\n#### [ CÂU 82 ] Đức Maria có vai trò gì trong công trình cứu chuộc?\n**Đáp:** Mẹ Maria là Mẹ Thiên Chúa (*Theotokos*) vì Mẹ đã sinh ra Đức Giêsu Kitô, Đấng vừa là Thiên Chúa thật vừa là người thật. Bằng lời thưa *\"Xin vâng\"* (*Fiat*) khiêm nhường, Mẹ đã hoàn toàn phó thác để kế hoạch cứu độ được thực hiện. Đức Mẹ cũng là Mẹ của Hội Thánh và người chuyển cầu tuyệt hảo cho mọi Kitô hữu.\n\n#### [ CÂU 101 ] Ý nghĩa cuộc Tử Nạn và Phục Sinh của Đức Kitô là gì?\n**Đáp:** Đây là trọng tâm của Tin Mừng. Bằng cái chết trên Thập Giá vì yêu thương, Đức Giêsu đã gánh lấy tội lỗi nhân loại và hòa giải ta với Chúa Cha. Bằng sự Phục Sinh vinh hiển từ cõi chết, Người đã đập tan xiềng xích tử thần và mở toang cánh cửa dẫn vào sự sống vĩnh hằng cho mọi người tin.\n\n#### [ CÂU 129 ] Bốn đặc tính căn bản của Hội Thánh là gì?\n**Đáp:**\n1. **Duy Nhất:** Hội Thánh chỉ có một Chúa, tuyên xưng một đức tin, sinh ra từ một phép rửa và liên kết trong một Thân Thể mầu nhiệm.\n2. **Thánh Thiện:** Vì Đấng sáng lập là Đức Kitô chí thánh và có Chúa Thánh Thần hằng hướng dẫn, dù các thành viên vẫn còn mang phận người yếu đuối.\n3. **Công Giáo (Phổ Quát):** Được sai đến với toàn thể nhân loại thuộc mọi thời đại, ngôn ngữ và nền văn hóa.\n4. **Tông Truyền:** Xây dựng trên nền tảng các Tông đồ và được tiếp nối liên tục qua các Đấng kế vị là Giám mục hiệp thông với Đức Giáo Hoàng.\n\n#### [ CÂU 157 ] Sau cái chết, con người sẽ đi về đâu?\n**Đáp:** Ngay sau khi chết, mỗi người trải qua cuộc phán xét riêng trước nhan Đức Kitô:\n- **Thiên Đàng:** Hưởng hạnh phúc đời đời kết hiệp trọn vẹn với Thiên Chúa và các thánh.\n- **Luyện Ngục:** Trạng thái thanh luyện cuối cùng dành cho những ai chết trong tình nghĩa Chúa nhưng chưa hoàn toàn tinh tuyền.\n- **Hỏa Ngục:** Sự tách biệt vĩnh viễn khỏi Thiên Chúa do chính người đó kiên quyết từ chối tình yêu và ân sủng tha thứ của Người cho đến phút cuối đời."
       },
       {
-        id: "dan-than-phuc-vu",
-        title: "4. Người Tín Hữu Dấn Thân — Muối Men Cho Đời",
-        content: `
-Người Công giáo không được phép co cụm trong sự an toàn của nhà thờ, mà phải can đảm đem tinh thần Tin Mừng đi vào trường học, công xưởng, văn phòng và khu dân cư.
-
-### Lời mời gọi của Đức Thánh Cha Phanxicô:
-> "Các con đừng ngồi trên ghế sofa để nhìn cuộc đời trôi qua! Hãy xỏ giày vào và bước ra thế giới để để lại dấu ấn của chính mình!"
-
-### Những Hành Động Cụ Thể:
-- Sẵn sàng giúp đỡ bạn bè gặp hoàn cảnh khó khăn mà không toan tính vụ lợi.
-- Tham gia các hoạt động thiện nguyện, bảo vệ môi trường, thăm viếng người nghèo và người đau yếu.
-- Đóng góp sức trẻ xây dựng Giáo xứ: tham gia làm Giáo lý viên, Huynh trưởng Thiếu Nhi Thánh Thể, ban Caritas hoặc Ca đoàn.
-`
+            "id": "youcat-chuong-4-phung-vu-bi-tich",
+            "title": "4. Cử Hành Mầu Nhiệm Phụng Vụ & 7 Suối Nguồn Ân Sủng (Câu 166 - 278)",
+            "content": "### 7 Bí Tích — Suối Nguồn Ân Sủng Chữa Lành & Thánh Hóa\n\n#### [ CÂU 172 ] Bí tích là gì và do ai thiết lập?\n**Đáp:** Các Bí tích là những dấu chỉ khả giác và hữu hiệu của ân sủng, do Chúa Giêsu Kitô thiết lập và trao ban cho Hội Thánh, qua đó sự sống thần linh của Thiên Chúa được thông ban cho chúng ta qua tác động của Chúa Thánh Thần.\n\n#### [ CÂU 194 ] Bí tích Rửa Tội đem lại những ơn ích cốt lõi nào?\n**Đáp:** Bí tích Rửa Tội là cửa ngõ bước vào đời sống thiêng liêng:\n- Tẩy sạch Tội Nguyên Tổ và mọi tội riêng đã phạm trước đó.\n- Cho người thụ nhân được tái sinh làm con cái dấu yêu của Thiên Chúa Cha.\n- Tháp nhập vào Thân Thể Đức Kitô và trở thành chi thể của Hội Thánh.\n- Ghi dấu ấn thiêng liêng vĩnh viễn không thể tẩy xóa.\n\n#### [ CÂU 203 ] Bí tích Thêm Sức đem lại hiệu quả gì cho người trẻ?\n**Đáp:** Bí tích Thêm Sức kiện toàn ân sủng Rửa Tội, ban tràn đầy **7 Ơn Chúa Thánh Thần**: *Khôn Ngoan, Hiểu Biết, Lo Liệu, Sức Mạnh, Thông Minh, Đạo Đức và Kính Sợ Chúa*. Bí tích này biến người tín hữu thành những chiến sĩ trưởng thành, can đảm làm chứng cho Đức Kitô giữa lòng thế giới.\n\n#### [ CÂU 211 ] Tại sao Bí tích Thánh Thể là “Nguồn mạch và Đỉnh cao”?\n**Đáp:** Vì trong Bí tích Thánh Thể, chính Đức Giêsu Kitô hiện diện thực sự bằng Mình, Máu, Linh hồn và Thần tính của Người dưới hình bánh rượu (Mầu nhiệm Biến đổi bản thể - *Transubstantiatio*). Đây không chỉ là một biểu tượng hay kỷ niệm, mà là hy tế Thập Giá được hiện tại hóa trên bàn thờ để nuôi dưỡng linh hồn người tín hữu.\n\n#### [ CÂU 224 ] Năm bước để lãnh nhận Bí tích Hòa Giải (Xưng Tội) nên là gì?\n**Đáp:**\n1. **Xét mình:** Soi chiếu tư tưởng, lời nói, việc làm và sự thiếu sót theo Lời Chúa.\n2. **Ăn năn tội:** Đau buồn chân thành vì đã xúc phạm đến Thiên Chúa nhân từ.\n3. **Dốc lòng chừa:** Quyết tâm thật lòng xa lánh dịp tội và sửa đổi đời sống.\n4. **Xưng tội:** Thành thật thú nhận mọi tội trọng cùng linh mục giải tội.\n5. **Làm việc đền tội:** Thực hiện việc đền tạ để bù đắp những tổn thương do tội gây ra."
+      },
+      {
+            "id": "youcat-chuong-5-doi-song-trong-duc-kito",
+            "title": "5. Đời Sống Trong Đức Kitô: Tự Do, Lương Tâm & Nhân Đức (Câu 286 - 342)",
+            "content": "### Nghệ Thuật Sống Của Người Trưởng Thành Kitô Giáo\n\n#### [ CÂU 286 ] Tự do thực sự là gì?\n**Đáp:** Tự do không phải là làm bất cứ điều gì mình thích theo bản năng mù quáng. Tự do đích thực là khả năng và sức mạnh tự nguyện chọn lựa điều chân thiện mỹ, phụng sự Thiên Chúa và phục vụ tha nhân. Càng làm điều thiện, con người càng trở nên tự do đích thực. Khi phạm tội, con người đánh mất chính mình và trở thành nô lệ của đam mê tội lỗi.\n\n#### [ CÂU 295 ] Lương tâm là gì và làm sao để rèn luyện lương tâm ngay thẳng?\n**Đáp:** Lương tâm là cung thánh thầm kín nơi đáy lòng con người, nơi con người hiện diện một mình với Thiên Chúa và nghe thấy tiếng Người thúc giục làm lành lánh dữ. Để rèn luyện lương tâm ngay chính, người trẻ cần:\n- Siêng năng lắng nghe và học hỏi Lời Chúa mỗi ngày.\n- Suy xét theo giáo huấn chân chính của Hội Thánh.\n- Tập thói quen xét mình mỗi tối trước khi đi ngủ.\n- Tìm kiếm lời khuyên từ những người đồng hành đức tin khôn ngoan.\n\n#### [ CÂU 300 ] Bốn Nhân đức Trụ (Nhân bản) rèn luyện thế nào?\n**Đáp:**\n1. **Khôn ngoan (*Prudentia*):** Khả năng phân định điều thực sự tốt lành trong mọi hoàn cảnh và lựa chọn phương thế đúng đắn.\n2. **Công bằng (*Iustitia*):** Ý chí kiên định luôn tôn trọng quyền lợi của tha nhân và trả lại cho mỗi người những gì thuộc về họ.\n3. **Can đảm (*Fortitudo*):** Sức mạnh nội tâm vượt qua sợ hãi, trung thành với điều thiện ngay cả khi gặp nghịch cảnh hay đe dọa.\n4. **Tiết độ (*Temperantia*):** Khả năng làm chủ các bản năng, ham muốn thể xác và sử dụng chừng mực của cải trần thế.\n\n#### [ CÂU 305 ] Ba Nhân đức Đối Thần là gì?\n**Đáp:** Đó là **Tin, Cậy và Mến**. Được Thiên Chúa đổ tràn vào linh hồn qua Bí tích Rửa Tội:\n- **Đức Tin:** Nhận biết và ưng thuận trọn vẹn trước Chân lý Thiên Chúa.\n- **Đức Cậy:** Vững lòng trông cậy và khao khát Nước Trời cùng sự trợ lực của ân sủng Chúa.\n- **Đức Mến:** Yêu mến Thiên Chúa trên hết mọi sự và yêu tha nhân như chính mình vì lòng mến Chúa."
+      },
+      {
+            "id": "youcat-chuong-6-muoi-dieu-ran",
+            "title": "6. Mười Điều Răn: Yêu Chúa & Yêu Người Giữa Thế Giới Hiện Đại (Câu 343 - 468)",
+            "content": "### Chiếc La Bàn Đạo Đức Trong Thời Đại Kỹ Thuật Số\n\n#### [ CÂU 352 ] Nhóm Ba Điều Răn Đầu: Thờ Phượng & Tôn Kính Thiên Chúa\n**Đáp:** \n- **Điều răn 1:** Tôn thờ một Thiên Chúa duy nhất. Người trẻ cần từ bỏ các hình thức mê tín dị đoan, bói toán, tôn sùng tiền tài danh vọng, hay biến các trào lưu ảo trên mạng thành thần tượng của mình.\n- **Điều răn 2:** Tôn kính Danh Thánh Chúa. Không xúc phạm đến sự thánh thiêng, không thề gian dối hay dùng Danh Chúa vào mục đích vụ lợi.\n- **Điều răn 3:** Thánh hóa ngày Chúa Nhật. Nghỉ ngơi thân xác, dâng trọn tâm tình trong Thánh Lễ, bồi dưỡng mối tương quan gia đình và thực thi bác ái.\n\n#### [ CÂU 367 ] Điều Răn Thứ 4: Thảo Kính Cha Mẹ\n**Đáp:** Tôn kính, vâng lời và biết ơn cha mẹ; chăm sóc phụng dưỡng khi cha mẹ già yếu bệnh tật. Trong trường học và cộng đoàn, tôn trọng thầy cô giáo, các vị chủ chăn và những người có trách nhiệm hướng dẫn mình.\n\n#### [ CÂU 378 ] Điều Răn Thứ 5: Bảo Vệ & Tôn Trọng Sự Sống\n**Đáp:** Sự sống là quà tặng thiêng liêng của Thiên Chúa từ giây phút thụ thai cho đến hơi thở cuối cùng tự nhiên. Người trẻ phải:\n- Kiên quyết nói không với nạo phá thai, trợ tử và tự tử.\n- Lên án mọi hình thức bạo lực học đường, xúc phạm thể xác, bạo lực mạng và đua xe nguy hiểm.\n- Không sử dụng ma túy, thuốc lá điện tử hay chất gây nghiện tàn phá sức khỏe bản thân.\n\n#### [ CÂU 401 ] Điều Răn Thứ 6 & 9: Đức Khiết Tịnh & Phẩm Giá Tình Yêu\n**Đáp:** Khiết tịnh không phải là sự chối bỏ tính dục, mà là nghệ thuật làm chủ cảm xúc và bản năng để hướng về tình yêu đích thực. Người trẻ sống khiết tịnh bằng cách:\n- Tôn trọng phẩm giá của chính mình và bạn khác giới; không biến người khác thành công cụ thỏa mãn dục vọng.\n- Tránh xa văn hóa phẩm đồi trụy, nội dung khiêu dâm trên không gian mạng.\n- Gìn giữ tâm hồn thanh sạch để chuẩn bị cho ơn gọi hôn nhân hoặc thánh hiến mai sau.\n\n#### [ CÂU 426 ] Điều Răn Thứ 7 & 10: Công Bằng Xã Hội & Sự Ngay Thẳng\n**Đáp:** Tôn trọng tài sản của người khác và của công; không gian lận trong học tập, thi cử và công việc; không trộm cắp tài sản trí tuệ; không nuôi dưỡng lòng ghen tị hay tham lam của cải tha nhân.\n\n#### [ CÂU 452 ] Điều Răn Thứ 8: Sống Trong Sự Thật & Trách Nhiệm Trên Mạng\n**Đáp:** Thiên Chúa là Chân Lý. Người trẻ phải sống chân thật, ghét sự dối trá. Đặc biệt trên mạng xã hội: không tung tin đồn vô căn cứ (*fake news*), không nói xấu sau lưng, không tham gia tấn công hội đồng hủy hoại danh dự của người khác."
+      },
+      {
+            "id": "youcat-chuong-7-cau-nguyen",
+            "title": "7. Cầu Nguyện Trong Đời Sống Đức Tin: Trò Chuyện Cùng Thầy Giêsu (Câu 469 - 510)",
+            "content": "### Cầu Nguyện Là Hơi Thở Của Linh Hồn\n\n#### [ CÂU 469 ] Cầu nguyện là gì và tại sao chúng ta cần cầu nguyện?\n**Đáp:** Thánh Nữ Têrêsa Hài Đồng Giêsu từng viết: *\"Đối với tôi, cầu nguyện là sự hướng lòng lên, là cái nhìn đơn sơ hướng về trời, là tiếng kêu tri ân và yêu mến giữa cơn thử thách cũng như lúc hân hoan.\"*  \nCầu nguyện là cuộc trò chuyện thân tình giữa người con với Cha trên trời. Nếu không cầu nguyện, đức tin của chúng ta sẽ khô héo như một nhành cây thiếu nước.\n\n#### [ CÂU 483 ] Năm hình thức cầu nguyện nền tảng trong Hội Thánh:\n**Đáp:**\n1. **Chúc tụng & Thờ lạy:** Tôn vinh sự vĩ đại và thánh thiện tuyệt đối của Thiên Chúa.\n2. **Cầu xin:** Chân thành xin ơn tha thứ tội lỗi và xin những ơn cần thiết cho linh hồn và thể xác.\n3. **Chuyển cầu:** Cầu nguyện thay cho anh chị em, cho gia đình, bạn bè, quê hương và cả những người xúc phạm mình.\n4. **Tạ ơn:** Tri ân Thiên Chúa vì muôn vàn hồng ân Người thương ban trong từng phút giây cuộc sống.\n5. **Ngợi khen:** Tán dương Thiên Chúa vì chính Người là Đấng Trọn Tốt Trọn Lành.\n\n#### [ CÂU 496 ] Năm bước thực hành Lectio Divina (Đọc Lời Chúa):\n**Đáp:**\n1. **Đọc (Lectio):** Đọc chậm rãi đoạn Tin Mừng, mở rộng tâm hồn lắng nghe Lời Chúa nói với chính mình hôm nay.\n2. **Suy niệm (Meditatio):** Dừng lại ở câu chữ chạm vào lòng mình; tự hỏi: *\"Chúa đang muốn dạy con điều gì?\"*.\n3. **Cầu nguyện (Oratio):** Trút cạn tâm tư thưa chuyện với Chúa về những đánh động vừa nhận được.\n4. **Chiêm niệm (Contemplatio):** Lắng đọng mọi ồn ào xung quanh, an nghỉ trong ánh mắt yêu thương của Chúa.\n5. **Hành động (Actio):** Đưa ra một cam kết cụ thể để sống Lời Chúa ngay trong ngày sống hôm nay.\n\n#### [ CÂU 499 ] Làm gì khi gặp khô khan và chia trí khi cầu nguyện?\n**Đáp:** Chia trí là chuyện rất bình thường của con người. Khi nhận ra mình bị chia trí, đừng nản lòng buông xuôi, hãy nhẹ nhàng hướng tâm trí trở lại với Chúa. Hãy biến chính những nỗi lo âu đang làm ta bận lòng thành đề tài cầu nguyện dâng lên cho Người."
+      },
+      {
+            "id": "youcat-chuong-8-kinh-lay-cha-va-su-vu",
+            "title": "8. Kinh Lạy Cha & Sứ Vụ Người Trẻ Giữa Đời (Câu 511 - 527 & 138 - 139)",
+            "content": "### Kinh Lạy Cha & Sứ Mạng Tông Đồ Giữa Trần Thế\n\n#### [ CÂU 511 ] Kinh Lạy Cha có nguồn gốc từ đâu?\n**Đáp:** Kinh Lạy Cha do chính Đức Giêsu Kitô dạy cho các môn đệ khi họ xin Người: *\"Lạy Thầy, xin dạy chúng con cầu nguyện\"* (Lc 11, 1). Lời kinh này là bản tóm lược toàn bộ Tin Mừng và là trường dạy cầu nguyện hoàn hảo nhất của người Kitô hữu.\n\n#### [ CÂU 512 ] Kinh Lạy Cha được cấu trúc như thế nào?\n**Đáp:** Kinh Lạy Cha gồm 7 lời cầu xin nền tảng:\n- **Ba lời cầu đầu tiên:** Hướng lòng ta hoàn toàn về Thiên Chúa Cha: Danh Cha cả sáng, Nước Cha trị đến, Ý Cha thể hiện dưới đất cũng như trên trời.\n- **Bốn lời cầu tiếp theo:** Dâng lên Cha mọi nhu cầu thiết thân của phận người: Lương thực hằng ngày, Ơn tha thứ nợ nần tội lỗi, Ơn gìn giữ khỏi sa chước cám dỗ, và Ơn giải thoát khỏi tay ma quỷ sự dữ.\n\n#### [ CÂU 527 ] Tiếng \"Amen\" ở cuối Kinh Lạy Cha có nghĩa là gì?\n**Đáp:** \"Amen\" là từ ngữ gốc Do Thái mang ý nghĩa: *\"Ước gì được như vậy! Con xin đoan hứa và tin thật như thế!\"*. Khi thưa \"Amen\", người tín hữu xác tín lời cầu nguyện và ký nhận cam kết sống trọn vẹn theo tinh thần Kinh Lạy Cha trong từng ngày sống.\n\n---\n\n### Sứ Mạng Chứng Nhân Giữa Lòng Thế Giới\n\n#### [ CÂU 138 ] Có phải mọi Kitô hữu đều được kêu gọi làm tông đồ không?\n**Đáp:** Đúng vậy! Mọi người đã chịu phép Rửa Tội và Thêm Sức đều được chia sẻ vào chức vụ tư tế, ngôn sứ và vương giả của Đức Kitô. Mọi người trẻ Kitô giáo đều được kêu gọi trở thành những chứng nhân sống động và can đảm loan báo Tin Mừng giữa lòng thế giới.\n\n#### [ CÂU 139 ] Sứ mạng cụ thể của người trẻ giáo dân giữa trần gian là gì?\n**Đáp:** Người giáo dân được sai vào lòng đời như men trong bột:\n- Sống trung thực, chan hòa và tận tụy trong học tập và công việc.\n- Can đảm bảo vệ sự thật, lẽ công bằng và người yếu thế.\n- Tỏa rạng niềm vui, hy vọng và lòng bác ái của Chúa Kitô cho bạn bè đồng trang lứa.\n\n---\n\n### Lời Tuyên Hứa Hiệp Sĩ Vào Đời An Ngãi:\n> *\"Lạy Chúa Giêsu, con xin dâng trọn tuổi trẻ, sức sống và ước mơ của con cho Chúa. Xin ban cho con một trái tim biết yêu thương, một ý chí can trường để phục vụ và một đức tin kiên vững để làm nhân chứng cho Tin Mừng giữa trần thế hôm nay. Amen!\"*"
       }
-    ]
+]
+  },
+
+  "docat-vietnam": {
+    id: "docat-vietnam",
+    title: "Docat — Cẩm Nang Hành Động Xã Hội Của Người Trẻ",
+    khoi: "vao-doi",
+    khoiLabel: "Khối Vào Đời",
+    badge: "Docat",
+    author: "Hội Đồng Giám Mục Việt Nam · Youcat Foundation (Lời mở đầu: ĐTC Phanxicô)",
+    readTime: "30 phút đọc trọn bộ",
+    size: "328 Câu Hỏi (12 Chương Toàn Diện)",
+    description: "Cẩm nang Học thuyết Xã hội Công giáo trọn vẹn 12 chương: Trao chiếc la bàn luân lý giúp người trẻ biến đức tin thành hành động cụ thể về công bằng, lao động, kinh tế, môi trường Laudato Si' và hòa bình.",
+    officialSourceUrl: "https://hdgmvietnam.com",
+    chapters: [
+      {
+            "id": "docat-chuong-1-ke-hoach-thien-chua",
+            "title": "1. Kế Hoạch Lớn Của Thiên Chúa: Tình Yêu Trong Hành Động (Câu 1 - 21)",
+            "content": "### Bức Thư Tâm Huyết Của Đức Thánh Cha Phanxicô Gửi Bạn Trẻ\n\n> *\"Thầy mong ước một triệu người trẻ Công giáo — thậm chí nhiều hơn nữa — trở thành một thế hệ biết đọc và sống Học thuyết Xã hội của Hội Thánh. Không gì khác hơn có thể biến đổi thế giới này! Hãy đọc Docat! Học thuyết Xã hội không đến từ một bàn giấy lý thuyết, mà xuất phát từ trái tim của Đức Giêsu Kitô. Thầy hy vọng các con sẽ có DOCAT trong tay và để cho cuốn sách này đốt lên ngọn lửa nhiệt huyết trong các con!\"*  \n> — **Đức Thánh Cha Phanxicô** *(Lời mở đầu DOCAT)*\n\n---\n\n#### [ CÂU 1 ] Kế hoạch của Thiên Chúa dành cho trần gian là gì?\n**Đáp:** Thiên Chúa dựng nên thế giới không phải như một nơi chốn vô nghĩa đầy đau khổ, mà là không gian của tình yêu thương và sự hiệp thông. Ý định của Thiên Chúa là biến toàn thể nhân loại thành một gia đình duy nhất, nơi mọi người nhận biết Thiên Chúa là Cha và sống chan hòa tình anh em với nhau.\n\n#### [ CÂU 4 ] Tình yêu đóng vai trò gì trong trật tự xã hội?\n**Đáp:** Tình yêu (*Caritas*) không chỉ là cảm xúc riêng tư hay việc bố thí tùy hứng, mà là sức mạnh biến đổi xã hội lớn nhất. Một xã hội chỉ dựa trên luật pháp nghiêm khắc hay hiệu quả kinh tế đơn thuần sẽ trở nên lạnh lùng và tàn nhẫn. Chỉ có tình yêu mới mang lại linh hồn và hơi ấm cho công lý.\n\n#### [ CÂU 14 ] Tại sao con người có bản tính xã hội bẩm sinh?\n**Đáp:** Vì con người được tạo dựng theo hình ảnh của Thiên Chúa Ba Ngôi — Đấng là sự hiệp thông hoàn hảo của tình yêu. Không ai có thể sống và phát triển trọn vẹn một mình như một ốc đảo biệt lập. Con người cần tha nhân để chia sẻ, học hỏi, cộng tác và trao ban chính mình."
+      },
+      {
+            "id": "docat-chuong-2-su-mang-xa-hoi-hoi-thanh",
+            "title": "2. Cùng Nhau Hiệp Nhất: Sứ Mạng Xã Hội Của Hội Thánh (Câu 22 - 46)",
+            "content": "### Tiếng Nói Của Tin Mừng Giữa Các Vấn Đề Thời Đại\n\n#### [ CÂU 22 ] Học thuyết Xã hội của Hội Thánh bắt nguồn từ đâu?\n**Đáp:** Bắt nguồn từ chính Lời Chúa trong Kinh Thánh và tấm lòng thương xót của Chúa Giêsu đối với những người nghèo khổ, bị áp bức. Dấu mốc lịch sử hiện đại khởi đầu từ Thông điệp *Rerum Novarum* (Tân Sự, năm 1891) của Đức Giáo Hoàng Lêô XIII bênh vực công nhân thời kỳ công nghiệp hóa, tiếp nối qua các văn kiện của Công đồng Vatican II và các Thông điệp của các Đức Thánh Cha cho đến nay.\n\n#### [ CÂU 28 ] Tại sao Hội Thánh can thiệp vào các vấn đề kinh tế - xã hội?\n**Đáp:** Hội Thánh không có tham vọng quyền lực chính trị hay quản lý kinh tế, nhưng Hội Thánh có bổn phận luân lý bênh vực phẩm giá con người bất cứ nơi nào nhân phẩm bị chà đạp. Nơi nào có bất công, nghèo đói và áp bức, nơi đó Tin Mừng cứu độ của Đức Kitô phải được vang lên.\n\n#### [ CÂU 35 ] Người giáo dân có vai trò gì trong sứ mạng này?\n**Đáp:** Nếu các linh mục và tu sĩ có sứ vụ giảng dạy và cử hành phụng vụ, thì người giáo dân — đặc biệt là người trẻ — chính là những người trực tiếp dấn thân giữa lòng đời: trong chính trị, kinh tế, khoa học, truyền thông và nghệ thuật. Bạn trẻ có trách nhiệm đưa các giá trị Tin Mừng thấm nhuần vào các cấu trúc xã hội."
+      },
+      {
+            "id": "docat-chuong-3-nhan-vi-con-nguoi",
+            "title": "3. Độc Đáo & Bất Khả Xâm Phạm: Phẩm Giá Nhân Vị Con Người (Câu 47 - 83)",
+            "content": "### Con Người Là Trung Tâm & Mục Đích Của Mọi Định Chế\n\n#### [ CÂU 47 ] Phẩm giá con người bắt nguồn từ đâu?\n**Đáp:** Phẩm giá con người không do nhà nước, xã hội hay tiền của ban tặng, mà bắt nguồn từ chính Thiên Chúa: mỗi người đều được tạo dựng theo hình ảnh Thiên Chúa, có linh hồn thiêng liêng và được Chúa Giêsu cứu chuộc bằng chính bửu huyết của Người. Vì thế, phẩm giá này là thiêng liêng, bất khả xâm phạm và bình đẳng nơi mọi người.\n\n#### [ CÂU 56 ] Những ai có quyền con người?\n**Đáp:** Tất cả mọi người, không phân biệt chủng tộc, giới tính, tôn giáo, địa vị kinh tế hay tình trạng sức khỏe. Quyền con người bắt đầu từ quyền sống của thai nhi trong bụng mẹ cho đến giây phút cuối đời của người già yếu và bệnh nhân nan y.\n\n#### [ CÂU 68 ] Sự bình đẳng giữa nam và nữ được hiểu như thế nào?\n**Đáp:** Nam và nữ có phẩm giá hoàn toàn bình đẳng trước nhan Thiên Chúa, nhưng mang những đặc tính bổ túc tuyệt vời cho nhau. Xã hội phải đảm bảo sự công bằng về cơ hội học tập, việc làm và mức lương cho nữ giới, đồng thời tôn vinh thiên chức làm mẹ và vai trò vô giá của người phụ nữ trong gia đình."
+      },
+      {
+            "id": "docat-chuong-4-bon-tru-cot-nen-tang",
+            "title": "4. Bốn Trụ Cột Nền Tảng Của Học Thuyết Xã Hội (Câu 84 - 111)",
+            "content": "### Chiếc Kiềng Bốn Chân Của Một Xã Hội Nhân Bản\n\n#### [ CÂU 84 ] Trụ Cột 1: Phẩm Giá Con Người (Human Dignity)\n**Đáp:** Mọi chính sách, thể chế và luật lệ phải phục vụ con người, chứ không được biến con người thành công cụ phục vụ cho kinh tế hay quyền lực chính trị.\n\n#### [ CÂU 90 ] Trụ Cột 2: Ích Chung / Công Ích (Common Good)\n**Đáp:** Công ích là tổng thể tất cả các điều kiện xã hội — an ninh, giáo dục, y tế, việc làm, môi trường trong lành — cho phép mọi nhóm xã hội và từng cá nhân đạt tới sự phát triển toàn diện một cách dễ dàng và trọn vẹn hơn.\n\n#### [ CÂU 99 ] Trụ Cột 3: Nguyên Tắc Bổ Trợ (Subsidiarity)\n**Đáp:** Các cấp chính quyền hoặc tổ chức cấp cao hơn không được tước đoạt hay can thiệp thô bạo vào những công việc mà gia đình, cộng đồng địa phương hay cấp cơ sở có thể tự giải quyết hiệu quả. Cấp trên có bổn phận hỗ trợ, khuyến khích và tạo điều kiện tự chủ cho cấp dưới.\n\n#### [ CÂU 108 ] Trụ Cột 4: Tình Liên Đới (Solidarity)\n**Đáp:** Là sự quyết tâm kiên trì dấn thân vì công ích; ý thức sâu sắc rằng chúng ta cùng chịu trách nhiệm về nhau. Tình liên đới đòi hỏi sự sẻ chia cụ thể của cải vật chất và tinh thần giữa người giàu và người nghèo, giữa các thế hệ và giữa các quốc gia."
+      },
+      {
+            "id": "docat-chuong-5-gia-dinh-hon-nhan",
+            "title": "5. Trái Tim Của Xã Hội: Gia Đình & Hôn Nhân (Câu 112 - 133)",
+            "content": "### Nôi Sự Sống & Trường Dạy Các Giá Trị Đầu Đời\n\n#### [ CÂU 112 ] Tại sao gia đình là nền tảng của toàn bộ xã hội?\n**Đáp:** Gia đình là tế bào tự nhiên và sống động đầu tiên của xã hội loài người. Một xã hội lành mạnh bắt đầu từ những gia đình bền vững. Chính trong gia đình, con người lần đầu tiên học được thế nào là được yêu thương vô điều kiện, học nói, học cầu nguyện, học lòng tha thứ và tinh thần trách nhiệm.\n\n#### [ CÂU 117 ] Bản chất của hôn nhân Kitô giáo là gì?\n**Đáp:** Hôn nhân là sự kết hợp tình yêu tự do, trọn vẹn, một vợ một chồng, chung thủy và bất khả phân ly giữa một người nam và một người nữ suốt đời, mở rộng lòng đón nhận và giáo dục con cái mà Thiên Chúa thương ban.\n\n#### [ CÂU 125 ] Người trẻ chuẩn bị gì cho đời sống hôn nhân tương lai?\n**Đáp:** Cần xây dựng tình bạn trong sáng, tôn trọng sự khác biệt, học cách lắng nghe và làm chủ cảm xúc. Hôn nhân không phải là một trò chơi thử nghiệm may rủi, mà là một ơn gọi cao quý đòi hỏi sự trưởng thành về nhân cách, đức tin và tinh thần trách nhiệm."
+      },
+      {
+            "id": "docat-chuong-6-lao-dong-con-nguoi",
+            "title": "6. Lao Động Con Người: Phẩm Giá, Quyền Lợi & Trách Nhiệm (Câu 134 - 157)",
+            "content": "### Con Người Cộng Tác Với Đấng Sáng Tạo\n\n#### [ CÂU 134 ] Ý nghĩa đích thực của lao động con người là gì?\n**Đáp:** Lao động không phải là một gánh nặng bị nguyền rủa, mà là vinh dự và ơn gọi. Qua lao động lương thiện, con người phát triển tài năng, nuôi sống bản thân và gia đình, đồng thời cộng tác với Thiên Chúa để làm cho vũ trụ ngày càng hoàn mỹ hơn.\n\n#### [ CÂU 144 ] Nguyên tắc ưu tiên của lao động trước tư bản:\n**Đáp:** Hội Thánh luôn khẳng định mạnh mẽ: **Con người luôn đứng trên đồng tiền và máy móc!** Tư bản (vốn liếng, thiết bị, thuật toán, công nghệ AI) chỉ là công cụ hỗ trợ, không bao giờ được phép thống trị hay biến con người thành bánh răng vô hồn phục vụ lợi nhuận.\n\n#### [ CÂU 150 ] Những quyền căn bản của người lao động:\n**Đáp:**\n- Quyền có việc làm ổn định và môi trường lao động an toàn, nhân phẩm được tôn trọng.\n- Quyền được trả mức lương công bằng đủ trang trải cuộc sống gia đình một cách đàng hoàng.\n- Quyền được nghỉ ngơi định kỳ và thánh hóa ngày Chúa Nhật.\n- Quyền lập nghiệp đoàn và đình công hợp pháp khi các quyền lợi chính đáng bị xâm phạm bất công."
+      },
+      {
+            "id": "docat-chuong-7-kinh-te-phuc-vu-con-nguoi",
+            "title": "7. Kinh Tế Phục Vụ Sự Sống: Thị Trường, Đạo Đức & Toàn Cầu Hóa (Câu 158 - 194)",
+            "content": "### Xây Dựng Một Nền Kinh Tế Chia Sẻ & Huynh Đệ\n\n#### [ CÂU 158 ] Mục tiêu tối hậu của nền kinh tế là gì?\n**Đáp:** Kinh tế tồn tại là để phục vụ con người, chứ không phải con người sinh ra để phục vụ nền kinh tế. Một nền kinh tế phát triển thịnh vượng thực sự không chỉ đo lường bằng chỉ số GDP hay số lượng tỷ phú, mà bằng việc mọi người dân — nhất là những người yếu thế nhất — có được cuộc sống ấm no, có cơm ăn áo mặc và cơ hội thăng tiến.\n\n#### [ CÂU 167 ] Hội Thánh nhìn nhận quyền tư hữu như thế nào?\n**Đáp:** Hội Thánh công nhận quyền sở hữu tư nhân chính đáng nhằm bảo đảm tự do và sự phát triển của cá nhân. Tuy nhiên, quyền tư hữu luôn đi kèm với **bổn phận xã hội của tài sản (Universal Destination of Goods)**: Thiên Chúa ban tặng đất đai và tài nguyên cho toàn thể nhân loại, vì thế của cải dư thừa không được cất giữ ích kỷ trong khi tha nhân đang chết đói.\n\n#### [ CÂU 182 ] Đạo đức trong kinh doanh và khởi nghiệp trẻ:\n**Đáp:** Người trẻ bước vào thương trường cần giữ lương tâm trong sáng: không sản xuất hàng giả độc hại, không trốn thuế, không bóc lột nhân công, và can đảm tiên phong trong các mô hình kinh doanh tuần hoàn, bảo vệ môi trường sinh thái."
+      },
+      {
+            "id": "docat-chuong-8-chinh-tri-va-dan-chu",
+            "title": "8. Cộng Đồng Chính Trị & Dân Chủ (Câu 195 - 228)",
+            "content": "### Quyền Bính Là Để Phục Vụ Công Ích\n\n#### [ CÂU 195 ] Quyền bính chính trị xuất phát từ đâu và có mục đích gì?\n**Đáp:** Mọi quyền bính chính đáng đều bắt nguồn từ Thiên Chúa nhằm thiết lập trật tự công bằng và bảo đảm công ích cho cộng đồng. Người nắm giữ quyền bính không phải là ông chủ độc tài, mà là tôi tớ phục vụ nhân dân theo tinh thần Chúa Giêsu quỳ xuống rửa chân cho các môn đệ.\n\n#### [ CÂU 205 ] Những tiêu chuẩn của một nền dân chủ lành mạnh:\n**Đáp:** Một nền dân chủ chân chính không chỉ là việc bỏ phiếu hình thức, mà phải được xây dựng trên:\n- Thượng tôn pháp luật (*Rule of law*), bình đẳng trước pháp luật.\n- Bảo vệ quyền tự do tôn giáo, tự do tư tưởng và ngôn luận.\n- Minh bạch tài chính công và bài trừ nạn tham nhũng làm nghèo đất nước.\n- Lắng nghe và bảo vệ quyền lợi của các nhóm yếu thế, thiểu số.\n\n#### [ CÂU 220 ] Trách nhiệm công dân của người trẻ Công giáo:\n**Đáp:** Người Kitô hữu không được sống thờ ơ, bàng quan trước các vấn đề của đất nước. Hãy tích cực tham gia các hoạt động cộng đồng, đóng góp tài năng xây dựng quê hương, và can đảm lên tiếng trước những đạo luật trái nghịch với luân lý tự nhiên."
+      },
+      {
+            "id": "docat-chuong-9-gia-dinh-quoc-te",
+            "title": "9. Gia Đình Quốc Tế: Hòa Bình & Công Lý Toàn Cầu (Câu 229 - 255)",
+            "content": "### Tình Huynh Đệ Vượt Mọi Biên Giới\n\n#### [ CÂU 229 ] Cộng đồng quốc tế được hiểu như thế nào?\n**Đáp:** Các quốc gia và dân tộc trên thế giới hợp thành một gia đình nhân loại duy nhất. Sự thịnh vượng hay khủng hoảng của một quốc gia đều ảnh hưởng sâu sắc đến các quốc gia khác. Vì thế, trật tự quốc tế phải được xây dựng trên sự tôn trọng lẫn nhau, công lý và sự thật.\n\n#### [ CÂU 242 ] Tinh thần đối với người di cư và người tị nạn:\n**Đáp:** ĐTC Phanxicô luôn kêu gọi 4 hành động cụ thể đối với người di cư: **Đón tiếp, Bảo vệ, Thăng tiến và Hội nhập**. Người trẻ Kitô hữu mở rộng vòng tay nâng đỡ những người vì chiến tranh, nghèo đói hay thiên tai mà phải rời bỏ quê hương, nhìn thấy nơi họ khuôn mặt của Chúa Giêsu lưu lạc năm xưa."
+      },
+      {
+            "id": "docat-chuong-10-moi-truong-laudato-si",
+            "title": "10. Bảo Vệ Ngôi Nhà Chung: Sinh Thái Toàn Diện Laudato Si' (Câu 256 - 269)",
+            "content": "### Lắng Nghe Tiếng Kêu Của Trái Đất & Tiếng Than Của Người Nghèo\n\n#### [ CÂU 256 ] Tại sao bảo vệ thiên nhiên là bổn phận đức tin?\n**Đáp:** Thiên nhiên là kỳ công tuyệt mỹ do Thiên Chúa sáng tạo và ủy thác cho con người chăm sóc (St 2, 15). Việc hủy hoại môi sinh vì lòng tham vô độ là tội lỗi xúc phạm đến Đấng Tạo Hóa và cướp đi tương lai sinh tồn của các thế hệ con cháu mai sau.\n\n#### [ CÂU 260 ] Thế nào là \"Sinh thái toàn diện\" (Integral Ecology)?\n**Đáp:** Mọi sự trong vũ trụ đều gắn kết mật thiết với nhau. Ta không thể giải quyết khủng hoảng môi trường nếu tách rời khỏi khủng hoảng xã hội và đạo đức. Tiếng kêu của Trái Đất bị ô nhiễm hòa chung với tiếng than van của những người nghèo đang chịu ảnh hưởng nặng nề nhất bởi biến đổi khí hậu.\n\n#### [ CÂU 268 ] Hành động cụ thể của bạn trẻ An Ngãi:\n**Đáp:**\n- Tiết kiệm điện, tắt các thiết bị khi không sử dụng.\n- Khóa chặt vòi nước, không lãng phí nguồn nước ngọt quý giá.\n- Hạn chế tối đa việc sử dụng túi nilon và đồ nhựa dùng một lần.\n- Tham gia các chiến dịch dọn sạch môi trường, trồng cây phủ xanh khuôn viên giáo xứ và đường làng xóm đạo."
+      },
+      {
+            "id": "docat-chuong-11-hoa-binh-tha-thu",
+            "title": "11. Hòa Bình: Xây Dựng Bằng Công Lý & Lòng Tha Thứ (Câu 270 - 304)",
+            "content": "### Phúc Cho Ai Xây Dựng Hòa Bình\n\n#### [ CÂU 270 ] Hòa bình đích thực là gì?\n**Đáp:** Hòa bình không chỉ đơn thuần là sự im ắng của tiếng súng đạn, mà là hoa trái của công lý, trật tự hài hòa và tình thương mến (Is 32, 17). Không thể có hòa bình lâu dài nếu sự bất công, nghèo đói và áp bức vẫn còn tồn tại.\n\n#### [ CÂU 285 ] Vũ khí và việc chạy đua vũ trang:\n**Đáp:** Hội Thánh lên án mạnh mẽ việc sản xuất, buôn bán và tích trữ vũ khí hủy diệt hàng loạt. Mỗi đồng tiền đổ vào kho vũ khí là một sự cướp đoạt mồ hôi nước mắt của những người đang thiếu ăn, thiếu trường học và trạm y tế trên khắp hành tinh.\n\n#### [ CÂU 298 ] Sức mạnh của lòng tha thứ Kitô giáo:\n**Đáp:** Bạo lực chỉ sinh ra bạo lực; hận thù không thể dập tắt được hận thù, chỉ có tình yêu thương và sự tha thứ mới có thể cắt đứt vòng xoáy oan nghiệt. Chúa Giêsu trên Thập Giá đã tha thứ cho chính những kẻ đóng đinh Người — đó là bài học hòa giải cao cả nhất cho nhân loại."
+      },
+      {
+            "id": "docat-chuong-12-bac-ai-dan-than",
+            "title": "12. Bác Ái Trong Hành Động: Lời Kêu Gọi Dấn Thân Của Người Trẻ Vào Đời (Câu 305 - 328)",
+            "content": "### Biến Đức Tin Thành Hành Động Cụ Thể\n\n#### [ CÂU 305 ] Mười Bốn Mối Thương Người (7 Thể Xác & 7 Linh Hồn):\n**Đáp:**\n- **Thương xác:** Cho kẻ đói ăn; cho kẻ khát uống; cho kẻ rách rưới ăn mặc; viếng kẻ liệt cùng kẻ tù rạc; cho khách đỗ nhà; chuộc kẻ làm tôi; chôn xác kẻ chết.\n- **Thương linh hồn:** Lấy lời lành khuyên người; mở dạy kẻ mê muội; yên ủi kẻ âu lo; răn bảo kẻ có tội; tha kẻ dể ta; nhịn kẻ mất lòng ta; cầu cho kẻ sống và kẻ chết.\n\n#### [ CÂU 320 ] Xây dựng \"Nền văn hóa gặp gỡ\" (Culture of Encounter):\n**Đáp:** Bước ra khỏi \"bong bóng an toàn\" và chiếc màn hình smartphone để thật sự nhìn vào mắt nhau, lắng nghe tiếng lòng của những người cô đơn, người già neo đơn và những bạn trẻ lầm lỡ trong xóm đạo.\n\n#### [ CÂU 328 ] Bản Tuyên Ngôn Dấn Thân Của Hiệp Sĩ Vào Đời:\n**Đáp:**\n> *\"Tôi tin rằng Tin Mừng Đức Kitô có sức mạnh biến đổi xã hội. Tôi cam kết sống trung thực trong học tập và nghề nghiệp, yêu thương hòa bình, sẵn sàng chìa tay giúp đỡ người nghèo khổ, và trở thành men muối tình yêu của Chúa giữa trần đời hôm nay!\"*"
+      }
+]
   },
 
   // ==========================================================================

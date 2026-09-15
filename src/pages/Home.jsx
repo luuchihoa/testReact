@@ -22,70 +22,69 @@ import {
   Copy,
   Check
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { useDailyLiturgy } from "../features/liturgy/useDailyLiturgy.js";
 import "./Home.css";
 
 /* ─────────────────────────────────────────────
-   1. DỮ LIỆU 4 NGÀNH THIẾU NHI THÁNH THỂ
+   1. DỮ LIỆU 4 NGÀNH HÙNG TÂM DŨNG CHÍ
 ───────────────────────────────────────────── */
 const NGANH_SECTIONS = [
   {
-    id: "au-nhi",
-    name: "Ngành Ấu Nhi",
-    ageText: "6 – 9 tuổi",
-    motto: "Vâng Lời",
-    badge: "Ươm Mầm & Bí Tích",
-    badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
-    accentColor: "emerald",
-    img: "/images/khoiruoclelandau.avif",
-    desc: "Gieo mầm đức tin đơn sơ, trong trắng vào tâm hồn tuổi thơ; chuẩn bị tâm hồn các em lãnh nhận Bí tích Hòa Giải và đón rước Chúa Giêsu Thánh Thể lần đầu tiên.",
+    id: "au-dung",
+    name: "Ngành Ấu (Ấu Hùng – Ấu Dũng)",
+    ageText: "5 – 9 tuổi",
+    motto: "Vâng Phục",
+    badge: "Khăn Xanh Chuối Non",
+    badgeColor: "bg-lime-100 text-lime-900 border-lime-300 dark:bg-lime-950/60 dark:text-lime-300 dark:border-lime-800",
+    accentColor: "lime",
+    img: "/images/khoiruocle-anngai.jpg",
+    desc: "Gieo mầm đức tin đơn sơ, trong trắng vào tâm hồn tuổi thơ; chuẩn bị tâm hồn các em đón rước Chúa Giêsu Bánh Hằng Sống và lãnh nhận Bí tích Hòa Giải lần đầu tiên.",
     khoiList: [
-      { name: "Khối Chiên Con & Vườn Trẻ", detail: "6 – 7 tuổi · 3 lớp", path: "/khối-chiên-con" },
-      { name: "Khối Rước Lễ Lần Đầu", detail: "8 – 9 tuổi · 4 lớp (RLLĐ 1 & 2)", path: "/khối-rước-lễ" }
+      { name: "Khối Chiên Con (Vườn Trẻ & Khai Tâm)", detail: "5 – 7 tuổi · 5 lớp học", path: "/khối-chiên-con" },
+      { name: "Khối Rước Lễ Lần Đầu", detail: "8 – 9 tuổi · 5 lớp (RLLĐ 1 & 2)", path: "/khối-rước-lễ" }
     ]
   },
   {
-    id: "thieu-nhi",
-    name: "Ngành Thiếu Nhi",
+    id: "kim-hoan",
+    name: "Ngành Kim Hoan",
     ageText: "10 – 11 tuổi",
-    motto: "Hy Sinh",
-    badge: "Ơn Chúa Thánh Thần",
-    badgeColor: "bg-sky-100 text-sky-900 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800",
-    accentColor: "sky",
+    motto: "Quảng Đại & Vui Tươi",
+    badge: "Khăn Vàng",
+    badgeColor: "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
+    accentColor: "amber",
     img: "/images/khoithemsuc.avif",
-    desc: "Nuôi dưỡng tinh thần hy sinh và phục vụ tha nhân; dẫn dắt các em lãnh nhận Bảy Ơn Chúa Thánh Thần qua Bí tích Thêm Sức để trở thành chứng nhân can đảm.",
+    desc: "Kim tâm (quảng đại) và Hoan dũng (vui tươi, hăng say); dẫn dắt các em lãnh nhận Bảy Ơn Chúa Thánh Thần qua Bí tích Thêm Sức để trở thành chứng nhân can đảm.",
     khoiList: [
       { name: "Khối Thêm Sức 1 & 2", detail: "10 – 11 tuổi · 6 lớp học", path: "/khối-thêm-sức" }
     ]
   },
   {
-    id: "nghia-si",
-    name: "Ngành Nghĩa Sĩ",
+    id: "nhiet-quang",
+    name: "Ngành Nhiệt Quang",
     ageText: "12 – 14 tuổi",
-    motto: "Chinh Phục",
-    badge: "Lời Chúa & Phụng Vụ",
-    badgeColor: "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
-    accentColor: "amber",
+    motto: "Nhiệt Tâm & Quang Dũng",
+    badge: "Khăn Da Cam",
+    badgeColor: "bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800",
+    accentColor: "orange",
     img: "/images/khoikinhthanh.avif",
-    desc: "Đào sâu Lịch Sử Cứu Độ qua Kinh Thánh, gắn bó mật thiết với Bàn Thờ Chúa qua việc Giúp Lễ và tham gia tích cực vào các cử hành Phụng Vụ Thánh Thể.",
+    desc: "Nhiệt thành và sáng suốt; đào sâu Lời Chúa qua Kinh Thánh, gắn bó mật thiết với Bàn Thờ Chúa qua việc Phụng Vụ và Lễ Sinh.",
     khoiList: [
-      { name: "Khối Phụng Vụ 1 & 2", detail: "12 tuổi · 6 lớp học", path: "/khối-phụng-vụ" },
+      { name: "Khối Phụng Vụ 1 & 2", detail: "12 tuổi · 3 lớp học", path: "/khối-phụng-vụ" },
       { name: "Khối Kinh Thánh 1 & 2", detail: "13 – 14 tuổi · 6 lớp học", path: "/khối-kinh-thánh" }
     ]
   },
   {
-    id: "hiep-si",
-    name: "Ngành Hiệp Sĩ",
+    id: "chinh-chien",
+    name: "Ngành Chinh Chiến",
     ageText: "15 – 18 tuổi",
-    motto: "Dấn Thân",
-    badge: "Trưởng Thành & Sứ Vụ",
-    badgeColor: "bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800",
-    accentColor: "orange",
+    motto: "Chiến Tâm & Chinh Dũng",
+    badge: "Khăn Đỏ",
+    badgeColor: "bg-red-100 text-red-900 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800",
+    accentColor: "red",
     img: "/images/khoivaodoi.avif",
-    desc: "Rèn luyện bản lĩnh người tông đồ trẻ, trang bị tri thức và nền tảng luân lý Kitô giáo vững vàng để sống chứng nhân giữa lòng học đường và xã hội.",
+    desc: "Rèn luyện bản lĩnh người Kitô hữu trưởng thành, vượt qua thử thách để sống chứng tá đức tin mạnh mẽ giữa đời.",
     khoiList: [
-      { name: "Khối Vào Đời 1 & 2", detail: "15 – 18 tuổi · 5 lớp học", path: "/khối-vào-đời" }
+      { name: "Khối Vào Đời 1, 2 & 3", detail: "15 – 18 tuổi · 5 lớp học", path: "/khối-vào-đời" }
     ]
   }
 ];
@@ -171,7 +170,7 @@ export default function Home() {
 
   useEffect(() => {
     const prevTitle = document.title;
-    document.title = "Trang Chủ | Xứ Đoàn Thiếu Nhi Thánh Thể Mẹ Mân Côi - Giáo Xứ An Ngãi";
+    document.title = "Trang Chủ | Xứ Đoàn Hùng Tâm Dũng Chí Mẹ Mân Côi - Giáo Xứ An Ngãi";
 
     return () => {
       document.title = prevTitle;
@@ -397,7 +396,7 @@ export default function Home() {
               <em>6 Khối Giáo Lý</em>
             </h2>
             <p className="home-section-desc">
-              Xứ đoàn Mẹ Mân Côi áp dụng đường hướng giáo dục của Phong trào Thiếu Nhi Thánh Thể,
+              Xứ đoàn Mẹ Mân Côi áp dụng đường hướng giáo dục của Phong trào Hùng Tâm Dũng Chí,
               từng bước đồng hành cùng các em từ thuở ấu thơ đến khi trưởng thành vững bước vào đời.
             </p>
           </div>

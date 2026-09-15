@@ -698,6 +698,52 @@ export function getBibleBookPdfUrl(bookId) {
 /**
  * Tìm thông tin sách theo ID
  */
+/**
+ * Danh sách các nhóm phân loại Kinh Thánh chuẩn mực
+ */
+export const BIBLE_CATEGORIES = [
+  { id: "all", label: "Tất cả 73 Sách", count: 73 },
+  { id: "old", label: "Cựu Ước", count: 46 },
+  { id: "new", label: "Tân Ước", count: 27 },
+  { id: "Ngũ Thư", label: "Ngũ Thư (Torah)", count: 5, testament: "old" },
+  { id: "Lịch Sử", label: "Lịch Sử", count: 17 },
+  { id: "Giáo Huấn", label: "Khôn Ngoan & Thi Ca", count: 7, testament: "old" },
+  { id: "Ngôn Sứ", label: "Các Ngôn Sứ", count: 18, testament: "old" },
+  { id: "Tin Mừng", label: "Bốn Tin Mừng", count: 4, testament: "new" },
+  { id: "Thư Tông Đồ", label: "Thư Phaolô & Tông Đồ", count: 21, testament: "new" },
+  { id: "Khải Huyền", label: "Khải Huyền", count: 1, testament: "new" }
+];
+
+/**
+ * Tóm tắt ý nghĩa và bối cảnh từng nhóm thể loại sách
+ */
+export const BIBLE_CATEGORY_INFO = {
+  "Ngũ Thư": "Bộ năm sách Luật (Torah) nền tảng, công trình tạo dựng và giao ước nguyên khởi của Thiên Chúa.",
+  "Lịch Sử": "Hành trình sống động của Dân Chúa từ thời các Thủ lãnh đến các Vua và thời lưu đày phục hưng.",
+  "Giáo Huấn": "Kho tàng thánh vịnh cầu nguyện, thi ca tâm linh và lẽ khôn ngoan sâu sắc cho đời sống Kitô hữu.",
+  "Ngôn Sứ": "Tiếng nói can đảm cảnh tỉnh dân tộc, loan báo ơn công chính và tiên tri Đấng Mêsia Cứu Độ.",
+  "Tin Mừng": "Trung tâm của toàn bộ Kinh Thánh: Cuộc đời, lời giảng dạy và mầu nhiệm Vượt Qua của Chúa Giêsu Kitô.",
+  "Thư Tông Đồ": "Những bức tâm thư đầy nhiệt huyết của các Tông đồ gửi các cộng đoàn Hội Thánh tiên khởi.",
+  "Khải Huyền": "Bức tranh tiên tri tràn đầy niềm hy vọng Kitô giáo về sự vinh thắng cuối cùng của Thiên Chúa Tình Yêu."
+};
+
+/**
+ * Lấy sách trước và sách kế tiếp để điều hướng liền mạch
+ */
+export function getAdjacentBooks(bookId) {
+  if (!bookId) return { prev: null, next: null };
+  const cleanId = String(bookId).toLowerCase().trim();
+  const idx = ALL_BIBLE_BOOKS.findIndex((b) => b.id === cleanId);
+  if (idx === -1) return { prev: null, next: null };
+  return {
+    prev: idx > 0 ? ALL_BIBLE_BOOKS[idx - 1] : null,
+    next: idx < ALL_BIBLE_BOOKS.length - 1 ? ALL_BIBLE_BOOKS[idx + 1] : null
+  };
+}
+
+/**
+ * Tìm thông tin sách theo ID
+ */
 export function findBookById(id) {
   if (!id) return null;
   const cleanId = String(id).toLowerCase().trim();
@@ -705,12 +751,17 @@ export function findBookById(id) {
 }
 
 /**
- * Tìm kiếm sách theo từ khóa (tên đầy đủ, tên viết tắt, nhóm)
+ * Tìm kiếm sách theo từ khóa (tên đầy đủ, tên viết tắt, nhóm) và lọc theo phân loại
  */
-export function searchBibleBooks(query, testament = "all") {
+export function searchBibleBooks(query, filter = "all") {
   let list = ALL_BIBLE_BOOKS;
-  if (testament === "old") list = OLD_TESTAMENT_BOOKS;
-  if (testament === "new") list = NEW_TESTAMENT_BOOKS;
+  if (filter === "old") {
+    list = OLD_TESTAMENT_BOOKS;
+  } else if (filter === "new") {
+    list = NEW_TESTAMENT_BOOKS;
+  } else if (filter && filter !== "all") {
+    list = ALL_BIBLE_BOOKS.filter((b) => b.category === filter);
+  }
 
   if (!query || !query.trim()) return list;
 

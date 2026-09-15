@@ -1,13 +1,15 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
+import { PWAInstallProvider } from "./components/ui/PWAInstallContext.jsx";
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "./lib/supabase.js";
 
 const ReactLenisLazy = lazy(() => 
-  import("lenis/react").then(mod => {
+  // eslint-disable-next-line no-unused-vars
+  import("lenis/react").then(({ ReactLenis }) => {
     const WrappedComponent = (props) => {
-      return <mod.ReactLenis {...props} ref={(inst) => { if (inst) window.lenis = inst.lenis; }} />;
+      return <ReactLenis {...props} ref={(inst) => { if (inst) window.lenis = inst.lenis; }} />;
     };
     return { default: WrappedComponent };
   })
@@ -127,7 +129,11 @@ const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) 
 };
 
 export default function App() {
-  const [fontSize, setFontSize] = useState("base");
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window === "undefined") return "base";
+    const saved = localStorage.getItem("fontSize");
+    return saved && fontSizeMap[saved] ? saved : "base";
+  });
   const [turnOnModal, setTurnOnModal] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
 
@@ -143,11 +149,6 @@ export default function App() {
       (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
     
     document.documentElement.classList.toggle("dark", isDark);
-
-    const savedFontSize = localStorage.getItem("fontSize");
-    if (savedFontSize && fontSizeMap[savedFontSize]) {
-      setFontSize(savedFontSize);
-    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -197,6 +198,7 @@ export default function App() {
           <Route path="khối-kinh-thánh" element={<KhoiKinhThanh />} />
           <Route path="khối-vào-đời" element={<KhoiVaoDoi />} />
           <Route path="giới-trẻ-công-giáo" element={<GioiTre />} />
+          <Route path="giới-trẻ" element={<Navigate to="/giới-trẻ-công-giáo" replace />} />
           <Route path="tài-liệu" element={<TaiLieu />} />
           <Route path="lịch-học" element={<LichHoc />} />
           <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
@@ -274,23 +276,25 @@ export default function App() {
 
   return (
     <ToastProvider>
-      {isMobile ? (
-        renderAppContent()
-      ) : (
-        <Suspense fallback={renderAppContent()}>
-          <ReactLenisLazy
-            root
-            options={{
-              duration: 1.2,
-              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-              smoothTouch: false,
-              touchMultiplier: 1.5,
-            }}
-          >
-            {renderAppContent()}
-          </ReactLenisLazy>
-        </Suspense>
-      )}
+      <PWAInstallProvider>
+        {isMobile ? (
+          renderAppContent()
+        ) : (
+          <Suspense fallback={renderAppContent()}>
+            <ReactLenisLazy
+              root
+              options={{
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothTouch: false,
+                touchMultiplier: 1.5,
+              }}
+            >
+              {renderAppContent()}
+            </ReactLenisLazy>
+          </Suspense>
+        )}
+      </PWAInstallProvider>
     </ToastProvider>
   );
 }

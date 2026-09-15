@@ -1,368 +1,654 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
-  Users, Music, HandHeart, Globe, Mic2,
-  Flame, BookOpen, MapPin, Clock, CalendarDays,
+  Users, Flame, BookOpen, HandHeart,
+  Sparkles, ChevronDown, CheckCircle2,
+  Compass, ArrowRight, Church,
+  Quote, Calendar, Clock, MapPin, HeartHandshake,
+  Smile, UserCheck
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { usePageMotion } from "../hooks/usePageMotion.js";
-import HeroSection from "../features/khoi/HeroSection.jsx";
-import OverviewCards from "../features/khoi/OverviewCards.jsx";
-import CtaSection from "../features/khoi/CtaSection.jsx";
-
-// Hằng số Easing chuẩn hệ thống
-const APPLE_EASE = [0.16, 1, 0.3, 1];
-
-/* ── Dữ liệu ── */
-const OVERVIEW = [
-  { icon: Users,        label: "Thành viên",  value: "Đã hoàn thành Khai Tâm" },
-  { icon: Clock,        label: "Sinh hoạt",   value: "2 lần / tháng" },
-  { icon: CalendarDays, label: "Lịch nhóm",   value: "Thứ Bảy tối, 19:00" },
-  { icon: MapPin,       label: "Địa điểm",    value: "Nhà giáo lý An Ngãi" },
-];
-
-const PILLARS = [
-  {
-    icon: Flame,
-    title: "Linh đạo",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-orange-500/40 shadow-sm",
-    iconBg: "bg-orange-100/80 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200/50 dark:border-orange-800/30 shadow-sm",
-    iconColor: "text-orange-600 dark:text-orange-400",
-    dot: "bg-orange-500 shadow-sm",
-    items: [
-      "Cầu nguyện chung — Giờ Kinh Phụng vụ",
-      "Lectio Divina theo nhóm nhỏ",
-      "Tĩnh tâm hàng quý (1 ngày)",
-      "Đồng hành tâm linh cá nhân",
-      "Chầu Thánh Thể định kỳ",
-    ],
-  },
-  {
-    icon: BookOpen,
-    title: "Học hỏi",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-sky-500/40 shadow-sm",
-    iconBg: "bg-sky-100/80 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/30 shadow-sm",
-    iconColor: "text-sky-700 dark:text-sky-400",
-    dot: "bg-sky-500 shadow-sm",
-    items: [
-      "Đọc sách thần học — chia sẻ hàng tháng",
-      "Thảo luận Học thuyết Xã hội CG",
-      "Kỹ năng lãnh đạo Kitô giáo",
-      "Tiếng Anh / Tin học phục vụ",
-      "Seminar chuyên đề Phụng vụ",
-    ],
-  },
-  {
-    icon: HandHeart,
-    title: "Phục vụ",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-rose-500/40 shadow-sm",
-    iconBg: "bg-rose-100/80 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/30 shadow-sm",
-    iconColor: "text-rose-600 dark:text-rose-400",
-    dot: "bg-rose-500 shadow-sm",
-    items: [
-      "Phụ trách giáo lý các khối nhỏ",
-      "Tình nguyện xã hội — thăm bệnh nhân",
-      "Hỗ trợ lễ hội và sự kiện giáo xứ",
-      "Gây quỹ học bổng học sinh nghèo",
-      "Nhóm ca đoàn Giới Trẻ",
-    ],
-  },
-  {
-    icon: Globe,
-    title: "Hiện diện",
-    color: "bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border-amber-900/10 dark:border-amber-100/10 md:hover:border-emerald-500/40 shadow-sm",
-    iconBg: "bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30 shadow-sm",
-    iconColor: "text-emerald-700 dark:text-emerald-400",
-    dot: "bg-emerald-500 shadow-sm",
-    items: [
-      "Fanpage & Instagram Giới Trẻ",
-      "Blog chia sẻ đức tin hàng tuần",
-      "Podcast Giới Trẻ — câu chuyện",
-      "Kết nối với giới trẻ giáo xứ bạn",
-      "Tham dự Đại hội Giới Trẻ",
-    ],
-  },
-];
-
-const EVENTS = [
-  { month: "Th.1",  name: "Gặp gỡ & Dâng năm mới",          tag: "Cộng đoàn", color: "bg-sky-100/80 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-sky-200/50 dark:border-sky-800/30" },
-  { month: "Th.2",  name: "Mùa Chay — Tĩnh tâm 24 giờ",       tag: "Linh đạo", color: "bg-orange-100/80 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200/50 dark:border-orange-800/30" },
-  { month: "Th.4",  name: "Đêm Vượt Qua",      tag: "Phụng vụ", color: "bg-violet-100/80 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 border-violet-200/50 dark:border-violet-800/30" },
-  { month: "Th.6",  name: "Trại hè Đức tin",          tag: "Hội hè", color: "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/30" },
-  { month: "Th.8",  name: "Đại hội Giới Trẻ Giáo phận",        tag: "Giáo phận", color: "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200/50 dark:border-blue-800/30" },
-  { month: "Th.9",  name: "Khai giảng — Nhận thành viên",      tag: "Nhóm", color: "bg-rose-100/80 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200/50 dark:border-rose-800/30" },
-  { month: "Th.11", name: "Tháng các Đẳng linh hồn",        tag: "Linh đạo", color: "bg-orange-100/80 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200/50 dark:border-orange-800/30" },
-  { month: "Th.12", name: "Gala cuối năm",          tag: "Cộng đoàn", color: "bg-sky-100/80 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-sky-200/50 dark:border-sky-800/30" },
-];
-
-const ROLES = [
-  { role: "Trưởng nhóm",         desc: "Điều phối chung, đại diện nhóm với giáo xứ." },
-  { role: "Phó nhóm Linh đạo",   desc: "Tổ chức cầu nguyện, tĩnh tâm và sinh hoạt đức tin." },
-  { role: "Phó nhóm Phục vụ",    desc: "Điều phối tình nguyện và các hoạt động bác ái." },
-  { role: "Thư ký",              desc: "Ghi biên bản, quản lý danh sách thành viên." },
-  { role: "Thủ quỹ",             desc: "Quản lý tài chính và quỹ nhóm minh bạch." },
-  { role: "Truyền thông",         desc: "Fanpage, bản tin và kết nối cộng đoàn trực tuyến." },
-];
-
-const CHANNELS = [
-  {
-    icon: "instagram",
-    title: "Instagram",
-    desc: "Ảnh sinh hoạt, câu chuyện đức tin và khoảnh khắc cộng đoàn.",
-    link: "#",
-    label: "@giantreanngai",
-    bg: "bg-pink-100/80 dark:bg-pink-900/30",
-    border: "border-pink-200/50 dark:border-pink-800/30",
-    textHover: "text-pink-600 dark:text-pink-400",
-  },
-  {
-    icon: Globe,
-    title: "Website",
-    desc: "Bản tin, bài chia sẻ và lịch sinh hoạt cập nhật hàng tháng.",
-    link: "#",
-    label: "giantreanngai.com",
-    bg: "bg-sky-100/80 dark:bg-sky-900/30",
-    border: "border-sky-200/50 dark:border-sky-800/30",
-    textHover: "text-sky-600 dark:text-sky-400",
-  },
-  {
-    icon: Music,
-    title: "Podcast",
-    desc: "Câu chuyện đức tin của các bạn trẻ — mỗi tuần 1 tập.",
-    link: "#",
-    label: "Spotify / Apple Podcasts",
-    bg: "bg-emerald-100/80 dark:bg-emerald-900/30",
-    border: "border-emerald-200/50 dark:border-emerald-800/30",
-    textHover: "text-emerald-600 dark:text-emerald-400",
-  },
-];
-
-function InstagramIcon({ className }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  );
-}
+import "./GioiTre.css";
 
 export default function GioiTre() {
-  const { heroRef, lenis, heroY, fadeUp, heroReveal, vp } = usePageMotion();
+  const [openFaq, setOpenFaq] = useState(null);
+
+  // Quản lý document.title đồng bộ theo chuẩn AGENTS.md
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "Giới Trẻ Công Giáo · Ban Mục Vụ Giới Trẻ | Giáo xứ An Ngãi";
+    return () => {
+      document.title = prevTitle;
+    };
+  }, []);
+
+  // 4 Chiều kích sinh hoạt sứ mạng cốt lõi của Giới Trẻ An Ngãi
+  const corePillars = [
+    {
+      id: "taize",
+      icon: Flame,
+      badge: "Linh Đạo Chiêm Niệm",
+      title: "1. Giờ Kinh Taizé & Phụng Vụ Sâu Lắng",
+      sub: "Điểm tựa bình an nội tâm",
+      desc: "Tạm gác lại những âu lo học tập và công việc bề bộn để tìm về sự thinh lặng bên Thánh Giá nến sáng, ngân vang những câu kinh Taizé và kín múc sức sống từ Lời Chúa.",
+      tags: [
+        "Giờ kinh Taizé tối Thứ Bảy",
+        "Thinh lặng trước Thánh Thể",
+        "Hiệp dâng Thánh Lễ Chúa Nhật",
+        "Tĩnh tâm Mùa Chay & Mùa Vọng"
+      ],
+      linkText: "Xem lịch sinh hoạt",
+      linkHref: "#lich"
+    },
+    {
+      id: "caritas",
+      icon: HandHeart,
+      badge: "Dấn Thân Xã Hội",
+      title: "2. Bác Ái Caritas & Dự Án Laudato Si'",
+      sub: "Đức tin biến thành hành động",
+      desc: "Biến đức tin thành nghĩa cử cụ thể: trực tiếp điều hành các chuyến viếng thăm mái ấm khuyết tật, nâng đỡ người già neo đơn và thực hiện các chiến dịch xanh bảo vệ môi sinh.",
+      tags: [
+        "Viếng thăm mái ấm tình thương",
+        "Chiến dịch Giáng Sinh & Tết ấm",
+        "Sống xanh Laudato Si'",
+        "Học bổng nâng bước trẻ thơ"
+      ],
+      linkText: "Tham gia dự án",
+      linkHref: "/liên-hệ"
+    },
+    {
+      id: "community",
+      icon: Users,
+      badge: "Tình Bạn Thánh Thiện",
+      title: "3. Trại Hè, Diễn Nguyện & Gắn Kết Huynh Đệ",
+      sub: "Môi trường bạn bè cùng đức tin",
+      desc: "Một sân chơi lành mạnh, văn minh, không bia rượu hay tệ nạn: nơi bạn tìm thấy những người bạn tri kỷ qua các kỳ trại kỹ năng dã ngoại, đêm nhạc acoustic và giải thể thao giáo xứ.",
+      tags: [
+        "Hội trại kỹ năng hè dã ngoại",
+        "Đêm hoan ca & diễn nguyện",
+        "Giải thể thao giao hữu liên xứ",
+        "Gặp gỡ chuyên đề cuối tuần"
+      ],
+      linkText: "Khám phá hoạt động",
+      linkHref: "#lich"
+    },
+    {
+      id: "vocation",
+      icon: Compass,
+      badge: "Định Hướng Ơn Gọi",
+      title: "4. Phân Định Nghề Nghiệp & Hôn Nhân Kitô",
+      sub: "Vững bước tương lai",
+      desc: "Đồng hành cùng bạn trẻ trước các quyết định lớn của cuộc đời: lựa chọn ngành nghề, giữ vững lương tâm liêm chính nơi công sở và chuẩn bị hành trang bước vào đời sống gia đình Kitô giáo.",
+      tags: [
+        "Tư vấn phân định nghề nghiệp",
+        "Thần học thân xác & tình yêu",
+        "Kỹ năng quản trị cuộc sống",
+        "Dự nguồn Huynh Trưởng & GLV"
+      ],
+      linkText: "Gặp ban cố vấn",
+      linkHref: "#dong-hanh"
+    }
+  ];
+
+  // Lịch sinh hoạt tối Thứ Bảy định kỳ (Tuần 2 & Tuần 4 hàng tháng)
+  const scheduleSteps = [
+    {
+      time: "19:15",
+      label: "Đón Tiếp & Khởi Động Kết Nối",
+      sub: "Tiền sảnh Nhà Mục Vụ · Chào hỏi, chia sẻ và kết nối bạn mới",
+      icon: Smile
+    },
+    {
+      time: "19:30 – 20:15",
+      label: "Giờ Kinh Taizé & Lắng Nghe Lời Chúa",
+      sub: "Phòng sinh hoạt Giới Trẻ · Lắng đọng tâm hồn bên Thánh Giá nến sáng",
+      icon: Flame,
+      highlight: true
+    },
+    {
+      time: "20:15 – 21:00",
+      label: "Chuyên Đề Sống Đạo & Thảo Luận",
+      sub: "Học hỏi Docat, giải quyết tình huống thực tế và triển khai dự án bác ái",
+      icon: BookOpen,
+      highlight: true
+    },
+    {
+      time: "21:00",
+      label: "Phép Lành & Lời Chúc Bình An",
+      sub: "Dâng lời tạ ơn cuối ngày, nhận phép lành và trao nhau lời chào thân tình",
+      icon: CheckCircle2
+    }
+  ];
+
+  // 4 Mùa sự kiện lớn trong năm của Giới Trẻ An Ngãi
+  const seasonalEvents = [
+    {
+      season: "MÙA CHAY",
+      name: "Tĩnh Tâm & Sa Mạc Thinh Lặng",
+      desc: "1 ngày trọn vẹn thinh lặng chiêm niệm, xét mình, xưng tội và chuẩn bị tâm hồn đón mừng Chúa Phục Sinh.",
+      badge: "Lắng Đọng Tâm Linh"
+    },
+    {
+      season: "MÙA HÈ",
+      name: "Hội Trại Kỹ Năng & Dã Ngoại",
+      desc: "3 ngày 2 đêm rèn luyện kỹ năng sinh tồn, tinh thần đồng đội, lửa trại và gắn kết tình huynh đệ.",
+      badge: "Sôi Động & Rèn Luyện"
+    },
+    {
+      season: "MÙA VỌNG",
+      name: "Chiến Dịch Bác Ái Giáng Sinh",
+      desc: "Gây quỹ, làm hang đá và trực tiếp mang quà trao tận tay các mảnh đời bất hạnh, người già neo đơn.",
+      badge: "Sứ Mạng Caritas"
+    },
+    {
+      season: "TẾT NGUYÊN ĐÁN",
+      name: "Đêm Hoan Ca Hội Ngộ Xa Quê",
+      desc: "Đêm nhạc ấm áp họp mặt toàn thể anh chị em sinh viên, người đi làm xa quê trở về sum họp bên giáo xứ mẹ.",
+      badge: "Hội Ngộ Huynh Đệ"
+    }
+  ];
+
+  // 2 Câu chuyện người trong cuộc (Testimonials)
+  const testimonials = [
+    {
+      quote: "Hồi mới bước chân vào đại học ở Đà Nẵng, em rất ngợp và cô đơn giữa môi trường mới. Nhờ các buổi sinh hoạt tối Thứ Bảy khi về quê, em tìm lại được sự bình an trong giờ Taizé và quen được những người bạn cùng chung chí hướng giúp em không bị cuốn vào lối sống sa đà.",
+      author: "Maria Mai Hoa",
+      role: "Sinh viên năm 3 · Trường ĐH Sư Phạm Đà Nẵng",
+      avatarText: "MH"
+    },
+    {
+      quote: "Đi làm công ty cả tuần rất nhiều áp lực và căng thẳng. Tham gia vào nhóm Caritas Giới Trẻ An Ngãi, tự tay trao những phần quà đến cho các cụ già neo đơn, mình mới cảm nhận trọn vẹn niềm vui trao ban. Ở đây không có sự so đo địa vị hay thu nhập, chỉ có tình huynh đệ chân thành.",
+      author: "Tôma Tuấn Hưng",
+      role: "Kỹ sư Phần mềm · Đi làm 2 năm tại Đà Nẵng",
+      avatarText: "TH"
+    }
+  ];
+
+  // 5 Câu hỏi thường gặp (FAQ)
+  const faqs = [
+    {
+      q: "Em đi học đại học hoặc đi làm xa ở thành phố thì có tham gia được không?",
+      a: "Hoàn toàn được! Lịch sinh hoạt định kỳ diễn ra vào tối Thứ Bảy (2 tuần/lần) được sắp xếp rất thuận tiện cho các bạn về thăm nhà dịp cuối tuần. Ngoài ra, Giới Trẻ An Ngãi duy trì nhóm kết nối trực tuyến và tổ chức các chương trình trọng điểm vào dịp hè, Lễ Giáng Sinh và Tết Nguyên Đán để mọi bạn trẻ xa quê đều có thể sum họp."
+    },
+    {
+      q: "Em có bắt buộc phải tham gia đủ 100% tất cả các buổi không?",
+      a: "Không hề áp đặt! Ban Điều Hành luôn thấu hiểu và tôn trọng lịch học tập, thi cử và công việc riêng của mỗi bạn. Nhóm khuyến khích sự hiện diện đều đặn để gắn kết tình huynh đệ, nhưng bạn luôn có thể báo trước nếu có lịch bận đột xuất mà không phải e ngại."
+    },
+    {
+      q: "Em chưa quen ai trong nhóm thì đến có bị bỡ ngỡ không?",
+      a: "Đừng lo lắng! Mỗi buổi sinh hoạt luôn có các anh chị ban tiếp tân đón tiếp bạn ngay từ cổng, giới thiệu bạn với một nhóm nhỏ để làm quen và có 'người bạn đồng hành' chia sẻ, hướng dẫn bạn hòa nhập một cách tự nhiên và ấm áp nhất."
+    },
+    {
+      q: "Tham gia Giới Trẻ có cơ hội được đào tạo để trở thành Giáo Lý Viên / Huynh Trưởng không?",
+      a: "Có! Giới Trẻ chính là vườn ươm thế hệ tông đồ tương lai của Giáo xứ An Ngãi. Hằng năm, Ban Giáo Lý đều mở các lớp Dự Trưởng và Sư phạm Giáo lý dành riêng cho các bạn trẻ có ước ao dấn thân đồng hành hướng dẫn các em thiếu nhi các khối nhỏ hơn."
+    },
+    {
+      q: "Tham gia sinh hoạt Giới Trẻ có phải đóng học phí hay kinh phí gì không?",
+      a: "Hoàn toàn không có học phí! Mọi hoạt động sinh hoạt định kỳ và tài liệu đều được Giáo xứ và Ban Mục Vụ tài trợ. Đối với các chuyến dã ngoại lớn hay hội trại hè, nhóm sẽ lên kế hoạch gây quỹ bác ái và công khai minh bạch mọi khoản đóng góp tự nguyện."
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-900 dark:bg-[#1C1917] dark:text-stone-50 antialiased overflow-x-hidden selection:bg-sky-500/20 dark:selection:bg-sky-500/30 transition-colors duration-500">
+    <div className="gt-page">
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 1: HERO SECTION
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="gt-hero">
+        <div className="gt-shell">
+          <div className="gt-hero-grid">
+            {/* Cột trái: Văn bản & CTA */}
+            <div className="gt-hero-left">
+              <div className="gt-hero-pill-badge">
+                <Users size={14} className="gt-hero-pill-icon" aria-hidden="true" />
+                <span>Ban Mục Vụ Giới Trẻ · Giáo Xứ An Ngãi</span>
+              </div>
 
-      <HeroSection
-        heroRef={heroRef}
-        heroY={heroY}
-        fadeUp={heroReveal}
-        lenis={lenis}
-        sectionBgClass="bg-gradient-to-b from-white via-[#FDFBF7] to-[#FDFBF7] dark:from-[#1C1917] dark:via-[#191614] dark:to-[#191614]"
-        glowClass="bg-sky-500/5 dark:bg-sky-500/10"
-        eyebrowIcon={Users}
-        eyebrowLabel="Giới Trẻ Công Giáo"
-        eyebrowClass="bg-sky-100/80 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/30 shadow-sm"
-        titleLine1="Trẻ trung, dấn thân"
-        titleLine2="sống đức tin"
-        titleGradientClass="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 dark:from-sky-400 dark:via-blue-400 dark:to-indigo-400"
-        description="Sau khi hoàn thành hành trình giáo lý, Giới Trẻ Công Giáo là nơi các bạn tiếp tục lớn lên — cùng nhau cầu nguyện, học hỏi, phục vụ và trở thành nhân chứng Tin Mừng sống động."
-        primaryCtaLabel="Khám phá nhóm"
-        primaryCtaTargetId="sinh-hoat"
-        primaryCtaClass="bg-sky-600 hover:bg-sky-500 dark:bg-sky-600 dark:hover:bg-sky-500 text-white"
-        secondaryCtaLabel="Tham gia ngay"
-        secondaryCtaTo="/liên-hệ"
-        image={{ src: "https://lh3.googleusercontent.com/d/1tnxBqhr_su9_FgK6zdSkLa4h-w7CAlKJ", alt: "Giới Trẻ Công Giáo" }}
-        imageGlowClass="bg-gradient-to-tr from-sky-500/5 to-blue-500/5"
-        floatBadge={{ label: "Sau Khối Vào Đời", sub: "Giai đoạn trưởng thành", dotClass: "bg-sky-500" }}
-      />
+              <h1 className="gt-hero-title">
+                Người Trẻ Kitô Hữu — <em>Dấn Thân Sống Đạo</em> Giữa Dòng Đời
+              </h1>
 
-      <OverviewCards items={OVERVIEW} accentBgClass="bg-sky-100/50 dark:bg-sky-900/20" accentTextClass="text-sky-900 dark:text-sky-400" accentBorderClass="border-sky-900/10 dark:border-sky-700/30" />
+              <p className="gt-hero-desc">
+                Không gian cộng đoàn rộng mở dành cho các bạn trẻ từ 17 tuổi trở lên (học sinh THPT, sinh viên và người đi làm): Nơi cùng nhau thắp sáng ngọn lửa đức tin, nuôi dưỡng tình bạn thánh thiện và can đảm dấn thân phụng sự tha nhân.
+              </p>
 
-      {/* 4 TRỤ CỘT SINH HOẠT */}
-      <section id="sinh-hoat" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400 ml-1">Sinh hoạt</p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Bốn trụ cột của Giới Trẻ</h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-            Mỗi buổi sinh hoạt đan xen cả bốn chiều kích — không chỉ nghe giảng, mà còn chia sẻ, phục vụ và kết nối với cộng đoàn rộng lớn.
-          </p>
-        </div>
+              <div className="gt-hero-actions">
+                <a href="#su-mang" className="gt-btn-primary">
+                  <span>Khám Phá Sứ Mạng &amp; Hoạt Động</span>
+                  <ArrowRight size={18} aria-hidden="true" className="gt-btn-icon" />
+                </a>
+                <Link to="/liên-hệ" className="gt-btn-secondary">
+                  <Sparkles size={17} aria-hidden="true" className="gt-btn-icon" />
+                  <span>Gia Nhập Cộng Đoàn</span>
+                </Link>
+              </div>
+            </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-          {PILLARS.map((p, i) => {
-            const Icon = p.icon;
-            return (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={vp}
-                custom={i * 0.08}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className={`rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col h-full transition-all duration-300 hover:shadow-xl ${p.color}`}
-              >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${p.iconBg}`}>
-                  <Icon className={`w-6 h-6 ${p.iconColor}`} strokeWidth={2.5} />
-                </div>
-                <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-6">{p.title}</h3>
-                <div className="space-y-3 mt-auto">
-                  {p.items.map((item, j) => (
-                    <div key={j} className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl bg-white/40 dark:bg-[#1C1917]/40 border border-amber-900/5 dark:border-amber-100/5 shadow-sm group hover:bg-white/80 dark:hover:bg-[#1C1917]/80 transition-colors">
-                      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${p.iconBg.replace('shadow-sm', '')}`}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                      </div>
-                      <span className="text-[14px] text-stone-700 dark:text-stone-300 font-medium leading-relaxed">{item}</span>
+            {/* Cột phải: Khung ảnh 4:3 & Floating Badge uy tín */}
+            <div className="gt-hero-right">
+              <div className="gt-hero-image-card">
+                <img
+                  src="/images/gioi-thieu/hoi-trai-1280.webp"
+                  alt="Cộng đoàn Giới Trẻ Giáo xứ An Ngãi trong ngày hội trại truyền thống"
+                  className="gt-hero-img"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+                <div className="gt-floating-badge">
+                  <div className="gt-floating-badge-icon">
+                    <Users size={20} aria-hidden="true" />
+                  </div>
+                  <div className="gt-floating-badge-content">
+                    <div className="gt-floating-badge-title">
+                      Cộng Đoàn Giới Trẻ An Ngãi
                     </div>
-                  ))}
+                    <div className="gt-floating-badge-sub">
+                      Mái ấm đức tin &amp; thanh xuân sau Khối Vào Đời
+                    </div>
+                  </div>
                 </div>
-              </motion.div>
-            );
-          })}
+              </div>
+            </div>
+          </div>
+
+          {/* Dải tổng quan 4 chỉ số (Overview Bar) Bento Chips */}
+          <div className="gt-overview-bar">
+            <div className="gt-overview-chip">
+              <span className="gt-chip-cat">Độ tuổi</span>
+              <span className="gt-chip-value">17+ Tuổi</span>
+              <span className="gt-chip-label">Sinh Viên &amp; Thanh Niên</span>
+            </div>
+            <div className="gt-overview-chip">
+              <span className="gt-chip-cat">Quy mô</span>
+              <span className="gt-chip-value">80+ Bạn Trẻ</span>
+              <span className="gt-chip-label">Gắn kết thường xuyên</span>
+            </div>
+            <div className="gt-overview-chip">
+              <span className="gt-chip-cat">Lịch sinh hoạt</span>
+              <span className="gt-chip-value">Tối Thứ Bảy</span>
+              <span className="gt-chip-label">Tuần 2 &amp; 4 · 19:30</span>
+            </div>
+            <div className="gt-overview-chip">
+              <span className="gt-chip-cat">Linh đạo</span>
+              <span className="gt-chip-value">Christus Vivit</span>
+              <span className="gt-chip-label">Đức Kitô đang sống</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* SỰ KIỆN THƯỜNG NIÊN */}
-      <section className="py-20 sm:py-24 border-y border-amber-900/5 dark:border-amber-100/5 bg-stone-50/50 dark:bg-[#1C1917]/50 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-            <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400 ml-1">Lịch trình năm</p>
-            <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Sự kiện thường niên</h2>
-            <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-              Một năm trọn vẹn với những dấu ấn không thể quên — gắn với nhịp sống Phụng vụ và hành trình đức tin cộng đoàn.
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 2: BỐN CHIỀU KÍCH SỨ MẠNG (CORE PILLARS)
+      ══════════════════════════════════════════════════════════════ */}
+      <section id="su-mang" className="gt-pillars-section">
+        <div className="gt-shell">
+          <div className="gt-section-header">
+            <div className="gt-eyebrow">
+              <span className="gt-dot" />
+              <span>BỐN CHIỀU KÍCH SINH HOẠT CỐT LÕI</span>
+            </div>
+            <h2 className="gt-section-title">
+              Hành Trang Thanh Xuân <em>Giới Trẻ An Ngãi</em>
+            </h2>
+            <p className="gt-section-desc">
+              Thay vì các tiết học giáo lý tuần tự như thiếu nhi, Giới Trẻ vận hành theo 4 chiều kích trưởng thành toàn diện: Linh đạo chiêm niệm, Bác ái thực tế, Tình bạn huynh đệ và Kỹ năng phân định tương lai.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-            {EVENTS.map((ev, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={vp}
-                custom={i * 0.05}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[20px] border border-amber-900/10 dark:border-amber-100/10 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden group"
-              >
-                <div className="px-5 py-3 border-b border-dashed border-amber-900/20 dark:border-amber-100/20 bg-stone-100/50 dark:bg-stone-800/30 flex justify-between items-center">
-                  <p className="text-[13px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-500">
-                    {ev.month}
-                  </p>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-widest border shadow-sm ${ev.color}`}>
-                    {ev.tag}
-                  </span>
+          <div className="gt-pillars-grid">
+            {corePillars.map((p) => {
+              const PIcon = p.icon;
+              return (
+                <div key={p.id} className={`gt-pillar-card theme-${p.id}`}>
+                  <div className="gt-pillar-main">
+                    <div className="gt-pillar-card-top">
+                      <div className="gt-pillar-icon-box">
+                        <PIcon size={22} aria-hidden="true" />
+                      </div>
+                      <span className="gt-pillar-badge">{p.badge}</span>
+                    </div>
+
+                    <h3 className="gt-pillar-title">{p.title}</h3>
+                    <p className="gt-pillar-desc">{p.desc}</p>
+
+                    <div className="gt-pillar-topics-grid">
+                      {p.tags.map((tag, tIdx) => (
+                        <div key={tIdx} className="gt-pillar-topic-chip">
+                          <CheckCircle2 size={14} className="gt-pillar-topic-icon" aria-hidden="true" />
+                          <span>{tag}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="gt-pillar-card-foot">
+                    <span className="gt-pillar-foot-sub">{p.sub}</span>
+                    {p.linkHref.startsWith("/") ? (
+                      <Link
+                        to={p.linkHref}
+                        className="gt-pillar-foot-btn"
+                        aria-label={`${p.linkText}: Di chuyển đến trang liên hệ`}
+                      >
+                        <span>{p.linkText}</span>
+                        <ArrowRight size={13} aria-hidden="true" className="gt-pillar-foot-icon" />
+                      </Link>
+                    ) : (
+                      <a
+                        href={p.linkHref}
+                        className="gt-pillar-foot-btn"
+                        aria-label={`${p.linkText}: Cuộn đến phân đoạn nội dung`}
+                      >
+                        <span>{p.linkText}</span>
+                        <ArrowRight size={13} aria-hidden="true" className="gt-pillar-foot-icon" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="p-5 flex-1 flex items-center">
-                  <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{ev.name}</p>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 3: NHỊP SỐNG SINH HOẠT & SỰ KIỆN ĐIỂM NHẤN
+      ══════════════════════════════════════════════════════════════ */}
+      <section id="lich" className="gt-schedule-section">
+        <div className="gt-shell">
+          <div className="gt-section-header">
+            <div className="gt-eyebrow">
+              <span className="gt-dot" />
+              <span>NHỊP SỐNG SINH HOẠT ĐỊNH KỲ</span>
+            </div>
+            <h2 className="gt-section-title">
+              Nhịp Sống Giới Trẻ &amp; <em>Sự Kiện Điểm Nhấn</em>
+            </h2>
+            <p className="gt-section-desc">
+              Khung thời gian sinh hoạt tối Thứ Bảy được tối ưu cho cả các bạn sinh viên và thanh niên đi làm xa cuối tuần về thăm gia đình.
+            </p>
+          </div>
+
+          <div className="gt-schedule-container">
+            {/* Cột 1: Khung giờ tối Thứ Bảy */}
+            <div className="gt-schedule-panel">
+              <div className="gt-panel-head">
+                <Clock size={18} className="gt-panel-head-icon" aria-hidden="true" />
+                <span>Khung Giờ Sinh Hoạt Tối Thứ Bảy (Tuần 2 &amp; 4)</span>
+              </div>
+              <div className="gt-schedule-list">
+                {scheduleSteps.map((step, idx) => {
+                  const SIcon = step.icon;
+                  return (
+                    <div key={idx} className={`gt-schedule-item ${step.highlight ? "highlight" : ""}`}>
+                      <div className="gt-schedule-time-box">
+                        <span className="gt-schedule-time">{step.time}</span>
+                        <div className="gt-schedule-icon-circle">
+                          <SIcon size={14} aria-hidden="true" />
+                        </div>
+                      </div>
+                      <div className="gt-schedule-detail">
+                        <strong className="gt-schedule-label">{step.label}</strong>
+                        <span className="gt-schedule-sub">{step.sub}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="gt-schedule-note">
+                <MapPin size={15} aria-hidden="true" style={{ flexShrink: 0, color: "var(--gt-accent)" }} />
+                <span><strong>Địa điểm:</strong> Phòng Sinh Hoạt Giới Trẻ · Tầng 2 Nhà Mục Vụ Giáo xứ An Ngãi.</span>
+              </div>
+            </div>
+
+            {/* Cột 2: 4 Sự kiện lớn trong năm */}
+            <div className="gt-schedule-panel">
+              <div className="gt-panel-head">
+                <Calendar size={18} className="gt-panel-head-icon" aria-hidden="true" />
+                <span>4 Mùa Điểm Nhấn Trong Năm Mục Vụ</span>
+              </div>
+              <div className="gt-events-grid">
+                {seasonalEvents.map((ev, idx) => (
+                  <div key={idx} className="gt-event-card">
+                    <div className="gt-event-header">
+                      <span className="gt-event-season">{ev.season}</span>
+                      <span className="gt-event-badge">{ev.badge}</span>
+                    </div>
+                    <strong className="gt-event-name">{ev.name}</strong>
+                    <p className="gt-event-desc">{ev.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="gt-schedule-note">
+                <Sparkles size={15} aria-hidden="true" style={{ flexShrink: 0, color: "var(--gt-gold)" }} />
+                <span>Ban Điều Hành luôn thông báo chi tiết từng sự kiện trước 2 tuần trên nhóm kết nối.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 4: GÓC ĐỒNG HÀNH & SANCTUARY BENTO HUB
+      ══════════════════════════════════════════════════════════════ */}
+      <section id="dong-hanh" className="gt-sanctuary-section">
+        <div className="gt-shell">
+          <div className="gt-section-header">
+            <div className="gt-eyebrow">
+              <span className="gt-dot" />
+              <span>ĐIỂM TỰA TINH THẦN BẠN TRẺ</span>
+            </div>
+            <h2 className="gt-section-title">
+              Góc Đồng Hành &amp; <em>Lắng Nghe</em>
+            </h2>
+            <p className="gt-section-desc">
+              Tuổi thanh xuân là quà tặng vô giá nhưng cũng đối diện nhiều ngã rẽ. Ban Mục Vụ Giới Trẻ An Ngãi luôn là điểm tựa ấm áp, đồng hành cùng các bạn trên từng bước đường trưởng thành.
+            </p>
+          </div>
+
+          <div className="gt-sanctuary-bento">
+            {/* Hộp Trái: Lời trích Christus Vivit */}
+            <div className="gt-quote-box">
+              <div className="gt-quote-eyebrow">
+                <Sparkles size={14} aria-hidden="true" />
+                <span>LỜI NHẮN TỪ ĐỨC THÁNH CHA PHANXICÔ</span>
+              </div>
+              <div className="gt-quote-content">
+                <Quote size={28} className="gt-quote-icon" aria-hidden="true" />
+                <blockquote className="gt-quote-text">
+                  “Đức Kitô đang sống! Người là niềm hy vọng của chúng ta, và là sự trẻ trung đẹp nhất của thế giới này. Tất cả những gì Người chạm vào đều trở nên trẻ trung, tràn đầy sức sống và tươi mới. Hãy can đảm bước ra khỏi sự an phận để làm cho thế giới này tươi đẹp hơn!”
+                </blockquote>
+              </div>
+              <div className="gt-quote-footer">
+                <span className="gt-quote-author">— Tông huấn Christus Vivit, Số 1 &amp; 20</span>
+                <span className="gt-quote-tag">Kim chỉ nam Giới Trẻ</span>
+              </div>
+            </div>
+
+            {/* Hộp Phải: 4 Thói quen & Nút liên hệ */}
+            <div className="gt-mentorship-card">
+              <div>
+                <div className="gt-mentorship-head">
+                  <UserCheck size={18} className="gt-mentorship-icon" aria-hidden="true" />
+                  <h3 className="gt-mentorship-title">
+                    4 Thói Quen Của Người Trẻ Trưởng Thành
+                  </h3>
                 </div>
-              </motion.div>
+                <p className="gt-mentorship-sub">
+                  Rèn luyện mỗi ngày để tâm hồn luôn vững chãi trước những biến động:
+                </p>
+                <ul className="gt-habits-list">
+                  <li className="gt-habit-item">
+                    <span className="gt-habit-check" aria-hidden="true">✓</span>
+                    <span><strong>10 phút thinh lặng:</strong> Đọc Lời Chúa và xét mình tạ ơn cuối ngày.</span>
+                  </li>
+                  <li className="gt-habit-item">
+                    <span className="gt-habit-check" aria-hidden="true">✓</span>
+                    <span><strong>Bí tích Hòa Giải:</strong> Xưng tội định kỳ để tái tạo năng lượng đức tin.</span>
+                  </li>
+                  <li className="gt-habit-item">
+                    <span className="gt-habit-check" aria-hidden="true">✓</span>
+                    <span><strong>Liêm chính công sở:</strong> Trung thực trong học tập và công việc.</span>
+                  </li>
+                  <li className="gt-habit-item">
+                    <span className="gt-habit-check" aria-hidden="true">✓</span>
+                    <span><strong>Sống chạnh thương:</strong> Sẵn sàng nâng đỡ người yếu thế hơn mình.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="gt-mentorship-action-box">
+                <p className="gt-mentorship-action-text">
+                  Cần tâm sự riêng với Cha Linh Hướng hoặc Ban Cố Vấn về định hướng nghề nghiệp, tình cảm?
+                </p>
+                <Link to="/liên-hệ" className="gt-mentorship-btn">
+                  <span>Gặp Gỡ Riêng Cha Linh Hướng</span>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 5: TIẾNG NÓI NGƯỜI TRONG CUỘC (TESTIMONIALS)
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="gt-testimonials-section">
+        <div className="gt-shell">
+          <div className="gt-section-header">
+            <div className="gt-eyebrow">
+              <span className="gt-dot" />
+              <span>CHIA SẺ CHÂN THẬT TỪ CÁC BẠN TRẺ</span>
+            </div>
+            <h2 className="gt-section-title">
+              Thanh Xuân <em>Có Chúa &amp; Có Nhau</em>
+            </h2>
+            <p className="gt-section-desc">
+              Lắng nghe cảm nhận thực tế từ những người bạn đã và đang đồng hành cùng Giới Trẻ Giáo xứ An Ngãi.
+            </p>
+          </div>
+
+          <div className="gt-testimonials-grid">
+            {testimonials.map((item, idx) => (
+              <div key={idx} className="gt-testi-card">
+                <div className="gt-testi-quote-mark" aria-hidden="true">“</div>
+                <p className="gt-testi-quote">{item.quote}</p>
+                <div className="gt-testi-user">
+                  <div className="gt-testi-avatar" aria-hidden="true">
+                    {item.avatarText}
+                  </div>
+                  <div className="gt-testi-meta">
+                    <strong className="gt-testi-name">{item.author}</strong>
+                    <span className="gt-testi-role">{item.role}</span>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* BAN ĐIỀU HÀNH */}
-      <section className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400 ml-1">Cơ cấu tổ chức</p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Ban điều hành nhóm</h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-            Nhóm do chính các thành viên điều hành theo nhiệm kỳ 1 năm — cơ hội rèn luyện kỹ năng lãnh đạo trong tinh thần phục vụ.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          {ROLES.map((r, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={vp}
-              custom={i * 0.08}
-              whileHover={{ y: -6, scale: 1.01 }}
-              className="bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-6 shadow-sm hover:border-sky-500/30 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900/40 dark:to-sky-800/40 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-700/30 shadow-sm font-black text-[14px] tracking-wider uppercase">
-                {r.role.split(' ').map(word => word[0]).join('').substring(0, 2)}
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 6: GIẢI ĐÁP THẮC MẮC (FAQ)
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="gt-faq-section">
+        <div className="gt-shell">
+          <div className="gt-faq-wrapper">
+            <div className="gt-faq-header">
+              <div className="gt-eyebrow" style={{ justifyContent: "center" }}>
+                <span className="gt-dot" />
+                <span>THẮC MẮC THƯỜNG GẶP CỦA BẠN TRẺ</span>
               </div>
-              <h3 className="text-[18px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-2">{r.role}</h3>
-              <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">{r.desc}</p>
-            </motion.div>
-          ))}
+              <h2 className="gt-section-title">
+                Giải Đáp <em>Thắc Mắc (FAQ)</em>
+              </h2>
+              <p className="gt-faq-desc">
+                Các câu hỏi thiết thực về lịch sinh hoạt, học tập xa quê, chi phí và cơ hội kết nối bạn bè mới.
+              </p>
+            </div>
+
+            <div className="gt-faq-list">
+              {faqs.map((item, idx) => {
+                const isOpen = openFaq === idx;
+                const faqAnsId = `gt-faq-ans-${idx}`;
+                const padIdx = String(idx + 1).padStart(2, "0");
+                return (
+                  <div key={idx} className={`gt-faq-item ${isOpen ? "active" : ""}`}>
+                    <button
+                      type="button"
+                      className="gt-faq-btn"
+                      aria-expanded={isOpen}
+                      aria-controls={faqAnsId}
+                      onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    >
+                      <div className="gt-faq-question-wrap">
+                        <span className="gt-faq-q-badge">{padIdx}</span>
+                        <span>{item.q}</span>
+                      </div>
+                      <ChevronDown
+                        size={18}
+                        aria-hidden="true"
+                        className="gt-faq-chevron"
+                      />
+                    </button>
+                    {isOpen && (
+                      <div id={faqAnsId} className="gt-faq-answer">
+                        <p>{item.a}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* QUOTE BANNER */}
-      <section className="py-24 relative overflow-hidden bg-stone-900 dark:bg-[#0a0a0a] z-10 border-y border-black/5 dark:border-white/5 shadow-inner">
-        <div className="absolute inset-0 bg-gradient-to-br from-sky-900/50 to-stone-900 dark:from-sky-900/30 dark:to-black z-0" />
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={vp}
-            custom={0.2}
-          >
-            <Mic2 className="w-10 h-10 mx-auto mb-8 text-sky-400/60" strokeWidth={1.5} />
-            <blockquote className="text-white text-[20px] md:text-[26px] font-medium font-serif leading-relaxed italic mb-8 drop-shadow-md">
-              "Đừng để ai coi thường anh vì anh còn trẻ, nhưng hãy nêu gương cho các tín hữu về lời nói, về cách ăn ở, về đức ái, đức tin và lòng trong sạch."
-            </blockquote>
-            <cite className="text-sky-300/80 text-[12px] font-bold not-italic tracking-widest uppercase">
-              — 1 Tm 4,12
-            </cite>
-          </motion.div>
-        </div>
-      </section>
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 7: CTA BANNER GIA NHẬP RỘNG MỞ
+      ══════════════════════════════════════════════════════════════ */}
+      <div className="gt-shell" id="ket-noi" style={{ paddingBottom: "64px" }}>
+        <div className="gt-cta-banner">
+          <div className="gt-cta-glow" aria-hidden="true" />
 
-      {/* KẾT NỐI */}
-      <section className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400 ml-1">Cộng đồng</p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Theo dõi và kết nối</h2>
-        </div>
+          <div className="gt-cta-badge">
+            <span className="gt-cta-badge-icon" aria-hidden="true">✦</span>
+            <span>BAN MỤC VỤ GIỚI TRẺ · GIÁO XỨ AN NGÃI</span>
+          </div>
 
-        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
-          {CHANNELS.map((ch, i) => {
-            const Icon = ch.icon === "instagram" ? InstagramIcon : ch.icon;
-            return (
-              <motion.a
-                key={i}
-                href={ch.link}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={vp}
-                custom={i * 0.1}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className={`group rounded-[24px] border border-amber-900/10 dark:border-amber-100/10 p-6 sm:p-8 flex flex-col gap-5 hover:shadow-xl dark:hover:shadow-none transition-all active:scale-[0.98] bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl ${ch.border}`}
-              >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm ${ch.bg} ${ch.border}`}>
-                  <Icon className={`w-6 h-6 text-stone-600 dark:text-stone-400 group-hover:${ch.textHover} transition-colors`} />
-                </div>
-                <div>
-                  <h3 className="text-[18px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-2">{ch.title}</h3>
-                  <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">{ch.desc}</p>
-                </div>
-                <p className={`text-[12px] font-bold uppercase tracking-widest mt-auto transition-colors ${ch.textHover}`}>{ch.label} &rarr;</p>
-              </motion.a>
-            );
-          })}
-        </div>
-      </section>
+          <h3 className="gt-cta-title">
+            Sẵn Sàng Thắp Sáng Ngọn Lửa Tuổi Trẻ Cùng Đức Kitô?
+          </h3>
 
-      <CtaSection
-        icon={Users}
-        iconClass="text-sky-500"
-        title="Bạn không cần đi một mình"
-        description="Giới Trẻ Công Giáo luôn rộng cửa đón chào — hành trình trưởng thành và sống đạo sẽ đẹp hơn rất nhiều khi có bạn bè đồng hành."
-        primaryCtaLabel="Tham gia nhóm"
-        primaryCtaTo="/liên-hệ"
-        primaryCtaClass="bg-sky-600 text-white hover:bg-sky-500 shadow-sm"
-        secondaryCtaLabel="Xem lại Khối Vào Đời"
-        secondaryCtaTo="/khối-vào-đời"
-      />
+          <p className="gt-cta-desc">
+            Bạn không bước vào tương lai một mình. Hãy gia nhập gia đình Giới Trẻ Công Giáo An Ngãi để cùng nhau trải qua những năm tháng thanh xuân ý nghĩa, gắn kết tình huynh đệ và tràn đầy niềm vui đức tin!
+          </p>
+
+          <div className="gt-cta-actions">
+            {/* Nút chính nổi bật */}
+            <Link to="/liên-hệ" className="gt-cta-primary-btn">
+              <Sparkles size={18} aria-hidden="true" className="gt-cta-sparkle" />
+              <span>Đăng Ký Gia Nhập Giới Trẻ</span>
+              <ArrowRight size={18} aria-hidden="true" className="gt-cta-arrow" />
+            </Link>
+
+            {/* Các nút phụ hỗ trợ điều hướng tinh tế */}
+            <div className="gt-cta-secondary-group">
+              <Link to="/khối-vào-đời" className="gt-cta-secondary-btn">
+                <Users size={15} aria-hidden="true" />
+                <span>Xem lại Khối Vào Đời</span>
+              </Link>
+              <Link to="/liên-hệ" className="gt-cta-secondary-btn">
+                <Church size={15} aria-hidden="true" />
+                <span>Liên Hệ Ban Giáo Lý</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="gt-cta-note">
+            <HeartHandshake size={14} aria-hidden="true" style={{ color: "var(--gt-gold)" }} />
+            <span>✦ Luôn rộng mở chào đón mọi người trẻ từ 17 tuổi trở lên. Không thu phí sinh hoạt.</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,531 +1,193 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Clock, ChevronRight, CheckCircle, Phone } from "lucide-react";
-import { usePageMotion } from "../hooks/usePageMotion.js";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight, ArrowRight, Phone, Mail, MapPin, Clock, Copy, Check, MessageCircle, Send, CheckCircle2, Loader2, Plus, Minus } from "lucide-react";
 import { submitContactForm } from "../features/admin/dataLayer.js";
+import { CONTACT_TOPICS, CONTACT_LIMITS, validateContact, buildContactPayload } from "../features/contact/contactForm.js";
+import "./Contact.css";
 
-/* ── Dữ liệu ── */
-const CONTACTS = [
-  {
-    id: "facebook",
-    label: "Fanpage Facebook",
-    value: "HTDC Xứ đoàn Mẹ Mân Côi – Giáo xứ An Ngãi",
-    valueMobile: "HTDC Xứ đoàn Mẹ Mân Côi",
-    href: "https://www.facebook.com/profile.php?id=61558564791118",
-    external: true,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-      </svg>
-    ),
-  },
-  {
-    id: "email",
-    label: "Email liên hệ",
-    value: "htdcanngai@gmail.com",
-    valueMobile: "htdcanngai@gmail.com",
-    href: "mailto:htdcanngai@gmail.com",
-    external: false,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect width="20" height="16" x="2" y="4" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-    ),
-  },
-  {
-    id: "phone",
-    label: "Điện thoại",
-    value: "0905 143 643",
-    note: "Trưởng Trang",
-    href: "tel:0905143643",
-    external: false,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-      </svg>
-    ),
-  },
-];
-
-const TODAY = new Date().getDay();
-
+const PHONE = "0905 143 643";
+const EMAIL = "htdcanngai@gmail.com";
+const ADDRESS = "Thôn An Ngãi Tây 2, Phường Hoà Khánh, Tp Đà Nẵng";
+const MAP_URL = "https://maps.app.goo.gl/FEtKEGn8V4wMXXKY6";
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61558564791118";
+const EMPTY_FORM = { hoTen: "", sdt: "", chuDe: "", noiDung: "" };
 const HOURS = [
-  { day: "Thứ Bảy",    time: "08:00 – 11:30",   note: "Sinh hoạt nhóm",          active: TODAY === 6 },
-  { day: "Chủ Nhật",   time: "07:00 – 09:30",   note: "Giáo lý & Thánh Lễ",     active: TODAY === 0 },
-  { day: "Trong tuần", time: "Theo hẹn trước",  note: "Qua điện thoại / Email",  active: TODAY >= 1 && TODAY <= 5 },
+  { day: "Thứ Bảy", time: "08:00 – 11:30", note: "Sinh hoạt nhóm", days: [6] },
+  { day: "Chủ Nhật", time: "07:00 – 09:30", note: "Giáo lý & Thánh lễ", days: [0] },
+  { day: "Trong tuần", time: "Theo hẹn trước", note: "Liên hệ qua điện thoại hoặc email", days: [1, 2, 3, 4, 5] },
 ];
-
 const FAQS = [
-  {
-    q: "Con tôi muốn học giáo lý, liên hệ thế nào?",
-    a: "Nhắn tin qua Fanpage Facebook hoặc gọi điện cho Trưởng Trang để được tư vấn và sắp xếp lớp phù hợp.",
-    emoji: "📞",
-  },
-  {
-    q: "Tôi muốn đóng góp ý kiến về chương trình học?",
-    a: "Gửi email đến htdcanngai@gmail.com — Ban Giáo Lý đọc và phản hồi trong vòng 3 ngày làm việc.",
-    emoji: "✉️",
-  },
-  {
-    q: "Làm sao để trở thành Giáo Lý Viên?",
-    a: "Liên hệ qua điện thoại hoặc gặp trực tiếp vào Chủ Nhật sau Thánh Lễ. Ban Giáo Lý có chương trình đào tạo GLV hàng năm.",
-    emoji: "🙋",
-  },
-  {
-    q: "Có thể liên hệ ngoài giờ hành chính không?",
-    a: "Vui lòng nhắn tin qua Fanpage Facebook bất cứ lúc nào. Với cuộc gọi điện thoại hoặc gặp trực tiếp, xin hẹn trước ít nhất 24 giờ qua tin nhắn.",
-    emoji: "🕒",
-  },
+  { q: "Con tôi muốn học giáo lý, bắt đầu từ đâu?", a: "Phụ huynh có thể xem thông tin tuyển sinh hoặc gửi lời nhắn với chủ đề “Tuyển sinh”. Ban Giáo lý sẽ hướng dẫn lựa chọn lớp phù hợp.", to: "/tuyển-sinh", label: "Tìm hiểu tuyển sinh" },
+  { q: "Tôi có thể xem lịch học của các em ở đâu?", a: "Lịch học có trên website. Nếu cần hỏi thêm về lớp hoặc lịch sinh hoạt, bạn có thể chọn chủ đề “Lịch học” trong biểu mẫu.", to: "/lịch-học", label: "Xem lịch học" },
+  { q: "Làm sao để tham gia làm giáo lý viên?", a: "Chọn chủ đề “Tham gia giáo lý viên” và để lại số điện thoại cùng lời giới thiệu ngắn. Bạn cũng có thể liên hệ trực tiếp với Trưởng Trang để trao đổi." },
+  { q: "Tôi có thể liên hệ ngoài giờ sinh hoạt không?", a: "Bạn có thể để lại lời nhắn hoặc nhắn qua Fanpage bất cứ lúc nào. Nếu muốn gặp trực tiếp ngoài giờ sinh hoạt, vui lòng liên hệ hẹn trước ít nhất 24 giờ." },
+  { q: "Sau khi gửi lời nhắn, tôi sẽ nhận phản hồi thế nào?", a: "Ban Giáo lý sẽ liên hệ qua số điện thoại bạn cung cấp khi tiếp nhận và xử lý lời nhắn. Nếu cần trao đổi sớm, bạn có thể gọi điện hoặc nhắn qua Fanpage." },
 ];
 
-const FORM_INIT = { hoTen: "", sdt: "", noiDung: "" };
-
-function ContactForm({ mc, vp, fadeUp }) {
-  const [form, setForm]       = useState(FORM_INIT);
-  const [errors, setErrors]   = useState({});
-  const [loading, setLoading] = useState(false);
-  const [done, setDone]       = useState(false);
-
-  const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  const validate = () => {
-    const e = {};
-    if (!form.hoTen.trim()) e.hoTen = "Vui lòng nhập họ tên.";
-    if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(form.sdt.replace(/\s/g, "")))
-      e.sdt = "Số điện thoại không hợp lệ.";
-    if (!form.noiDung.trim()) e.noiDung = "Vui lòng nhập nội dung.";
-    return e;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setErrors({});
-    setLoading(true);
-    
+function CopyButton({ value, label }) {
+  const [status, setStatus] = useState("");
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  async function copy() {
     try {
-      await submitContactForm(form.hoTen, form.sdt, form.noiDung);
+      await navigator.clipboard.writeText(value);
+      setStatus("Đã sao chép");
+    } catch {
+      setStatus("Chưa sao chép được. Bạn có thể chọn và sao chép nội dung.");
+    }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setStatus(""), 4000);
+  }
+  return <span className="contact-copy-wrap">
+    <button type="button" className="contact-copy" onClick={copy} aria-label={`Sao chép ${label}`}>
+      {status === "Đã sao chép" ? <Check size={17} /> : <Copy size={17} />}
+    </button>
+    <span role="status" className="contact-copy-status">{status}</span>
+  </span>;
+}
+
+function ContactForm() {
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [failure, setFailure] = useState("");
+  const sending = useRef(false);
+  const resultRef = useRef(null);
+  const errorRef = useRef(null);
+
+  useEffect(() => { if (done) resultRef.current?.focus(); }, [done]);
+  useEffect(() => { if (failure) errorRef.current?.focus(); }, [failure]);
+
+  function change(event) {
+    const { name, value } = event.target;
+    setForm((previous) => ({ ...previous, [name]: value }));
+    setErrors((previous) => ({ ...previous, [name]: undefined }));
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (sending.current) return;
+    const nextErrors = validateContact(form);
+    setErrors(nextErrors);
+    setFailure("");
+    if (Object.keys(nextErrors).length) {
+      document.getElementById(`contact-${Object.keys(nextErrors)[0]}`)?.focus();
+      return;
+    }
+    sending.current = true;
+    setLoading(true);
+    try {
+      const payload = buildContactPayload(form);
+      await submitContactForm(payload.hoTen, payload.sdt, payload.noiDung);
       setDone(true);
-    } catch (error) {
-      console.error("Lỗi khi gửi liên hệ:", error);
-      alert("Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau.");
+    } catch {
+      setFailure("Chưa thể xác nhận lời nhắn đã được gửi. Nội dung của bạn vẫn được giữ lại; bạn có thể thử lại hoặc liên hệ qua điện thoại, Fanpage.");
     } finally {
+      sending.current = false;
       setLoading(false);
     }
-  };
+  }
 
-  const LABEL = "block text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-1.5 ml-1";
-  const fieldCls = (err) =>
-    `w-full px-4 py-3 rounded-xl text-[14px] font-medium bg-white/60 dark:bg-stone-900/40 border backdrop-blur-sm ${
-      err ? "border-red-500/50 dark:border-red-500/40 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 text-red-900 dark:text-red-100"
-          : "border-amber-900/20 dark:border-amber-100/10 focus:border-amber-600 dark:focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5 text-amber-950 dark:text-amber-50 placeholder:text-stone-400 dark:placeholder:text-stone-500"
-    } outline-none transition-all duration-200`;
-  const ERR = "mt-1.5 ml-1 text-[12px] font-medium text-red-600 dark:text-red-400 flex items-center gap-1";
+  function attributes(name) {
+    return {
+      id: `contact-${name}`, name, value: form[name], onChange: change,
+      disabled: loading, required: true,
+      "aria-invalid": Boolean(errors[name]),
+      "aria-describedby": [errors[name] ? `contact-${name}-error` : "", name === "sdt" ? "contact-phone-hint" : ""].filter(Boolean).join(" ") || undefined,
+    };
+  }
+  function fieldError(name) {
+    return errors[name] && <p id={`contact-${name}-error`} className="contact-field-error">{errors[name]}</p>;
+  }
 
-  return (
-    <motion.section
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={vp}
-    >
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none">
-        Gửi tin nhắn trực tuyến
-      </h2>
-
-      <div className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-5 sm:p-7 shadow-sm">
-        <AnimatePresence mode="wait">
-          {done ? (
-            <motion.div key="done"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ type: "spring", stiffness: 100, damping: 14 }}
-              className="py-8 flex flex-col items-center text-center gap-4"
-            >
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center">
-                <CheckCircle className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-[16px] font-bold text-amber-950 dark:text-amber-50 font-serif">Đã gửi tin nhắn thành công</p>
-                <p className="text-[13px] text-stone-600 dark:text-stone-400 max-w-xs leading-relaxed font-medium">
-                  Cảm ơn bạn đã liên hệ. Ban Giáo Lý sẽ phản hồi qua số điện thoại{" "}
-                  <span className="text-amber-900 dark:text-amber-200 font-bold">{form.sdt}</span> trong thời gian sớm nhất.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setForm(FORM_INIT); setDone(false); }}
-                className="mt-3 text-[13px] font-bold text-amber-700 dark:text-amber-400 md:hover:opacity-80 transition-opacity active:scale-95 px-4 py-2 bg-amber-100/50 dark:bg-amber-900/30 rounded-xl"
-              >
-                Gửi thêm tin nhắn khác
-              </button>
-            </motion.div>
-          ) : (
-            <motion.form key="form"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onSubmit={handleSubmit} noValidate className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={LABEL}>Họ và tên</label>
-                  <input type="text" value={form.hoTen} onChange={set("hoTen")}
-                    placeholder="Nguyễn Văn A" className={fieldCls(errors.hoTen)} disabled={loading} />
-                  {errors.hoTen && <p className={ERR}><span>⚠</span> {errors.hoTen}</p>}
-                </div>
-                <div>
-                  <label className={LABEL}>Số điện thoại</label>
-                  <input type="tel" inputMode="numeric" value={form.sdt} onChange={set("sdt")}
-                    placeholder="0905..." className={fieldCls(errors.sdt)} disabled={loading} />
-                  {errors.sdt && <p className={ERR}><span>⚠</span> {errors.sdt}</p>}
-                </div>
-              </div>
-              <div>
-                <label className={LABEL}>Nội dung lời nhắn</label>
-                <textarea rows={3} value={form.noiDung} onChange={set("noiDung")}
-                  placeholder="Nhập nội dung câu hỏi hoặc góp ý của bạn tại đây..."
-                  className={`${fieldCls(errors.noiDung)} resize-none`} disabled={loading} />
-                {errors.noiDung && <p className={ERR}><span>⚠</span> {errors.noiDung}</p>}
-              </div>
-              <button
-                type="submit" disabled={loading}
-                style={{ touchAction: "manipulation" }}
-                className="w-full mt-2 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white md:hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
-                    Đang thiết lập kết nối…
-                  </>
-                ) : "Gửi thông tin"}
-              </button>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.section>
-  );
+  return <section className="contact-form-panel" id="form-lien-he" aria-labelledby="contact-form-title">
+    <p className="contact-eyebrow">CHÚNG TÔI SẴN LÒNG LẮNG NGHE</p>
+    <h2 id="contact-form-title">Gửi một <em>lời nhắn.</em></h2>
+    {done ? <div className="contact-success" ref={resultRef} tabIndex={-1} role="status">
+      <CheckCircle2 size={46} />
+      <h3>Đã nhận lời nhắn của bạn</h3>
+      <p>Cảm ơn bạn đã liên hệ. Ban Giáo lý sẽ phản hồi qua số <strong>{buildContactPayload(form).sdt}</strong> khi tiếp nhận và xử lý lời nhắn.</p>
+      <button className="contact-button contact-primary" type="button" onClick={() => {
+        setForm(EMPTY_FORM); setErrors({}); setDone(false);
+        requestAnimationFrame(() => document.getElementById("contact-hoTen")?.focus());
+      }}>Gửi lời nhắn khác <ArrowRight size={17} /></button>
+    </div> : <>
+      <p className="contact-form-intro">Để lại thông tin để Ban Giáo lý có thể liên hệ với bạn. Tất cả các trường bên dưới đều cần điền.</p>
+      <form onSubmit={handleSubmit} noValidate aria-busy={loading}>
+        <div className="contact-form-row">
+          <div><label htmlFor="contact-hoTen">Họ và tên</label><input {...attributes("hoTen")} type="text" autoComplete="name" maxLength={CONTACT_LIMITS.name} placeholder="Tên của bạn" />{fieldError("hoTen")}</div>
+          <div><label htmlFor="contact-sdt">Số điện thoại</label><input {...attributes("sdt")} type="tel" inputMode="tel" autoComplete="tel" maxLength={24} placeholder="VD: 0905 123 456" /><p id="contact-phone-hint" className="contact-field-hint">Số để Ban Giáo lý liên hệ lại với bạn.</p>{fieldError("sdt")}</div>
+        </div>
+        <div><label htmlFor="contact-chuDe">Bạn cần hỗ trợ về?</label><select {...attributes("chuDe")}><option value="" disabled>Chọn một chủ đề</option>{CONTACT_TOPICS.map((topic) => <option key={topic}>{topic}</option>)}</select>{fieldError("chuDe")}</div>
+        <div><label htmlFor="contact-noiDung">Lời nhắn của bạn</label><textarea {...attributes("noiDung")} rows={5} maxLength={CONTACT_LIMITS.message} placeholder="Bạn muốn trao đổi điều gì với Ban Giáo lý?" />{fieldError("noiDung")}<span className="contact-counter">{form.noiDung.length.toLocaleString("vi-VN")} / 2.000 ký tự</span></div>
+        {failure && <div className="contact-submit-error" role="alert" tabIndex={-1} ref={errorRef}><p>{failure}</p><a href="tel:0905143643">Gọi {PHONE}</a><a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer">Mở Fanpage ↗</a></div>}
+        <p className="contact-privacy">Thông tin bạn cung cấp được dùng để tiếp nhận và phản hồi lời nhắn. <Link to="/bảo-mật">Xem chính sách bảo mật.</Link></p>
+        <button type="submit" className="contact-button contact-primary contact-submit" disabled={loading}>{loading ? <><Loader2 className="contact-spinner" size={18} />Đang gửi lời nhắn…</> : <>Gửi lời nhắn <Send size={17} /></>}</button>
+      </form>
+    </>}
+  </section>;
 }
-
-function FaqItem({ faq, index, isOpen, onToggle, fadeUp, vp }) {
-
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={vp}
-      custom={index * 0.04}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        style={{ touchAction: "manipulation" }}
-        className={`w-full flex items-center justify-between gap-4 p-5 rounded-2xl text-left transition-all duration-300 border ${
-          isOpen
-            ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200/50 dark:border-amber-800/30 shadow-sm"
-            : "bg-white/80 dark:bg-stone-800/40 border-amber-900/10 dark:border-amber-100/10 shadow-sm md:hover:border-amber-300 dark:md:hover:border-amber-700 backdrop-blur-sm"
-        }`}
-      >
-        <span className="flex items-center gap-3.5 min-w-0">
-          <span
-            className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${
-              isOpen 
-                ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white" 
-                : "bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5"
-            }`}
-            aria-hidden="true"
-          >
-            {index + 1}
-          </span>
-          <span className="text-[14.5px] font-bold text-amber-950 dark:text-amber-50 tracking-tight leading-snug"><span className="mr-2 select-none">{faq.emoji}</span>{faq.q}</span>
-        </span>
-
-        <motion.span
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ type: "spring", stiffness: 150, damping: 18 }}
-          className="flex-shrink-0 text-stone-400 dark:text-stone-500"
-          aria-hidden="true"
-        >
-          <ChevronRight className="w-4 h-4 rotate-90" />
-        </motion.span>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            key="answer"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 140, damping: 18 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 pt-3">
-              <div className="border-l-[3px] border-amber-400/50 dark:border-amber-500/30 pl-4 ml-2.5 text-[13.5px] sm:text-[14px] text-stone-600 dark:text-stone-400 leading-relaxed font-medium">
-                {faq.a}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-const headerVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (d = 0) => ({
-    opacity: 1, y: 0,
-    transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5, delay: d },
-  }),
-};
-
-const listVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.15 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 18, mass: 0.5 } },
-};
 
 export default function Contact() {
-  const { mc, heroReveal, fadeUp, vp } = usePageMotion();
+  const [today, setToday] = useState(() => vietnamDay());
   const [openFaq, setOpenFaq] = useState(null);
+  useEffect(() => {
+    const timer = setInterval(() => setToday(vietnamDay()), 60000);
+    const previous = document.title;
+    document.title = "Liên hệ Ban Giáo lý | Xứ đoàn Mẹ Mân Côi";
+    return () => { clearInterval(timer); document.title = previous; };
+  }, []);
 
-  return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 dark:bg-[#1C1917] dark:text-stone-200 antialiased overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-950 transition-colors duration-500 relative">
-      
-      {/* Background Pattern */}
-      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+  return <div className="contact-page">
+    <header className="contact-hero contact-shell">
+      <p className="contact-eyebrow">GIÁO XỨ AN NGÃI · XỨ ĐOÀN MẸ MÂN CÔI</p>
+      <h1>Kết nối bằng <em>sự sẻ chia.</em></h1>
+      <p>Một câu hỏi, một lời góp ý hay mong muốn đồng hành.{" "}<br />Ban Giáo lý luôn sẵn lòng lắng nghe bạn.</p>
+      <a className="contact-link contact-form-shortcut" href="#form-lien-he" onClick={(event) => {
+        event.preventDefault();
+        const section = document.getElementById("form-lien-he");
+        section?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+        document.getElementById("contact-hoTen")?.focus({ preventScroll: true });
+      }}>Đi đến biểu mẫu <ArrowRight size={17} /></a>
+    </header>
 
-      {/* ══ HERO SECTION ══ */}
-      <section className="relative overflow-hidden pt-12 pb-10 md:pt-24 md:pb-16 z-10">
-        {!mc.isMobile && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
-        )}
-        <div className="max-w-4xl mx-auto px-5 sm:px-6">
-          <div className="space-y-5 text-left">
-            <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0}>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100/50 text-amber-800 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50 select-none">
-                Trung tâm hỗ trợ Ban Giáo Lý
-              </span>
-            </motion.div>
-
-            <motion.h1
-              variants={heroReveal} initial="hidden" animate="visible" custom={0.05}
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-amber-950 dark:text-amber-50 leading-[1.1] font-serif"
-            >
-              Kênh kết nối &<br />
-              <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
-                Giải đáp thắc mắc
-              </span>
-            </motion.h1>
-
-            <motion.p
-              variants={heroReveal} initial="hidden" animate="visible" custom={0.1}
-              className="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed max-w-lg font-medium"
-            >
-              Mọi thắc mắc về quy trình đăng ký học, khung chương trình đào tạo hoặc đóng góp ý kiến xây dựng, xin vui lòng liên hệ với ban điều hành.
-            </motion.p>
-
-            <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0.15} className="flex flex-wrap gap-3 pt-1.5">
-              <a
-                href="#form-lien-he"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById("form-lien-he");
-                  if (!el) return;
-                  const navbar = document.querySelector("header");
-                  const offset = navbar?.offsetHeight ?? 0;
-                  if (window.lenis) { window.lenis.scrollTo(el, { duration: 1.0, offset: -offset }); } 
-                  else { const top = el.getBoundingClientRect().top + window.scrollY - offset; window.scrollTo({ top, behavior: "smooth" }); }
-                }}
-                style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[14px] font-bold md:hover:opacity-90 active:scale-[0.97] transition-all shadow-sm"
-              >
-                Gửi Form liên hệ
-                <ChevronRight className="w-4 h-4 text-amber-400" aria-hidden="true" />
-              </a>
-              <a
-                href="#faq"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById("faq");
-                  if (!el) return;
-                  const navbar = document.querySelector("header");
-                  const offset = navbar?.offsetHeight ?? 0;
-                  if (window.lenis) { window.lenis.scrollTo(el, { duration: 1.0, offset: -offset }); } 
-                  else { const top = el.getBoundingClientRect().top + window.scrollY - offset; window.scrollTo({ top, behavior: "smooth" }); }
-                }}
-                style={{ touchAction: "manipulation" }}
-                className="inline-flex items-center gap-1.5 px-6 py-3.5 rounded-full bg-white/60 dark:bg-stone-800/40 backdrop-blur-sm border border-amber-900/20 dark:border-amber-100/10 text-stone-700 dark:text-stone-300 text-[14px] font-bold hover:bg-white dark:hover:bg-stone-800 active:scale-[0.97] transition-all shadow-sm"
-              >
-                Câu hỏi thường gặp
-              </a>
-            </motion.div>
-          </div>
+    <div className="contact-main contact-shell">
+      <section className="contact-channels" aria-labelledby="contact-channels-title">
+        <p className="contact-eyebrow">CHỌN CÁCH THUẬN TIỆN NHẤT</p>
+        <h2 id="contact-channels-title">Liên hệ trực tiếp</h2>
+        <p className="contact-muted">Trao đổi với chúng tôi qua điện thoại, Fanpage hoặc email.</p>
+        <div className="contact-channel contact-phone-card">
+          <span className="contact-channel-icon"><Phone size={22} /></span>
+          <div><span className="contact-small-label">ĐIỆN THOẠI · TRƯỞNG TRANG</span><a className="contact-phone-number" href="tel:0905143643">{PHONE}</a><p>Vui lòng hẹn trước nếu cần gặp trực tiếp.</p><a className="contact-link" href="tel:0905143643">Gọi điện <ArrowUpRight size={16} /></a></div>
+          <CopyButton value="0905143643" label="số điện thoại" />
         </div>
+        <div className="contact-channel"><span className="contact-channel-icon"><MessageCircle size={22} /></span><div><span className="contact-small-label">FANPAGE FACEBOOK</span><a className="contact-channel-name" href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer">HTDC Xứ đoàn Mẹ Mân Côi <ArrowUpRight size={16} /></a><p>Giáo xứ An Ngãi · Tin tức và kết nối cộng đoàn</p></div></div>
+        <div className="contact-channel"><span className="contact-channel-icon"><Mail size={22} /></span><div><span className="contact-small-label">EMAIL</span><a className="contact-channel-name" href={`mailto:${EMAIL}`}>{EMAIL}</a><p>Gửi câu hỏi hoặc chia sẻ ý kiến của bạn.</p></div><CopyButton value={EMAIL} label="email" /></div>
+        <div className="contact-response-note"><Clock size={19} /><p>Bạn có thể để lại lời nhắn bất cứ lúc nào. Ban Giáo lý sẽ phản hồi khi tiếp nhận và xử lý yêu cầu.</p></div>
+        <Link to="/tuyển-sinh" className="contact-enrollment"><BookLabel /><span>Muốn đăng ký học cho các em?<strong>Xem thông tin tuyển sinh</strong></span><ArrowRight size={19} /></Link>
       </section>
-
-      {/* ══ NỘI DUNG CHÍNH ══ */}
-      <div className="max-w-4xl mx-auto px-5 sm:px-6 pb-20 space-y-12 relative z-10">
-
-        {/* Kênh liên hệ chính */}
-        <section>
-          <motion.h2 variants={heroReveal} initial="hidden" animate="visible" custom={0.2}
-            className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none ml-1"
-          >
-            Phương thức truyền thông trực tiếp
-          </motion.h2>
-
-          <motion.div className="space-y-3" variants={listVariants} initial="hidden" animate="visible">
-            {/* Featured Phone Card */}
-            {(() => {
-              const phone = CONTACTS.find(c => c.id === 'phone');
-              return (
-                <motion.a href={phone.href} aria-label={`${phone.label}: ${phone.value}`}
-                  variants={itemVariants} whileTap={{ scale: 0.98 }} style={{ touchAction: "manipulation" }}
-                  className="group flex items-center gap-4 p-5 sm:p-6 rounded-2xl bg-amber-900 dark:bg-stone-800 text-amber-50 dark:text-stone-100 shadow-lg transition-all"
-                >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-800/80 dark:bg-stone-700 text-amber-300 dark:text-amber-400 border border-amber-700/50 dark:border-stone-600">
-                    {phone.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 dark:text-stone-400 mb-0.5">{phone.label}</p>
-                    <p className="text-[18px] font-extrabold tabular-nums tracking-wide">{phone.value} <span className="ml-1.5 text-xs font-medium text-amber-300/60 dark:text-stone-500">({phone.note})</span></p>
-                    <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-bold uppercase tracking-widest text-emerald-300 dark:text-emerald-400 bg-emerald-900/40 dark:bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/30 select-none">
-                      <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" /></span>
-                      Nhấn để gọi ngay
-                    </span>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-amber-300/60 group-hover:translate-x-0.5 transition-transform flex-shrink-0" aria-hidden="true" />
-                </motion.a>
-              );
-            })()}
-
-            {/* FB + Email side by side */}
-            <div className="grid sm:grid-cols-2 gap-3">
-              {CONTACTS.filter(c => c.id !== 'phone').map((c) => (
-                <motion.a key={c.id} href={c.href} aria-label={`${c.label}: ${c.value}`} target={c.external ? "_blank" : undefined} rel={c.external ? "noreferrer noopener" : undefined}
-                  variants={itemVariants} whileTap={{ scale: 0.98 }} style={{ touchAction: "manipulation" }}
-                  className="group flex items-center gap-4 p-4 rounded-2xl bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm border border-amber-900/10 dark:border-amber-100/10 shadow-sm transition-colors text-left"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-stone-800 text-amber-800 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5 group-hover:bg-amber-100/50 dark:group-hover:bg-amber-500/20 transition-all duration-300">
-                    {c.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-0.5">{c.label}</p>
-                    <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">
-                      <span className="hidden sm:inline">{c.value}</span><span className="sm:hidden">{c.valueMobile ?? c.value}</span>
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-stone-400 dark:text-stone-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transform group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" aria-hidden="true" />
-                </motion.a>
-              ))}
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Địa điểm & Giờ tiếp nhận */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0.25} className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 shadow-sm overflow-hidden text-left h-full flex flex-col"
-          >
-            <a href="https://maps.app.goo.gl/FEtKEGn8V4wMXXKY6" target="_blank" rel="noreferrer noopener" aria-label="Xem bản đồ Giáo xứ An Ngãi trên Google Maps"
-              className="block relative h-44 bg-stone-100 dark:bg-stone-900 overflow-hidden group border-b border-amber-900/10 dark:border-amber-100/10 shrink-0"
-            >
-              <iframe title="Bản đồ Giáo xứ An Ngãi" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.0!2d108.15!3d16.07!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zR2nDoW8geOG7qyBBbiBOZ8OjaQ!5e0!3m2!1svi!2s!4v1" className="w-full h-full border-0 pointer-events-none dark:opacity-70 dark:invert sepia-[20%] hue-rotate-15" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <span className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-[11px] font-bold text-amber-50 bg-amber-950/80 px-3 py-1.5 rounded-full backdrop-blur-md">Mở ứng dụng Bản đồ ↗</span>
-              </div>
-            </a>
-            <div className="p-5 sm:p-6 space-y-4 flex-1">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-900/5 dark:border-amber-100/5">
-                  <MapPin className="w-4.5 h-4.5" aria-hidden="true" />
-                </div>
-                <h3 className="text-[15px] font-bold text-amber-950 dark:text-amber-50 tracking-tight font-serif">Địa điểm văn phòng</h3>
-              </div>
-              <div className="grid grid-cols-1 gap-3 text-xs sm:text-sm font-medium">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Giáo xứ quản hạt</p>
-                  <p className="text-stone-800 dark:text-stone-200 font-bold">Giáo xứ An Ngãi</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-0.5">Địa chỉ hành chính</p>
-                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">Thôn An Ngãi Tây 2, Phường Hoà Khánh, Tp Đà Nẵng</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0.3}
-            className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-3xl border border-amber-900/10 dark:border-amber-100/10 p-5 sm:p-6 shadow-sm text-left h-full flex flex-col"
-          >
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-amber-100/50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-900/5 dark:border-amber-100/5">
-                <Clock className="w-4.5 h-4.5" aria-hidden="true" />
-              </div>
-              <h3 className="text-[15px] font-bold text-amber-950 dark:text-amber-50 tracking-tight font-serif">Khung giờ sinh hoạt</h3>
-            </div>
-            <div className="space-y-2 flex-1">
-              {HOURS.map((h) => (
-                <div key={h.day} className={`flex items-center justify-between gap-3 p-3 rounded-xl transition-colors border ${h.active ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200/50 dark:border-amber-800/30" : "border-transparent"}`}>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-bold text-stone-800 dark:text-stone-200 flex items-center gap-2 truncate">
-                      {h.day}
-                      {h.active && <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-200/50 dark:text-amber-300 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">Hiện tại</span>}
-                    </p>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate mt-0.5">{h.note}</p>
-                  </div>
-                  <span className="text-[13px] font-bold text-amber-700 dark:text-amber-400 tabular-nums flex-shrink-0">{h.time}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 p-3 rounded-xl bg-stone-50/80 dark:bg-stone-900/50 border border-stone-200/40 dark:border-stone-800/60">
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium">
-                <span className="font-bold text-stone-700 dark:text-stone-300">Lưu ý hành chính:</span> Nhằm chuẩn bị chu đáo, vui lòng liên hệ hẹn trước ít nhất 24h nếu cần làm việc ngoài giờ Thánh Lễ.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Khu vực xử lý form liên hệ nhắn tin */}
-        <div id="form-lien-he" className="scroll-mt-6">
-                <ContactForm mc={mc} vp={vp} fadeUp={fadeUp} />
-        </div>
-
-        {/* Cụm câu hỏi thường gặp FAQ */}
-        <section id="faq" className="scroll-mt-6">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-4 select-none ml-1">
-            Giải đáp thắc mắc thường gặp
-          </h2>
-          <div className="grid gap-2">
-            {FAQS.map((faq, i) => (
-                      <FaqItem 
-                        key={i} 
-                        faq={faq} 
-                        index={i} 
-                        isOpen={openFaq === i} 
-                        onToggle={() => setOpenFaq(openFaq === i ? null : i)}
-                        fadeUp={fadeUp}
-                        vp={vp}
-                      />
-            ))}
-          </div>
-        </section>
-      </div>
+      <ContactForm />
     </div>
-  );
+
+    <section className="contact-visit contact-shell" aria-labelledby="contact-visit-title">
+      <div className="contact-section-heading"><div><p className="contact-eyebrow">HẸN GẶP BẠN TẠI GIÁO XỨ</p><h2 id="contact-visit-title">Một địa chỉ, <em>nhiều kết nối.</em></h2></div><p>Vui lòng liên hệ hẹn trước ít nhất 24 giờ<br />nếu bạn cần gặp ngoài giờ sinh hoạt.</p></div>
+      <div className="contact-visit-grid">
+        <article className="contact-address">
+          <img src={`${import.meta.env.BASE_URL}images/gioi-thieu/thanh-duong-640.webp`} alt="Mặt tiền thánh đường An Ngãi với hai tháp chuông" width="640" height="427" loading="lazy" decoding="async" />
+          <div><span className="contact-small-label"><MapPin size={15} /> ĐỊA ĐIỂM GẶP GỠ</span><h3>Giáo xứ An Ngãi</h3><address>{ADDRESS}</address><div className="contact-address-actions"><a className="contact-button contact-primary" href={MAP_URL} target="_blank" rel="noopener noreferrer">Mở Google Maps <ArrowUpRight size={17} /></a><CopyButton value={ADDRESS} label="địa chỉ" /></div></div>
+        </article>
+        <article className="contact-hours"><Clock size={27} /><h3>Khung giờ sinh hoạt</h3><p className="contact-muted">Thời gian sinh hoạt cộng đoàn, không phải lịch trực tư vấn.</p><div>{HOURS.map((hour) => <div key={hour.day} className="contact-hours-row"><div><strong>{hour.day} {hour.days.includes(today) && <span>Hôm nay</span>}</strong><p>{hour.note}</p></div><span>{hour.time}</span></div>)}</div><p className="contact-hours-note">Lịch có thể thay đổi vào các dịp đặc biệt. Theo dõi thông báo mới trước khi đến.</p><Link className="contact-link" to="/lịch-sinh-hoạt">Xem lịch sinh hoạt <ArrowRight size={17} /></Link></article>
+      </div>
+    </section>
+
+    <section className="contact-faq contact-shell" aria-labelledby="contact-faq-title"><div><p className="contact-eyebrow">CÓ THỂ BẠN ĐANG THẮC MẮC</p><h2 id="contact-faq-title">Một vài<br /><em>giải đáp nhanh.</em></h2><p>Những thông tin hữu ích trước khi liên hệ với Ban Giáo lý.</p></div><div>{FAQS.map((faq, index) => <div className="contact-faq-item" key={faq.q}><h3><button type="button" aria-expanded={openFaq === index} aria-controls={`contact-answer-${index}`} id={`contact-question-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)}><span>{faq.q}</span>{openFaq === index ? <Minus size={18} /> : <Plus size={18} />}</button></h3><div id={`contact-answer-${index}`} role="region" aria-labelledby={`contact-question-${index}`} hidden={openFaq !== index}><p>{faq.a}</p>{faq.to && <Link className="contact-link" to={faq.to}>{faq.label} <ArrowRight size={16} /></Link>}</div></div>)}</div></section>
+    <div className="contact-closing contact-shell"><MessageCircle size={19} /><p>Cảm ơn bạn đã cùng chúng tôi xây dựng một cộng đoàn gắn kết.</p></div>
+  </div>;
+}
+
+function BookLabel() { return <span className="contact-enrollment-icon" aria-hidden="true">↗</span>; }
+function vietnamDay() {
+  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
 }

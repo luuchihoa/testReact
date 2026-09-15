@@ -1,20 +1,30 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "../ui/ToastContext.jsx";
+import { usePWAInstall } from "../ui/PWAInstallContext.jsx";
 import { supabase } from "../../lib/supabase.js";
-import { motion } from "framer-motion";
 
-const RESOURCE_LINKS = [
+// Đầy đủ 7 Khối giáo lý & Giới trẻ (không kèm số tuổi theo yêu cầu)
+const CATECHISM_BLOCKS = [
+  { label: "Khối Chiên Con", path: "/khối-chiên-con" },
+  { label: "Khối Rước Lễ", path: "/khối-rước-lễ" },
+  { label: "Khối Thêm Sức", path: "/khối-thêm-sức" },
   { label: "Khối Kinh Thánh", path: "/khối-kinh-thánh" },
   { label: "Khối Phụng Vụ", path: "/khối-phụng-vụ" },
-  { label: "Khối Thêm Sức", path: "/khối-thêm-sức" },
-  { label: "Thư viện tài liệu", path: "/tài-liệu" },
+  { label: "Khối Vào Đời", path: "/khối-vào-đời" },
+  { label: "Giới Trẻ Công Giáo", path: "/giới-trẻ-công-giáo" },
 ];
 
 const INFO_LINKS = [
   { label: "Giới thiệu", path: "/giới-thiệu" },
   { label: "Lịch sinh hoạt", path: "/lịch-sinh-hoạt" },
+  { label: "Lịch học giáo lý", path: "/lịch-học" },
+  { label: "Tuyển sinh", path: "/tuyển-sinh" },
+  { label: "Thư viện tài liệu", path: "/tài-liệu" },
+  { label: "Cài đặt ứng dụng", action: "install" },
   { label: "Liên hệ", path: "/liên-hệ" },
+  { label: "Góp ý hệ thống", path: "mailto:htdcanngai@gmail.com", isExternal: true },
 ];
 
 function FacebookIcon() {
@@ -25,42 +35,47 @@ function FacebookIcon() {
   );
 }
 
-function InstagramIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  );
-}
-
 function MailIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect width="20" height="16" x="2" y="4" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   );
 }
 
-function LinkGroup({ title, links, onNavigate }) {
+function LinkGroup({ title, links, onAction }) {
   return (
     <div className="flex flex-col space-y-4">
-      <h3 className="text-[12px] font-bold uppercase tracking-widest text-amber-900/80 dark:text-amber-400/80">
+      <h3 className="text-[12px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
         {title}
       </h3>
-      <ul className="flex flex-col space-y-3">
+      <ul className="flex flex-col space-y-2.5">
         {links.map((link) => (
-          <li key={link.path}>
-            <button
-              type="button"
-              onClick={() => onNavigate(link.path)}
-              className="group relative text-left text-[14px] font-medium text-stone-600 transition-all hover:text-amber-900 dark:text-stone-400 dark:hover:text-amber-200"
-            >
-              <span className="relative z-10">{link.label}</span>
-              <span className="absolute -bottom-0.5 left-0 h-[2px] w-0 bg-amber-600/30 transition-all duration-300 ease-out group-hover:w-full dark:bg-amber-400/30" />
-            </button>
+          <li key={link.label}>
+            {link.action ? (
+              <button
+                type="button"
+                onClick={() => onAction?.(link.action)}
+                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#314e3e]"
+              >
+                <span>{link.label}</span>
+              </button>
+            ) : link.isExternal || link.path.startsWith("mailto:") ? (
+              <a
+                href={link.path}
+                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
+              >
+                <span>{link.label}</span>
+              </a>
+            ) : (
+              <Link
+                to={link.path}
+                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
+              >
+                <span>{link.label}</span>
+              </Link>
+            )}
           </li>
         ))}
       </ul>
@@ -69,10 +84,14 @@ function LinkGroup({ title, links, onNavigate }) {
 }
 
 export default function Footer() {
-  const navigate = useNavigate();
   const { showToast } = useToast();
+  const { install, isInstalled } = usePWAInstall();
   const [email, setEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
+
+  const infoLinks = useMemo(() => {
+    return INFO_LINKS.filter((link) => !(link.action === "install" && isInstalled));
+  }, [isInstalled]);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -112,107 +131,103 @@ export default function Footer() {
   const year = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <footer className="mt-auto relative z-10 w-full overflow-hidden border-t border-amber-900/10 bg-[#FDFBF7]/90 pb-[calc(env(safe-area-inset-bottom)+6rem)] antialiased backdrop-blur-xl md:pb-12 md:pt-16 dark:border-stone-800/80 dark:bg-[#161c18]/90">
-      {/* Decorative gradient blur background */}
-      <div className="absolute inset-x-0 -top-24 -z-10 flex justify-center opacity-40 dark:opacity-20 pointer-events-none">
-        <div className="h-[200px] w-[800px] bg-gradient-to-r from-amber-100 via-amber-200/50 to-amber-100 blur-[80px] dark:from-amber-900/40 dark:via-amber-800/20 dark:to-amber-900/40" />
-      </div>
-
+    <footer className="mt-auto relative z-10 w-full overflow-hidden border-t border-[#dedfd4] bg-[#faf8f3] pb-[calc(env(safe-area-inset-bottom)+6rem)] antialiased md:pb-12 md:pt-16 dark:border-[#354237] dark:bg-[#151c18]">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {/* Lưới chính - Desktop (Đã ẩn trên Mobile theo yêu cầu) */}
+        {/* Lưới chính - Desktop (Ẩn trên Mobile theo yêu cầu) */}
         <div className="hidden md:grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
           
           {/* Cột 1: Thương hiệu (Chiếm 4 cột trên lg) */}
           <div className="space-y-6 lg:col-span-4 lg:pr-8">
-            <div className="flex items-center gap-4 select-none">
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-200/60 bg-white shadow-sm dark:border-amber-800/30 dark:bg-stone-900">
+            <div className="flex items-center gap-3.5 select-none">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                 <img
-                  src="/images/logo_htdc.avif"
-                  alt="Giáo xứ An Ngãi"
-                  className="h-full w-full object-cover p-1.5"
+                  src="/images/logo_htdc.png"
+                  alt="Ban Giáo Lý Giáo xứ An Ngãi"
+                  className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-[18px] font-extrabold tracking-tight text-amber-950 dark:text-amber-50 font-serif leading-tight">
+                <span className="text-[18px] font-bold tracking-tight text-[#293d32] dark:text-[#ecece0] font-serif leading-tight">
                   Ban Giáo Lý
                 </span>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-800/60 font-mono dark:text-amber-400/60">
+                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-[#7c5c2d] font-mono dark:text-[#d4b47d]">
                   HTDC · Xứ đoàn Mẹ Mân Côi
                 </p>
               </div>
             </div>
 
-            <p className="text-[14px] font-medium leading-relaxed text-stone-600/90 dark:text-stone-400/90">
-              Nền tảng học hỏi và kết nối đức tin cho cộng đoàn. Đồng hành cùng giáo lý viên và phụ huynh.
+            <p className="text-[13.5px] font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
+              Nền tảng học hỏi và kết nối đức tin cho cộng đoàn. Đồng hành cùng giáo lý viên, phụ huynh và thiếu nhi giáo xứ.
             </p>
 
             <div className="flex items-center gap-3">
-              <motion.a
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
+              <a
                 href="https://www.facebook.com/profile.php?id=61558564791118"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm border border-stone-200/60 transition-colors hover:text-[#1877F2] dark:bg-stone-800 dark:border-stone-700/60 dark:text-stone-400"
-                aria-label="Facebook"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#575e55] shadow-sm border border-[#dedfd4] transition-all hover:scale-105 hover:-translate-y-0.5 hover:text-[#1877F2] hover:border-[#1877F2] active:scale-95 dark:bg-[#1e2821] dark:border-[#354237] dark:text-[#b0b9ac] dark:hover:text-[#60a5fa]"
+                aria-label="Facebook Giáo xứ An Ngãi"
+                title="Facebook Giáo xứ An Ngãi"
               >
                 <FacebookIcon />
-              </motion.a>
-              <motion.button
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => showToast("Trang Instagram đang được cập nhật", "info")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm border border-stone-200/60 transition-colors hover:text-[#E4405F] dark:bg-stone-800 dark:border-stone-700/60 dark:text-stone-400"
-                aria-label="Instagram"
+              </a>
+              <a
+                href="mailto:htdcanngai@gmail.com"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#575e55] shadow-sm border border-[#dedfd4] transition-all hover:scale-105 hover:-translate-y-0.5 hover:text-[#314e3e] hover:border-[#314e3e] active:scale-95 dark:bg-[#1e2821] dark:border-[#354237] dark:text-[#b0b9ac] dark:hover:text-[#d4b47d]"
+                aria-label="Gửi email cho Ban Giáo Lý: htdcanngai@gmail.com"
+                title="Email: htdcanngai@gmail.com"
               >
-                <InstagramIcon />
-              </motion.button>
+                <MailIcon />
+              </a>
             </div>
           </div>
 
           {/* Cột 2 & 3: Liên kết (Chiếm 4 cột trên lg) */}
           <div className="grid grid-cols-2 gap-8 lg:col-span-4">
-            <LinkGroup title="Tài nguyên" links={RESOURCE_LINKS} onNavigate={navigate} />
+            <LinkGroup title="Các Khối Học" links={CATECHISM_BLOCKS} />
             <LinkGroup
               title="Thông tin"
-              links={[...INFO_LINKS, { label: "Góp ý hệ thống", path: "mailto:htdcanngai@gmail.com" }]}
-              onNavigate={(path) => (path.startsWith("mailto:") ? (window.location.href = path) : navigate(path))}
+              links={infoLinks}
+              onAction={(action) => {
+                if (action === "install") install();
+              }}
             />
           </div>
 
           {/* Cột 4: Đăng ký nhận tin (Chiếm 4 cột trên lg) */}
           <div className="space-y-4 lg:col-span-4 lg:pl-4">
             <div className="space-y-1.5">
-              <h4 className="text-[12px] font-bold uppercase tracking-widest text-amber-900/80 dark:text-amber-400/80">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
                 Nhận tin tức
               </h4>
-              <p className="text-[13px] font-medium leading-relaxed text-stone-600 dark:text-stone-400">
+              <p className="text-[13px] font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
                 Đăng ký để nhận các thông báo quan trọng và tài liệu mới nhất qua Email.
               </p>
             </div>
             
             <form onSubmit={handleSubscribe} className="relative flex flex-col gap-3">
+              <label htmlFor="footer-newsletter-email" className="sr-only">
+                Địa chỉ email nhận thông báo
+              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-stone-400">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#575e55] dark:text-[#b0b9ac] pointer-events-none">
                   <MailIcon />
                 </div>
                 <input
+                  id="footer-newsletter-email"
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={subscribing}
                   placeholder="Nhập địa chỉ email..."
-                  className="w-full rounded-2xl border border-stone-300/60 bg-white/80 py-3.5 pl-10 pr-4 text-[14px] font-medium text-amber-950 placeholder-stone-400 shadow-sm transition-all focus:border-amber-600/50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-600/10 disabled:opacity-60 dark:border-stone-700/60 dark:bg-stone-900/50 dark:text-amber-50 dark:focus:border-amber-400/50 dark:focus:bg-stone-900"
+                  className="w-full rounded-2xl border border-[#dedfd4] bg-white py-3.5 pl-10 pr-4 text-[14px] font-medium text-[#293d32] placeholder-[#6b7280] shadow-sm transition-all focus:border-[#314e3e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#314e3e]/10 disabled:opacity-60 dark:border-[#354237] dark:bg-[#1e2821] dark:text-[#ecece0] dark:placeholder-[#9ca3af] dark:focus:border-[#d4b47d] dark:focus:bg-[#1e2821]"
                 />
               </div>
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="submit"
                 disabled={subscribing}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-900 hover:bg-amber-800 dark:bg-amber-600 dark:hover:bg-amber-500 text-white py-3.5 text-[14px] font-bold shadow-sm transition-all disabled:opacity-70 active:scale-[0.98]"
+                className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] py-3.5 text-[14px] font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm motion-reduce:transform-none transition-all duration-200 ease-out disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1e2821]"
               >
                 {subscribing ? (
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -220,32 +235,35 @@ export default function Footer() {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
                 ) : (
-                  "Đăng ký ngay"
+                  <>
+                    <span>Đăng ký ngay</span>
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transform-none" />
+                  </>
                 )}
-              </motion.button>
+              </button>
             </form>
           </div>
         </div>
 
-        {/* Bản quyền - Tối ưu cho Mobile & Desktop */}
-        <div className="md:mt-16 mb-[env(safe-area-inset-bottom)] md:mb-0 flex flex-col items-center justify-center gap-4 border-t border-amber-900/10 pt-6 md:pt-8 text-center md:flex-row md:justify-between dark:border-amber-100/10">
+        {/* Bản quyền - Hiển thị cả Mobile & Desktop */}
+        <div className="md:mt-16 mb-[env(safe-area-inset-bottom)] md:mb-0 flex flex-col items-center justify-center gap-4 border-t border-[#dedfd4] pt-6 md:pt-8 text-center md:flex-row md:justify-between dark:border-[#354237]">
           
           <div className="flex flex-col items-center gap-1 md:items-start">
-            <p className="text-[11px] font-bold tracking-widest uppercase text-amber-900/60 dark:text-amber-400/60">
+            <p className="text-[11px] font-bold tracking-widest uppercase text-[#7c5c2d] dark:text-[#d4b47d]">
               HTDC Xứ đoàn Mẹ Mân Côi
             </p>
-            <p className="text-[12px] font-medium text-stone-500/80 dark:text-stone-500">
+            <p className="text-[12.5px] font-medium text-[#575e55] dark:text-[#b0b9ac]">
               © {year} Giáo xứ An Ngãi. All rights reserved.
             </p>
           </div>
 
-          <div className="flex justify-center gap-6 text-[12px] font-semibold text-stone-500 select-none md:justify-end dark:text-stone-400">
-            <button type="button" onClick={() => navigate("/quy-định")} className="transition-colors hover:text-amber-900 dark:hover:text-amber-200">
+          <div className="flex justify-center gap-6 text-[12.5px] font-semibold text-[#575e55] select-none md:justify-end dark:text-[#b0b9ac]">
+            <Link to="/quy-định" className="transition-colors hover:text-[#293d32] dark:hover:text-[#ecece0]">
               Quy định sử dụng
-            </button>
-            <button type="button" onClick={() => navigate("/bảo-mật")} className="transition-colors hover:text-amber-900 dark:hover:text-amber-200">
+            </Link>
+            <Link to="/bảo-mật" className="transition-colors hover:text-[#293d32] dark:hover:text-[#ecece0]">
               Chính sách bảo mật
-            </button>
+            </Link>
           </div>
         </div>
       </div>

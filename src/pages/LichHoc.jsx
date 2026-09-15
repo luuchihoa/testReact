@@ -5,6 +5,7 @@ import {
   LayoutGrid, ListFilter, GraduationCap, Sparkles,
   ArrowUpRight, ChevronRight, Info, Church, DoorOpen
 } from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import {
   SCHEDULE_CLASSES,
@@ -572,7 +573,7 @@ export default function LichHoc() {
                 Các em vui lòng có mặt trước giờ học <strong>10–15 phút</strong> để ổn định hàng ngũ, điểm danh và chuẩn bị tâm hồn.
               </li>
               <li>
-                Mặc đồng phục Thiếu Nhi Thánh Thể chỉnh tề, đeo khăn quàng đúng ngành, mang đầy đủ Kinh Thánh, sách giáo lý và tập vở.
+                Mặc đồng phục Hùng Tâm Dũng Chí chỉnh tề, đeo khăn quàng đúng ngành (Khăn xanh chuối non cho Ngành Ấu, khăn vàng cho Kim Hoan...), mang đầy đủ Kinh Thánh, sách giáo lý và tập vở.
               </li>
               <li>
                 Lịch học có thể điều chỉnh vào các dịp Lễ Trọng hoặc kỳ thi giáo lý. Phụ huynh vui lòng theo dõi thông báo trực tiếp từ Ban Giáo Lý.

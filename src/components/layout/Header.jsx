@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars, react-hooks/refs, react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "../ui/ToastContext.jsx";
+import { usePWAInstall } from "../ui/PWAInstallContext.jsx";
 import { supabase } from "../../lib/supabase.js";
 import {
   LogIn, LogOut, ChevronDown, Church,
@@ -9,25 +11,26 @@ import {
   CalendarDays, FileText, Phone, Settings, ShieldCheck,
   ScrollText, User, Home, GraduationCap, Info, Menu, X,
   LayoutDashboard, Bell, Loader2, CheckCheck, Megaphone, BellOff,
+  ArrowRight, Smartphone, Download,
 } from "lucide-react";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
-  { path: "/khối-chiên-con",    label: "Chiên Con",  sub: "Lớp 1 – 2",       icon: Heart,    accent: "#db2777", bg: "bg-pink-50 dark:bg-pink-500/10",     ring: "ring-pink-200 dark:ring-pink-500/30"     },
-  { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#65a30d", bg: "bg-lime-50 dark:bg-lime-500/10",     ring: "ring-lime-200 dark:ring-lime-500/30"     },
-  { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Lớp 5 – 6",       icon: Flame,    accent: "#ca8a04", bg: "bg-yellow-50 dark:bg-yellow-500/10", ring: "ring-yellow-200 dark:ring-yellow-500/30" },
-  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",           icon: Church, accent: "#ea580c", bg: "bg-orange-50 dark:bg-orange-500/10", ring: "ring-orange-200 dark:ring-orange-500/30" },
-  { path: "/khối-kinh-thánh",   label: "Kinh Thánh", sub: "Lớp 8 – 9",       icon: BookOpen, accent: "#dc2626", bg: "bg-red-50 dark:bg-red-500/10",       ring: "ring-red-200 dark:ring-red-500/30"       },
-  { path: "/khối-vào-đời",      label: "Vào Đời",    sub: "Lớp 10 – 11",     icon: Globe,    accent: "#7c3a1e", bg: "bg-amber-50 dark:bg-amber-500/10",   ring: "ring-amber-200 dark:ring-amber-500/30"   },
+  { path: "/khối-chiên-con",    label: "Chiên Con",  sub: "Lớp 1 – 2",       icon: Heart,    accent: "#be185d", bg: "bg-pink-100/80 dark:bg-pink-500/20",     ring: "ring-pink-300 dark:ring-pink-500/40"     },
+  { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#4d7c0f", bg: "bg-lime-100/80 dark:bg-lime-500/20",     ring: "ring-lime-300 dark:ring-lime-500/40"     },
+  { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Lớp 5 – 6",       icon: Flame,    accent: "#a16207", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
+  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",           icon: Church,   accent: "#c2410c", bg: "bg-orange-100/80 dark:bg-orange-500/20", ring: "ring-orange-300 dark:ring-orange-500/40" },
+  { path: "/khối-kinh-thánh",   label: "Kinh Thánh", sub: "Lớp 8 – 9",       icon: BookOpen, accent: "#b91c1c", bg: "bg-red-100/80 dark:bg-red-500/20",       ring: "ring-red-300 dark:ring-red-500/40"       },
+  { path: "/khối-vào-đời",      label: "Vào Đời",    sub: "Lớp 10 – 11",     icon: Globe,    accent: "#78350f", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
 ];
 
 const COMMUNITY_ITEMS = [
-  { path: "/tuyển-sinh",     label: "Tuyển sinh",     icon: Users,        desc: "Đăng ký học viên mới" },
-  { path: "/lịch-học",       label: "Lịch học",       icon: CalendarDays, desc: "Xem lịch giáo lý tuần" },
-  { path: "/lịch-sinh-hoạt", label: "Lịch sinh hoạt", icon: CalendarDays, desc: "Theo dõi sự kiện giáo xứ" },
-  { path: "/tài-liệu",       label: "Tài liệu",       icon: FileText,     desc: "Tải bài giảng & học liệu" },
-  { path: "/liên-hệ",        label: "Liên hệ",        icon: Phone,        desc: "Kết nối & hỗ trợ" },
-  { path: "/bài-viết",       label: "Bài viết",       icon: FileText,     desc: "Chia sẻ từ cộng đoàn" },
+  { path: "/tuyển-sinh",     label: "Tuyển sinh",     icon: Users,        desc: "Đăng ký học viên mới",     accent: "#15803d", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
+  { path: "/lịch-học",       label: "Lịch học",       icon: CalendarDays, desc: "Xem lịch giáo lý tuần",    accent: "#0369a1", bg: "bg-sky-100/80 dark:bg-sky-500/20",         ring: "ring-sky-300 dark:ring-sky-500/40" },
+  { path: "/lịch-sinh-hoạt", label: "Lịch sinh hoạt", icon: Sparkles,     desc: "Theo dõi sự kiện giáo xứ", accent: "#7e22ce", bg: "bg-purple-100/80 dark:bg-purple-500/20",   ring: "ring-purple-300 dark:ring-purple-500/40" },
+  { path: "/tài-liệu",       label: "Tài liệu",       icon: FileText,     desc: "Tải bài giảng & học liệu", accent: "#0f766e", bg: "bg-teal-100/80 dark:bg-teal-500/20",       ring: "ring-teal-300 dark:ring-teal-500/40" },
+  { path: "/liên-hệ",        label: "Liên hệ",        icon: Phone,        desc: "Kênh kết nối & hỗ trợ",    accent: "#b45309", bg: "bg-amber-100/80 dark:bg-amber-500/20",     ring: "ring-amber-300 dark:ring-amber-500/40" },
+  { path: "/bài-viết",       label: "Bài viết",       icon: BookOpen,     desc: "Chia sẻ từ cộng đoàn",     accent: "#4338ca", bg: "bg-indigo-100/80 dark:bg-indigo-500/20",   ring: "ring-indigo-300 dark:ring-indigo-500/40" },
 ];
 
 const MAIN_ITEMS = [
@@ -177,14 +180,19 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          className="absolute left-1/2 -translate-x-[40%] top-full mt-3 w-[720px] rounded-[2rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
+          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          id="khoi-megamenu-panel"
+          role="region"
+          aria-label="Chương trình giáo lý các khối"
+          className="absolute left-1/2 -translate-x-[42%] top-full mt-3 w-[720px] max-w-[calc(100vw-32px)] rounded-[2rem] border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
         >
           <div className="flex">
             {/* Cột Danh sách Khối (2/3 chiều rộng) */}
             <div className="w-2/3 p-5">
               <div className="mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800/80 dark:text-amber-200/80 font-serif">Chương trình giáo lý</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] font-serif">Chương trình giáo lý</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {KHOI_ITEMS.map((khoi) => {
@@ -192,14 +200,14 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
                   const isActive = currentPath === khoi.path;
                   return (
                     <button key={khoi.path} type="button" onClick={() => { navigate(khoi.path); onClose(); }}
-                      className={`flex items-center gap-3 px-4 py-3 text-left rounded-2xl bg-[#FDFBF7] dark:bg-[#161c18] hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors group ${isActive ? "bg-amber-50 dark:bg-amber-900/20 shadow-sm" : ""}`}
+                      className={`flex items-center gap-3 px-4 py-3 text-left rounded-2xl bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] transition-all group ${isActive ? "bg-[#faf8f3] dark:bg-[#151c18] shadow-sm ring-1 ring-[#dedfd4] dark:ring-[#354237]" : ""}`}
                     >
                       <div className={`flex-shrink-0 w-10 h-10 rounded-[14px] flex items-center justify-center ${khoi.bg} ring-1 ${isActive ? khoi.ring : "ring-transparent"} group-hover:ring-1 group-hover:${khoi.ring} transition-all`}>
                         <Icon className="w-4 h-4" style={{ color: khoi.accent }} />
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-[13px] font-bold leading-snug ${isActive ? "text-amber-950 dark:text-amber-50" : "text-stone-700 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-amber-100"}`}>{khoi.label}</p>
-                        <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">{khoi.sub}</p>
+                        <p className={`text-[14px] font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>{khoi.label}</p>
+                        <p className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8] truncate mt-0.5">{khoi.sub}</p>
                       </div>
                     </button>
                   );
@@ -208,17 +216,21 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
             </div>
             
             {/* Cột Nổi bật (Featured - 1/3 chiều rộng) */}
-            <div className="w-1/3 bg-gradient-to-br from-amber-100 to-amber-50/50 dark:from-stone-800 dark:to-stone-900 p-6 flex flex-col justify-between border-l border-amber-900/10 dark:border-amber-100/10">
+            <div className="w-1/3 bg-[#f4efe4] dark:bg-[#161c18] p-6 flex flex-col justify-between border-l border-[#dedfd4] dark:border-[#354237]">
               <div>
-                <div className="w-10 h-10 rounded-full bg-white dark:bg-stone-800 shadow-sm flex items-center justify-center mb-4">
-                  <Star className="w-5 h-5 text-amber-500" />
+                <div className="w-10 h-10 rounded-full bg-white dark:bg-[#1e2821] shadow-sm flex items-center justify-center mb-4 text-[#7c5c2d] dark:text-[#d4b47d]">
+                  <Star className="w-5 h-5 text-[#927140] dark:text-[#d4b47d]" />
                 </div>
-                <h4 className="text-sm font-bold text-amber-950 dark:text-amber-50 font-serif leading-snug mb-2">Lời Chúa cho Thiếu Nhi</h4>
-                <p className="text-[11px] text-stone-600 dark:text-stone-400 italic">"Hãy để trẻ nhỏ đến cùng Thầy, đừng ngăn cấm chúng, vì Nước Thiên Chúa thuộc về những ai giống như chúng."</p>
-                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-500 mt-2">— Mc 10, 14</p>
+                <h4 className="text-[14px] font-bold text-[#293d32] dark:text-[#f2f2e8] font-serif leading-snug mb-2">Lời Chúa cho Thiếu Nhi</h4>
+                <p className="text-[12.5px] font-medium text-[#26362d] dark:text-[#e8ede6] italic leading-relaxed">"Hãy để trẻ nhỏ đến cùng Thầy, đừng ngăn cấm chúng, vì Nước Thiên Chúa thuộc về những ai giống như chúng."</p>
+                <p className="text-[12px] font-bold text-[#6b4d21] dark:text-[#d4b47d] mt-2.5">— Mc 10, 14</p>
               </div>
-              <button onClick={() => { navigate("/giới-thiệu"); onClose(); }} className="mt-6 w-full py-2 bg-amber-900 hover:bg-amber-800 dark:bg-amber-100 dark:hover:bg-white text-amber-50 dark:text-amber-950 rounded-xl text-xs font-bold transition-colors">
-                Tìm hiểu thêm
+              <button
+                onClick={() => { navigate("/giới-thiệu"); onClose(); }}
+                className="group flex items-center justify-center gap-1.5 mt-6 w-full py-2.5 bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] rounded-xl text-[12.5px] font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
+              >
+                <span>Tìm hiểu thêm</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
               </button>
             </div>
           </div>
@@ -241,24 +253,61 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          id="community-dropdown-panel"
+          role="region"
+          aria-label="Kênh thông tin và sinh hoạt giáo xứ"
+          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[500px] max-w-[calc(100vw-32px)] rounded-[2rem] border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
         >
-          {COMMUNITY_ITEMS.map((item, i) => {
-            const Icon     = item.icon;
-            const isActive = currentPath === item.path;
-            return (
-              <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${i !== COMMUNITY_ITEMS.length - 1 ? "border-b border-amber-900/5 dark:border-amber-100/5" : ""} ${isActive ? "bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
-              >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`} />
-                <div>
-                  <p className="text-sm font-semibold">{item.label}</p>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{item.desc}</p>
-                </div>
-              </button>
-            );
-          })}
+          <div className="p-5 pb-3">
+            <p className="text-[12px] font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] font-serif">
+              Kênh thông tin & Sinh hoạt
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 px-5 pb-4">
+            {COMMUNITY_ITEMS.map((item) => {
+              const Icon     = item.icon;
+              const isActive = currentPath === item.path;
+              return (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() => { navigate(item.path); onClose(); }}
+                  className={`flex items-start gap-3 p-3 text-left rounded-2xl bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] transition-all group ${
+                    isActive ? "bg-[#faf8f3] dark:bg-[#151c18] shadow-sm ring-1 ring-[#dedfd4] dark:ring-[#354237]" : ""
+                  }`}
+                >
+                  <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${item.bg} ring-1 ${isActive ? item.ring : "ring-transparent"} group-hover:ring-1 group-hover:${item.ring} transition-all mt-0.5`}>
+                    <Icon className="w-4 h-4" style={{ color: item.accent }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-[13.5px] font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>
+                      {item.label}
+                    </p>
+                    <p className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8] leading-tight mt-0.5 line-clamp-1">
+                      {item.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="px-5 py-3 bg-[#faf8f3] dark:bg-[#151c18] border-t border-[#dedfd4] dark:border-[#354237] flex items-center justify-between">
+            <span className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8]">
+              Sinh hoạt: <strong className="text-[#293d32] dark:text-[#f2f2e8]">Chúa Nhật 07:30 – 10:30</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => { navigate("/liên-hệ"); onClose(); }}
+              className="text-[12px] font-bold text-[#7c5c2d] dark:text-[#d4b47d] hover:text-[#314e3e] dark:hover:text-white transition-colors"
+            >
+              Hỗ trợ trực tiếp →
+            </button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -480,6 +529,7 @@ function MoreMenuSheet({
   isLogin, onProfilePress, onLogout, avatar, username, role,
   ACCOUNT_ITEMS = [],
 }) {
+  const { install, isInstalled } = usePWAInstall();
   const goTo = (path) => { navigate(path); onClose(); };
   const roleAccent = ROLE_ACCENTS[role] || ROLE_ACCENTS.user;
   const roleLabel  = ROLE_LABELS[role]  || ROLE_LABELS.user;
@@ -615,6 +665,37 @@ function MoreMenuSheet({
                       </button>
                     );
                   })}
+                </div>
+              )}
+
+              {/* PWA Install Action Row (Chỉ hiển thị khi chưa cài đặt) */}
+              {!isInstalled && (
+                <div className="py-1 border-b border-amber-900/10 dark:border-amber-100/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      install();
+                    }}
+                    className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-amber-50 dark:active:bg-stone-800/70 transition-colors"
+                  >
+                    <div className="w-[30px] h-[30px] rounded-[7px] bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Smartphone className="w-[17px] h-[17px]" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0 pr-1">
+                      <p className="text-[14px] text-amber-950 dark:text-amber-50 font-semibold tracking-tight leading-tight">
+                        Cài đặt ứng dụng
+                      </p>
+                      <p className="text-[12px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight truncate font-medium">
+                        Thêm vào màn hình chính để mở nhanh
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1 rounded-full shadow-xs">
+                        <Download className="w-3 h-3" strokeWidth={2.5} /> Cài đặt
+                      </span>
+                    </div>
+                  </button>
                 </div>
               )}
 
@@ -763,6 +844,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
 /* ═══ HEADER (MAIN EXPORT) ════════════════════════════════════════ */
 export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }) {
   const { showToast } = useToast();
+  const { install, isInstalled, hasNativePrompt } = usePWAInstall();
   const navigate  = useNavigate();
   const location  = useLocation();
   const isScrolled = useScrollPosition(); // Sử dụng hook cuộn chuột
@@ -781,6 +863,23 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const [notifications, setNotifications] = useState([]);
   const [notifLoading,  setNotifLoading]  = useState(false);
   const [isRinging,     setIsRinging]     = useState(false);
+
+  // Synchronize route change to close any open menu
+  const prevPathRef = useRef(location.pathname);
+  if (prevPathRef.current !== location.pathname) {
+    prevPathRef.current = location.pathname;
+    if (openMenu) setOpenMenu(null);
+  }
+
+  // Synchronize logout to reset notification counts
+  const prevIsLoginRef = useRef(isLogin);
+  if (!isLogin && prevIsLoginRef.current) {
+    prevIsLoginRef.current = false;
+    if (unreadCount !== 0) setUnreadCount(0);
+    if (notifications.length > 0) setNotifications([]);
+  } else if (isLogin && !prevIsLoginRef.current) {
+    prevIsLoginRef.current = true;
+  }
 
   useEffect(() => {
     const sync = () => {
@@ -873,11 +972,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
 
   // Supabase Realtime Subscription thay cho setInterval
   useEffect(() => {
-    if (!isLogin) { 
-      setUnreadCount(0); 
-      setNotifications([]); 
-      return; 
-    }
+    if (!isLogin) return;
     
     // Fetch initial count
     fetchUnreadCount();
@@ -891,9 +986,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
           schema: 'public',
           table: 'notifications',
         },
-        (payload) => {
-          // Khi có thông báo mới insert vào db (cho dù của ai)
-          // Chúng ta cứ fetch lại count để cho an toàn nếu rls áp dụng
+        () => {
           fetchUnreadCount();
           // Kích hoạt hiệu ứng lắc chuông
           setIsRinging(true);
@@ -921,13 +1014,26 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     if (n.link) navigate(n.link);
   };
 
-  useEffect(() => { setOpenMenu(null); }, [location.pathname]);
-
   useEffect(() => {
     const onResize = () => setOpenMenu(null);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && openMenu) {
+        const current = openMenu;
+        setOpenMenu(null);
+        if (current === "khoi") khoiRef.current?.querySelector("button")?.focus();
+        else if (current === "community") communityRef.current?.querySelector("button")?.focus();
+        else if (current === "account") accountRef.current?.querySelector("button")?.focus();
+        else if (current === "notif") notifRef.current?.querySelector("button")?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [openMenu]);
 
   const closeKhoi      = useCallback(() => setOpenMenu((prev) => prev === "khoi" ? null : prev), []);
   const closeCommunity = useCallback(() => setOpenMenu((prev) => prev === "community" ? null : prev), []);
@@ -969,20 +1075,20 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
       <header 
         className={`sticky top-0 z-50 w-full antialiased transition-all duration-300 ${
           isScrolled 
-            ? "bg-[#FDFBF7]/85 dark:bg-[#161c18]/90 backdrop-blur-lg border-b border-amber-900/10 dark:border-stone-800/80 shadow-sm" 
+            ? "bg-[#faf8f3]/90 dark:bg-[#151c18]/90 backdrop-blur-lg border-b border-[#dedfd4] dark:border-[#354237] shadow-sm" 
             : "bg-transparent border-b border-transparent"
         }`} 
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           
-          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors hover:bg-amber-900/5 dark:hover:bg-amber-100/5">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-gradient-to-br from-amber-50 to-[#FDFBF7] dark:from-amber-900/20 dark:to-[#161c18] shadow-sm transition-all group-hover:scale-105">
-              <img src="/images/logo_htdc.avif" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:rotate-6" />
+          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <img src="/images/logo_htdc.png" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:rotate-6" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-sm font-extrabold tracking-tight text-amber-950 dark:text-amber-50 group-hover:text-amber-700 dark:group-hover:text-amber-400 md:text-base font-serif transition-colors">BAN GIÁO LÝ</span>
-              <span className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-800/60 dark:text-amber-200/50 md:text-[10px] whitespace-nowrap">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
+              <span className="text-sm font-extrabold tracking-tight text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] md:text-base font-serif transition-colors">BAN GIÁO LÝ</span>
+              <span className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d] whitespace-nowrap font-mono">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
             </div>
           </button>
 
@@ -991,28 +1097,55 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               const isActive = location.pathname === item.path;
               return (
                 <button key={item.path} type="button" onClick={() => navigate(item.path)}
-                  className={`px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isActive ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}
+                  className={`px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isActive ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
                 >
                   {item.label}
                 </button>
               );
             })}
-            <div className="w-px h-4 bg-amber-900/10 dark:bg-amber-100/10 mx-1.5" />
+            <div className="w-px h-4 bg-[#dedfd4] dark:bg-[#354237] mx-1.5" />
             <div ref={khoiRef} className="relative">
-              <button type="button" onClick={(e) => toggle("khoi", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${isKhoiActive || openMenu === "khoi" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}>
-                Khối học <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "khoi" ? "rotate-180" : ""}`} />
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={openMenu === "khoi"}
+                aria-controls="khoi-megamenu-panel"
+                onClick={(e) => toggle("khoi", e)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isKhoiActive || openMenu === "khoi" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+              >
+                <span>Khối học</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "khoi" ? "rotate-180" : ""}`} />
               </button>
               <KhoiMegaMenu isOpen={openMenu === "khoi"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} />
             </div>
             <div ref={communityRef} className="relative">
-              <button type="button" onClick={(e) => toggle("community", e)} className={`flex items-center gap-1 px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${openMenu === "community" ? "text-amber-950 dark:text-amber-50 bg-amber-900/5 dark:bg-amber-100/5 font-bold" : "text-stone-600 dark:text-stone-400 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-900/5 dark:hover:bg-amber-100/5"}`}>
-                Cộng đoàn <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={openMenu === "community"}
+                aria-controls="community-dropdown-panel"
+                onClick={(e) => toggle("community", e)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${openMenu === "community" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+              >
+                <span>Cộng đoàn</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
               </button>
               <CommunityDropdown isOpen={openMenu === "community"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} />
             </div>
           </nav>
 
           <div className="flex items-center gap-2">
+            {!isInstalled && hasNativePrompt && (
+              <button
+                type="button"
+                onClick={install}
+                className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/50 transition-colors shadow-xs"
+                title="Cài đặt ứng dụng lên máy tính"
+              >
+                <Download className="w-3.5 h-3.5" strokeWidth={2.2} />
+                <span>Cài ứng dụng</span>
+              </button>
+            )}
             {isLogin ? (
               <div ref={notifRef} className="relative">
                 <button

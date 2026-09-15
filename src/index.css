@@ -2,6 +2,33 @@
 @plugin "@tailwindcss/typography";
 @variant dark (&:where(.dark, .dark *));
 
+/* ══════════════════════════════════════════════════════════════════
+   TIÊU CHUẨN THIẾT KẾ SEMANTIC TOKEN — BAN GIÁO LÝ AN NGÃI (AGENTS.MD)
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --ui-bg: #faf8f3;
+  --ui-surface: #fffefa;
+  --ui-text: #293d32;
+  --ui-muted: #575e55;
+  --ui-border: #dedfd4;
+  --ui-accent: #927140;
+  --ui-accent-text: #7c5c2d;
+  --ui-primary: #314e3e;
+  --ui-on-primary: #ffffff;
+}
+
+.dark {
+  --ui-bg: #151c18;
+  --ui-surface: #1e2821;
+  --ui-text: #ecece0;
+  --ui-muted: #b0b9ac;
+  --ui-border: #354237;
+  --ui-accent: #d4b47d;
+  --ui-accent-text: #d4b47d;
+  --ui-primary: #d6b883;
+  --ui-on-primary: #19251d;
+}
+
 @layer utilities {
   .preserve-3d {
     transform-style: preserve-3d;
@@ -27,6 +54,16 @@
 }
 
 @theme {
+  --color-ui-bg: var(--ui-bg);
+  --color-ui-surface: var(--ui-surface);
+  --color-ui-text: var(--ui-text);
+  --color-ui-muted: var(--ui-muted);
+  --color-ui-border: var(--ui-border);
+  --color-ui-accent: var(--ui-accent);
+  --color-ui-accent-text: var(--ui-accent-text);
+  --color-ui-primary: var(--ui-primary);
+  --color-ui-on-primary: var(--ui-on-primary);
+
   --animate-wiggle: wiggle 1s ease-in-out infinite;
 
   @keyframes wiggle {

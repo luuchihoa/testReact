@@ -32,7 +32,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-15-phut-hk1",
     slug: "ôn-tập-15-phút-học-kỳ-1",
-    title: "ÔN TẬP 15 PHÚT",
+    title: "Ôn Tập 15 Phút — Học Kỳ 1",
     khoi: "phung-vu",
     time: 900,
     mcq_count: 10,
@@ -43,7 +43,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-1-tiet-hk1",
     slug: "ôn-tập-1-tiết-học-kỳ-1",
-    title: "ÔN TẬP 1 TIẾT",
+    title: "Ôn Tập 1 Tiết — Học Kỳ 1",
     khoi: "phung-vu",
     time: 2700,
     mcq_count: 20,
@@ -54,7 +54,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-cuoi-hk1",
     slug: "ôn-tập-cuối-học-kỳ-1",
-    title: "ÔN TẬP HỌC KỲ I",
+    title: "Ôn Tập Cuối Học Kỳ 1",
     khoi: "phung-vu",
     time: 2700,
     mcq_count: 20,
@@ -65,7 +65,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-15-phut-hk2",
     slug: "ôn-tập-15-phút-học-kỳ-2",
-    title: "ÔN TẬP 15 PHÚT",
+    title: "Ôn Tập 15 Phút — Học Kỳ 2",
     khoi: "phung-vu",
     time: 900,
     mcq_count: 10,
@@ -76,7 +76,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-1-tiet-hk2",
     slug: "ôn-tập-1-tiết-học-kỳ-2",
-    title: "ÔN TẬP 1 TIẾT",
+    title: "Ôn Tập 1 Tiết — Học Kỳ 2",
     khoi: "phung-vu",
     time: 2700,
     mcq_count: 20,
@@ -87,7 +87,7 @@ const QUIZ_CONFIGS = [
   {
     id: "on-tap-cuoi-hk2",
     slug: "ôn-tập-cuối-học-kỳ-2",
-    title: "ÔN TẬP HỌC KỲ II",
+    title: "Ôn Tập Cuối Học Kỳ 2",
     khoi: "phung-vu",
     time: 2700,
     mcq_count: 20,

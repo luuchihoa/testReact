@@ -2,9 +2,26 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { copyFileSync } from 'node:fs'
+
+// The SPA fallback must use the built entry and the same base-aware icon URLs.
+function spaFallback() {
+  let outputDirectory;
+  return {
+    name: 'built-spa-fallback',
+    apply: 'build',
+    configResolved(config) {
+      outputDirectory = path.resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      copyFileSync(path.join(outputDirectory, 'index.html'), path.join(outputDirectory, '200.html'));
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
+    spaFallback(),
     react(),
     tailwindcss(),
     {

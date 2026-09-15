@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { QuizTimerRing } from "../components/ui/Timer.jsx";
 import { GuideBox, ExitButton } from "../components/ui/Feedback.jsx";
 import useDoVuiLogic from "../features/dovui/hooks/useDoVuiLogic.js";
@@ -59,7 +59,7 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden bg-[#FDFBF7] dark:bg-[#1C1917]">
         <div className="fixed inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent pointer-events-none" />
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ ease: APPLE_EASE, duration: 0.4 }}
@@ -80,7 +80,7 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
           >
             Quay lại trang chủ
           </button>
-        </motion.div>
+        </Motion.div>
       </div>
     );
   }
@@ -92,7 +92,14 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
       <div className="fixed -bottom-32 -right-32 w-[420px] h-[420px] bg-amber-700/10 dark:bg-amber-600/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* Modals */}
-      {showGuide && <GuideBox onConfirm={handleGuideConfirm} skipStorageKey={SKIP_GUIDE_KEY} />}
+      {showGuide && (
+        <GuideBox
+          mode="game"
+          isMidQuiz={phase === "playing" || current > 0}
+          onConfirm={handleGuideConfirm}
+          skipStorageKey={SKIP_GUIDE_KEY}
+        />
+      )}
       {showExit && <ExitButton handleExit={confirmExit} handleClose={() => setShowExit(false)} />}
       <AnimatePresence>
         {showLeaderboard && (
@@ -157,13 +164,13 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
 
               {/* Streak Combo Indicator */}
               {streak >= 2 && (
-                <motion.div
+                <Motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[11px] shadow-sm animate-pulse"
                 >
                   🔥 Combo x{streak}!
-                </motion.div>
+                </Motion.div>
               )}
             </div>
 
@@ -174,7 +181,7 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
                 const isCurrent = i === current;
                 return (
                   <div key={i} className="flex-1 h-1.5 rounded-full bg-stone-200/80 dark:bg-stone-800/80 overflow-hidden relative">
-                    <motion.div
+                    <Motion.div
                       className={`absolute inset-0 rounded-full ${
                         isCurrent
                           ? "bg-amber-500 shadow-sm ring-1 ring-amber-300"
@@ -239,7 +246,7 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
 
           {/* ── 3. QUESTION CARD WITH INTEGRATED TIMER ── */}
           <AnimatePresence mode="wait">
-            <motion.div
+            <Motion.div
               key={current}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -270,12 +277,12 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
               <p className="text-[17px] font-extrabold text-amber-950 dark:text-amber-50 leading-relaxed m-0 pt-1">
                 {q.text}
               </p>
-            </motion.div>
+            </Motion.div>
           </AnimatePresence>
 
           {/* ── 4. OPTION BUTTONS ── */}
           <AnimatePresence mode="wait">
-            <motion.div
+            <Motion.div
               key={current}
               initial="hidden"
               animate="show"
@@ -283,7 +290,7 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
               className="flex flex-col gap-2.5 mb-4"
             >
               {Object.entries(q.choices).map(([letter, text]) => (
-                <motion.div
+                <Motion.div
                   key={letter}
                   variants={{
                     hidden: { opacity: 0, y: 10 },
@@ -298,9 +305,9 @@ export default function DoVui({ config = {}, quizData = [], handleExit: onExitTo
                     onHover={handleHover}
                     disabled={!!optStates[letter]}
                   />
-                </motion.div>
+                </Motion.div>
               ))}
-            </motion.div>
+            </Motion.div>
           </AnimatePresence>
 
           {/* ── 5. BOTTOM UTILITY ACTIONS ── */}
