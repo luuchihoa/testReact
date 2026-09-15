@@ -78,11 +78,66 @@ function OptionButton({ label, text, selected, onClick, disabled }) {
 }
 
 // ====================== QUESTION PALETTE =========================
-function QuestionPalette({ total, current, answers, flags, onSelect, onSubmitPrompt }) {
+function QuestionPalette({ total, current, answers, flags, onSelect, onSubmitPrompt, compact }) {
   const answeredCount = Object.keys(answers).length;
   const flaggedCount = Object.values(flags).filter(Boolean).length;
   const unansweredCount = total - answeredCount;
 
+  // ── Dạng compact: dải ngang cuộn ngang, dùng trên mobile ──
+  if (compact) {
+    return (
+      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs mb-4 overflow-hidden">
+        {/* Thống kê mini */}
+        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[#dedfd4] dark:border-[#354237] text-[11px]">
+          <span className="flex items-center gap-1 text-[#314e3e] dark:text-[#d6b883] font-bold">
+            <span className="w-3 h-3 rounded-sm bg-[#314e3e] dark:bg-[#d6b883] inline-block" />
+            {answeredCount} đã làm
+          </span>
+          <span className="flex items-center gap-1 text-[#575e55] dark:text-[#b0b9ac] font-medium">
+            <span className="w-3 h-3 rounded-sm bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] inline-block" />
+            {unansweredCount} chưa làm
+          </span>
+          {flaggedCount > 0 && (
+            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
+              ⚑ {flaggedCount} cờ
+            </span>
+          )}
+        </div>
+        {/* Lưới câu hỏi cuộn ngang */}
+        <div className="overflow-x-auto px-3 py-2.5">
+          <div className="flex gap-2" style={{ width: "max-content" }}>
+            {Array.from({ length: total }).map((_, idx) => {
+              const isCurrent = current === idx;
+              const isAnswered = answers[idx] !== undefined && answers[idx] !== null;
+              const isFlagged = Boolean(flags[idx]);
+
+              let cls = "bg-[#faf8f3] dark:bg-[#151c18] text-[#575e55] dark:text-[#b0b9ac] border-[#dedfd4] dark:border-[#354237]";
+              if (isAnswered) cls = "bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] border-transparent font-bold";
+              if (isFlagged) cls = "bg-amber-500 text-white border-amber-600 font-bold";
+              if (isCurrent) cls += " ring-2 ring-[#927140] dark:ring-[#d4b47d] ring-offset-1 dark:ring-offset-[#1e2821]";
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => onSelect(idx)}
+                  aria-label={`Câu ${idx + 1}`}
+                  className={`relative w-9 h-9 flex-shrink-0 rounded-xl border text-[12px] font-semibold flex items-center justify-center transition-all cursor-pointer ${cls}`}
+                >
+                  {idx + 1}
+                  {isFlagged && (
+                    <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Dạng đầy đủ: sidebar desktop ──
   return (
     <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-5 border border-[#dedfd4] dark:border-[#354237] shadow-xs sticky top-6">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#dedfd4] dark:border-[#354237]">
@@ -184,7 +239,6 @@ function McqArea({
   onToggleFlag,
   onPrev,
   onNext,
-  onSkip,
   isFirst,
   isLast,
   hasEssay,
@@ -274,34 +328,24 @@ function McqArea({
         </div>
       </div>
 
-      {/* Điều hướng câu trước / câu sau */}
-      <div className="flex items-center justify-between gap-3 pt-1">
+      {/* Điều hướng câu trước / câu sau — 2 nút đơn giản */}
+      <div className="flex items-center gap-3 pt-1">
         <button
           type="button"
           onClick={onPrev}
           disabled={isFirst}
-          className="px-4 py-3 rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] text-[13px] sm:text-[14px] font-bold flex items-center gap-2 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs"
+          className="px-4 py-3 rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] text-[13px] sm:text-[14px] font-bold flex items-center gap-2 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs flex-shrink-0"
         >
           ← Câu trước
         </button>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onSkip}
-            className="px-3.5 py-3 rounded-xl border border-dashed border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] bg-[#fffefa] dark:bg-[#1e2821] text-[13px] font-medium transition-all cursor-pointer shadow-xs"
-          >
-            Để lại làm sau
-          </button>
-
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-5 py-3 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] hover:opacity-95 active:scale-98 text-[13px] sm:text-[14px] font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer"
-          >
-            {isLast ? (hasEssay ? "Sang Tự luận →" : "Xem lại & Nộp bài →") : "Câu tiếp theo →"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onNext}
+          className="flex-1 py-3 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] hover:opacity-95 active:scale-[0.98] text-[13px] sm:text-[14px] font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+        >
+          {isLast ? (hasEssay ? "Sang Tự luận →" : "Xem lại & Nộp bài →") : "Câu tiếp theo →"}
+        </button>
       </div>
     </div>
   );
@@ -1278,28 +1322,28 @@ export default function QuizBox({ handleExit, config, quizData }) {
 
         {/* TAB SWITCHER (Khi có cả Trắc nghiệm & Tự luận trong lúc làm bài) */}
         {phase === "taking" && essay.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 bg-[#faf8f3] dark:bg-[#151c18] p-1.5 rounded-2xl border border-[#dedfd4] dark:border-[#354237] w-fit">
+          <div className="flex items-center gap-1.5 mb-4 bg-[#faf8f3] dark:bg-[#151c18] p-1.5 rounded-2xl border border-[#dedfd4] dark:border-[#354237] w-full">
             <button
               type="button"
               onClick={() => setActiveTab("mcq")}
-              className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer text-center ${
                 activeTab === "mcq"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] shadow-xs"
                   : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
               }`}
             >
-              Phần I: Trắc Nghiệm ({mcq.length})
+              Phần I: Trắc Nghiệm
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("essay")}
-              className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer text-center ${
                 activeTab === "essay"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] shadow-xs"
                   : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
               }`}
             >
-              Phần II: Tự Luận ({essay.length})
+              Phần II: Tự Luận
             </button>
           </div>
         )}
@@ -1310,6 +1354,21 @@ export default function QuizBox({ handleExit, config, quizData }) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* KHU VỰC CÂU HỎI (8 CỘT TRÊN DESKTOP) */}
               <div className="lg:col-span-8">
+                {/* Palette compact chỉ hiện trên mobile (lg:hidden) */}
+                {activeTab === "mcq" && (
+                  <div className="lg:hidden">
+                    <QuestionPalette
+                      total={mcq.length}
+                      current={currentQ}
+                      answers={answers}
+                      flags={flags}
+                      onSelect={(idx) => setCurrentQ(idx)}
+                      onSubmitPrompt={() => setShowConfirmSubmit(true)}
+                      compact
+                    />
+                  </div>
+                )}
+
                 {activeTab === "mcq" ? (
                   <McqArea
                     q={mcq[currentQ]}
@@ -1330,13 +1389,6 @@ export default function QuizBox({ handleExit, config, quizData }) {
                         setShowConfirmSubmit(true);
                       }
                     }}
-                    onSkip={() => {
-                      if (currentQ < mcq.length - 1) {
-                        setCurrentQ((c) => c + 1);
-                      } else if (essay.length > 0) {
-                        setActiveTab("essay");
-                      }
-                    }}
                     isFirst={currentQ === 0}
                     isLast={currentQ === mcq.length - 1}
                     hasEssay={essay.length > 0}
@@ -1352,8 +1404,8 @@ export default function QuizBox({ handleExit, config, quizData }) {
                 )}
               </div>
 
-              {/* BẢNG CÂU HỎI SIDEBAR (4 CỘT TRÊN DESKTOP) */}
-              <div className="lg:col-span-4">
+              {/* BẢNG CÂU HỎI SIDEBAR (4 CỘT TRÊN DESKTOP, ẩn trên mobile) */}
+              <div className="hidden lg:block lg:col-span-4">
                 <QuestionPalette
                   total={mcq.length}
                   current={activeTab === "mcq" ? currentQ : -1}
