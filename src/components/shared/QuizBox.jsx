@@ -1118,14 +1118,19 @@ export default function QuizBox({ handleExit, config, quizData }) {
           {/* Right: Cụm điều khiển — nút nhỏ trên mobile, to hơn trên desktop */}
           <div className="quiz-tools">
             {phase === "taking" && (
-              <div className="quiz-clock flex items-center justify-center gap-1 bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] rounded-full px-3 py-1.5 shadow-xs min-w-[4.5rem]">
-                <span className="text-xs opacity-60">⏱</span>
+              <div
+                className="quiz-clock h-11 w-28 flex-shrink-0 flex items-center justify-center gap-1.5 bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-full shadow-xs px-2.5"
+                role="timer"
+                aria-label="Thời gian làm bài còn lại"
+              >
+                <span className="text-sm opacity-70 select-none flex-shrink-0" aria-hidden="true">⏱</span>
                 <QuizTimer
                   key={attempt}
                   duration={config.time}
                   onTimeUp={handleTimeUp}
                   running={isTimerRunning}
                   onTick={handleTimerTick}
+                  className="font-mono text-[14.5px] sm:text-[15px] font-bold tabular-nums tracking-tight transition-colors inline-block text-center"
                 />
               </div>
             )}
