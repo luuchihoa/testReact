@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 
 export function formatTime(sec) {
+  if (sec >= 3600) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
@@ -13,34 +19,48 @@ export function QuizTimer({
   duration,
   onTimeUp,
   running = true,
-  // Đổi sang font-serif và màu amber/red chuẩn hệ thống
-  className = "text-[22px] sm:text-[24px] font-extrabold font-serif text-amber-700 dark:text-amber-500 tracking-wider tabular-nums",
+  onTick,
+  className = "text-[16px] sm:text-[18px] font-extrabold font-serif tabular-nums tracking-wide transition-colors",
 }) {
   const [timeLeft, setTimeLeft] = useState(duration);
   const timerRef = useRef(null);
 
   const onTimeUpRef = useRef(onTimeUp);
+  const onTickRef = useRef(onTick);
   useEffect(() => {
     onTimeUpRef.current = onTimeUp;
-  }, [onTimeUp]);
+    onTickRef.current = onTick;
+  }, [onTimeUp, onTick]);
+
+  const completedRef = useRef(false);
 
   useEffect(() => {
-    if (!running) return;
+    if (!running || completedRef.current) return;
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          onTimeUpRef.current?.();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [running]);
+  }, [running, duration]);
 
-  return <span className={className}>{formatTime(timeLeft)}</span>;
+  // Notify the parent after render, never from a state updater.
+  useEffect(() => {
+    onTickRef.current?.(timeLeft, duration - timeLeft);
+    if (timeLeft === 0 && !completedRef.current) {
+      completedRef.current = true;
+      clearInterval(timerRef.current);
+      onTimeUpRef.current?.();
+    }
+  }, [timeLeft, duration]);
+
+  const timeColor =
+    timeLeft <= 60
+      ? "text-red-600 dark:text-red-400 animate-pulse"
+      : timeLeft <= 180
+      ? "text-amber-600 dark:text-amber-400"
+      : "text-[#314e3e] dark:text-[#d6b883]";
+
+  return <span className={`${className} ${timeColor}`}>{formatTime(timeLeft)}</span>;
 }
 
 /**

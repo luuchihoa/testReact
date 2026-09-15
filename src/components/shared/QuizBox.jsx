@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useMemo, useCallback, useRef, useId } from "react";
+import { AnimatePresence } from "framer-motion";
 import { QuizTimer, formatTime } from "../ui/Timer.jsx";
 import useSound from "../../features/sound/useSounds.js";
 import { GuideBox, ExitButton, SubmitConfirmBox } from "../ui/Feedback.jsx";
 
-// Hằng số Easing chuẩn hệ thống
-const APPLE_EASE = [0.16, 1, 0.3, 1];
+import "./QuizBox.css";
 
 // ====================== UTILITIES =========================
 function getRandomItems(arr, n) {
@@ -14,6 +13,7 @@ function getRandomItems(arr, n) {
 }
 
 function burstConfetti(x, y) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const colors = ["#314e3e", "#927140", "#d4b47d", "#10b981", "#d6b883", "#22c55e"];
   const els = [];
   Array.from({ length: 18 }).forEach((_, i) => {
@@ -57,7 +57,7 @@ function OptionButton({ label, text, selected, onClick, disabled }) {
       aria-checked={selected}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[20px] border-[1.5px] text-left text-[14.5px] sm:text-[15px] transition-all select-none min-h-[54px] cursor-pointer ${
+      className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl border-[1.5px] text-left text-base transition-all select-none min-h-[54px] cursor-pointer ${
         selected
           ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] border-[#314e3e] dark:border-[#d6b883] font-semibold shadow-xs"
           : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] text-[#293d32] dark:text-[#ecece0] font-medium hover:bg-[#faf8f3] dark:hover:bg-[#151c18] shadow-xs active:scale-[0.99]"
@@ -79,151 +79,55 @@ function OptionButton({ label, text, selected, onClick, disabled }) {
 
 // ====================== QUESTION PALETTE =========================
 function QuestionPalette({ total, current, answers, flags, onSelect, onSubmitPrompt, compact }) {
+  const [expanded, setExpanded] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const panelId = useId();
   const answeredCount = Object.keys(answers).length;
   const flaggedCount = Object.values(flags).filter(Boolean).length;
-  const unansweredCount = total - answeredCount;
+  const items = Array.from({ length: total }, (_, index) => index).filter((index) =>
+    filter === "unanswered" ? answers[index] == null : filter === "flagged" ? flags[index] : true
+  );
 
-  // ── Dạng compact: dải ngang cuộn ngang, dùng trên mobile ──
-  if (compact) {
-    return (
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs mb-4 overflow-hidden">
-        {/* Thống kê mini */}
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[#dedfd4] dark:border-[#354237] text-[11px]">
-          <span className="flex items-center gap-1 text-[#314e3e] dark:text-[#d6b883] font-bold">
-            <span className="w-3 h-3 rounded-sm bg-[#314e3e] dark:bg-[#d6b883] inline-block" />
-            {answeredCount} đã làm
-          </span>
-          <span className="flex items-center gap-1 text-[#575e55] dark:text-[#b0b9ac] font-medium">
-            <span className="w-3 h-3 rounded-sm bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] inline-block" />
-            {unansweredCount} chưa làm
-          </span>
-          {flaggedCount > 0 && (
-            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
-              ⚑ {flaggedCount} cờ
-            </span>
-          )}
-        </div>
-        {/* Lưới câu hỏi cuộn ngang */}
-        <div className="overflow-x-auto px-3 py-2.5">
-          <div className="flex gap-2" style={{ width: "max-content" }}>
-            {Array.from({ length: total }).map((_, idx) => {
-              const isCurrent = current === idx;
-              const isAnswered = answers[idx] !== undefined && answers[idx] !== null;
-              const isFlagged = Boolean(flags[idx]);
-
-              let cls = "bg-[#faf8f3] dark:bg-[#151c18] text-[#575e55] dark:text-[#b0b9ac] border-[#dedfd4] dark:border-[#354237]";
-              if (isAnswered) cls = "bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] border-transparent font-bold";
-              if (isFlagged) cls = "bg-amber-500 text-white border-amber-600 font-bold";
-              if (isCurrent) cls += " ring-2 ring-[#927140] dark:ring-[#d4b47d] ring-offset-1 dark:ring-offset-[#1e2821]";
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => onSelect(idx)}
-                  aria-label={`Câu ${idx + 1}`}
-                  className={`relative w-9 h-9 flex-shrink-0 rounded-xl border text-[12px] font-semibold flex items-center justify-center transition-all cursor-pointer ${cls}`}
-                >
-                  {idx + 1}
-                  {isFlagged && (
-                    <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-500" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Dạng đầy đủ: sidebar desktop ──
   return (
-    <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-5 border border-[#dedfd4] dark:border-[#354237] shadow-xs sticky top-6">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#dedfd4] dark:border-[#354237]">
-        <h3 className="text-[13px] font-bold uppercase tracking-wider text-[#293d32] dark:text-[#ecece0] flex items-center gap-2">
-          <span>📋</span> Bảng câu hỏi
-        </h3>
-        <span className="text-[12px] font-bold font-serif text-[#7c5c2d] dark:text-[#d4b47d]">
-          {total} câu
-        </span>
-      </div>
-
-      {/* Chú giải trạng thái */}
-      <div className="grid grid-cols-2 gap-2 text-[11px] mb-4 pb-3 border-b border-[#dedfd4] dark:border-[#354237]">
-        <div className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] text-[9px] font-bold flex items-center justify-center">
-            ✓
-          </span>
-          <span className="text-[#575e55] dark:text-[#b0b9ac]">Đã làm ({answeredCount})</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237]" />
-          <span className="text-[#575e55] dark:text-[#b0b9ac]">Chưa làm ({unansweredCount})</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
-            ⚑
-          </span>
-          <span className="text-[#575e55] dark:text-[#b0b9ac]">Cần xem ({flaggedCount})</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded border-2 border-[#927140] dark:border-[#d4b47d]" />
-          <span className="text-[#575e55] dark:text-[#b0b9ac]">Đang xem</span>
-        </div>
-      </div>
-
-      {/* Lưới câu hỏi */}
-      <div className="p-2 -m-1 max-h-[290px] overflow-y-auto rounded-xl">
-        <div className="grid grid-cols-5 gap-2.5">
-        {Array.from({ length: total }).map((_, idx) => {
-          const isCurrent = current === idx;
-          const isAnswered = answers[idx] !== undefined && answers[idx] !== null;
-          const isFlagged = Boolean(flags[idx]);
-
-          let style = "bg-[#faf8f3] dark:bg-[#151c18] text-[#575e55] dark:text-[#b0b9ac] border-[#dedfd4] dark:border-[#354237]";
-          if (isAnswered) {
-            style = "bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] border-transparent font-bold";
-          }
-          if (isFlagged) {
-            style = "bg-amber-500 text-white border-amber-600 font-bold";
-          }
-          if (isCurrent) {
-            style += " ring-2 ring-[#927140] dark:ring-[#d4b47d] ring-offset-2 dark:ring-offset-[#1e2821]";
-          }
-
-          return (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onSelect(idx)}
-              aria-label={`Chuyển tới câu ${idx + 1}`}
-              className={`relative h-9 rounded-xl border text-[12px] font-semibold flex items-center justify-center transition-all cursor-pointer ${style}`}
-            >
-              {idx + 1}
-              {isFlagged && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#1e2821]" />
-              )}
-            </button>
-          );
-        })}
-        </div>
-      </div>
-
-      {/* Nút Nộp bài nhanh từ thanh bên */}
-      <div className="mt-5 pt-4 border-t border-[#dedfd4] dark:border-[#354237]">
-        <button
-          type="button"
-          onClick={onSubmitPrompt}
-          className="w-full py-3 px-4 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] font-bold text-[13px] hover:opacity-95 active:scale-98 transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <span>Nộp bài thi</span> →
+    <section className={`quiz-palette ${compact ? "quiz-palette--compact" : "quiz-palette--desktop"}`} aria-label="Danh sách câu hỏi">
+      {compact ? (
+        <button type="button" className="quiz-palette-toggle" aria-expanded={expanded} aria-controls={panelId} onClick={() => setExpanded(!expanded)}>
+          <span>Danh sách câu hỏi <span className="quiz-muted">· {answeredCount}/{total}</span></span>
+          <span aria-hidden="true">{expanded ? "−" : "+"}</span>
         </button>
-        <p className="text-[11px] text-center text-[#575e55] dark:text-[#b0b9ac] mt-2">
-          Có thể nộp bất cứ lúc nào trước khi hết giờ
-        </p>
+      ) : <h2 className="quiz-palette-title">Danh sách câu hỏi</h2>}
+      <div id={panelId} hidden={compact && !expanded}>
+        <div className="quiz-palette-filters" aria-label="Lọc câu hỏi">
+          {[["all", `Tất cả (${total})`], ["unanswered", `Chưa làm (${total - answeredCount})`], ["flagged", `Cần xem (${flaggedCount})`]].map(([value, label]) => (
+            <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
+          ))}
+        </div>
+        <div className="quiz-palette-grid">
+          {items.map((index) => (
+            <button
+              key={index}
+              type="button"
+              className={`quiz-number ${answers[index] != null ? "is-answered" : ""}`}
+              aria-current={current === index ? "step" : undefined}
+              aria-label={`Câu ${index + 1}, ${answers[index] != null ? "đã trả lời" : "chưa trả lời"}${flags[index] ? ", cần xem lại" : ""}`}
+              onClick={() => {
+                onSelect(index);
+                if (compact) {
+                  setExpanded(false);
+                  requestAnimationFrame(() => document.getElementById("quiz-question")?.focus({ preventScroll: true }));
+                }
+              }}
+            >
+              {index + 1}
+              {flags[index] && <span className="quiz-number-flag" aria-hidden="true">⚑</span>}
+            </button>
+          ))}
+        </div>
+        {items.length === 0 && <p className="quiz-muted" role="status">Không có câu hỏi trong nhóm này.</p>}
+        <p className="quiz-palette-legend">Ô tô màu: đã trả lời · ⚑: cần xem lại</p>
       </div>
-    </div>
+      {!compact && <button type="button" className="quiz-submit" onClick={onSubmitPrompt}>Xem lại và nộp bài →</button>}
+    </section>
   );
 }
 
@@ -245,7 +149,7 @@ function McqArea({
 }) {
   if (!q) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-center bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-6 border border-[#dedfd4] dark:border-[#354237]">
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-center bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl p-6 border border-[#dedfd4] dark:border-[#354237]">
         <span className="text-[44px]">📭</span>
         <p className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0]">
           Không tìm thấy nội dung câu hỏi
@@ -259,13 +163,13 @@ function McqArea({
   return (
     <div className="flex flex-col gap-4">
       {/* Progress & Top Meta */}
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[20px] p-3.5 border border-[#dedfd4] dark:border-[#354237] shadow-xs space-y-2">
-        <div className="flex justify-between items-center px-1 text-[11.5px] font-bold">
+      <div className="quiz-progress">
+        <div className="flex flex-wrap gap-2 justify-between items-center text-sm font-semibold">
           <span className="text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-wider">
             Câu {index + 1} / {total}
           </span>
-          <span className="font-serif text-[#314e3e] dark:text-[#d6b883] tabular-nums text-[13px]">
-            Đã làm: {answeredCount}/{total} ({answeredPct}%)
+          <span className="text-[#314e3e] dark:text-[#d6b883] tabular-nums text-[13px]">
+            Đã trả lời {answeredCount}/{total}
           </span>
         </div>
         <div className="h-1.5 bg-[#dedfd4] dark:bg-[#354237] rounded-full overflow-hidden shadow-inner">
@@ -277,21 +181,15 @@ function McqArea({
       </div>
 
       {/* Main Question Card */}
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-5 sm:p-6 border border-[#dedfd4] dark:border-[#354237] shadow-xs flex flex-col gap-5">
+      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl p-5 sm:p-6 border border-[#dedfd4] dark:border-[#354237] shadow-xs flex flex-col gap-5">
         {/* Header câu hỏi: Số câu, điểm, Nút Cờ đánh dấu */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[12px] font-bold border border-[#927140]/25 dark:border-[#d4b47d]/30">
-              {index + 1}
-            </span>
-            <span className="text-[11px] font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-widest">
-              Trắc nghiệm (1 đáp án)
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="quiz-muted text-sm">Chọn một đáp án</span>
 
           <button
             type="button"
             onClick={onToggleFlag}
+            aria-pressed={isFlagged}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold border transition-all cursor-pointer ${
               isFlagged
                 ? "border-amber-400 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-bold"
@@ -299,12 +197,12 @@ function McqArea({
             }`}
           >
             <span>⚑</span>
-            <span>{isFlagged ? "Đã đánh dấu" : "Đánh dấu xem lại"}</span>
+            <span>{isFlagged ? "Đã đánh dấu" : "Xem lại"}</span>
           </button>
         </div>
 
         {/* Nội dung câu hỏi */}
-        <h2 className="text-[16px] sm:text-[17px] font-bold text-[#293d32] dark:text-[#ecece0] leading-relaxed">
+        <h2 id="quiz-question" tabIndex={-1} className="quiz-question text-lg sm:text-xl font-bold text-[#293d32] dark:text-[#ecece0] leading-relaxed">
           {q.text}
         </h2>
 
@@ -322,14 +220,14 @@ function McqArea({
         </div>
 
         {/* Mẹo phím tắt */}
-        <div className="pt-3 border-t border-[#dedfd4] dark:border-[#354237] flex flex-wrap items-center justify-between text-[11px] text-[#575e55] dark:text-[#b0b9ac] gap-2">
+        <div className="quiz-shortcuts pt-3 border-t border-[#dedfd4] dark:border-[#354237] flex flex-wrap items-center justify-between text-xs text-[#575e55] dark:text-[#b0b9ac] gap-2">
           <span>Phím tắt: Bấm <strong>1, 2, 3, 4</strong> hoặc <strong>A, B, C, D</strong> để chọn nhanh</span>
           <span className="hidden sm:inline">Phím <strong>← / →</strong> để đổi câu, <strong>F</strong> đặt cờ</span>
         </div>
       </div>
 
       {/* Điều hướng câu trước / câu sau — 2 nút đơn giản */}
-      <div className="flex items-center gap-3 pt-1">
+      <div className="quiz-navigation">
         <button
           type="button"
           onClick={onPrev}
@@ -344,7 +242,7 @@ function McqArea({
           onClick={onNext}
           className="flex-1 py-3 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] hover:opacity-95 active:scale-[0.98] text-[13px] sm:text-[14px] font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
         >
-          {isLast ? (hasEssay ? "Sang Tự luận →" : "Xem lại & Nộp bài →") : "Câu tiếp theo →"}
+          {isLast ? (hasEssay ? "Sang Tự luận →" : "Xem lại bài →") : "Câu tiếp →"}
         </button>
       </div>
     </div>
@@ -357,18 +255,9 @@ function EssayArea({ essay, userEssayAns, onChangeEssay, onPrevToMcq, onSubmitPr
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-5 border border-[#dedfd4] dark:border-[#354237] shadow-xs flex items-center gap-4">
-        <span className="w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[22px] border border-[#927140]/25 dark:border-[#d4b47d]/30 shadow-xs">
-          ✍️
-        </span>
-        <div>
-          <h2 className="text-[16px] sm:text-[17px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0]">
-            Phần II: Tự Luận Ngắn
-          </h2>
-          <p className="text-[12.5px] font-medium text-[#575e55] dark:text-[#b0b9ac] mt-0.5">
-            {essay.length} câu hỏi · Trả lời ngắn gọn, nêu đúng từ khóa trọng tâm
-          </p>
-        </div>
+      <div className="quiz-essay-intro">
+        <h2 className="text-lg font-bold">Tự luận ngắn</h2>
+        <p className="quiz-muted text-sm">{essay.length} câu hỏi · Trả lời ngắn gọn, đúng ý câu hỏi.</p>
       </div>
 
       {essay.map((q, i) => {
@@ -379,35 +268,36 @@ function EssayArea({ essay, userEssayAns, onChangeEssay, onPrevToMcq, onSubmitPr
         return (
           <div
             key={i}
-            className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[24px] p-5 sm:p-6 border border-[#dedfd4] dark:border-[#354237] shadow-xs flex flex-col gap-3.5"
+            className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl p-5 sm:p-6 border border-[#dedfd4] dark:border-[#354237] shadow-xs flex flex-col gap-3.5"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-2 items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[12px] font-bold border border-[#927140]/25 dark:border-[#d4b47d]/30">
                   {i + 1}
                 </span>
-                <span className="text-[11px] font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-widest">
+                <span className="text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-widest">
                   Câu hỏi tự luận
                 </span>
               </div>
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                 ✓ Tự động lưu nháp
               </span>
             </div>
 
-            <h3 className="text-[15.5px] sm:text-[16px] font-bold text-[#293d32] dark:text-[#ecece0] leading-relaxed">
+            <h3 id={`quiz-essay-${i}`} className="text-lg font-bold text-[#293d32] dark:text-[#ecece0] leading-relaxed">
               {q.text}
             </h3>
 
             <textarea
-              rows={4}
+              aria-labelledby={`quiz-essay-${i}`}
+              rows={5}
               value={val}
               onChange={(e) => onChangeEssay(i, e.target.value)}
               placeholder="Nhập câu trả lời của em tại đây…"
-              className="w-full resize-none rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3.5 text-[14.5px] font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-shadow shadow-inner leading-relaxed"
+              className="w-full resize-y rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3.5 text-base font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-shadow shadow-inner leading-relaxed"
             />
 
-            <div className="flex justify-between items-center text-[11px] text-[#575e55] dark:text-[#b0b9ac]">
+            <div className="flex flex-wrap gap-2 justify-between items-center text-xs text-[#575e55] dark:text-[#b0b9ac]">
               <span>Gợi ý: Trả lời mạch lạc, đúng ý câu hỏi</span>
               <span className="font-mono tabular-nums">{words} từ · {chars} ký tự</span>
             </div>
@@ -415,7 +305,7 @@ function EssayArea({ essay, userEssayAns, onChangeEssay, onPrevToMcq, onSubmitPr
         );
       })}
 
-      <div className="flex items-center justify-between gap-3 pt-2">
+      <div className="quiz-essay-actions">
         <button
           type="button"
           onClick={onPrevToMcq}
@@ -531,13 +421,13 @@ function ResultView({
       )}
 
       {/* Thẻ Điểm Tổng Quan (Score Hero) */}
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[28px] p-6 sm:p-8 border border-[#dedfd4] dark:border-[#354237] shadow-xs text-center relative overflow-hidden">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-[#575e55] dark:text-[#b0b9ac] mb-5">
-          Kết quả đánh giá bài ôn tập
-        </p>
+      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl p-6 sm:p-8 border border-[#dedfd4] dark:border-[#354237] shadow-xs text-center relative overflow-hidden">
+        <h2 tabIndex={-1} className="text-base font-bold text-[#293d32] dark:text-[#ecece0] mb-3">
+          Kết quả bài ôn tập
+        </h2>
 
         {/* Circular score progress indicator */}
-        <div className="relative mx-auto w-36 h-36 mb-5">
+        <div className="relative mx-auto w-24 h-24 mb-3">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
@@ -561,7 +451,7 @@ function ResultView({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[36px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0] tabular-nums leading-none">
+            <span className="text-[1.75rem] font-extrabold text-[#293d32] dark:text-[#ecece0] tabular-nums leading-none">
               {scoreData?.totalScore}
             </span>
             <span className="text-[12px] font-bold text-[#575e55] dark:text-[#b0b9ac] mt-1">/ 10.0</span>
@@ -582,55 +472,59 @@ function ResultView({
         {/* Breakdown Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#faf8f3] dark:bg-[#151c18] rounded-[20px] p-4 border border-[#dedfd4] dark:border-[#354237] shadow-inner text-left">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
               Trắc nghiệm
             </span>
-            <p className="text-[16px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
+            <p className="text-[16px] font-extrabold text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
               {scoreData?.mcqScore} đ
             </p>
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
               {correctCount}/{mcq.length} câu đúng
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
               Tự luận
             </span>
-            <p className="text-[16px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
+            <p className="text-[16px] font-extrabold text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
               {scoreData?.essayScore} đ
             </p>
-            <span className="text-[11px] text-[#575e55] dark:text-[#b0b9ac] font-medium">
+            <span className="text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium">
               {essay.length} câu hỏi
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
               Thời gian làm
             </span>
-            <p className="text-[16px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
+            <p className="text-[16px] font-extrabold text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
               {formatTime(timeElapsed)}
             </p>
-            <span className="text-[11px] text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="text-xs text-[#575e55] dark:text-[#b0b9ac]">
               Hạn mức {formatTime(totalTime)}
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
               Tỷ lệ chính xác
             </span>
-            <p className="text-[16px] font-extrabold font-serif text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
+            <p className="text-[16px] font-extrabold text-[#293d32] dark:text-[#ecece0] mt-0.5 tabular-nums">
               {pct}%
             </p>
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
               {total >= 5 ? "Đạt chuẩn" : "Cần ôn tập"}
             </span>
           </div>
         </div>
 
         {/* Action Buttons */}
+        <button type="button" className="quiz-submit mt-4" onClick={() => {
+          setFilter("wrong");
+          requestAnimationFrame(() => document.getElementById("quiz-review")?.focus());
+        }}>Xem câu sai ({wrongCount}) →</button>
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6 print:hidden">
           <button
             type="button"
@@ -659,10 +553,10 @@ function ResultView({
       </div>
 
       {/* Phần Rà Soát Chi Tiết Đáp Án */}
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-[28px] p-6 sm:p-7 border border-[#dedfd4] dark:border-[#354237] shadow-xs">
+      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl p-6 sm:p-7 border border-[#dedfd4] dark:border-[#354237] shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-[#dedfd4] dark:border-[#354237]">
           <div>
-            <h3 className="text-[16px] font-bold font-serif text-[#293d32] dark:text-[#ecece0]">
+            <h3 id="quiz-review" tabIndex={-1} className="text-base font-bold text-[#293d32] dark:text-[#ecece0]">
               Chi tiết đáp án & Lời giải
             </h3>
             <p className="text-[12px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5">
@@ -671,11 +565,11 @@ function ResultView({
           </div>
 
           {/* Bộ lọc xem lại */}
-          <div className="flex flex-wrap bg-[#faf8f3] dark:bg-[#151c18] p-1 rounded-xl border border-[#dedfd4] dark:border-[#354237] text-[11.5px] font-bold print:hidden">
+          <div className="flex flex-wrap bg-[#faf8f3] dark:bg-[#151c18] p-1 rounded-xl border border-[#dedfd4] dark:border-[#354237] text-xs font-bold print:hidden">
             <button
               type="button"
               onClick={() => setFilter("all")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-2.5 min-h-11 rounded-lg transition-all cursor-pointer ${
                 filter === "all"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d]"
                   : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
@@ -686,7 +580,7 @@ function ResultView({
             <button
               type="button"
               onClick={() => setFilter("correct")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-2.5 min-h-11 rounded-lg transition-all cursor-pointer ${
                 filter === "correct"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d]"
                   : "text-emerald-700 dark:text-emerald-400"
@@ -697,7 +591,7 @@ function ResultView({
             <button
               type="button"
               onClick={() => setFilter("wrong")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-2.5 min-h-11 rounded-lg transition-all cursor-pointer ${
                 filter === "wrong"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d]"
                   : "text-red-700 dark:text-red-400"
@@ -708,7 +602,7 @@ function ResultView({
             <button
               type="button"
               onClick={() => setFilter("unanswered")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-2.5 min-h-11 rounded-lg transition-all cursor-pointer ${
                 filter === "unanswered"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d]"
                   : "text-[#575e55] dark:text-[#b0b9ac]"
@@ -721,6 +615,7 @@ function ResultView({
 
         {/* Danh sách các câu MCQ đã lọc */}
         <div className="space-y-4">
+          {filteredItems.length === 0 && <p role="status" className="quiz-muted py-4">Không có câu hỏi trong nhóm này.</p>}
           {filteredItems.map(({ q, idx, selected, isCorrect, isUnanswered }) => (
             <div
               key={idx}
@@ -744,7 +639,7 @@ function ResultView({
                 >
                   Câu {idx + 1} · {isCorrect ? "✓ Chính xác" : isUnanswered ? "– Chưa trả lời" : "✗ Chưa chính xác"}
                 </span>
-                <span className="text-[12px] font-serif font-bold text-[#575e55] dark:text-[#b0b9ac]">
+                <span className="text-[12px] font-bold text-[#575e55] dark:text-[#b0b9ac]">
                   {isCorrect ? "Đạt điểm" : "0 đ"}
                 </span>
               </div>
@@ -813,7 +708,7 @@ function ResultView({
                   className="p-4 sm:p-5 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] flex flex-col gap-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[11px] font-bold border border-[#927140]/25 dark:border-[#d4b47d]/30">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-xs font-bold border border-[#927140]/25 dark:border-[#d4b47d]/30">
                       {i + 1}
                     </span>
                     <h5 className="text-[14px] font-bold text-[#293d32] dark:text-[#ecece0]">
@@ -823,7 +718,7 @@ function ResultView({
 
                   {q.sample && (
                     <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/40 rounded-xl">
-                      <p className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-1">
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-1">
                         Gợi ý đáp án chuẩn
                       </p>
                       <p className="text-[13px] text-emerald-900 dark:text-emerald-200 font-medium leading-relaxed whitespace-pre-line">
@@ -833,7 +728,7 @@ function ResultView({
                   )}
 
                   <div className="p-3.5 bg-[#fffefa] dark:bg-[#1e2821] rounded-xl border border-[#dedfd4] dark:border-[#354237]">
-                    <p className="text-[10px] font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-widest mb-1">
+                    <p className="text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-widest mb-1">
                       Câu trả lời của em
                     </p>
                     <p className="text-[13.5px] text-[#293d32] dark:text-[#ecece0] font-medium leading-relaxed">
@@ -853,6 +748,8 @@ function ResultView({
 // ====================== MAIN COMPONENT =========================
 export default function QuizBox({ handleExit, config, quizData }) {
   const { play } = useSound();
+  const contentRef = useRef(null);
+  const previousView = useRef(null);
 
   // Cấu hình âm thanh & hướng dẫn
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -1092,9 +989,10 @@ export default function QuizBox({ handleExit, config, quizData }) {
 
   // Phím tắt bàn phím
   useEffect(() => {
-    if (phase !== "taking" || activeTab !== "mcq") return;
+    if (phase !== "taking" || activeTab !== "mcq" || showGuide || isOpenExit || showConfirmSubmit) return;
 
     const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (["input", "textarea"].includes(document.activeElement?.tagName?.toLowerCase())) {
         return;
       }
@@ -1116,7 +1014,20 @@ export default function QuizBox({ handleExit, config, quizData }) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, activeTab, currentQ, mcq.length, handleSelectOption, handleToggleFlag]);
+  }, [phase, activeTab, currentQ, mcq.length, handleSelectOption, handleToggleFlag, showGuide, isOpenExit, showConfirmSubmit]);
+
+  useEffect(() => {
+    const view = `${phase}:${activeTab}:${currentQ}`;
+    if (previousView.current !== null && previousView.current !== view) {
+      const target = contentRef.current?.querySelector("h2, h3");
+      if (target) {
+        target.setAttribute("tabindex", "-1");
+        target.focus({ preventScroll: true });
+        target.scrollIntoView({ block: "nearest", behavior: "instant" });
+      }
+    }
+    previousView.current = view;
+  }, [phase, activeTab, currentQ]);
 
   if (!config) return null;
 
@@ -1147,10 +1058,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
   const answeredEssaysCount = Object.values(userEssayAns).filter((t) => t && t.trim()).length;
 
   return (
-    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] transition-colors duration-500 relative font-sans">
-      {/* Nền pattern lưới mờ trang trọng */}
-      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#293D3208_1px,transparent_1px),linear-gradient(to_bottom,#293D3208_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ECECE005_1px,transparent_1px),linear-gradient(to_bottom,#ECECE005_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
-
+    <div className="quiz-box min-h-screen relative font-sans">
       {/* Các Modal hệ thống */}
       <AnimatePresence>
         {isOpenExit && (
@@ -1182,94 +1090,36 @@ export default function QuizBox({ handleExit, config, quizData }) {
         essayAnswered={answeredEssaysCount}
       />
 
-      {/* Khung nội dung chính (Mở rộng max-w-5xl cho màn hình lớn) */}
+      {/* Khung nội dung responsive */}
       <div
-        className="flex flex-col min-h-screen max-w-5xl mx-auto w-full px-4 sm:px-6 relative z-10"
+        className="quiz-shell flex flex-col min-h-screen mx-auto w-full relative z-10"
         style={{
           paddingTop: "max(env(safe-area-inset-top), 16px)",
           paddingBottom: "max(env(safe-area-inset-bottom), 24px)",
         }}
       >
-        {/* HEADER BAR */}
-        <header className="bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-2xl p-4 sm:p-5 shadow-xs mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        {/* Header xuống hai hàng trên mobile */}
+        <header className="bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-2xl px-4 py-3 sm:px-5 sm:py-4 quiz-header mb-4">
 
-          {/* ── Tầng 1: CHỈ MOBILE ── Badge phần thi (trái) + Cụm điều khiển (phải) */}
-          <div className="flex items-center justify-between gap-2 sm:hidden pb-2.5 border-b border-[#dedfd4]/60 dark:border-[#354237]/60">
-            <span className="text-[10.5px] font-extrabold text-[#7c5c2d] dark:text-[#d4b47d] tracking-widest uppercase leading-snug">
+          {/* Left: Tiêu đề + phụ đề */}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[16px] sm:text-[20px] font-extrabold text-[#293d32] dark:text-[#ecece0] tracking-tight leading-snug">
+              {config.title}
+            </h1>
+            <p className="text-xs font-bold text-[#7c5c2d] dark:text-[#d4b47d] mt-1">
               {phase === "result"
                 ? "Bảng Kết Quả"
                 : activeTab === "mcq"
-                ? `Phần I · TN (${mcq.length} câu)`
-                : `Phần II · TL (${essay.length} câu)`}
-            </span>
-
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {phase === "taking" && (
-                <div className="flex items-center gap-1 bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] rounded-full px-2.5 py-1 shadow-xs text-[12px]">
-                  <span className="opacity-80">⏱</span>
-                  <QuizTimer
-                    key={attempt}
-                    duration={config.time}
-                    onTimeUp={handleTimeUp}
-                    running={isTimerRunning}
-                    onTick={handleTimerTick}
-                  />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={handleToggleSound}
-                aria-label={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
-                title={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
-                className="w-9 h-9 rounded-full bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] text-[14px] flex items-center justify-center shadow-xs active:scale-95 transition-all cursor-pointer"
-              >
-                {soundEnabled ? "🔊" : "🔇"}
-              </button>
-              {phase === "taking" && (
-                <button
-                  type="button"
-                  onClick={() => { setIsMidQuizGuide(true); setShowGuide(true); }}
-                  aria-label="Hướng dẫn làm bài"
-                  title="Hướng dẫn làm bài"
-                  className="w-9 h-9 rounded-full bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[15px] font-bold flex items-center justify-center shadow-xs border border-[#927140]/25 dark:border-[#d4b47d]/30 active:scale-95 transition-colors cursor-pointer"
-                >
-                  ?
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsOpenExit(true)}
-                aria-label="Thoát bài thi"
-                title="Thoát bài thi"
-                className="w-9 h-9 rounded-full bg-[#fffefa] dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center text-[#575e55] hover:text-red-600 dark:text-[#b0b9ac] dark:hover:text-red-400 active:scale-95 transition-all text-[14px] font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
+                ? `Phần I · Trắc Nghiệm`
+                : `Phần II · Tự Luận`}
+            </p>
           </div>
 
-          {/* ── Tầng 2 (mobile) / Desktop left: Tiêu đề + phụ đề ── */}
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[18px] sm:text-[21px] font-extrabold text-[#293d32] dark:text-[#ecece0] tracking-tight leading-snug sm:leading-tight font-serif break-words">
-              {config.title}
-            </h1>
-            {/* Phụ đề: chỉ hiện trên desktop vì mobile đã có badge ở Tầng 1 */}
-            <div className="hidden sm:flex items-center gap-2 mt-1">
-              <span className="text-[11px] font-bold text-[#7c5c2d] dark:text-[#d4b47d] tracking-widest uppercase">
-                {phase === "result"
-                  ? "Bảng Kết Quả"
-                  : activeTab === "mcq"
-                  ? `Phần I · Trắc Nghiệm (${mcq.length} câu)`
-                  : `Phần II · Tự Luận (${essay.length} câu)`}
-              </span>
-            </div>
-          </div>
-
-          {/* ── Desktop right: Cụm điều khiển đầy đủ (ẩn trên mobile) ── */}
-          <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          {/* Right: Cụm điều khiển — nút nhỏ trên mobile, to hơn trên desktop */}
+          <div className="quiz-tools">
             {phase === "taking" && (
-              <div className="flex items-center gap-1.5 bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] rounded-full px-3 py-1.5 shadow-xs">
-                <span className="text-[13px] opacity-80">⏱</span>
+              <div className="quiz-clock flex items-center justify-center gap-1 bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] rounded-full px-3 py-1.5 shadow-xs min-w-[4.5rem]">
+                <span className="text-xs opacity-60">⏱</span>
                 <QuizTimer
                   key={attempt}
                   duration={config.time}
@@ -1280,40 +1130,34 @@ export default function QuizBox({ handleExit, config, quizData }) {
               </div>
             )}
 
-            {/* Sound toggle button */}
             <button
               type="button"
               onClick={handleToggleSound}
               aria-label={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
               title={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
-              className="w-10 h-10 rounded-full bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] text-[14px] flex items-center justify-center shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="w-11 h-11 rounded-full bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] text-[13px] sm:text-[14px] flex items-center justify-center shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               {soundEnabled ? "🔊" : "🔇"}
             </button>
 
-            {/* Guide modal button */}
             {phase === "taking" && (
               <button
                 type="button"
-                onClick={() => {
-                  setIsMidQuizGuide(true);
-                  setShowGuide(true);
-                }}
+                onClick={() => { setIsMidQuizGuide(true); setShowGuide(true); }}
                 aria-label="Hướng dẫn làm bài"
                 title="Hướng dẫn làm bài"
-                className="w-10 h-10 rounded-full bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[15px] font-bold flex items-center justify-center shadow-xs border border-[#927140]/25 dark:border-[#d4b47d]/30 hover:bg-[#927140]/20 transition-colors active:scale-95 cursor-pointer"
+                className="w-11 h-11 rounded-full bg-[#927140]/10 dark:bg-[#d4b47d]/15 text-[#7c5c2d] dark:text-[#d4b47d] text-[14px] sm:text-[15px] font-bold flex items-center justify-center shadow-xs border border-[#927140]/25 dark:border-[#d4b47d]/30 hover:bg-[#927140]/20 active:scale-95 transition-colors cursor-pointer"
               >
                 ?
               </button>
             )}
 
-            {/* Exit button */}
             <button
               type="button"
               onClick={() => setIsOpenExit(true)}
               aria-label="Thoát bài thi"
               title="Thoát bài thi"
-              className="w-10 h-10 rounded-full bg-[#fffefa] dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center text-[#575e55] hover:text-red-600 dark:text-[#b0b9ac] dark:hover:text-red-400 active:scale-95 transition-all text-[14px] font-bold cursor-pointer"
+              className="w-11 h-11 rounded-full bg-[#fffefa] dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center text-[#575e55] hover:text-red-600 dark:text-[#b0b9ac] dark:hover:text-red-400 active:scale-95 transition-all text-[13px] sm:text-[14px] font-bold cursor-pointer"
             >
               ✕
             </button>
@@ -1326,24 +1170,26 @@ export default function QuizBox({ handleExit, config, quizData }) {
             <button
               type="button"
               onClick={() => setActiveTab("mcq")}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer text-center ${
+              aria-pressed={activeTab === "mcq"}
+              className={`flex-1 min-h-11 py-2 px-2 rounded-xl text-sm font-bold transition-all cursor-pointer text-center ${
                 activeTab === "mcq"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] shadow-xs"
                   : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
               }`}
             >
-              Phần I: Trắc Nghiệm
+              Trắc nghiệm · {Object.keys(answers).length}/{mcq.length}
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("essay")}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer text-center ${
+              aria-pressed={activeTab === "essay"}
+              className={`flex-1 min-h-11 py-2 px-2 rounded-xl text-sm font-bold transition-all cursor-pointer text-center ${
                 activeTab === "essay"
                   ? "bg-[#314e3e] dark:bg-[#d6b883] text-[#ffffff] dark:text-[#19251d] shadow-xs"
                   : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
               }`}
             >
-              Phần II: Tự Luận
+              Tự luận · {answeredEssaysCount}/{essay.length}
             </button>
           </div>
         )}
@@ -1351,10 +1197,10 @@ export default function QuizBox({ handleExit, config, quizData }) {
         {/* NỘI DUNG CHÍNH (CONTENT) */}
         <div className="flex-1">
           {phase === "taking" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* KHU VỰC CÂU HỎI (8 CỘT TRÊN DESKTOP) */}
-              <div className="lg:col-span-8">
-                {/* Palette compact chỉ hiện trên mobile (lg:hidden) */}
+            <div className="quiz-columns">
+              {/* Nội dung câu hỏi */}
+              <div className="min-w-0">
+                {/* Danh sách câu hỏi thu gọn trên mobile */}
                 {activeTab === "mcq" && (
                   <div className="lg:hidden">
                     <QuestionPalette
@@ -1369,6 +1215,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
                   </div>
                 )}
 
+                <div ref={contentRef}>
                 {activeTab === "mcq" ? (
                   <McqArea
                     q={mcq[currentQ]}
@@ -1402,10 +1249,12 @@ export default function QuizBox({ handleExit, config, quizData }) {
                     onSubmitPrompt={() => setShowConfirmSubmit(true)}
                   />
                 )}
+                </div>
+                {activeTab === "mcq" && <button type="button" className="quiz-submit quiz-submit--mobile lg:hidden" onClick={() => setShowConfirmSubmit(true)}>Xem lại và nộp bài →</button>}
               </div>
 
-              {/* BẢNG CÂU HỎI SIDEBAR (4 CỘT TRÊN DESKTOP, ẩn trên mobile) */}
-              <div className="hidden lg:block lg:col-span-4">
+              {/* Sidebar desktop có chiều rộng cố định */}
+              <div className="hidden lg:block min-w-0">
                 <QuestionPalette
                   total={mcq.length}
                   current={activeTab === "mcq" ? currentQ : -1}
@@ -1421,6 +1270,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
             </div>
           ) : (
             /* MÀN HÌNH KẾT QUẢ */
+            <div ref={contentRef}>
             <ResultView
               mcq={mcq}
               essay={essay}
@@ -1433,6 +1283,7 @@ export default function QuizBox({ handleExit, config, quizData }) {
               handleReset={handleReset}
               handleExit={handleExit}
             />
+            </div>
           )}
         </div>
       </div>
