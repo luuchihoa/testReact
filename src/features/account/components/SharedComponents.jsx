@@ -1,5 +1,6 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { pressable } from "../../../components/ui/variant.jsx";
 
 export function Spinner({ className = "h-4 w-4" }) {
@@ -11,29 +12,53 @@ export function Spinner({ className = "h-4 w-4" }) {
   );
 }
 
-export function StatCard({ label, value, colorClass = "text-amber-950 dark:text-white", icon = null, delay = 0 }) {
+export function StatCard({ label, value, colorClass = "text-[#19251d] dark:text-[#ffffff]", icon = null, delay = 0, subLabel = null }) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
+    <Motion.div 
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay, ease: "easeOut" }}
-      className="bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm rounded-2xl border border-amber-900/10 dark:border-amber-100/10 shadow-sm p-4 relative overflow-hidden"
+      transition={{ duration: 0.25, delay, ease: "easeOut" }}
+      className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs p-3.5 sm:p-4 relative overflow-hidden flex flex-col justify-between min-w-0"
     >
-      {icon && <span className="absolute top-3 right-3 text-2xl opacity-10">{icon}</span>}
-      <p className="text-[12px] font-semibold text-stone-500 dark:text-stone-400 mb-1 flex items-center gap-1.5">
-        {icon && <span className="text-sm opacity-80">{icon}</span>}
-        {label}
-      </p>
-      <p className={`text-[20px] font-bold ${colorClass}`}>{value ?? "—"}</p>
-    </motion.div>
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[12px] font-bold text-[#293d32] dark:text-[#ecece0] tracking-wide truncate pr-1">
+          {label}
+        </p>
+        {icon && (
+          <div className="w-7 h-7 rounded-lg bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] shrink-0 border border-[#dedfd4]/60 dark:border-[#354237]/60">
+            {icon}
+          </div>
+        )}
+      </div>
+      <div>
+        <p className={`text-[20px] sm:text-[22px] font-bold tracking-tight truncate ${colorClass}`}>{value ?? "—"}</p>
+        {subLabel && <p className="text-[11px] font-medium text-[#575e55] dark:text-[#b0b9ac] mt-0.5 truncate">{subLabel}</p>}
+      </div>
+    </Motion.div>
   );
 }
 
-export function ScoreCell({ label, value }) {
+export function ScoreCell({ label, value, isExam = false }) {
   return (
-    <div className="bg-amber-900/5 dark:bg-amber-100/5 rounded-xl px-3 py-2.5 text-center flex-1 min-w-[64px] border border-amber-900/10 dark:border-amber-100/10">
-      <p className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 mb-0.5">{label}</p>
-      <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50">{value ?? "—"}</p>
+    <div 
+      className={`rounded-xl px-2 sm:px-3 py-2.5 text-center flex-1 min-w-0 border transition-all ${
+        isExam
+          ? "bg-[#5e4117]/10 dark:bg-[#e0c38c]/10 border-[#5e4117]/40 dark:border-[#e0c38c]/40 shadow-2xs"
+          : "bg-[#faf8f3] dark:bg-[#151c18] border-[#616e5f]/30 dark:border-[#677765]/40 shadow-2xs"
+      }`}
+    >
+      <p className={`text-[11px] font-bold block leading-none mb-1 uppercase tracking-wider truncate select-none ${
+        isExam ? "text-[#5e4117] dark:text-[#e0c38c]" : "text-[#293d32] dark:text-[#ecece0]"
+      }`}>
+        {label}
+      </p>
+      <p className={`text-base sm:text-lg font-bold font-mono truncate ${
+        value !== null && value !== undefined && value !== "" && value !== "—"
+          ? isExam ? "text-[#5e4117] dark:text-[#e0c38c]" : "text-[#19251d] dark:text-[#ffffff]"
+          : "text-[#575e55] dark:text-[#b0b9ac]"
+      }`}>
+        {value ?? "—"}
+      </p>
     </div>
   );
 }
@@ -41,38 +66,20 @@ export function ScoreCell({ label, value }) {
 export function LoginRequired({ toggleModal }) {
   return (
     <div className="min-h-[55vh] w-full flex flex-col items-center justify-center gap-4 text-center px-4 py-16">
-      <div className="w-16 h-16 rounded-full bg-amber-100/50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 flex items-center justify-center text-3xl shadow-inner border border-amber-900/5 dark:border-amber-100/5">🔒</div>
-      <h1 className="text-[20px] font-bold text-amber-950 dark:text-amber-50 font-serif">Vui lòng đăng nhập để xem</h1>
-      <p className="text-[14px] text-stone-500 dark:text-stone-400 max-w-sm leading-relaxed">
+      <div className="w-16 h-16 rounded-2xl bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 text-[#314e3e] dark:text-[#d4b47d] flex items-center justify-center shadow-xs border border-[#dedfd4] dark:border-[#354237]">
+        <Lock className="w-8 h-8" strokeWidth={2} />
+      </div>
+      <h1 className="text-[20px] font-bold text-[#293d32] dark:text-[#ecece0]">Vui lòng đăng nhập để xem</h1>
+      <p className="text-[14px] text-[#575e55] dark:text-[#b0b9ac] max-w-sm leading-relaxed">
         Bạn cần đăng nhập tài khoản để xem thông tin cá nhân và kết quả học tập.
       </p>
-      <motion.button
+      <Motion.button
         {...pressable()}
         onClick={toggleModal}
-        className="px-6 py-3 mt-2 rounded-full bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[14px] font-bold md:hover:opacity-90 transition-colors shadow-sm"
+        className="px-6 py-3 mt-2 rounded-full bg-[#314e3e] hover:bg-[#253d30] text-white dark:bg-[#d6b883] dark:hover:bg-[#c4a671] dark:text-[#19251d] text-[14px] font-bold transition-colors shadow-xs"
       >
         Đăng nhập ngay
-      </motion.button>
+      </Motion.button>
     </div>
-  );
-}
-
-export function TabIndicator({ activeTab, isStaff }) {
-  const tabsCount = isStaff ? 2 : 3;
-  let index = 0;
-  if (isStaff) {
-    if (activeTab === "thong-bao") index = 1;
-  } else {
-    if (activeTab === "thanh-tich") index = 1;
-    if (activeTab === "thong-bao") index = 2;
-  }
-
-  return (
-    <motion.span
-      className="absolute top-1 left-1 h-10 rounded-[14px] bg-white dark:bg-amber-400 shadow-sm border border-black/5 dark:border-white/10"
-      style={{ width: `calc(${100 / tabsCount}% - ${8 / tabsCount}px)` }}
-      animate={{ x: `${index * 100}%` }}
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-    />
   );
 }

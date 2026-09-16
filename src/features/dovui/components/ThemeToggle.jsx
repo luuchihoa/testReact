@@ -1,8 +1,9 @@
 import React, { useState, useEffect, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { APPLE_EASE } from "../utils/dovuiUtils.js";
 
 const ThemeToggle = memo(() => {
+  const reducedMotion = useReducedMotion();
   const [isDark, setIsDark] = useState(
     typeof window !== "undefined" && document.documentElement.classList.contains("dark")
   );
@@ -26,19 +27,19 @@ const ThemeToggle = memo(() => {
   };
 
   return (
-    <motion.button
+    <Motion.button
       onClick={toggleTheme}
-      whileTap={{ scale: 0.9 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.9 }}
       aria-label={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
-      className="flex-shrink-0 w-[40px] h-[40px] rounded-full bg-white dark:bg-[#1C1917] border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center cursor-pointer shadow-sm text-stone-500 dark:text-stone-400 transition-colors"
+      className="flex-shrink-0 w-11 h-11 rounded-full bg-white dark:bg-[#1C1917] border border-amber-900/10 dark:border-amber-100/10 flex items-center justify-center cursor-pointer shadow-sm text-stone-500 dark:text-stone-400 transition-colors"
     >
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span
+        <Motion.span
           key={isDark ? "moon" : "sun"}
-          initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+          initial={reducedMotion ? false : { opacity: 0, rotate: -90, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-          transition={{ duration: 0.25, ease: APPLE_EASE }}
+          exit={reducedMotion ? { opacity: 1 } : { opacity: 0, rotate: 90, scale: 0.5 }}
+          transition={{ duration: reducedMotion ? 0 : 0.25, ease: APPLE_EASE }}
           className="flex"
         >
           {isDark ? (
@@ -60,9 +61,9 @@ const ThemeToggle = memo(() => {
               </g>
             </svg>
           )}
-        </motion.span>
+        </Motion.span>
       </AnimatePresence>
-    </motion.button>
+    </Motion.button>
   );
 });
 

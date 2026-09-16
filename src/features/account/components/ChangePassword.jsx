@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { createPortal } from "react-dom";
+import { KeyRound, X, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../../lib/supabase.js";
 import Backdrop from "../../../components/ui/Backdrop.jsx";
 import { modalVariant, pressable } from "../../../components/ui/variant.jsx";
@@ -34,7 +35,7 @@ export function ChangePassword({ setIsOpenChangePass }) {
       if (updateError) { showToast(updateError.message || "Đổi mật khẩu thất bại", "error"); return; }
       showToast("Đổi mật khẩu thành công", "success");
       close();
-    } catch (err) {
+    } catch {
       showToast("Lỗi kết nối server", "warning");
     } finally {
       setSaveLoading(false);
@@ -47,27 +48,31 @@ export function ChangePassword({ setIsOpenChangePass }) {
     { id: "confirmPassword", label: "Nhập lại mật khẩu mới", placeholder: "Nhập lại mật khẩu",      value: confirmPassword, set: setConfirmPassword, show: showConfirm, setShow: setShowConfirm },
   ];
 
-  const inputCls = "w-full rounded-xl border border-amber-900/10 dark:border-amber-100/10 bg-white dark:bg-stone-800/50 px-4 py-3 pr-12 text-[14px] font-medium text-amber-950 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/20 dark:focus:ring-amber-500/30 transition disabled:opacity-60";
+  const inputCls = "w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-white dark:bg-[#151c18] px-4 py-3 pr-12 text-[14px] font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/50 dark:placeholder-[#b0b9ac]/50 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/20 dark:focus:ring-[#d4b47d]/20 transition disabled:opacity-60";
 
   return createPortal(
     <Backdrop handleClose={saveLoading ? undefined : close}>
-      <motion.div {...modalVariant()} className="w-full max-w-md mx-4 rounded-3xl bg-[#FDFBF7] dark:bg-[#1C1917] p-6 shadow-2xl border border-amber-900/10 dark:border-amber-100/10" onClick={(e) => e.stopPropagation()}>
+      <Motion.div {...modalVariant()} role="dialog" aria-modal="true" aria-label="Đổi mật khẩu" className="w-full max-w-md mx-4 rounded-3xl bg-[#faf8f3] dark:bg-[#1e2821] p-6 shadow-2xl border border-[#dedfd4] dark:border-[#354237]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-100/50 dark:bg-amber-500/20 flex items-center justify-center text-amber-800 dark:text-amber-400 border border-amber-900/5 dark:border-amber-100/5">🔒</div>
-            <h2 className="text-[18px] font-bold text-amber-950 dark:text-amber-50 font-serif">Đổi mật khẩu</h2>
+            <div className="w-10 h-10 rounded-xl bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] border border-[#dedfd4] dark:border-[#354237]">
+              <KeyRound className="w-5 h-5" strokeWidth={2} />
+            </div>
+            <h2 className="text-[18px] font-bold text-[#293d32] dark:text-[#ecece0]">Đổi mật khẩu</h2>
           </div>
-          <button type="button" onClick={close} disabled={saveLoading} aria-label="Đóng" className="w-8 h-8 rounded-full bg-amber-900/5 hover:bg-amber-900/10 dark:bg-amber-100/5 dark:hover:bg-amber-100/10 text-stone-500 flex items-center justify-center transition-colors active:scale-90 disabled:opacity-40">✕</button>
+          <button type="button" onClick={close} disabled={saveLoading} aria-label="Đóng" className="w-8 h-8 rounded-full bg-stone-500/10 hover:bg-stone-500/15 dark:bg-stone-400/10 dark:hover:bg-stone-400/20 text-[#575e55] dark:text-[#b0b9ac] flex items-center justify-center transition-colors active:scale-90 disabled:opacity-40">
+            <X className="w-4 h-4" strokeWidth={2} />
+          </button>
         </div>
 
         <div className="flex flex-col gap-4">
           {fields.map((f) => (
             <div key={f.id}>
-              <label htmlFor={f.id} className="text-[12px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 inline-block">{f.label}</label>
+              <label htmlFor={f.id} className="text-[12px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] ml-1 mb-1.5 inline-block">{f.label}</label>
               <div className="relative">
                 <input id={f.id} type={f.show ? "text" : "password"} placeholder={f.placeholder} value={f.value} onChange={(e) => f.set(e.target.value)} autoFocus={f.autoFocus} disabled={saveLoading} className={inputCls} />
-                <button type="button" onClick={() => f.setShow((v) => !v)} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-amber-800 dark:hover:text-amber-400 text-[12px] font-bold">
-                  {f.show ? "Ẩn" : "Hiện"}
+                <button type="button" onClick={() => f.setShow((v) => !v)} tabIndex={-1} aria-label={f.show ? "Ẩn mật khẩu" : "Hiện mật khẩu"} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#575e55] dark:text-[#b0b9ac] hover:text-[#314e3e] dark:hover:text-[#d4b47d] transition-colors">
+                  {f.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -75,13 +80,13 @@ export function ChangePassword({ setIsOpenChangePass }) {
         </div>
 
         <div className="mt-7 flex gap-3">
-          <motion.button {...(saveLoading ? {} : pressable())} disabled={saveLoading} onClick={close} className="flex-1 py-3 rounded-xl bg-amber-900/5 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-[14px] font-bold hover:bg-amber-900/10 dark:hover:bg-stone-700 transition-colors disabled:opacity-40">Hủy</motion.button>
-          <motion.button {...(saveLoading ? {} : pressable())} disabled={saveLoading} onClick={submit} className="flex-1 py-3 rounded-xl bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white text-[14px] font-bold md:hover:opacity-90 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-sm">
+          <Motion.button {...(saveLoading ? {} : pressable())} disabled={saveLoading} onClick={close} className="flex-1 py-3 rounded-xl bg-stone-500/10 dark:bg-stone-400/10 text-[#575e55] dark:text-[#b0b9ac] text-[14px] font-bold hover:bg-stone-500/15 dark:hover:bg-stone-400/15 transition-colors disabled:opacity-40">Hủy</Motion.button>
+          <Motion.button {...(saveLoading ? {} : pressable())} disabled={saveLoading} onClick={submit} className="flex-1 py-3 rounded-xl bg-[#314e3e] hover:bg-[#253d30] text-white dark:bg-[#d6b883] dark:hover:bg-[#c4a671] dark:text-[#19251d] text-[14px] font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-xs">
             {saveLoading && <Spinner />} {saveLoading ? "Đang lưu…" : "Lưu thay đổi"}
-          </motion.button>
+          </Motion.button>
         </div>
-      </motion.div>
+      </Motion.div>
     </Backdrop>,
-    document.getElementById("tai-khoan-page")
+    document.body
   );
 }

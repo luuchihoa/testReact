@@ -24,7 +24,9 @@ function aggregateStats(classes, rows, config) {
     const value = row[config.sourceField];
     if (!value) return;
 
-    const col = config.columns.find((c) => c.match === value);
+    const col = config.columns.find(
+      (c) => c.match === value || (c.key === "tb" && (value === "TB" || value === "Trung Bình"))
+    );
     if (!col) return; // giá trị lạ / chưa map -> bỏ qua thay vì crash
 
     entry.totalGraded += 1;

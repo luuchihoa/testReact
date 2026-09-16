@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components, react-hooks/preserve-manual-memoization, react-hooks/set-state-in-effect */
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../../components/ui/ToastContext.jsx";
-import { fetchTeacherContext, fetchClassStudents, fetchClassSummary } from "./api.js";
+import { fetchTeacherContext, fetchClassStudents, fetchClassSummary, fetchPendingProfileRequests } from "./api.js";
 
 const TeacherContext = createContext(null);
 
@@ -24,15 +25,13 @@ export function TeacherProvider({ children }) {
 
   const [students,        setStudents]        = useState([]);
   const [loadingStudents, setLoadingStudents]  = useState(false);
-  // Đánh dấu đã tải xong roster LẦN ĐẦU (kể cả khi lớp rỗng) — dùng để chặn
-  // không cho các tab con render với students=[] rồi phải tự fetch lại lần
-  // 2 khi roster thật về, gây nháy loading 2 lần.
   const [studentsInitialized, setStudentsInitialized] = useState(false);
 
-  // Tổng kết Học Kỳ I (tab mặc định) tải SẴN cùng lúc với roster, đưa xuống
-  // cho SummaryTab dùng ngay khi mount lần đầu — để nó không phải tự fetch
-  // + tự hiện thêm 1 spinner riêng ngay sau khi roster vừa xong.
   const [initialSummary, setInitialSummary] = useState(null); // { hocKyInt, data }
+
+  // Yêu cầu thay đổi thông tin hồ sơ của học sinh
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +59,7 @@ export function TeacherProvider({ children }) {
     setStudentsInitialized(false);
     setInitialSummary(null);
     setStudents([]);
+    setPendingRequests([]);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -93,7 +93,34 @@ export function TeacherProvider({ children }) {
     }
   }, [context, showToast]);
 
+  const refreshPendingRequests = useCallback(async () => {
+    if (!context?.namHoc) return;
+    setLoadingRequests(true);
+    try {
+      const data = await fetchPendingProfileRequests(context.namHoc);
+      setPendingRequests(data);
+    } catch (err) {
+      console.error("fetchPendingProfileRequests error:", err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, [context?.namHoc]);
+
   useEffect(() => { reloadStudents(); }, [reloadStudents]);
+  useEffect(() => { refreshPendingRequests(); }, [refreshPendingRequests]);
+
+  // Realtime subscription cho yêu cầu thay đổi hồ sơ
+  useEffect(() => {
+    const channel = supabase.channel("teacher_pcr_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profile_change_requests" }, () => {
+        refreshPendingRequests();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshPendingRequests]);
 
   const handleStudentSaved = useCallback((updated) => {
     setStudents((prev) => prev.map((s) => (s.username === updated.username ? { ...s, ...updated } : s)));
@@ -106,6 +133,10 @@ export function TeacherProvider({ children }) {
     loadingStudents,
     studentsInitialized,
     initialSummary,
+    pendingRequests,
+    pendingRequestsCount: pendingRequests.length,
+    loadingRequests,
+    refreshPendingRequests,
     reloadStudents,
     handleStudentSaved,
     changeYear,

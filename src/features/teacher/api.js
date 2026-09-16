@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase.js";
-import { normalizeStudent } from "../../components/ui/StudentShared.jsx";
+import { normalizeStudent } from "../../components/ui/studentSharedUtils.js";
 import { buildSundayList, getCurrentNamHoc, sortStudentsByTen } from "./utils.js";
 
 export async function fetchTeacherContext(authId, requestedNamHoc) {
@@ -225,4 +225,121 @@ export async function fetchYearSummary(usernames, namHoc) {
   });
 
   return byUser;
+}
+
+// ── Yêu cầu thay đổi hồ sơ học sinh ──
+export async function fetchPendingProfileRequests(namHoc) {
+  const { data, error } = await supabase.rpc("get_pending_profile_requests_for_teacher", {
+    p_nam_hoc: namHoc || null,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function approveProfileRequest(requestId) {
+  const { data, error } = await supabase.rpc("approve_profile_change_request", {
+    p_request_id: requestId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function rejectProfileRequest(requestId, note) {
+  const { data, error } = await supabase.rpc("reject_profile_change_request", {
+    p_request_id: requestId,
+    p_note: note || null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ── Khóa / Mở khóa hồ sơ học sinh ──
+export async function toggleBatchProfileLock(usernames, isLocked, lockedBy = null) {
+  if (!usernames || !usernames.length) return true;
+  
+  const { error: rpcErr } = await supabase.rpc("toggle_student_profile_lock", {
+    p_student_usernames: usernames,
+    p_locked: isLocked,
+    p_locked_by: lockedBy || null,
+  });
+
+  if (!rpcErr) return true;
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      is_profile_locked: isLocked,
+      profile_locked_by: isLocked ? (lockedBy || null) : null,
+      profile_locked_at: isLocked ? new Date().toISOString() : null,
+    })
+    .in("username", usernames);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function toggleStudentProfileLock(username, isLocked, lockedBy = null) {
+  return toggleBatchProfileLock([username], isLocked, lockedBy);
+}
+
+// ── Cập nhật hồ sơ học sinh (Giáo lý viên) ──
+export async function updateStudentProfile(username, payload) {
+  const { error } = await supabase
+    .from("users")
+    .update(payload)
+    .eq("username", username);
+  if (error) throw error;
+  return true;
+}
+
+// ── Lưu điểm học kỳ của 1 học sinh ──
+export async function saveStudentGrades(payload) {
+  const { error } = await supabase
+    .from("grades")
+    .upsert(payload, { onConflict: "username,nam_hoc,hoc_ky" });
+  if (error) throw error;
+  return true;
+}
+
+// ── Lưu tổng kết học kỳ của 1 học sinh ──
+export async function saveStudentTermSummary(payload) {
+  const { error } = await supabase
+    .from("term_summary")
+    .upsert(payload, { onConflict: "username,nam_hoc,hoc_ky" });
+  if (error) throw error;
+  return true;
+}
+
+// ── Lưu tổng kết cả năm của 1 học sinh ──
+export async function saveStudentYearSummary(payload) {
+  const { error } = await supabase
+    .from("year_summary")
+    .upsert(payload, { onConflict: "username,nam_hoc" });
+  if (error) throw error;
+  return true;
+}
+
+// ── Lưu điểm danh của 1 học sinh ──
+export async function saveStudentAttendance(rows) {
+  const { error } = await supabase
+    .from("attendance")
+    .upsert(rows, { onConflict: "username,nam_hoc,hoc_ky,ngay" });
+  if (error) throw error;
+  return true;
+}
+
+// ── Tải lên và cập nhật ảnh đại diện học sinh ──
+export async function uploadStudentAvatarForTeacher(username, resizedBlob, ext) {
+  const filePath = `avatars/${username}.${ext}`;
+  const staleExts = ["webp", "jpeg", "jpg", "avif"].filter((e) => e !== ext);
+  await supabase.storage.from("user-assets").remove(staleExts.map((e) => `avatars/${username}.${e}`)).catch(() => {});
+  const { error: uploadError } = await supabase.storage.from("user-assets").upload(filePath, resizedBlob, { upsert: true, contentType: resizedBlob.type });
+  if (uploadError) throw uploadError;
+  const { data: urlData } = supabase.storage.from("user-assets").getPublicUrl(filePath);
+  const publicUrl = urlData?.publicUrl;
+  if (!publicUrl) throw new Error("Không lấy được public URL");
+  const bustedUrl = `${publicUrl}?v=${Date.now()}`;
+  const { error: updateError } = await supabase.from("users").update({ avatar: bustedUrl }).eq("username", username);
+  if (updateError) throw updateError;
+  return bustedUrl;
 }

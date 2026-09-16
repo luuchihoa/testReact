@@ -4,7 +4,7 @@
    (đường dẫn import lùi thêm 1 cấp vì file này nằm trong components/admin/).
    ============================================================ */
 import { supabase } from "../../lib/supabase.js";
-import { normalizeStudent } from "../../components/ui/StudentShared.jsx";
+import { normalizeStudent } from "../../components/ui/studentSharedUtils.js";
 import { sortStudentsByTen } from "./gradeUtils.js";
 
 // Thay thế hàm fetchAllUsers() cũ bằng 2 hàm sau:
@@ -182,6 +182,32 @@ export async function lockTerm(lop, namHoc, hocKy) {
 export async function unlockTerm(lop, namHoc, hocKy) {
   const { error } = await supabase.rpc("unlock_term", { p_nam_hoc: namHoc, p_lop: lop, p_hoc_ky: hocKy });
   if (error) throw error;
+}
+
+// Khóa/Mở khóa hồ sơ học sinh (Admin)
+export async function toggleBatchProfileLockAdmin(usernames, isLocked, lockedBy = "Ban Quản Trị") {
+  if (!usernames || !usernames.length) return true;
+  const { error: rpcErr } = await supabase.rpc("toggle_student_profile_lock", {
+    p_student_usernames: usernames,
+    p_locked: isLocked,
+    p_locked_by: lockedBy,
+  });
+  if (!rpcErr) return true;
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      is_profile_locked: isLocked,
+      profile_locked_by: isLocked ? lockedBy : null,
+      profile_locked_at: isLocked ? new Date().toISOString() : null,
+    })
+    .in("username", usernames);
+  if (error) throw error;
+  return true;
+}
+
+export async function toggleStudentProfileLockAdmin(username, isLocked, lockedBy = "Ban Quản Trị") {
+  return toggleBatchProfileLockAdmin([username], isLocked, lockedBy);
 }
 
 // Gán/bỏ GVCN qua RPC "assign_class_teacher" (chạy transaction ở DB):

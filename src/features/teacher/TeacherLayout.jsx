@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, {
   Suspense,
   useCallback,
@@ -6,8 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Navigate, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -15,41 +16,15 @@ import {
   Table,
   ChevronLeft,
   GraduationCap,
-  Users,
   RefreshCw,
   ChevronDown,
   CalendarDays,
   Check,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
-import { AuthGateSkeleton, TableSkeleton, Bone } from "../../components/ui/Skeleton.jsx";
+import { AuthGateSkeleton, TableSkeleton } from "../../components/ui/Skeleton.jsx";
 import { TeacherProvider, useTeacherContext } from "./TeacherContext.jsx";
 import { getCurrentNamHoc } from "./utils.js";
-
-// ---------------------------------------------------------------------------
-// Design tokens — "Sổ chủ nhiệm" identity
-// ---------------------------------------------------------------------------
-// Hardcoded as Tailwind arbitrary values for now so this file is a drop-in
-// replacement with no build config changes. Once approved, promote these
-// into tailwind.config.js under `theme.extend.colors.tk` (e.g. `tk-paper`,
-// `tk-ink`, `tk-accent`, `tk-flag`, `tk-hair`) so every screen in the app
-// can reference the same palette instead of copy-pasting hex values.
-//
-//   paper (nền)        #F5F4F0  / dark #1B2130
-//   card/surface        #FFFFFF  / dark #232A3B
-//   ink (chữ chính)      #1E2A44  / dark #E8E9EE
-//   accent (chalkboard)  #2F6F5E  / dark #5FAE94
-//   flag (cảnh báo/mực đỏ) #B3432F / dark #E2795F
-//   hairline (viền)      #E4E1D9  / dark #333B4E
-//   sub (chữ phụ)        #6B6A63  / dark #9AA0B4
-//
-// Typography: display = Fraunces (tiêu đề), body = Inter, số liệu = IBM
-// Plex Mono. The @import below is a convenience for previewing this file
-// in isolation — in production, load these once in the app's root
-// stylesheet/index.html instead of per-component.
-
-const TK_FONT_IMPORT =
-  "@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap');";
 
 const STORAGE_KEY_ROLE = "role";
 const ROLE_TEACHER = "teacher";
@@ -63,23 +38,12 @@ const AUTH_STATUS = {
 };
 
 const TABS = [
-  { to: "tổng-quan", label: "Tổng kết lớp", icon: LayoutDashboard },
-  { to: "học-sinh", label: "Học sinh", icon: ClipboardList },
-  { to: "điểm-danh", label: "Điểm danh nhanh", icon: CalendarCheck },
-  { to: "nhập-điểm", label: "Nhập điểm nhanh", icon: Table },
+  { to: "tổng-quan", label: "Tổng quan", shortLabel: "Tổng quan", icon: LayoutDashboard },
+  { to: "học-sinh", label: "Danh sách", shortLabel: "Danh sách", icon: ClipboardList },
+  { to: "điểm-danh", label: "Điểm danh", shortLabel: "Điểm danh", icon: CalendarCheck },
+  { to: "nhập-điểm", label: "Nhập điểm", shortLabel: "Nhập điểm", icon: Table },
 ];
 
-// ---------------------------------------------------------------------------
-// useScrollCollapse — threshold-based collapse (mobile only)
-// ---------------------------------------------------------------------------
-// Deliberately NOT direction-aware (no "hide on scroll-down, show on
-// scroll-up" logic). That pattern (Gmail/Notion/X) needs debounce + a
-// direction threshold to avoid jitter, which is more moving parts than this
-// screen currently needs. Instead: past `threshold` px of scroll, collapse;
-// below it, expand. Simple, cheap, no direction bugs. The actual collapsing
-// is done with CSS transform/opacity transitions (scoped to mobile via
-// base-vs-`sm:` utility pairs in TeacherHeader) — this hook only flips a
-// boolean, it doesn't touch layout directly.
 function useScrollCollapse(threshold = 80) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -102,20 +66,7 @@ function useScrollCollapse(threshold = 80) {
   return collapsed;
 }
 
-// ---------------------------------------------------------------------------
-// useHeaderHeightVar — publishes the sticky header's rendered height as a
-// CSS custom property (`--header-h`) on the document root.
-// ---------------------------------------------------------------------------
-// Why a CSS var on :root instead of React context: every scrollable child
-// (SummaryTab's table today, other tabs' tables later) needs the exact same
-// number to position its own `sticky` thead just below the header, and a
-// CSS var is the simplest thing that's globally readable without plumbing
-// a value through TeacherContext or prop-drilling into every future tab.
-// TeacherHeader itself sits at `top-16` (see className below) — i.e. it is
-// offset 64px from the viewport top by the app's outer nav — so the point
-// where a table's thead should start being sticky is 64px + this element's
-// own rendered height, not just its own height.
-const HEADER_STICKY_OFFSET_PX = 0; // previously 64, changed because global header is hidden
+const HEADER_STICKY_OFFSET_PX = 0;
 
 function useHeaderHeightVar(ref) {
   useEffect(() => {
@@ -138,10 +89,6 @@ function useHeaderHeightVar(ref) {
     };
   }, [ref]);
 }
-
-// ---------------------------------------------------------------------------
-// useRequireRole — reusable auth-gate hook
-// ---------------------------------------------------------------------------
 
 function useRequireRole(requiredRole) {
   const cachedRole =
@@ -196,8 +143,7 @@ function useRequireRole(requiredRole) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requiredRole, retryToken]);
+  }, [requiredRole, retryToken, cachedRole]);
 
   return { status, retry };
 }
@@ -205,13 +151,13 @@ function useRequireRole(requiredRole) {
 function AuthCheckError({ onRetry }) {
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center justify-center gap-3 px-4 text-center">
-      <p className="text-[#6B6A63] dark:text-[#9AA0B4] text-sm max-w-xs">
+      <p className="text-[#575e55] dark:text-[#b0b9ac] text-sm max-w-xs">
         Không thể xác thực quyền truy cập. Vui lòng kiểm tra kết nối mạng và thử lại.
       </p>
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2F6F5E] dark:text-[#5FAE94] hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#314e3e] dark:text-[#d6b883] hover:underline"
       >
         <RefreshCw className="w-4 h-4" /> Thử lại
       </button>
@@ -227,10 +173,6 @@ export function RequireTeacherRoute({ children }) {
   if (status === AUTH_STATUS.DENIED) return <Navigate to="/" replace />;
   return children;
 }
-
-// ---------------------------------------------------------------------------
-// Error boundary
-// ---------------------------------------------------------------------------
 
 class RouteErrorBoundary extends React.Component {
   constructor(props) {
@@ -255,13 +197,13 @@ class RouteErrorBoundary extends React.Component {
     if (this.state.error) {
       return (
         <div className="min-h-[40vh] w-full flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <p className="text-[#6B6A63] dark:text-[#9AA0B4] text-sm max-w-xs">
+          <p className="text-[#575e55] dark:text-[#b0b9ac] text-sm max-w-xs">
             Đã có lỗi xảy ra khi tải nội dung này.
           </p>
           <button
             type="button"
             onClick={this.handleReset}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2F6F5E] dark:text-[#5FAE94] hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#314e3e] dark:text-[#d6b883] hover:underline"
           >
             <RefreshCw className="w-4 h-4" /> Thử lại
           </button>
@@ -272,9 +214,6 @@ class RouteErrorBoundary extends React.Component {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Hooks
-// ---------------------------------------------------------------------------
 function useDismissableDropdown(isOpen, onClose) {
   const ref = useRef(null);
   useEffect(() => {
@@ -284,209 +223,233 @@ function useDismissableDropdown(isOpen, onClose) {
         onClose();
       }
     };
+    const keyHandler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     document.addEventListener("mousedown", handler);
     document.addEventListener("touchstart", handler);
+    document.addEventListener("keydown", keyHandler);
     return () => {
       document.removeEventListener("mousedown", handler);
       document.removeEventListener("touchstart", handler);
+      document.removeEventListener("keydown", keyHandler);
     };
   }, [isOpen, onClose]);
   return ref;
 }
 
-// ---------------------------------------------------------------------------
-// Header — "hồ sơ lớp" layout with indexed underline tabs
-// ---------------------------------------------------------------------------
+function YearSelector({ namHoc, availableYears, changeYear, collapsed }) {
+  const [openYear, setOpenYear] = useState(false);
+  const wrapRef = useDismissableDropdown(openYear, () => setOpenYear(false));
+  const isCurrent = (nh) => nh === getCurrentNamHoc();
+
+  return (
+    <div className="relative flex-shrink-0" ref={wrapRef}>
+      <button
+        type="button"
+        onClick={() => setOpenYear((v) => !v)}
+        title="Chọn niên khóa làm việc"
+        aria-haspopup="listbox"
+        aria-expanded={openYear}
+        className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border font-bold transition-all duration-150 active:scale-[0.97] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e]/40 ${
+          collapsed 
+            ? "h-8 px-2.5 sm:px-3 text-xs" 
+            : "h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs sm:text-[13px]"
+        } ${
+          openYear
+            ? "border-transparent bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] shadow-sm"
+            : "border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] shadow-2xs hover:bg-[#faf8f3] dark:hover:bg-[#151c18]"
+        }`}
+      >
+        <CalendarDays className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${openYear ? "text-white dark:text-[#19251d]" : "text-[#927140] dark:text-[#d4b47d]"}`} strokeWidth={2} />
+        <span className="font-mono whitespace-nowrap leading-none">{namHoc}</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${openYear ? "rotate-180 text-white dark:text-[#19251d]" : "text-[#575e55] dark:text-[#b0b9ac]"}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {openYear && (
+          <Motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.16 }}
+            role="listbox"
+            className="absolute right-0 z-[100] mt-1.5 min-w-[200px] sm:min-w-[220px] rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] backdrop-blur-xl p-1.5 shadow-xl overflow-hidden flex flex-col"
+          >
+            <div className="px-3 py-2 border-b border-[#dedfd4]/60 dark:border-[#354237]/60 flex items-center justify-between text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+              <span className="flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d]" />
+                <span>Chọn Niên Khóa</span>
+              </span>
+            </div>
+
+            <div className="pt-1 space-y-0.5 max-h-[240px] overflow-y-auto">
+              {availableYears?.map((nh) => {
+                const active = nh === namHoc;
+                const isCurr = isCurrent(nh);
+                return (
+                  <button
+                    key={nh}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => { changeYear(nh); setOpenYear(false); }}
+                    className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs sm:text-[13px] font-bold text-left transition-colors cursor-pointer ${
+                      active 
+                        ? "bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 text-[#314e3e] dark:text-[#d4b47d]" 
+                        : "text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18]"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 font-mono">
+                      <span>{nh}</span>
+                      {isCurr && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] sm:text-[9.5px] font-extrabold uppercase tracking-wide bg-emerald-600 text-white font-sans">
+                          Hiện tại
+                        </span>
+                      )}
+                    </span>
+                    {active && <Check className="w-4 h-4 text-[#314e3e] dark:text-[#d4b47d] flex-shrink-0" strokeWidth={2.5} />}
+                  </button>
+                );
+              })}
+            </div>
+          </Motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const TeacherHeader = React.memo(
   React.forwardRef(function TeacherHeader(
-    { lop, namHoc, availableYears, changeYear, studentCount, studentsInitialized, collapsed },
+    { lop, namHoc, availableYears, changeYear, collapsed, pendingRequestsCount },
     ref
   ) {
-    const [openYear, setOpenYear] = useState(false);
-    const wrapRef = useDismissableDropdown(openYear, () => setOpenYear(false));
-    const isCurrent = (nh) => nh === getCurrentNamHoc();
-
-  return (
-    <div
-      ref={ref}
-      className={`sticky top-0 z-[60] border-b transition-all duration-300 ease-out px-4 sm:px-6 ${
-        collapsed 
-          ? "py-2 bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-2xl shadow-sm border-amber-900/10 dark:border-amber-100/10" 
-          : "py-3 sm:py-4 bg-white/70 dark:bg-[#1C1917]/70 backdrop-blur-xl border-transparent"
-      }`}
-    >
-      <div
-        className={`max-w-6xl mx-auto flex flex-col transition-[gap] duration-300 ease-out ${
-          collapsed ? "gap-1" : "gap-3"
-        } sm:gap-3`}
+    return (
+      <header
+        ref={ref}
+        className={`sticky top-0 z-[60] border-b transition-all duration-300 ease-out px-4 sm:px-6 md:px-8 ${
+          collapsed 
+            ? "py-2 sm:py-2.5 bg-[#fffefa]/95 dark:bg-[#1e2821]/95 backdrop-blur-2xl shadow-xs border-[#dedfd4] dark:border-[#354237]" 
+            : "py-2.5 sm:py-4 bg-[#faf8f3]/90 dark:bg-[#151c18]/90 backdrop-blur-xl border-[#dedfd4]/60 dark:border-[#354237]/60"
+        }`}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <NavLink
-              to="/"
-              className="p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 rounded-full flex-shrink-0 text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-amber-950 dark:hover:text-amber-50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-800/50"
-              aria-label="Về trang chủ"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </NavLink>
-            <div className="min-w-0">
-              <p
-                className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-amber-800/80 dark:text-amber-500/80 overflow-hidden transition-all duration-300 ease-out ${
-                  collapsed ? "max-h-0 opacity-0" : "max-h-4 opacity-100"
-                }`}
+        <div
+          className={`max-w-6xl mx-auto flex flex-col transition-[gap] duration-300 ease-out ${
+            collapsed ? "gap-1.5" : "gap-2 sm:gap-3.5"
+          }`}
+        >
+          {/* Main Top Bar (1 Hàng thống nhất trên cả Mobile và Desktop) */}
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <NavLink
+                to="/"
+                className="p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 rounded-xl flex-shrink-0 text-[#575e55] dark:text-[#b0b9ac] hover:bg-stone-500/10 hover:text-[#293d32] dark:hover:text-[#ecece0] transition-colors focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30"
+                aria-label="Về trang chủ"
               >
-                Sổ chủ nhiệm
-              </p>
-              <div className="flex items-center gap-2">
-                <h1
-                  className={`font-semibold text-amber-950 dark:text-amber-50 truncate transition-all duration-300 ease-out ${
-                    collapsed ? "text-sm sm:text-lg" : "text-lg sm:text-2xl"
+                <ChevronLeft className="w-5 h-5" />
+              </NavLink>
+              
+              <div className="min-w-0">
+                <p
+                  className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#314e3e] dark:text-[#d4b47d] overflow-hidden transition-all duration-300 ease-out ${
+                    collapsed ? "max-h-0 opacity-0 hidden sm:block" : "max-h-4 opacity-100"
                   }`}
-                  style={{ fontFamily: "'Fraunces', serif" }}
+                >
+                  Sổ Chủ Nhiệm
+                </p>
+                <h1
+                  className={`font-bold text-[#293d32] dark:text-[#ecece0] font-serif transition-all duration-300 ease-out truncate ${
+                    collapsed 
+                      ? "text-base sm:text-lg leading-tight" 
+                      : "text-lg sm:text-2xl leading-tight"
+                  }`}
                 >
                   Lớp {lop}
                 </h1>
-                
-                <div className="relative flex-shrink-0" ref={wrapRef}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenYear((v) => !v)}
-                    title="Chọn năm học"
-                    aria-haspopup="listbox"
-                    aria-expanded={openYear}
-                    className={`inline-flex items-center gap-1.5 rounded-full border font-bold transition-all duration-150 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500/50 dark:focus-visible:ring-offset-[#1C1917] ${
-                      collapsed ? "h-6 pl-2 pr-1.5 text-[11px]" : "h-7 sm:h-8 pl-3 pr-2 text-[12px] sm:text-[13px] mt-0.5"
-                    } ${
-                      openYear
-                        ? "border-transparent bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 shadow-[0_2px_8px_rgba(146,64,14,0.2)]"
-                        : "border-amber-900/10 dark:border-amber-100/10 bg-white/80 dark:bg-stone-800/40 text-stone-700 dark:text-stone-300 shadow-sm backdrop-blur-sm hover:bg-amber-50 dark:hover:bg-stone-800/80"
-                    }`}
-                  >
-                    <CalendarDays className={`${collapsed ? "w-3 h-3" : "w-3.5 h-3.5"} ${openYear ? "text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`} strokeWidth={2.25} />
-                    <span className="whitespace-nowrap leading-none mt-[1px]">{namHoc}</span>
-                    <ChevronDown
-                      className={`${collapsed ? "w-3 h-3" : "w-3.5 h-3.5"} transition-transform duration-200 ${openYear ? "rotate-180 text-amber-50 dark:text-amber-950" : "text-stone-400 dark:text-stone-500"}`}
-                    />
-                  </button>
-
-                  {openYear && (
-                    <div
-                      role="listbox"
-                      className="absolute left-0 sm:left-auto sm:right-0 z-[100] mt-2 min-w-[180px] rounded-2xl border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7]/95 dark:bg-[#1C1917]/95 backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
-                    >
-                      {availableYears?.map((nh) => {
-                        const active = nh === namHoc;
-                        return (
-                          <button
-                            key={nh}
-                            type="button"
-                            role="option"
-                            aria-selected={active}
-                            onClick={() => { changeYear(nh); setOpenYear(false); }}
-                            className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-bold text-left transition-colors ${
-                              active ? "bg-amber-100/50 dark:bg-amber-500/20 text-amber-950 dark:text-amber-50" : "text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              {nh}
-                              {isCurrent(nh) && (
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-amber-600 dark:bg-amber-400"
-                                  title="Năm học hiện tại"
-                                />
-                              )}
-                            </span>
-                            {active && <Check className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" strokeWidth={2.5} />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
               </div>
+            </div>
+
+            {/* Top Right: Bộ chọn Niên Khóa */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <YearSelector
+                namHoc={namHoc}
+                availableYears={availableYears}
+                changeYear={changeYear}
+                collapsed={collapsed}
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <span
-              className="inline-flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-gradient-to-b from-stone-50 to-white dark:from-stone-800 dark:to-stone-900 border border-stone-200/80 dark:border-stone-700/80 shadow-sm text-xs font-bold text-amber-950 dark:text-amber-50 transition-all hover:shadow-md"
-              style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-              aria-live="polite"
+          {/* 4 Tabs Điều hướng Nghiệp vụ (Không viền bọc ngoài trên Mobile, icon trên chữ) */}
+          <div className="w-full sm:w-fit p-0 sm:p-1 bg-transparent sm:bg-[#faf8f3] dark:sm:bg-[#151c18] rounded-none sm:rounded-2xl border-0 sm:border border-[#dedfd4] dark:border-[#354237] overflow-hidden">
+            <nav
+              className="tk-tabbar relative grid grid-cols-4 sm:flex gap-1.5 sm:gap-1 w-full sm:w-auto"
+              data-lenis-prevent
+              aria-label="Điều hướng nghiệp vụ lớp"
             >
-              <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
-                <Users className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
-              </div>
-              {studentsInitialized ? (
-                <span className="text-[13px] leading-none">{studentCount}</span>
-              ) : (
-                <Bone className="h-3 w-5 rounded-md" aria-hidden="true" />
-              )}
-              <span className="hidden sm:inline font-sans font-medium text-[12px] text-stone-500 dark:text-stone-400 leading-none">
-                học sinh
-              </span>
-            </span>
+              {TABS.map(({ to, label, shortLabel, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `tk-tab relative flex-1 sm:flex-initial inline-flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 min-h-[46px] sm:min-h-[40px] rounded-xl text-[11px] sm:text-[13px] font-semibold transition-all duration-200 ${
+                      isActive
+                        ? "text-[#314e3e] dark:text-[#d6b883] font-bold bg-[#fffefa] dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237] sm:border-transparent sm:bg-transparent sm:shadow-none"
+                        : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] bg-[#faf8f3]/60 dark:bg-[#151c18]/60 border border-[#dedfd4]/40 dark:border-[#354237]/40 sm:border-transparent sm:bg-transparent hover:bg-stone-500/5"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <Motion.div
+                          layoutId="teacher-active-tab-desktop"
+                          className="hidden sm:block absolute inset-0 bg-[#fffefa] dark:bg-[#1e2821] rounded-xl shadow-xs border border-[#dedfd4] dark:border-[#354237]"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                        />
+                      )}
+                      <span className="relative z-10 inline-flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-center">
+                        <div className="relative flex items-center justify-center">
+                          <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" aria-hidden="true" />
+                          {to === "học-sinh" && pendingRequestsCount > 0 && (
+                            <span className="sm:hidden absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                          )}
+                        </div>
+                        <span className="sm:hidden leading-tight whitespace-nowrap font-bold">{shortLabel}</span>
+                        <span className="hidden sm:inline whitespace-nowrap">{label}</span>
+                        {to === "học-sinh" && pendingRequestsCount > 0 && (
+                          <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-amber-950 font-black text-[10px] animate-pulse shrink-0">
+                            {pendingRequestsCount}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
           </div>
         </div>
-
-        <div className="p-1 sm:p-1.5 bg-stone-100/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-2xl border border-stone-200/50 dark:border-stone-700/50 w-full overflow-hidden">
-          <nav
-            className="tk-tabbar relative flex gap-1 sm:gap-1.5 overflow-x-auto w-full no-scrollbar"
-            data-lenis-prevent
-            aria-label="Điều hướng lớp học"
-          >
-            {TABS.map(({ to, label, icon: Icon }, i) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `tk-tab relative flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold whitespace-nowrap transition-colors duration-300 ${
-                    isActive
-                      ? "text-amber-950 dark:text-amber-50"
-                      : "text-stone-500 dark:text-stone-400 hover:text-amber-950 dark:hover:text-amber-50 hover:bg-white/50 dark:hover:bg-stone-700/50"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {isActive && (
-                      <motion.div
-                        layoutId="teacher-active-tab"
-                        className="absolute inset-0 bg-white dark:bg-stone-900 rounded-xl shadow-sm border border-amber-900/10 dark:border-amber-100/10"
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10 inline-flex items-center gap-1.5">
-                      <Icon className="w-4 h-4" aria-hidden="true" /> {label}
-                    </span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-      </div>
-    </div>
-  );
+      </header>
+    );
   })
 );
-
-// ---------------------------------------------------------------------------
-// Layout body
-// ---------------------------------------------------------------------------
 
 function EmptyClassState({ onGoHome }) {
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center justify-center gap-3 px-4 text-center">
-      <GraduationCap className="w-10 h-10 text-[#E4E1D9] dark:text-[#333B4E]" aria-hidden="true" />
-      <p className="text-[#6B6A63] dark:text-[#9AA0B4] text-sm max-w-xs">
+      <GraduationCap className="w-12 h-12 text-[#dedfd4] dark:text-[#354237]" aria-hidden="true" />
+      <p className="text-[#575e55] dark:text-[#b0b9ac] text-sm max-w-xs leading-relaxed">
         Bạn chưa được phân công chủ nhiệm lớp nào trong năm học {getCurrentNamHoc()}.
       </p>
       <button
         type="button"
         onClick={onGoHome}
-        className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2F6F5E] dark:text-[#5FAE94] hover:underline"
+        className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#314e3e] dark:text-[#d6b883] hover:underline"
       >
         <ChevronLeft className="w-4 h-4" aria-hidden="true" /> Về trang chủ
       </button>
@@ -496,14 +459,12 @@ function EmptyClassState({ onGoHome }) {
 
 function TeacherLayoutInner() {
   const navigate = useNavigate();
-  const { loadingContext, context, students, studentsInitialized, changeYear } = useTeacherContext();
+  const { loadingContext, context, students, studentsInitialized, changeYear, pendingRequestsCount } = useTeacherContext();
 
   const [outletKey, setOutletKey] = useState(0);
   const resetOutlet = useCallback(() => setOutletKey((k) => k + 1), []);
 
   const handleGoHome = useCallback(() => navigate("/"), [navigate]);
-
-  const studentCount = useMemo(() => students?.length ?? 0, [students]);
 
   const headerRef = useRef(null);
   useHeaderHeightVar(headerRef);
@@ -518,16 +479,10 @@ function TeacherLayoutInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917]">
+    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] transition-colors duration-300">
       <style>{`
-        ${TK_FONT_IMPORT}
         .tk-tabbar::-webkit-scrollbar { display: none; }
         .tk-tabbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Fallback before ResizeObserver's first measurement runs (and for
-           any environment without ResizeObserver support). Child tables
-           (SummaryTab, and any future tab) read this same variable to
-           position their sticky <thead> just below the header — see
-           useHeaderHeightVar above for how it's kept accurate. */
         :root { --header-h: 48px; }
       `}</style>
 
@@ -537,12 +492,11 @@ function TeacherLayoutInner() {
         namHoc={context.namHoc}
         availableYears={context.availableYears}
         changeYear={changeYear}
-        studentCount={studentCount}
-        studentsInitialized={studentsInitialized}
         collapsed={headerCollapsed}
+        pendingRequestsCount={pendingRequestsCount}
       />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-0 pb-6 sm:py-8">
         <RouteErrorBoundary onReset={resetOutlet}>
           <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
             <Outlet key={`${context.namHoc}-${outletKey}`} />

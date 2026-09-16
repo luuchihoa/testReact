@@ -17,7 +17,7 @@ export function shuffleArray(arr) {
 
 // Pháo hoa Confetti chúc mừng
 export function burstConfetti(x, y) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const colors = ["#d97706", "#b45309", "#f59e0b", "#fcd34d", "#10b981", "#3b82f6", "#ec4899"];
   const count = 20;
   const els = [];

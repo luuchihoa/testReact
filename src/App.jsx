@@ -4,6 +4,7 @@ import { PWAInstallProvider } from "./components/ui/PWAInstallContext.jsx";
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "./lib/supabase.js";
+import { normalizeSemester } from "./features/account/utils.js";
 
 const ReactLenisLazy = lazy(() => 
   // eslint-disable-next-line no-unused-vars
@@ -65,6 +66,21 @@ function ExternalRedirect({ url }) {
   return null;
 }
 
+function RedirectToAchievement() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const rawKy = searchParams.get("ky") || searchParams.get("hoc_ky") || searchParams.get("semester") || searchParams.get("hk");
+  const normalizedKy = normalizeSemester(rawKy);
+  const query = normalizedKy ? `?ky=${normalizedKy}` : location.search;
+  return <Navigate to={`/tài-khoản/thành-tích${query}`} replace />;
+}
+
+function RedirectToAccount() {
+  const location = useLocation();
+  const subPath = location.pathname.replace(/^\/tai-khoan/, "");
+  return <Navigate to={`/tài-khoản${subPath || "/hồ-sơ"}${location.search}`} replace />;
+}
+
 
 // ── Bài viết ──
 const ArticleList   = lazyWithRetry(() => import("./features/articles/ArticleList.jsx"));
@@ -104,7 +120,7 @@ const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) 
   const isDashboard = decodedPath.startsWith("/quản-trị") || decodedPath.startsWith("/quản-lý-học-sinh");
 
   return (
-    <div className={`${fontSizeMap[fontSize]} min-h-screen flex flex-col bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
+    <div className={`${fontSizeMap[fontSize]} min-h-screen w-full min-w-0 flex flex-col bg-[#faf8f5] dark:bg-stone-950 text-stone-900 dark:text-stone-100 antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-100`}>
       {/* Thanh điều hướng Header */}
       {!isDashboard && (
         <Header 
@@ -116,7 +132,7 @@ const AppLayout = ({ fontSize, toggleModal, isLogin, setIsLogin, handleClose }) 
       )}
       
       {/* Không gian nội dung chính tối ưu hóa khoảng cách thiết bị di động */}
-      <main className="w-full flex-grow">
+      <main className="w-full flex-grow min-w-0">
         <Suspense fallback={<PageLoader />}>
           <Outlet context={{ toggleModal, isLogin, setIsLogin }} />
         </Suspense>
@@ -207,6 +223,10 @@ export default function App() {
           <Route path="bảo-mật" element={<BaoMat />} />
           <Route path="quy-định" element={<QuyDinh />} />
           <Route path="tài-khoản/*" element={<TaiKhoanLayout />} />
+          <Route path="tai-khoan/*" element={<RedirectToAccount />} />
+          <Route path="ket-qua-hoc-tap" element={<RedirectToAchievement />} />
+          <Route path="thanh-tich" element={<RedirectToAchievement />} />
+          <Route path="thành-tích" element={<RedirectToAchievement />} />
           <Route path="reset-password" element={<ResetPassword />} />
 
           {/* ── Bài viết ── */}

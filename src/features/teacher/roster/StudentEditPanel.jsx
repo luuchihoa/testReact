@@ -1,25 +1,30 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Copy } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+import { X, User, BookOpen, Camera, Printer, ArrowLeft, Lock, Unlock } from "lucide-react";
 import { useToast } from "../../../components/ui/ToastContext.jsx";
-import { transferDateForView } from "../../../components/ui/StudentShared.jsx";
+import { ConfirmDialog } from "../../../components/ui/StudentShared.jsx";
+import { resizeImage } from "../../account/utils.js";
+import { uploadStudentAvatarForTeacher, toggleStudentProfileLock } from "../api.js";
+import { useTeacherContext } from "../TeacherContext.jsx";
 import ProfileTab from "./ProfileTab.jsx";
 import AcademicTab from "./AcademicTab.jsx";
 
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 const SLIDE_VARIANTS = {
-  initial: (direction) => ({ x: direction > 0 ? 30 : -30, opacity: 0 }),
+  initial: (direction) => ({ x: direction > 0 ? 20 : -20, opacity: 0 }),
   animate: { x: 0, opacity: 1 },
-  exit: (direction) => ({ x: direction < 0 ? 30 : -30, opacity: 0 }),
+  exit: (direction) => ({ x: direction < 0 ? 20 : -20, opacity: 0 }),
 };
 
 function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
   const { showToast } = useToast();
+  const { teacherUsername } = useTeacherContext();
+  const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
+  const [locking, setLocking] = useState(false);
   const [tab, setTab] = useState("profile"); // profile | academic
-  const [[page, direction], setPage] = useState([0, 0]);
-
-  const [hocKy, setHocKy] = useState("HK1");
-  const [[hkPage, hkDirection], setHkPage] = useState([0, 0]);
+  const [[_page, direction], setPage] = useState([0, 0]);
 
   const TABS = ["profile", "academic"];
   const handleTabChange = (tId) => {
@@ -30,145 +35,227 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
     setPage([newIdx, newIdx > oldIdx ? 1 : -1]);
   };
 
-  const handleHocKyChange = (k) => {
-    if (k === hocKy) return;
-    const HK_LIST = ["HK1", "HK2"];
-    const newIdx = HK_LIST.indexOf(k);
-    const oldIdx = HK_LIST.indexOf(hocKy);
-    setHocKy(k);
-    setHkPage([newIdx, newIdx > oldIdx ? 1 : -1]);
+  const handleToggleLock = async () => {
+    setLocking(true);
+    const nextLocked = !student?.isProfileLocked;
+    try {
+      await toggleStudentProfileLock(student.username, nextLocked, teacherUsername);
+      const updated = {
+        ...student,
+        isProfileLocked: nextLocked,
+        profileLockedBy: nextLocked ? (teacherUsername || "Giáo lý viên") : null,
+        profileLockedAt: nextLocked ? new Date().toISOString() : null,
+      };
+      showToast(nextLocked ? "Đã khóa chỉnh sửa hồ sơ học sinh" : "Đã mở khóa chỉnh sửa hồ sơ học sinh", "success");
+      onSaved?.(updated);
+      setShowLockConfirm(false);
+    } catch (err) {
+      console.error("Toggle profile lock error:", err);
+      showToast("Không thể thay đổi trạng thái khóa: " + (err.message || ""), "error");
+    } finally {
+      setLocking(false);
+    }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(student.username);
-    showToast("Đã sao chép Username/ID", "success");
+  const handleAvatarFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Chỉ hỗ trợ file hình ảnh", "warning");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      showToast("Dung lượng ảnh tối đa 8MB", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const { blob: resizedBlob, ext } = await resizeImage(file);
+      const newAvatarUrl = await uploadStudentAvatarForTeacher(student.username, resizedBlob, ext);
+      showToast("Đã cập nhật ảnh đại diện học sinh!", "success");
+      onSaved?.({ ...student, avatar: newAvatarUrl });
+    } catch (err) {
+      console.error("Upload student avatar error:", err);
+      showToast("Không thể tải lên ảnh đại diện: " + (err.message || ""), "error");
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
-    <div className="sm:bg-white/80 sm:dark:bg-[#1C1917]/80 sm:backdrop-blur-xl sm:rounded-[28px] sm:border sm:border-amber-900/10 sm:dark:border-amber-100/10 sm:shadow-sm sm:overflow-hidden w-full min-w-0 flex flex-col">
-      <div className="relative overflow-hidden px-4 py-5 sm:px-8 sm:py-10 rounded-[20px] sm:rounded-none border border-amber-900/5 sm:border-b sm:border-amber-900/10 dark:border-amber-100/5 sm:dark:border-amber-100/10 bg-gradient-to-br from-stone-100 to-amber-50 dark:from-stone-800 dark:to-stone-900 shadow-sm sm:shadow-none mb-4 sm:mb-0">
-        {/* Nền trang trí */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-600/5 dark:bg-amber-400/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        
-
-        {/* Desktop close button */}
-        <button type="button" onClick={onClose} aria-label="Đóng"
-          className="hidden sm:flex absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/50 dark:bg-stone-800/50 backdrop-blur border border-amber-900/10 dark:border-amber-100/10 hover:bg-white dark:hover:bg-stone-700 items-center justify-center transition-colors shadow-sm">
-          <X className="w-5 h-5 text-stone-500" />
+    <div className="-mx-4 sm:mx-0 rounded-none sm:rounded-3xl border-x-0 border-t-0 sm:border-t border-b sm:border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-none sm:shadow-xs p-4 sm:p-6 lg:p-8 relative min-w-0">
+      
+      {/* Top Actions Bar */}
+      <div className="flex items-center justify-between gap-2 mb-4 md:mb-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#454f46] dark:text-[#b8c2b4] hover:text-[#293d32] dark:hover:text-[#ecece0] bg-stone-500/10 hover:bg-stone-500/15 transition-colors active:scale-95 cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Danh sách</span>
         </button>
+        <div className="hidden lg:block" />
 
-        <div className="relative z-10 flex items-center gap-4 sm:gap-6 min-w-0 pr-0 sm:pr-12">
-          <div className="relative">
-            <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }} className="absolute inset-0 bg-amber-400/30 dark:bg-amber-500/20 rounded-full blur-xl" />
-            <motion.div whileHover={{ scale: 1.05 }} className="relative z-10 w-16 h-16 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 sm:border-4 border-white dark:border-stone-800 flex-shrink-0 bg-stone-100 shadow-xl">
-              <img src={student.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
-            </motion.div>
-          </div>
-          <div className="min-w-0 flex flex-col justify-center flex-1">
-            <p className="text-[20px] sm:text-[32px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight drop-shadow-sm">
-              {student.hoTen || student.username}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/60 dark:bg-stone-800/60 backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50 text-[11px] sm:text-[12px] font-bold text-stone-600 dark:text-stone-300 whitespace-nowrap shadow-sm">
-                Lớp {lop}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/60 dark:bg-stone-800/60 backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50 text-[11px] sm:text-[12px] font-bold text-stone-600 dark:text-stone-300 whitespace-nowrap shadow-sm">
-                ID: {student.username}
-                <button type="button" onClick={copyToClipboard} className="p-0.5 hover:bg-stone-200 dark:hover:bg-stone-700 rounded transition-colors" title="Copy ID">
-                  <Copy className="w-3 h-3 text-stone-400 dark:text-stone-500" />
-                </button>
-              </span>
-              {student.gioiTinh && (
-                <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/60 dark:bg-stone-800/60 backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50 text-[11px] sm:text-[12px] font-bold text-stone-600 dark:text-stone-300 whitespace-nowrap shadow-sm">
-                  {student.gioiTinh === "Nam" ? "👨 Nam" : "👩 Nữ"}
-                </span>
-              )}
-              {student.ngaySinh && (
-                <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/60 dark:bg-stone-800/60 backdrop-blur-sm border border-stone-200/50 dark:border-stone-700/50 text-[11px] sm:text-[12px] font-bold text-stone-600 dark:text-stone-300 whitespace-nowrap shadow-sm">
-                  🎂 {transferDateForView(student.ngaySinh)}
-                </span>
-              )}
-            </div>
-          </div>
+        <div className="flex items-center gap-1.5">
+          {/* Nút Khóa / Mở khóa hồ sơ */}
+          <button
+            type="button"
+            onClick={() => setShowLockConfirm(true)}
+            disabled={locking}
+            aria-label={student?.isProfileLocked ? "Mở khóa chỉnh sửa hồ sơ" : "Khóa chỉnh sửa hồ sơ"}
+            title={student?.isProfileLocked ? "Hồ sơ đang khóa. Bấm để mở khóa" : "Khóa chỉnh sửa hồ sơ học sinh"}
+            className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center transition-colors cursor-pointer active:scale-95 ${
+              student?.isProfileLocked 
+                ? "bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] border border-[#927140]/30 dark:border-[#d4b47d]/30"
+                : "bg-stone-500/10 hover:bg-[#314e3e]/10 dark:bg-stone-400/10 dark:hover:bg-[#d6b883]/20 text-[#454f46] hover:text-[#314e3e] dark:text-[#b8c2b4] dark:hover:text-[#d6b883]"
+            }`}
+          >
+            {student?.isProfileLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrint}
+            aria-label="In phiếu học sinh"
+            title="In phiếu học sinh"
+            className="w-8.5 h-8.5 rounded-xl bg-stone-500/10 hover:bg-[#314e3e]/10 dark:bg-stone-400/10 dark:hover:bg-[#d6b883]/20 text-[#454f46] hover:text-[#314e3e] dark:text-[#b8c2b4] dark:hover:text-[#d6b883] flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Đóng chi tiết học sinh"
+            title="Đóng chi tiết học sinh"
+            className="w-8.5 h-8.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 dark:bg-stone-400/10 dark:hover:bg-stone-400/20 text-[#454f46] dark:text-[#b8c2b4] flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:px-2 sm:pt-5 mb-4 sm:mb-6 gap-3 sm:gap-4">
-        
-        {/* Main Tabs (Hồ sơ - Điểm) */}
-        <div className="relative flex gap-1 p-1 bg-stone-100 dark:bg-stone-800 rounded-[16px] shadow-inner border border-amber-900/10 dark:border-amber-100/10 w-full sm:w-fit shrink-0">
-          {[
-            { id: "profile", label: "Hồ sơ cá nhân", icon: "👤" },
-            { id: "academic", label: "Điểm & Điểm danh", icon: "📊" }
-          ].map((t) => (
-            <button key={t.id} type="button" onClick={() => handleTabChange(t.id)}
-              className={`relative flex w-1/2 sm:w-auto sm:flex-none items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[14px] font-bold transition-colors duration-300 whitespace-nowrap z-10 ${
-                tab === t.id 
-                  ? "text-amber-950 dark:text-amber-50" 
-                  : "text-stone-500 dark:text-stone-400 hover:text-amber-950 dark:hover:text-amber-50"
-              }`}>
-              {tab === t.id && (
-                <motion.div
-                  layoutId="active-main-tab"
-                  className="absolute inset-0 bg-white dark:bg-stone-900 rounded-xl shadow-sm border border-amber-900/10 dark:border-amber-100/10"
-                  initial={false}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-20 flex items-center gap-1.5"><span>{t.icon}</span> {t.label}</span>
-            </button>
-          ))}
+      {/* Hero Profile: Avatar & Tên hiển thị đầy đủ, rõ ràng */}
+      <div className="flex flex-col items-center gap-3.5 mb-6 text-center">
+        <div className="relative">
+          <div className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden ring-4 ring-[#faf8f3] dark:ring-[#151c18] shadow-sm border border-[#dedfd4] dark:border-[#354237] bg-stone-100 dark:bg-stone-800 ${
+            uploadingAvatar ? "opacity-70" : ""
+          }`}>
+            <img
+              src={student.avatar || "/images/avatarDefault.avif"}
+              alt={student.hoTen || "Ảnh đại diện học sinh"}
+              className="w-full h-full object-cover"
+            />
+            {uploadingAvatar && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+                <div className="w-8 h-8 border-[3px] border-[#d6b883] border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            aria-label="Đổi ảnh đại diện học sinh"
+            title="Đổi ảnh đại diện học sinh"
+            className="absolute bottom-0 right-0 w-8.5 h-8.5 rounded-full shadow-md flex items-center justify-center border-2 border-[#faf8f3] dark:border-[#151c18] bg-[#314e3e] hover:bg-[#253d30] dark:bg-[#d6b883] dark:hover:bg-[#c4a671] text-white dark:text-[#19251d] active:scale-90 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Camera className="w-4 h-4" strokeWidth={2.2} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            hidden
+            onChange={handleAvatarFile}
+          />
         </div>
 
-        {/* Semester Tabs (Học kỳ I - Học kỳ II) */}
-        <AnimatePresence>
-          {tab === "academic" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="relative flex gap-1 p-1 bg-stone-100 dark:bg-stone-800 rounded-[14px] shadow-inner border border-amber-900/10 dark:border-amber-100/10 w-full sm:w-fit shrink-0"
-            >
-              {["HK1", "HK2", "CN"].map((k) => (
-                <button key={k} type="button" onClick={() => handleHocKyChange(k)}
-                  className={`relative flex items-center justify-center w-1/3 sm:w-auto sm:flex-none px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[14px] font-bold transition-colors duration-300 z-10 ${
-                    hocKy === k 
-                      ? "text-amber-950 dark:text-amber-50" 
-                      : "text-stone-500 dark:text-stone-400 hover:text-amber-950 dark:hover:text-amber-50"
-                  }`}>
-                  {hocKy === k && (
-                    <motion.div
-                      layoutId="active-hk-tab"
-                      className="absolute inset-0 bg-white dark:bg-stone-900 rounded-xl shadow-sm border border-amber-900/10 dark:border-amber-100/10"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        <div className="min-w-0 max-w-full px-2">
+          <h3 className="text-[20px] sm:text-[22px] font-bold text-[#293d32] dark:text-[#ecece0] leading-tight">
+            {student.tenThanh ? `${student.tenThanh} ` : ""}{student.hoTen || student.username}
+          </h3>
+        </div>
+
+        {/* Tab Switcher - Pill style giống /tài-khoản */}
+        <div className="relative w-full max-w-xs sm:max-w-sm rounded-2xl bg-[#dedfd4]/40 dark:bg-[#354237]/50 p-1 select-none border border-[#dedfd4] dark:border-[#354237] mt-1">
+          <div className="grid grid-cols-2 gap-1 w-full text-xs sm:text-[13px] font-bold">
+            {[
+              { id: "profile", label: "Hồ sơ cá nhân", mobileLabel: "Hồ sơ", Icon: User },
+              { id: "academic", label: "Kết quả học tập", mobileLabel: "Học tập", Icon: BookOpen }
+            ].map((t) => {
+              const isActive = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTabChange(t.id)}
+                  className={`relative flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl transition-colors duration-200 whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? "text-[#314e3e] dark:text-[#d4b47d]"
+                      : "text-[#454f46] dark:text-[#b8c2b4] hover:text-[#293d32] dark:hover:text-[#ecece0]"
+                  }`}
+                >
+                  {isActive && (
+                    <Motion.span
+                      layoutId="studentDetailActiveTabIndicator"
+                      className="absolute inset-0 rounded-xl bg-white dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237]"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
                     />
                   )}
-                  <span className="relative z-20">{k === "HK1" ? "Học kỳ I" : k === "HK2" ? "Học kỳ II" : "Cả năm"}</span>
+                  <t.Icon className="relative z-10 w-3.5 h-3.5 shrink-0" />
+                  <span className="relative z-10 truncate hidden sm:inline">{t.label}</span>
+                  <span className="relative z-10 truncate sm:hidden">{t.mobileLabel}</span>
                 </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="px-0 sm:px-2 pb-6">
+      {/* Tab Panels */}
+      <div className="w-full min-w-0 pt-2">
         <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
+          <Motion.div
             key={tab}
             custom={direction}
             variants={SLIDE_VARIANTS}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.35, ease: APPLE_EASE }}
+            transition={{ duration: 0.25, ease: APPLE_EASE }}
           >
-            {tab === "profile"  && <ProfileTab  student={student} onSaved={onSaved} showToast={showToast} />}
-            {tab === "academic" && <AcademicTab student={student} namHoc={namHoc} lop={lop} showToast={showToast} hocKy={hocKy} hkDirection={hkDirection} />}
-          </motion.div>
+            {tab === "profile" && <ProfileTab student={student} onSaved={onSaved} showToast={showToast} />}
+            {tab === "academic" && <AcademicTab student={student} namHoc={namHoc} lop={lop} showToast={showToast} />}
+          </Motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Modal xác nhận Khóa / Mở khóa hồ sơ */}
+      <ConfirmDialog
+        open={showLockConfirm}
+        onCancel={() => setShowLockConfirm(false)}
+        onConfirm={handleToggleLock}
+        busy={locking}
+        title={student?.isProfileLocked ? "Mở khóa chỉnh sửa hồ sơ?" : "Khóa chỉnh sửa hồ sơ?"}
+        message={
+          student?.isProfileLocked
+            ? `Bạn có chắc chắn muốn mở khóa chỉnh sửa hồ sơ cho học sinh "${student.hoTen || student.username}"?`
+            : `Bạn có chắc chắn muốn khóa chỉnh sửa hồ sơ cho học sinh "${student.hoTen || student.username}"? Sau khi khóa, thông tin hộ tịch và bí tích sẽ được bảo vệ và không thể tự ý sửa đổi.`
+        }
+        confirmLabel={student?.isProfileLocked ? "Mở khóa" : "Khóa hồ sơ"}
+        icon={student?.isProfileLocked ? Unlock : Lock}
+        iconBg={student?.isProfileLocked ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" : "bg-amber-500/15 text-amber-800 dark:text-amber-300"}
+      />
     </div>
   );
 }

@@ -257,7 +257,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="flex justify-center gap-6 text-[12.5px] font-semibold text-[#575e55] select-none md:justify-end dark:text-[#b0b9ac]">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-[12.5px] font-semibold text-[#575e55] select-none md:justify-end dark:text-[#b0b9ac]">
             <Link to="/quy-định" className="transition-colors hover:text-[#293d32] dark:hover:text-[#ecece0]">
               Quy định sử dụng
             </Link>

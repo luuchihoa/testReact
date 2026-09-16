@@ -13,6 +13,7 @@ import {
   LayoutDashboard, Bell, Loader2, CheckCheck, Megaphone, BellOff,
   ArrowRight, Smartphone, Download,
 } from "lucide-react";
+import { normalizeNotificationLink } from "../../features/account/utils.js";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
@@ -102,17 +103,20 @@ function timeAgoVi(dateStr) {
 
 const MOBILE_TAB_ITEMS = [
   { path: "/",                label: "Trang chủ",    icon: Home },
-  { type: "dropdown_khoi",    label: "Khối học",     icon: GraduationCap },
   { path: "/lịch-học",        label: "Lịch học",     icon: CalendarDays },
+  { type: "dropdown_khoi",    label: "Khối học",     icon: GraduationCap },
   { path: "/tài-liệu",        label: "Tài liệu",     icon: FileText },
-  { type: "menu_more",        label: "Mở rộng",      icon: Menu } 
+  { type: "menu_more",        label: "Tiện ích",     icon: Menu } 
 ];
 
 function isItemActive(item, pathname) {
   if (item.type === "dropdown_khoi") return KHOI_ITEMS.some((s) => s.path === pathname);
   if (item.type === "menu_more") {
-    const morePaths = ["/giới-thiệu", "/liên-hệ", "/tuyển-sinh", "/cài-đặt", "/bảo-mật", "/quy-định"];
-    return morePaths.includes(pathname);
+    const morePaths = [
+      "/giới-thiệu", "/liên-hệ", "/tuyển-sinh", "/cài-đặt", "/bảo-mật", "/quy-định",
+      "/lịch-sinh-hoạt", "/bài-viết", "/tài-khoản", "/quản-trị", "/quản-lý-học-sinh",
+    ];
+    return morePaths.some((p) => pathname.startsWith(p));
   }
   return item.path === pathname;
 }
@@ -464,6 +468,12 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
 
 /* ═══ MOBILE: Khối học bottom sheet ══════════════════════════════ */
 function KhoiSheet({ open, onClose, navigate }) {
+  const handleDragEnd = (_, info) => {
+    if (info.offset.y > 70 || info.velocity.y > 350) {
+      onClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -472,25 +482,52 @@ function KhoiSheet({ open, onClose, navigate }) {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[60] bg-black/40 dark:bg-black/70 backdrop-blur-sm" 
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 backdrop-blur-[2px]" 
             onClick={onClose} 
           />
           
           <motion.div 
-            initial={{ y: "100%" }} 
-            animate={{ y: 0 }} 
-            exit={{ y: "100%" }} 
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-[#FDFBF7] dark:bg-[#161c18] rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col max-h-[85vh]"
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={handleDragEnd}
+            initial={{ y: "100%", opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            exit={{ y: "100%", opacity: 0 }} 
+            transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Danh sách Khối giáo lý"
+            className="
+              fixed z-[51] flex flex-col bg-[#faf8f3] dark:bg-[#151c18] shadow-2xl dark:shadow-black/50
+              inset-x-0 bottom-0 rounded-t-[2rem] max-h-[85vh]
+              sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2
+              sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md
+              sm:rounded-3xl sm:max-h-[80vh]
+            "
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
-            <div className="flex justify-center pt-3.5 pb-5 touch-none flex-shrink-0">
-              <div className="w-10 h-1.5 rounded-full bg-amber-900/20 dark:bg-amber-100/20" />
+            <div className="relative flex justify-center pt-3 pb-1 flex-shrink-0 touch-none cursor-grab active:cursor-grabbing sm:hidden">
+              <div className="w-10 h-1.5 rounded-full bg-[#dedfd4] dark:bg-[#354237]" />
             </div>
 
-            <div className="overflow-y-auto overscroll-contain flex-1 px-3 pb-8">
-              <div className="grid grid-cols-2 gap-3.5">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng bảng khối học"
+              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
+            >
+              <X className="w-4 h-4" strokeWidth={2.5} />
+            </button>
+
+            <div className="px-5 pt-2 pb-2 border-b border-[#dedfd4] dark:border-[#354237]">
+              <h2 className="text-[16px] font-bold text-[#293d32] dark:text-[#ecece0]">Khối giáo lý</h2>
+              <p className="text-[12px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5">Chọn khối để xem chương trình và lịch học</p>
+            </div>
+
+            <div className="overflow-y-auto overscroll-contain flex-1 p-3.5 pb-6">
+              <div className="grid grid-cols-2 gap-2.5">
                 {KHOI_ITEMS.map((k) => {
                   const Icon = k.icon;
                   return (
@@ -498,17 +535,17 @@ function KhoiSheet({ open, onClose, navigate }) {
                       key={k.path} 
                       type="button" 
                       onClick={() => { navigate(k.path); onClose(); }} 
-                      className="flex items-center gap-3 p-3.5 rounded-[22px] bg-white dark:bg-stone-800/40 border border-amber-900/5 dark:border-amber-100/5 shadow-sm active:bg-amber-50 dark:active:bg-stone-800 active:scale-[0.98] transition-all text-left group"
+                      className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-xs active:bg-[#faf8f3] dark:active:bg-[#253229] active:scale-[0.98] transition-all text-left group"
                     >
-                      <div className={`w-11 h-11 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                        <Icon className="w-[22px] h-[22px]" style={{ color: k.accent }} />
+                      <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 shadow-xs`}>
+                        <Icon className="w-5 h-5" style={{ color: k.accent }} />
                       </div>
                       
                       <div className="flex-1 min-w-0"> 
-                        <p className="text-[15px] font-bold text-stone-900 dark:text-stone-100 leading-tight truncate">
+                        <p className="text-[14px] font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
                           {k.label}
                         </p>
-                        <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-snug line-clamp-1">
+                        <p className="text-[11px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-snug line-clamp-1">
                           {k.sub}
                         </p>
                       </div>
@@ -549,7 +586,7 @@ function MoreMenuSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25 }}
             className="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 backdrop-blur-[2px]"
             onClick={onClose}
           />
@@ -563,8 +600,11 @@ function MoreMenuSheet({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tiện ích và tài khoản"
             className="
-              fixed z-[51] flex flex-col bg-[#FDFBF7] dark:bg-[#161c18] shadow-2xl dark:shadow-black/50
+              fixed z-[51] flex flex-col bg-[#faf8f3] dark:bg-[#151c18] shadow-2xl dark:shadow-black/50
               inset-x-0 bottom-0 rounded-t-[2rem] max-h-[85vh]
               sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2
               sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md
@@ -573,16 +613,16 @@ function MoreMenuSheet({
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
             <div className="relative flex justify-center pt-3 pb-1 flex-shrink-0 touch-none cursor-grab active:cursor-grabbing sm:hidden">
-              <div className="w-10 h-1.5 rounded-full bg-amber-900/20 dark:bg-amber-100/20" />
+              <div className="w-10 h-1.5 rounded-full bg-[#dedfd4] dark:bg-[#354237]" />
             </div>
  
             <button
               type="button"
               onClick={onClose}
-              aria-label="Đóng"
-              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-amber-900/5 dark:bg-amber-100/10 flex items-center justify-center active:bg-amber-900/10 dark:active:bg-amber-100/20 transition-colors"
+              aria-label="Đóng bảng tiện ích"
+              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
             >
-              <X className="w-4 h-4 text-amber-900/60 dark:text-amber-100/60" strokeWidth={2.5} />
+              <X className="w-4 h-4" strokeWidth={2.5} />
             </button>
  
             <div className="overflow-y-auto overscroll-contain flex-1">
@@ -590,7 +630,7 @@ function MoreMenuSheet({
               <button
                 type="button"
                 onClick={() => { onProfilePress(); onClose(); }}
-                className="flex w-full items-center gap-3 px-5 py-4 border-b border-amber-900/10 dark:border-amber-100/10 text-left active:bg-amber-50 dark:active:bg-stone-800/70 transition-colors"
+                className="flex w-full items-center gap-3 px-5 py-4 border-b border-[#dedfd4] dark:border-[#354237] text-left active:bg-white dark:active:bg-[#1e2821] transition-colors"
               >
                 {isLogin ? (
                   <>
@@ -603,7 +643,7 @@ function MoreMenuSheet({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-bold text-stone-900 dark:text-stone-100 truncate">
+                        <p className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0] truncate">
                           {username || "Thành viên"}
                         </p>
                         <span
@@ -613,19 +653,21 @@ function MoreMenuSheet({
                           {roleLabel}
                         </span>
                       </div>
-                      <p className="text-[13px] text-stone-500 dark:text-stone-400">Xem hồ sơ & thành tích →</p>
+                      <p className="text-[13px] text-[#575e55] dark:text-[#b0b9ac]">
+                        {role === "student" ? "Xem hồ sơ & thành tích →" : "Xem thông tin hồ sơ →"}
+                      </p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-amber-900/5 dark:bg-stone-800 flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-amber-900/40 dark:text-stone-500" />
+                    <div className="w-12 h-12 rounded-full bg-[#dedfd4]/40 dark:bg-[#354237]/50 flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-[#575e55] dark:text-[#b0b9ac]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-bold text-amber-950 dark:text-stone-100">Bạn chưa đăng nhập</p>
-                      <p className="text-[13px] text-stone-500 dark:text-stone-400">Đăng nhập để xem thông tin học tập</p>
+                      <p className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0]">Bạn chưa đăng nhập</p>
+                      <p className="text-[13px] text-[#575e55] dark:text-[#b0b9ac]">Đăng nhập để truy cập tài khoản</p>
                     </div>
-                    <span className="flex-shrink-0 flex h-9 items-center gap-1.5 rounded-xl bg-amber-900 px-4 text-[13px] font-bold text-amber-50 shadow-sm">
+                    <span className="flex-shrink-0 flex h-9 items-center gap-1.5 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] px-4 text-[13px] font-bold text-[#ffffff] dark:text-[#19251d] shadow-xs active:scale-95 transition-transform">
                       <LogIn className="w-3.5 h-3.5" strokeWidth={2.5} />
                       Đăng nhập
                     </span>
@@ -634,15 +676,15 @@ function MoreMenuSheet({
               </button>
  
               {/* Quick links */}
-              <div className="grid grid-cols-3 gap-2 p-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
+              <div className="grid grid-cols-3 gap-2 p-3 border-b border-[#dedfd4] dark:border-[#354237] bg-stone-500/5 dark:bg-stone-400/5">
                 <QuickLink icon={Info} label="Giới thiệu" onClick={() => goTo("/giới-thiệu")} />
                 <QuickLink icon={Phone} label="Liên hệ" onClick={() => goTo("/liên-hệ")} />
                 <QuickLink icon={Users} label="Tuyển sinh" onClick={() => goTo("/tuyển-sinh")} accent />
               </div>
  
-              {extraItems.length > 0 && (
-                <div className="py-1 border-b border-amber-900/10 dark:border-amber-100/10">
-                  <p className="px-5 pt-2 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+              {isLogin && extraItems.length > 0 && (
+                <div className="py-1 border-b border-[#dedfd4] dark:border-[#354237]">
+                  <p className="px-5 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
                     Công cụ {roleLabel.toLowerCase()}
                   </p>
                   {extraItems.map((item) => {
@@ -653,15 +695,15 @@ function MoreMenuSheet({
                         key={item.path}
                         type="button"
                         onClick={() => goTo(item.path)}
-                        className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-amber-50 dark:active:bg-stone-800/70 transition-colors"
+                        className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-white dark:active:bg-[#1e2821] transition-colors"
                         style={isActive ? { color: roleAccent, background: `${roleAccent}0f` } : undefined}
                       >
                         <Icon
                           className="w-[18px] h-[18px] flex-shrink-0"
-                          style={{ color: isActive ? roleAccent : "#a8a29e" }}
+                          style={{ color: isActive ? roleAccent : "#8c9489" }}
                           strokeWidth={1.75}
                         />
-                        <span className="text-[14px] font-medium text-stone-700 dark:text-stone-300" style={isActive ? { color: roleAccent } : undefined}>{item.label}</span>
+                        <span className="text-[14px] font-medium text-[#293d32] dark:text-[#ecece0]" style={isActive ? { color: roleAccent } : undefined}>{item.label}</span>
                       </button>
                     );
                   })}
@@ -670,23 +712,23 @@ function MoreMenuSheet({
 
               {/* PWA Install Action Row (Chỉ hiển thị khi chưa cài đặt) */}
               {!isInstalled && (
-                <div className="py-1 border-b border-amber-900/10 dark:border-amber-100/10">
+                <div className="py-1 border-b border-[#dedfd4] dark:border-[#354237]">
                   <button
                     type="button"
                     onClick={() => {
                       onClose();
                       install();
                     }}
-                    className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-amber-50 dark:active:bg-stone-800/70 transition-colors"
+                    className="flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-white dark:active:bg-[#1e2821] transition-colors"
                   >
-                    <div className="w-[30px] h-[30px] rounded-[7px] bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div className="w-[30px] h-[30px] rounded-[7px] bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 shadow-xs">
                       <Smartphone className="w-[17px] h-[17px]" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0 pr-1">
-                      <p className="text-[14px] text-amber-950 dark:text-amber-50 font-semibold tracking-tight leading-tight">
+                      <p className="text-[14px] text-[#293d32] dark:text-[#ecece0] font-semibold tracking-tight leading-tight">
                         Cài đặt ứng dụng
                       </p>
-                      <p className="text-[12px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight truncate font-medium">
+                      <p className="text-[12px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-tight truncate font-medium">
                         Thêm vào màn hình chính để mở nhanh
                       </p>
                     </div>
@@ -708,13 +750,13 @@ function MoreMenuSheet({
                       key={item.path}
                       type="button"
                       onClick={() => goTo(item.path)}
-                      className={`flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-amber-50 dark:active:bg-stone-800/70 transition-colors ${
-                        isActive ? "text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30" : "text-stone-700 dark:text-stone-300"
+                      className={`flex w-full items-center gap-3.5 px-5 py-3.5 text-left active:bg-white dark:active:bg-[#1e2821] transition-colors ${
+                        isActive ? "text-[#314e3e] dark:text-[#d4b47d] bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 font-semibold" : "text-[#293d32] dark:text-[#ecece0]"
                       }`}
                     >
                       <Icon
                         className={`w-[18px] h-[18px] flex-shrink-0 ${
-                          isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"
+                          isActive ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
                         }`}
                         strokeWidth={1.75}
                       />
@@ -725,7 +767,7 @@ function MoreMenuSheet({
               </div>
  
               {isLogin && (
-                <div className="px-5 pb-4 pt-2 border-t border-amber-900/10 dark:border-amber-100/10">
+                <div className="px-5 pb-4 pt-2 border-t border-[#dedfd4] dark:border-[#354237]">
                   <button
                     type="button"
                     onClick={() => { onLogout(); onClose(); }}
@@ -750,10 +792,10 @@ function QuickLink({ icon: Icon, label, onClick, accent = false }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 py-3.5 rounded-[1rem] bg-white dark:bg-stone-900 border border-amber-900/5 dark:border-stone-700/50 shadow-sm dark:shadow-black/20 active:bg-amber-50 dark:active:bg-stone-800 transition-colors"
+      className="flex flex-col items-center gap-1.5 py-3.5 rounded-[1rem] bg-white dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-xs active:bg-[#faf8f3] dark:active:bg-[#253229] transition-colors"
     >
-      <Icon className={`w-[18px] h-[18px] ${accent ? "text-amber-600 dark:text-amber-400" : "text-stone-500 dark:text-stone-400"}`} strokeWidth={1.75} />
-      <span className="text-[12px] font-semibold text-stone-700 dark:text-stone-300 leading-none">{label}</span>
+      <Icon className={`w-[18px] h-[18px] ${accent ? "text-[#927140] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"}`} strokeWidth={1.75} />
+      <span className="text-[12px] font-semibold text-[#293d32] dark:text-[#ecece0] leading-none">{label}</span>
     </button>
   );
 }
@@ -780,58 +822,111 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
         ACCOUNT_ITEMS={ACCOUNT_ITEMS}
       />
       
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 dark:bg-[#161c18]/95 backdrop-blur-xl border-t border-amber-900/10 dark:border-stone-800/80 shadow-[0_-4px_20px_rgba(146,64,14,0.05)] dark:shadow-black/30"
+      <nav 
+        role="navigation"
+        aria-label="Điều hướng di động"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#faf8f3]/95 dark:bg-[#151c18]/95 backdrop-blur-xl border-t border-[#dedfd4] dark:border-[#354237] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-black/30"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="flex h-18 items-stretch justify-around px-2">
+        <div className="flex h-16 items-stretch justify-around px-1.5">
           {MOBILE_TAB_ITEMS.map((item) => {
             const active = isItemActive(item, location.pathname);
             
-            // Xử lý nút Khối Học
+            // Xử lý nút Khối Học (Mở KhoiSheet)
             if (item.type === "dropdown_khoi") {
               const Icon = item.icon;
               return (
-                <motion.button whileTap={{ scale: 0.85, y: 2 }} key="khoi-tab" type="button" onClick={() => setKhoiSheetOpen(true)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+                <motion.button 
+                  whileTap={{ scale: 0.92 }} 
+                  key="khoi-tab" 
+                  type="button" 
+                  onClick={() => setKhoiSheetOpen(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={khoiSheetOpen}
+                  aria-label="Mở danh sách Khối học"
+                  className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
+                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                  }`}
                 >
-                  <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
-                    <Icon className="w-5 h-5" />
+                  <div className="relative w-12 h-7 flex items-center justify-center">
+                    {active && (
+                      <motion.div
+                        layoutId="mobileActiveTabIndicator"
+                        transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        className="absolute inset-0 rounded-full bg-[#314e3e]/10 dark:bg-[#d4b47d]/20"
+                      />
+                    )}
+                    <Icon className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                   </div>
-                  <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+                  <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{item.label}</span>
                 </motion.button>
               );
             }
 
-            // Xử lý nút Mở Rộng (More)
+            // Xử lý nút Tiện ích / Cá nhân (Mở MoreMenuSheet)
             if (item.type === "menu_more") {
               return (
-                <motion.button whileTap={{ scale: 0.85, y: 2 }} key="more-tab" type="button" onClick={() => setMoreSheetOpen(true)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+                <motion.button 
+                  whileTap={{ scale: 0.92 }} 
+                  key="more-tab" 
+                  type="button" 
+                  onClick={() => setMoreSheetOpen(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={moreSheetOpen}
+                  aria-label={isLogin ? `Tài khoản cá nhân, ${username || "Thành viên"}` : "Mở bảng Tiện ích"}
+                  className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
+                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                  }`}
                 >
-                  <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 w-12" : ""}`}>
+                  <div className="relative w-12 h-7 flex items-center justify-center">
+                    {active && (
+                      <motion.div
+                        layoutId="mobileActiveTabIndicator"
+                        transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        className="absolute inset-0 rounded-full bg-[#314e3e]/10 dark:bg-[#d4b47d]/20"
+                      />
+                    )}
                     {isLogin ? (
-                      <div className="w-6 h-6 rounded-full overflow-hidden border-2" style={{ borderColor: active ? (ROLE_ACCENTS[role] || ROLE_ACCENTS.user) : "#d6d3d1" }}>
+                      <div 
+                        className="relative z-10 w-5.5 h-5.5 rounded-full overflow-hidden border-2" 
+                        style={{ borderColor: active ? (ROLE_ACCENTS[role] || ROLE_ACCENTS.user) : "#dedfd4" }}
+                      >
                         <img src={avatar || "/images/avatarDefault.avif"} className="w-full h-full object-cover" alt="" />
                       </div>
                     ) : (
-                      <Menu className="w-5 h-5" />
+                      <Menu className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                     )}
                   </div>
-                  <span className="text-[10px] font-bold tracking-tight">{isLogin ? (username || "Tôi").split(" ").pop() : "Mở rộng"}</span>
+                  <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{isLogin ? "Cá nhân" : "Tiện ích"}</span>
                 </motion.button>
               );
             }
 
-            // Xử lý các tab đường dẫn trực tiếp (Home, Lịch học, Tài liệu)
+            // Xử lý các tab đường dẫn trực tiếp (Trang chủ, Lịch học, Tài liệu)
             const Icon = item.icon;
             return (
-              <motion.button whileTap={{ scale: 0.85, y: 2 }} key={item.path} type="button" onClick={() => navigate(item.path)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 pt-1.5 pb-1 transition-colors ${active ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`}
+              <motion.button 
+                whileTap={{ scale: 0.92 }} 
+                key={item.path} 
+                type="button" 
+                onClick={() => navigate(item.path)}
+                aria-current={active ? "page" : undefined}
+                aria-label={item.label}
+                className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
+                  active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                }`}
               >
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${active ? "bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 w-12" : ""}`}>
-                  <Icon className="w-5 h-5" />
+                <div className="relative w-12 h-7 flex items-center justify-center">
+                  {active && (
+                    <motion.div
+                      layoutId="mobileActiveTabIndicator"
+                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                      className="absolute inset-0 rounded-full bg-[#314e3e]/10 dark:bg-[#d4b47d]/20"
+                    />
+                  )}
+                  <Icon className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                 </div>
-                <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+                <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{item.label}</span>
               </motion.button>
             );
           })}
@@ -852,7 +947,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const [openMenu, setOpenMenu] = useState(null);
   const [avatar,   setAvatar]   = useState(() => localStorage.getItem("avatar")   || "");
   const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
-  const [role,     setRole]     = useState(() => localStorage.getItem("role")     || "student");
+  const [role,     setRole]     = useState(() => localStorage.getItem("role")     || "user");
 
   const khoiRef      = useRef(null);
   const communityRef = useRef(null);
@@ -885,7 +980,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     const sync = () => {
       setAvatar(localStorage.getItem("avatar")   || "");
       setUsername(localStorage.getItem("username") || "");
-      setRole(localStorage.getItem("role")     || "student");
+      setRole(localStorage.getItem("role")     || "user");
     };
     window.addEventListener("avatar-updated", sync);
     window.addEventListener("storage",        sync);
@@ -1011,7 +1106,8 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   const handleNotifItemClick = (n) => {
     setOpenMenu(null);
     if (!n.read) handleMarkOneRead(n.id);
-    if (n.link) navigate(n.link);
+    const targetLink = normalizeNotificationLink(n.link, n);
+    if (targetLink) navigate(targetLink);
   };
 
   useEffect(() => {
@@ -1058,7 +1154,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
     }
     ["sessionKey", "role", "username", "user", "avatar", "studentData"].forEach((k) => localStorage.removeItem(k));
     setIsLogin(false);
-    setRole("student");
+    setRole("user");
     handleClose?.();
     showToast("Đã đăng xuất", "success");
   };
@@ -1069,6 +1165,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
   };
 
   const isKhoiActive = KHOI_ITEMS.some((k) => k.path === location.pathname);
+  const isCommunityActive = COMMUNITY_ITEMS.some((c) => c.path === location.pathname);
 
   return (
     <>
@@ -1082,13 +1179,17 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           
-          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 select-none rounded-xl p-1.5 -ml-1.5 group transition-colors hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+          <button 
+            type="button" 
+            onClick={() => navigate("/")} 
+            className="flex items-center gap-2.5 sm:gap-3 select-none rounded-xl p-1 -ml-1 sm:p-1.5 sm:-ml-1.5 group transition-colors hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] min-w-0 max-w-[calc(100%-48px)] sm:max-w-none"
+          >
+            <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
               <img src="/images/logo_htdc.png" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:rotate-6" />
             </div>
-            <div className="flex flex-col items-start text-left">
-              <span className="text-sm font-extrabold tracking-tight text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] md:text-base font-serif transition-colors">BAN GIÁO LÝ</span>
-              <span className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d] whitespace-nowrap font-mono">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
+            <div className="flex flex-col items-start text-left min-w-0">
+              <span className="text-sm font-extrabold tracking-tight text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] md:text-base font-serif transition-colors truncate w-full">BAN GIÁO LÝ</span>
+              <span className="mt-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-[#7c5c2d] dark:text-[#d4b47d] font-mono truncate max-w-[175px] xs:max-w-none">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
             </div>
           </button>
 
@@ -1125,16 +1226,16 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 aria-expanded={openMenu === "community"}
                 aria-controls="community-dropdown-panel"
                 onClick={(e) => toggle("community", e)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${openMenu === "community" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isCommunityActive || openMenu === "community" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
               >
-                <span>Cộng đoàn</span>
+                <span>Sinh hoạt</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
               </button>
               <CommunityDropdown isOpen={openMenu === "community"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} />
             </div>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {!isInstalled && hasNativePrompt && (
               <button
                 type="button"

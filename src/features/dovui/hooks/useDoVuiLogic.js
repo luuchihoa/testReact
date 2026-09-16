@@ -76,6 +76,11 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
   const scoreSavedRef = useRef(false);
   const questionStartTimeRef = useRef(0);
   const allRawScoresRef = useRef([]);
+  const latestResultRef = useRef({ score: 0, totalPoints: 0, maxStreak: 0 });
+
+  useEffect(() => {
+    latestResultRef.current = { score, totalPoints, maxStreak };
+  }, [score, totalPoints, maxStreak]);
 
   /* ── Mô Hình 2 Tầng: Save Score (Upsert Tổng Trọn Đời + Insert Lịch Sử) ── */
   const saveQuizScore = useCallback(async ({ title, scoreVal, totalVal, pointsVal, maxStreakVal }) => {
@@ -431,12 +436,12 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
 
     saveQuizScore({
       title: config.title,
-      scoreVal: score,
+      scoreVal: latestResultRef.current.score,
       totalVal: quizQRef.current.length,
-      pointsVal: totalPoints,
-      maxStreakVal: maxStreak,
+      pointsVal: latestResultRef.current.totalPoints,
+      maxStreakVal: latestResultRef.current.maxStreak,
     });
-  }, [play, saveQuizScore, config.title, score, totalPoints, maxStreak]);
+  }, [play, saveQuizScore, config.title]);
 
   const nextQuestion = useCallback(() => {
     const next = currentRef.current + 1;
@@ -483,12 +488,9 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
         play("correct");
         setScore((s) => s + 1);
 
-        let currentStreakVal = 0;
-        setStreak((prevStreak) => {
-          currentStreakVal = prevStreak + 1;
-          setMaxStreak((m) => Math.max(m, currentStreakVal));
-          return currentStreakVal;
-        });
+        const currentStreakVal = streak + 1;
+        setStreak(currentStreakVal);
+        setMaxStreak((previous) => Math.max(previous, currentStreakVal));
 
         let earnedPoints = 100;
         if (currentStreakVal >= 2) earnedPoints += (currentStreakVal - 1) * 20;
@@ -509,7 +511,7 @@ export default function useDoVuiLogic({ config = {}, quizData = [], onExitToRout
         nextQuestion();
       }, 1300);
     },
-    [play, nextQuestion]
+    [play, nextQuestion, streak]
   );
 
   const handleTimeUp = useCallback(() => {
