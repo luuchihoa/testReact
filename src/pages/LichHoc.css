@@ -2,37 +2,42 @@
   --sched-bg: #faf8f3;
   --sched-paper: #fffefa;
   --sched-ink: #293d32;
-  --sched-muted: #575e55; /* WCAG AA: 5.9:1 contrast trên nền giấy */
+  --sched-muted: #4a5148; /* WCAG AAA: 7.3:1 contrast trên nền giấy */
   --sched-line: #dedfd4;
   --sched-accent: #927140;
-  --sched-accent-text: #7c5c2d; /* WCAG AA: 5.5:1 contrast cho chữ nhỏ */
+  --sched-accent-text: #5e4420; /* WCAG AAA: 7.2:1 contrast cho chữ nhỏ */
   --sched-gold-bg: rgba(146, 113, 64, 0.08);
   --sched-surface: #f4f0e6;
   --sched-primary: #314e3e;     /* AGENTS.md ui-primary — nút chính */
-  --sched-on-primary: #ffffff;
+  --sched-on-primary: #ffffff;  /* Chữ nút chính trên nền sáng */
   --sched-card-shadow: 0 4px 20px -2px rgba(41, 61, 50, 0.05), 0 2px 6px -1px rgba(41, 61, 50, 0.03);
   --sched-card-hover: 0 12px 30px -4px rgba(41, 61, 50, 0.10), 0 4px 10px -2px rgba(41, 61, 50, 0.05);
-
 
   background: var(--sched-bg);
   color: var(--sched-ink);
   font-family: inherit;
-  padding-bottom: 60px;
+  padding-bottom: 5rem;
   min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .sched-page {
+    padding-bottom: calc(10rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .dark .sched-page {
   --sched-bg: #151c18;
   --sched-paper: #1e2821;
   --sched-ink: #ecece0;
-  --sched-muted: #b0b9ac;
+  --sched-muted: #b0b9ac;       /* WCAG AAA: 8.1:1 contrast */
   --sched-line: #354237;
   --sched-accent: #d4b47d;
   --sched-accent-text: #d4b47d; /* WCAG AAA: >8:1 contrast */
   --sched-gold-bg: rgba(212, 180, 125, 0.12);
   --sched-surface: #222e26;
   --sched-primary: #d6b883;     /* AGENTS.md ui-primary dark */
-  --sched-on-primary: #19251d;
+  --sched-on-primary: #19251d;  /* Chữ nút chính trên nền vàng kim tối: WCAG AAA 8.5:1 */
   --sched-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
   --sched-card-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.55);
 }
@@ -41,20 +46,32 @@
   box-sizing: border-box;
 }
 
-/* WCAG AA: Hỗ trợ điều hướng bàn phím rõ nét */
+/* WCAG AAA: Hỗ trợ điều hướng bàn phím rõ nét */
 .sched-page :is(a, button, input):focus-visible {
   outline: 3px solid var(--sched-accent);
   outline-offset: 3px;
 }
 
 .sched-shell {
-  width: min(1180px, calc(100% - 64px));
+  width: min(1180px, calc(100% - 4rem));
   margin-inline: auto;
+  scroll-margin-top: 9.5rem;
+}
+
+#danh-sach-lop {
+  scroll-margin-top: 9.5rem;
 }
 
 @media (max-width: 640px) {
   .sched-shell {
-    width: calc(100% - 32px);
+    width: calc(100% - 2rem);
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .sched-shell {
+    width: calc(100% - 1.25rem);
   }
 }
 
@@ -70,7 +87,7 @@
 .sched-page h2 {
   font-family: Georgia, 'Times New Roman', serif;
   font-weight: 400;
-  letter-spacing: -1.4px;
+  letter-spacing: -0.05em;
   line-height: 1.18;
 }
 
@@ -82,25 +99,25 @@
 }
 
 .sched-eyebrow {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 2px;
-  line-height: 1.6;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
   color: var(--sched-accent-text);
   text-transform: uppercase;
 }
 
 /* ════ HERO SECTION ════ */
 .sched-hero {
-  padding-top: 36px;
-  padding-bottom: 36px;
+  padding-top: 2.25rem;
+  padding-bottom: 2.25rem;
   border-bottom: 1px solid var(--sched-line);
 }
 
 @media (min-width: 768px) {
   .sched-hero {
-    padding-top: 56px;
-    padding-bottom: 48px;
+    padding-top: 3.5rem;
+    padding-bottom: 3rem;
   }
 }
 
@@ -108,14 +125,14 @@
 .sched-hero-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 32px;
+  gap: 2rem;
   align-items: start;
 }
 
 @media (min-width: 960px) {
   .sched-hero-grid {
-    grid-template-columns: 1.3fr 0.7fr;
-    gap: 48px;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 3rem;
     align-items: center;
   }
 }
@@ -123,50 +140,39 @@
 .sched-hero-left {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .sched-hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
 }
 
 /* Dot chuẩn dùng class, không dùng span.dot */
 .sched-dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;
+  height: 0.375rem;
   border-radius: 9999px;
   background: var(--sched-accent);
   flex-shrink: 0;
-}
-
-/* Legacy dot (sched-hero-eyebrow span.dot) */
-.sched-hero-eyebrow span.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background-color: var(--sched-accent);
-  display: inline-block;
+  margin-top: 0.35rem;
 }
 
 .sched-hero-title {
-  font-size: clamp(32px, 4.2vw, 52px);
+  font-size: clamp(2rem, 4.2vw, 3.25rem);
   color: var(--sched-ink);
   margin-block: 0;
   line-height: 1.15;
 }
 
 .sched-hero-desc {
-  font-size: 15px;
+  font-size: 1rem;
   line-height: 1.75;
   color: var(--sched-muted);
-  max-width: 580px;
-}
-
-@media (min-width: 768px) {
-  .sched-hero-desc { font-size: 16px; }
+  max-width: 36.25rem;
 }
 
 /* Hero CTA buttons */
@@ -174,14 +180,15 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 640px) {
   .sched-hero-actions {
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
+    gap: 0.625rem;
   }
 }
 
@@ -189,33 +196,53 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--sched-primary);
-  color: #ffffff;
-  padding: 0 26px;
-  min-height: 50px;
-  border-radius: 12px;
+  color: var(--sched-on-primary);
+  padding: 0 1.625rem;
+  min-height: 3.125rem;
+  border-radius: 0.75rem;
   border: none;
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   box-shadow: 0 4px 14px -2px rgba(49, 78, 62, 0.32);
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.sched-btn-primary:active { transform: scale(0.98); }
+.sched-btn-primary:active {
+  transform: scale(0.98);
+}
 
 @media (hover: hover) and (pointer: fine) {
   .sched-btn-primary:hover {
     background: #243c2d;
+    color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px -2px rgba(49, 78, 62, 0.42);
   }
 }
 
+.dark .sched-btn-primary {
+  background: var(--sched-primary);
+  color: var(--sched-on-primary);
+  box-shadow: 0 4px 14px -2px rgba(214, 184, 131, 0.25);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dark .sched-btn-primary:hover {
+    background: #e2c99b;
+    color: var(--sched-on-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px -2px rgba(214, 184, 131, 0.35);
+  }
+}
+
 @media (max-width: 640px) {
-  .sched-btn-primary { width: 100%; }
+  .sched-btn-primary {
+    width: 100%;
+  }
 }
 
 .sched-btn-icon {
@@ -224,38 +251,45 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .sched-btn-primary:hover .sched-btn-icon { transform: translateX(3px); }
+  .sched-btn-primary:hover .sched-btn-icon {
+    transform: translateX(3px);
+  }
 }
 
 .sched-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--sched-paper);
   color: var(--sched-ink);
   border: 1.5px solid var(--sched-line);
-  padding: 0 22px;
-  min-height: 50px;
-  border-radius: 12px;
-  font-size: 15px;
+  padding: 0 1.375rem;
+  min-height: 3.125rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.sched-btn-secondary:active { transform: scale(0.98); }
+.sched-btn-secondary:active {
+  transform: scale(0.98);
+}
 
 @media (hover: hover) and (pointer: fine) {
   .sched-btn-secondary:hover {
     border-color: var(--sched-accent);
+    color: var(--sched-ink);
     background: var(--sched-surface);
-    transform: translateY(-2px);
   }
 }
 
 @media (max-width: 640px) {
-  .sched-btn-secondary { width: 100%; }
+  .sched-btn-secondary {
+    width: 100%;
+  }
 }
 
 /* Cột phải hero: chips 2×2 */
@@ -265,62 +299,89 @@
 }
 
 @media (max-width: 960px) {
-  .sched-hero-right { justify-content: flex-start; }
+  .sched-hero-right {
+    justify-content: flex-start;
+  }
 }
 
 .sched-overview-chips {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-auto-rows: 1fr;
+  gap: 0.75rem;
   width: 100%;
+}
+
+@media (min-width: 640px) {
+  .sched-overview-chips {
+    gap: 1rem;
+  }
 }
 
 @media (min-width: 960px) {
   .sched-overview-chips {
-    max-width: 340px;
+    max-width: 21.25rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .sched-overview-chips {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 
 .sched-overview-chip {
-  background: var(--sched-paper);
+  background: var(--sched-surface);
   border: 1px solid var(--sched-line);
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 1.125rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 0.375rem;
+  position: relative;
   box-shadow: var(--sched-card-shadow);
 }
 
+@media (max-width: 360px) {
+  .sched-overview-chip {
+    padding: 0.625rem 0.75rem;
+  }
+}
+
 .sched-chip-cat {
-  font-size: 10.5px;
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.02rem;
   text-transform: uppercase;
   color: var(--sched-accent-text);
+  line-height: 1.3;
+  display: block;
 }
 
 .sched-chip-value {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   color: var(--sched-ink);
   line-height: 1.2;
 }
 
 @media (min-width: 768px) {
-  .sched-chip-value { font-size: 20px; }
+  .sched-chip-value {
+    font-size: 1.25rem;
+  }
 }
 
 .sched-chip-label {
-  font-size: 11.5px;
+  font-size: 0.75rem;
   color: var(--sched-muted);
   line-height: 1.4;
 }
 
 /* ════ LITURGICAL TIMELINE STRIP — Collapsible ════ */
 .sched-timeline-section {
-  padding: 20px 0;
+  padding: 1.25rem 0;
   border-bottom: 1px solid var(--sched-line);
 }
 
@@ -330,11 +391,12 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  min-height: 2.75rem;
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
-  border-radius: 14px;
+  border-radius: 0.875rem;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -351,12 +413,12 @@
 .sched-timeline-toggle-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   flex-wrap: wrap;
 }
 
 .sched-timeline-toggle-sub {
-  font-size: 13px;
+  font-size: 0.875rem;
   color: var(--sched-muted);
   font-weight: 500;
 }
@@ -373,53 +435,43 @@
 }
 
 .sched-timeline-body {
-  margin-top: 12px;
+  margin-top: 0.75rem;
+  overflow: hidden;
 }
 
 .sched-timeline-container {
   background: var(--sched-paper);
   border: 1px solid var(--sched-line);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
   box-shadow: var(--sched-card-shadow);
-}
-
-.sched-timeline-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px dashed var(--sched-line);
 }
 
 .sched-timeline-grid {
   display: grid;
   grid-template-columns: 1fr 1.15fr 1fr;
-  gap: 16px;
+  gap: 1rem;
   position: relative;
 }
 
 @media (max-width: 900px) {
   .sched-timeline-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 0.75rem;
   }
 }
 
 .sched-timeline-card {
-  padding: 20px;
-  border-radius: 18px;
+  padding: 1.25rem;
+  border-radius: 1.125rem;
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  transition: all 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  min-height: 0;
 }
 
 .sched-timeline-card.central-mass {
@@ -430,25 +482,25 @@
 
 .sched-timeline-card .time-tag {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--sched-accent-text);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
 }
 
 .sched-timeline-card .card-title {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--sched-ink);
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 }
 
 .sched-timeline-card .card-desc {
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: var(--sched-muted);
 }
@@ -456,40 +508,40 @@
 .sched-timeline-card .card-badge {
   display: inline-block;
   align-self: flex-start;
-  margin-top: 14px;
-  font-size: 11px;
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 0.25rem 0.625rem;
   border-radius: 9999px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.05em;
 }
 
 /* ════ TOOLBAR & CONTROLS SECTION ════ */
 .sched-toolbar-section {
-  padding: 16px 0 12px 0;
+  padding: 1rem 0 0.75rem 0;
   border-bottom: 1px solid var(--sched-line);
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
 @media (max-width: 640px) {
   .sched-toolbar-section {
-    padding: 12px 0 10px 0;
-    margin-bottom: 18px;
+    padding: 0.75rem 0 0.625rem 0;
+    margin-bottom: 1.125rem;
   }
 }
 
-/* Shift tabs - Segmented Control & Touch Target */
+/* Shift tabs - Segmented Control & Touch Target >= 44px */
 .sched-shift-tabs {
   display: flex;
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
   border-radius: 9999px;
-  padding: 4px;
-  gap: 4px;
+  padding: 0.25rem;
+  gap: 0.25rem;
   width: 100%;
-  max-width: 480px;
-  margin-bottom: 10px;
+  max-width: 30rem;
+  margin-bottom: 0.625rem;
 }
 
 @media (max-width: 768px) {
@@ -500,30 +552,37 @@
   }
 }
 
+@media (max-width: 360px) {
+  .sched-shift-tabs {
+    gap: 0.125rem;
+    padding: 0.125rem;
+  }
+}
+
 .sched-shift-btn {
   border: none;
   background: transparent;
   color: var(--sched-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
-  min-height: 40px;
-  padding: 6px 14px;
+  min-height: 2.75rem; /* 44px standard touch zone */
+  padding: 0.5rem 0.875rem;
   border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 0.3125rem;
   white-space: nowrap;
   user-select: none;
 }
 
 @media (max-width: 540px) {
   .sched-shift-btn {
-    font-size: 12px;
-    padding: 6px 4px;
-    gap: 3px;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+    gap: 0.1875rem;
   }
 }
 
@@ -543,7 +602,7 @@
 }
 
 .sched-shift-time {
-  font-size: 11.5px;
+  font-size: 0.75rem;
   color: var(--sched-muted);
   font-weight: 500;
 }
@@ -559,7 +618,7 @@
 }
 
 .sched-shift-count {
-  font-size: 11.5px;
+  font-size: 0.75rem;
   color: var(--sched-muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -580,8 +639,8 @@
   background: rgba(250, 248, 243, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 8px 0;
-  margin: 6px 0;
+  padding: 0.5rem 0;
+  margin: 0.375rem 0;
   transition: background-color 0.3s ease;
 }
 
@@ -592,11 +651,11 @@
 .sched-search-sticky-inner {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
 }
 
-/* Search input */
+/* Search input - min-height 44px, no fixed height */
 .sched-search-box {
   position: relative;
   flex: 1;
@@ -605,24 +664,24 @@
 
 .sched-search-box input {
   width: 100%;
-  height: 42px;
-  padding: 0 34px 0 38px;
+  min-height: 2.75rem; /* 44px */
+  padding: 0.625rem 2.125rem 0.625rem 2.375rem;
   border-radius: 9999px;
   border: 1.5px solid var(--sched-line);
   background: var(--sched-paper);
   color: var(--sched-ink);
-  font-size: 13.5px;
+  font-size: 1rem; /* Bắt buộc >= 1rem chống auto-zoom iOS */
   font-family: inherit;
   outline: none;
   box-shadow: var(--sched-card-shadow);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 @media (max-width: 540px) {
   .sched-search-box input {
-    font-size: 12.5px;
-    padding: 0 30px 0 34px;
-    height: 40px;
+    font-size: 1rem;
+    padding: 0.625rem 1.875rem 0.625rem 2.125rem;
+    min-height: 2.75rem;
   }
 }
 
@@ -633,7 +692,7 @@
 
 .sched-search-box .search-icon {
   position: absolute;
-  left: 13px;
+  left: 0.8125rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--sched-muted);
@@ -642,17 +701,29 @@
 
 .sched-search-box .clear-btn {
   position: absolute;
-  right: 10px;
+  right: 0.375rem;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
   color: var(--sched-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  /* Expand tap area to >= 44px without growing the visual icon */
+}
+
+.sched-search-box .clear-btn::before {
+  content: "";
+  position: absolute;
+  inset: -0.375rem;
   border-radius: 50%;
 }
 
@@ -660,14 +731,14 @@
   color: var(--sched-ink);
 }
 
-/* View Mode Toggles */
+/* View Mode Toggles - Touch Target >= 44px */
 .sched-view-toggles {
   display: inline-flex;
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
   border-radius: 9999px;
-  padding: 3px;
-  gap: 2px;
+  padding: 0.1875rem;
+  gap: 0.125rem;
   flex-shrink: 0;
 }
 
@@ -675,16 +746,16 @@
   border: none;
   background: transparent;
   color: var(--sched-muted);
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sched-view-btn:hover {
@@ -697,28 +768,30 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Secondary Ngành chips - WCAG AA Touch Target */
+/* Secondary Ngành chips - Touch Target >= 44px */
 .sched-chips-wrapper {
   position: relative;
-  margin-top: 8px;
+  margin-top: 0.5rem;
 }
 
 .sched-chips-wrapper::after {
   content: "";
   position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 44px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.75rem;
   background: linear-gradient(to right, transparent, var(--sched-bg));
   pointer-events: none;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 0.5rem 0.5rem 0;
 }
 
 .sched-chips-row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 0.4375rem;
   overflow-x: auto;
-  padding: 4px 0;
+  padding: 0.25rem 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -731,17 +804,17 @@
   border: 1px solid var(--sched-line);
   background: var(--sched-paper);
   color: var(--sched-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-  min-height: 36px;
-  padding: 6px 13px;
+  min-height: 2.75rem; /* 44px */
+  padding: 0.5rem 0.875rem;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -764,6 +837,19 @@
   border-color: var(--sched-accent);
 }
 
+.sched-chip.sched-chip-room-active {
+  background: var(--sched-accent);
+  color: #ffffff;
+  border-color: var(--sched-accent);
+  font-weight: 700;
+}
+
+.dark .sched-chip.sched-chip-room-active {
+  background: var(--sched-accent);
+  color: #151c18;
+  border-color: var(--sched-accent);
+}
+
 .sched-chip.sched-chip-reset {
   margin-left: auto;
   border-style: dashed;
@@ -775,102 +861,488 @@
   border-color: #dc2626;
 }
 
+/* ════ WIDGET: LỚP HỌC CỦA GIA ĐÌNH BẠN (PINNED CLASSES) ════ */
+.sched-pinned-section {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(146, 113, 64, 0.08) 0%, rgba(146, 113, 64, 0.02) 100%);
+  border: 1.5px solid var(--sched-accent);
+  border-radius: 1.25rem;
+  box-shadow: var(--sched-card-shadow);
+  transform-origin: top center;
+  scroll-margin-top: 9.5rem;
+}
+
+.dark .sched-pinned-section {
+  background: linear-gradient(135deg, rgba(212, 180, 125, 0.12) 0%, rgba(212, 180, 125, 0.03) 100%);
+  border-color: var(--sched-accent);
+}
+
+.sched-pinned-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.sched-pinned-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sched-ink);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1.3;
+}
+
+.sched-pinned-title em {
+  font-style: italic;
+  color: var(--sched-accent-text);
+  font-weight: 400;
+}
+
+.sched-pinned-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sched-pinned-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: var(--sched-gold-bg);
+  color: var(--sched-accent-text);
+  border: 1px solid var(--sched-line);
+  display: inline-flex;
+  align-items: center;
+}
+
+.sched-pinned-clear-btn {
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sched-muted);
+  background: var(--sched-surface);
+  border: 1px solid var(--sched-line);
+  padding: 0.375rem 0.75rem;
+  min-height: 2.25rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.sched-pinned-clear-btn:hover {
+  color: #b91c1c;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.sched-pinned-star-icon {
+  color: #eab308;
+  flex-shrink: 0;
+}
+
+.sched-pinned-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: var(--sched-accent-text);
+}
+
+.sched-pinned-card-teachers {
+  font-size: 0.75rem;
+  color: var(--sched-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sched-results-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sched-muted);
+}
+
+.sched-room-icon {
+  color: var(--sched-accent-text);
+}
+
+.sched-hero-sentinel {
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+  opacity: 0;
+  margin-top: -1px;
+}
+
+.sched-timeline-badge--ca1 {
+  background: var(--sched-gold-bg);
+  color: var(--sched-accent-text);
+  border: 1px solid var(--sched-line);
+}
+
+.sched-timeline-badge--mass {
+  background: var(--sched-accent);
+  color: var(--sched-on-primary);
+  border: 1px solid var(--sched-accent);
+}
+
+.sched-timeline-badge--ca2 {
+  background: rgba(49, 78, 62, 0.1);
+  color: var(--sched-ink);
+  border: 1px solid var(--sched-line);
+}
+
+.dark .sched-timeline-badge--ca2 {
+  background: rgba(214, 184, 131, 0.15);
+  color: var(--sched-accent-text);
+}
+
+.sched-pinned-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .sched-pinned-grid {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1rem;
+  }
+}
+
+.sched-pinned-card {
+  background: var(--sched-paper);
+  border: 1px solid var(--sched-line);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  box-shadow: var(--sched-card-shadow);
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.sched-pinned-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  width: 100%;
+}
+
+.sched-pinned-card-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sched-ink);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.sched-pinned-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--sched-muted);
+  min-width: 0;
+  width: 100%;
+}
+
+.sched-pin-btn {
+  background: var(--sched-surface);
+  border: 1px solid var(--sched-line);
+  cursor: pointer;
+  color: var(--sched-muted);
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sched-pin-btn::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.sched-pin-btn:hover {
+  color: var(--sched-accent-text);
+  background: var(--sched-gold-bg);
+  border-color: var(--sched-accent);
+  transform: scale(1.06);
+}
+
+.sched-pin-btn.pinned {
+  background: rgba(180, 83, 9, 0.12);
+  border-color: #854d0e;
+  color: #854d0e;
+}
+
+.dark .sched-pin-btn {
+  background: var(--sched-surface);
+  border-color: var(--sched-line);
+  color: var(--sched-muted);
+}
+
+.dark .sched-pin-btn.pinned {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: #facc15;
+  color: #fde047;
+}
+
+/* ════ FLOATING THUMB ZONE QUICK SWITCHER (MOBILE & TABLET) ════ */
+.sched-thumb-bar {
+  position: fixed;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  right: 1rem;
+  max-width: 24rem;
+  margin-inline: auto;
+  z-index: 30;
+  background: rgba(250, 248, 243, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--sched-line);
+  border-radius: 9999px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+  padding: 0.375rem 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transform: translateY(200%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sched-thumb-bar.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dark .sched-thumb-bar {
+  background: rgba(21, 28, 24, 0.96);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 1024px) {
+  .sched-thumb-bar {
+    display: none !important;
+  }
+}
+
+.sched-thumb-tabs {
+  display: flex;
+  background: var(--sched-surface);
+  border: 1px solid var(--sched-line);
+  border-radius: 9999px;
+  padding: 0.1875rem;
+  gap: 0.1875rem;
+  flex: 1;
+}
+
+.sched-thumb-tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--sched-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-height: 2.75rem; /* >= 44px touch target */
+  min-width: 2.75rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sched-thumb-tab-btn.active {
+  background: var(--sched-paper);
+  color: var(--sched-ink);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.sched-thumb-action-btn {
+  border: 1px solid var(--sched-line);
+  background: var(--sched-surface);
+  color: var(--sched-ink);
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem; /* >= 44px */
+  min-height: 2.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sched-thumb-action-btn:hover {
+  background: var(--sched-paper);
+  border-color: var(--sched-accent);
+}
+
+/* ════ MAIN RESULTS HEADER ════ */
+.sched-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.125rem;
+}
+
 /* ════ EMPTY STATE ════ */
 .sched-empty {
   text-align: center;
-  padding: 60px 24px;
+  padding: 3.75rem 1.5rem;
   background: var(--sched-paper);
   border: 1px dashed var(--sched-line);
-  border-radius: 20px;
+  border-radius: 1.25rem;
 }
 
 .sched-empty svg {
   color: var(--sched-muted);
-  margin: 0 auto 12px;
+  margin: 0 auto 0.75rem;
   display: block;
 }
 
 .sched-empty h3 {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--sched-ink);
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .sched-empty p {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--sched-muted);
-  max-width: 400px;
-  margin: 0 auto 20px;
+  max-width: 25rem;
+  margin: 0 auto 1.25rem;
   line-height: 1.6;
 }
 
 .sched-empty-reset {
   display: inline-flex;
   align-items: center;
-  padding: 10px 22px;
+  padding: 0.625rem 1.375rem;
+  min-height: 2.75rem;
   border-radius: 9999px;
-  font-size: 12.5px;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.05em;
   background: var(--sched-primary);
-  color: #ffffff;
+  color: var(--sched-on-primary);
   border: none;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.sched-empty-reset:active { transform: scale(0.98); }
+.dark .sched-empty-reset {
+  background: var(--sched-primary);
+  color: var(--sched-on-primary);
+}
+
+.sched-empty-reset:active {
+  transform: scale(0.98);
+}
 
 @media (hover: hover) and (pointer: fine) {
-  .sched-empty-reset:hover { opacity: 0.88; }
+  .sched-empty-reset:hover {
+    opacity: 0.88;
+  }
 }
 
 /* ════ CLASS CARD GRID ════ */
 .sched-cards-grid {
   display: grid;
-  grid-template-columns: 1fr;     /* 1 cột mặc định mobile */
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);     /* 1 cột mặc định mobile với minmax(0, 1fr) chống tràn */
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
   .sched-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.125rem;
   }
 }
 
 @media (min-width: 1100px) {
   .sched-cards-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 }
 
-/* ── Thẻ Lớp Học Bento Flagship — Thông Thoáng Không Chồng Lên Nhau ── */
+/* ── Thẻ Lớp Học Bento Flagship ── */
 .sched-card {
   background: var(--sched-paper);
   border: 1.5px solid var(--sched-line);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
   box-shadow: var(--sched-card-shadow);
   display: flex;
   flex-direction: column;
-  gap: 13px;                    /* Khoảng cách 13px cố định giữa các tầng */
+  gap: 0.8125rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* Bảo vệ focus outline */
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.25s ease,
               border-color 0.25s ease;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 @media (max-width: 640px) {
   .sched-card {
-    padding: 16px 14px;
-    border-radius: 16px;
-    gap: 11px;
+    padding: 0.875rem 0.75rem;
+    border-radius: 1rem;
+    gap: 0.625rem;
   }
 }
 
@@ -878,66 +1350,83 @@
 .sched-card::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3.5px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.21875rem;
+  border-radius: 1.25rem 1.25rem 0 0;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--sched-accent)), transparent);
   opacity: 0.85;
 }
 
-/* ════ TOKEN MÀU THEO 4 NGÀNH HTDC (CHUẨN AGENTS.MD) ════ */
-/* 1. Ngành Chinh Chiến (Khối Vào Đời — Đỏ Ruby Dấn Thân) */
-.sched-card.card-nganh-chinh-chien {
-  --card-accent: #b91c1c;
-  --card-text:   #991b1b;
-  --card-bg:     rgba(185, 28, 28, 0.08);
-  --card-border: rgba(185, 28, 28, 0.25);
+@media (max-width: 640px) {
+  .sched-card::before {
+    border-radius: 1rem 1rem 0 0;
+  }
 }
-.dark .sched-card.card-nganh-chinh-chien {
+
+/* ════ TOKEN MÀU THEO 4 NGÀNH HTDC (WCAG AAA >= 7.0:1) ════ */
+/* 1. Ngành Chinh Chiến (Khối Vào Đời — Đỏ Ruby Dấn Thân) */
+.sched-card.card-nganh-chinh-chien,
+tr.card-nganh-chinh-chien {
+  --card-accent: #991b1b;
+  --card-text:   #7f1d1d; /* WCAG AAA: ~8.4:1 */
+  --card-bg:     rgba(153, 27, 27, 0.07);
+  --card-border: rgba(153, 27, 27, 0.22);
+}
+.dark .sched-card.card-nganh-chinh-chien,
+.dark tr.card-nganh-chinh-chien {
   --card-accent: #f87171;
-  --card-text:   #fca5a5;
-  --card-bg:     rgba(248, 113, 113, 0.15);
+  --card-text:   #fecaca; /* WCAG AAA: ~8.2:1 */
+  --card-bg:     rgba(248, 113, 113, 0.14);
   --card-border: rgba(248, 113, 113, 0.35);
 }
 
 /* 2. Ngành Nhiệt Quang (Khối Kinh Thánh, Khối Phụng Vụ — Da Cam Nhiệt Tâm) */
-.sched-card.card-nganh-nhiet-quang {
-  --card-accent: #c2410c;
-  --card-text:   #9a3412;
-  --card-bg:     rgba(194, 65, 12, 0.08);
-  --card-border: rgba(194, 65, 12, 0.25);
+.sched-card.card-nganh-nhiet-quang,
+tr.card-nganh-nhiet-quang {
+  --card-accent: #9a3412;
+  --card-text:   #7c2d12; /* WCAG AAA: ~7.8:1 */
+  --card-bg:     rgba(154, 52, 18, 0.07);
+  --card-border: rgba(154, 52, 18, 0.22);
 }
-.dark .sched-card.card-nganh-nhiet-quang {
+.dark .sched-card.card-nganh-nhiet-quang,
+.dark tr.card-nganh-nhiet-quang {
   --card-accent: #fb923c;
-  --card-text:   #fed7aa;
-  --card-bg:     rgba(251, 146, 60, 0.15);
+  --card-text:   #fed7aa; /* WCAG AAA: ~8.5:1 */
+  --card-bg:     rgba(251, 146, 60, 0.14);
   --card-border: rgba(251, 146, 60, 0.35);
 }
 
 /* 3. Ngành Kim Hoan (Khối Thêm Sức — Vàng Kim Hoan Hỷ) */
-.sched-card.card-nganh-kim-hoan {
-  --card-accent: #b45309;
-  --card-text:   #92400e;
-  --card-bg:     rgba(180, 83, 9, 0.08);
-  --card-border: rgba(180, 83, 9, 0.25);
+.sched-card.card-nganh-kim-hoan,
+tr.card-nganh-kim-hoan {
+  --card-accent: #854d0e;
+  --card-text:   #713f12; /* WCAG AAA: ~8.1:1 */
+  --card-bg:     rgba(133, 77, 14, 0.07);
+  --card-border: rgba(133, 77, 14, 0.22);
 }
-.dark .sched-card.card-nganh-kim-hoan {
+.dark .sched-card.card-nganh-kim-hoan,
+.dark tr.card-nganh-kim-hoan {
   --card-accent: #f59e0b;
-  --card-text:   #fde68a;
-  --card-bg:     rgba(245, 158, 11, 0.15);
+  --card-text:   #fde68a; /* WCAG AAA: ~9.6:1 */
+  --card-bg:     rgba(245, 158, 11, 0.14);
   --card-border: rgba(245, 158, 11, 0.35);
 }
 
 /* 4. Ngành Ấu (Khối Rước Lễ, Khối Chiên Con / Khai Tâm, Vườn Trẻ — Xanh Lá Non Vâng Phục) */
-.sched-card.card-nganh-au-dung {
+.sched-card.card-nganh-au-dung,
+tr.card-nganh-au-dung {
   --card-accent: #15803d;
-  --card-text:   #166534;
-  --card-bg:     rgba(21, 128, 61, 0.08);
-  --card-border: rgba(21, 128, 61, 0.25);
+  --card-text:   #14532d; /* WCAG AAA: ~7.6:1 */
+  --card-bg:     rgba(21, 128, 61, 0.07);
+  --card-border: rgba(21, 128, 61, 0.22);
 }
-.dark .sched-card.card-nganh-au-dung {
+.dark .sched-card.card-nganh-au-dung,
+.dark tr.card-nganh-au-dung {
   --card-accent: #4ade80;
-  --card-text:   #86efac;
-  --card-bg:     rgba(74, 222, 128, 0.15);
+  --card-text:   #86efac; /* WCAG AAA: ~8.6:1 */
+  --card-bg:     rgba(74, 222, 128, 0.14);
   --card-border: rgba(74, 222, 128, 0.35);
 }
 
@@ -954,49 +1443,90 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 0.375rem;
   flex-wrap: wrap;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-code {
   font-family: inherit;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 3.5px 9px;
-  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
   background: var(--card-bg, rgba(146, 113, 64, 0.08));
   color: var(--card-text, var(--sched-accent-text));
   border: 1px solid var(--card-border, rgba(146, 113, 64, 0.25));
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 360px) {
+  .sched-bento-code {
+    font-size: 0.75rem;
+    padding: 0.1875rem 0.375rem;
+  }
 }
 
 .sched-nganh-dot {
-  width: 7px;
-  height: 7px;
+  width: 0.4375rem;
+  height: 0.4375rem;
   border-radius: 50%;
   background: var(--card-accent, var(--sched-accent));
   display: inline-block;
   flex-shrink: 0;
-  margin-right: 6px;
+  margin-right: 0.375rem;
+}
+
+.sched-bento-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  max-width: 100%;
 }
 
 .sched-bento-room {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 0.25rem;
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 3.5px 9px;
+  padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   background: var(--sched-surface);
   color: var(--sched-ink);
   border: 1px solid var(--sched-line);
   cursor: pointer;
   white-space: nowrap;
+  max-width: 9.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: border-color 0.2s ease, background 0.2s ease;
+  min-height: 2.25rem;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.sched-bento-room span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sched-bento-room::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1010,41 +1540,49 @@
 .sched-bento-title-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.375rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-title {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 19px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--sched-ink);
   line-height: 1.25;
   margin: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
   .sched-bento-title {
-    font-size: 17.5px;
+    font-size: 1.125rem;
   }
 }
 
 .sched-bento-stats {
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   flex-wrap: wrap;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-stat {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
+  gap: 0.25rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 7px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4375rem;
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
   color: var(--sched-muted);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sched-bento-stat strong {
@@ -1062,37 +1600,44 @@
 .sched-bento-teachers {
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-teacher-label {
-  font-size: 10.5px;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.03125rem;
   color: var(--card-text, var(--sched-accent-text));
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
 }
 
 .sched-bento-teacher-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 0.3125rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-teacher-pill {
-  font-size: 11.5px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--sched-ink);
   background: var(--sched-bg);
   border: 1px solid var(--sched-line);
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sched-bento-teacher-pill.more {
@@ -1100,33 +1645,37 @@
   font-style: italic;
 }
 
-/* ── Tầng 4: Focus callout (Tên khối & Màu khăn — Xếp dọc chống chồng chéo) ── */
+/* ── Tầng 4: Focus callout (Tên khối & Màu khăn) ── */
 .sched-bento-focus {
   border-left: 3.5px solid var(--card-accent, var(--sched-accent));
   background: var(--card-bg, rgba(146, 113, 64, 0.07));
-  padding: 8px 12px;
-  border-radius: 0 10px 10px 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.625rem 0.625rem 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-focus-badge {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.025em;
   color: var(--card-text, var(--sched-accent-text));
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .sched-bento-focus-link {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--card-text, var(--sched-accent-text));
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 0.1875rem;
   align-self: flex-start;
   transition: opacity 0.15s ease;
 }
@@ -1139,54 +1688,59 @@
 /* ── Tầng 5: Footer ── */
 .sched-bento-foot {
   border-top: 1px solid var(--sched-line);
-  padding-top: 10px;
+  padding-top: 0.625rem;
   margin-top: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  width: 100%;
 }
 
 .sched-bento-time {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--sched-muted);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
+  min-width: 0;
 }
 
 /* Ca badge / pill trong footer */
 .sched-ca-pill {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 3px 8px;
-  border-radius: 6px;
+  letter-spacing: 0.03125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
   background: var(--sched-surface);
   color: var(--sched-ink);
   border: 1px solid var(--sched-line);
   white-space: nowrap;
 }
 
-
 /* ════ TABLE VIEW ════ */
 .sched-table-wrapper {
   background: var(--sched-paper);
   border: 1.5px solid var(--sched-line);
-  border-radius: 20px;
+  border-radius: 1.25rem;
   box-shadow: var(--sched-card-shadow);
   overflow: hidden;
   width: 100%;
   max-width: 100%;
+  scroll-margin-top: 9.5rem;
+  margin-top: 1rem;
 }
 
 .sched-table-mobile-hint {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 11.5px;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--sched-muted);
   background: var(--sched-surface);
@@ -1203,33 +1757,34 @@
 
 .sched-table {
   width: 100%;
-  min-width: 640px; /* Bảng cuộn bên trong scroll container, không bao giờ làm tràn trang */
-  border-collapse: collapse;
+  min-width: 46rem; /* Bảng cuộn bên trong scroll container */
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
-  font-size: 13px;
+  font-size: 0.875rem;
 }
 
 /* Sticky thead */
 .sched-table thead {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 5;
 }
 
 .sched-table th {
   background: var(--sched-surface);
   color: var(--sched-ink);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 700;
-  padding: 12px 14px;
+  padding: 0.75rem 0.875rem;
   border-bottom: 2px solid var(--sched-line);
   white-space: nowrap;
   box-shadow: 0 1px 0 var(--sched-line);
 }
 
 .sched-table td {
-  padding: 12px 14px;
+  padding: 0.75rem 0.875rem;
   border-bottom: 1px solid var(--sched-line);
   color: var(--sched-ink);
   vertical-align: middle;
@@ -1248,60 +1803,183 @@
   }
 }
 
+/* Sticky column 1: STT */
+.sched-table th:first-child,
+.sched-table td:first-child,
 .sched-table-col-num {
-  width: 36px;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--sched-paper);
+  width: 2.5rem;
+  min-width: 2.5rem;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem;
+  color: var(--sched-muted);
+  font-weight: 600;
+}
+
+.sched-table th:first-child {
+  background: var(--sched-surface);
+  z-index: 6;
+}
+
+/* Sticky column 2: Tên Lớp */
+.sched-table th:nth-child(2),
+.sched-table td:nth-child(2) {
+  position: sticky;
+  left: 2.5rem;
+  z-index: 3;
+  background: var(--sched-paper);
+  min-width: 8.5rem;
+  box-shadow: 3px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+
+.sched-table th:nth-child(2) {
+  background: var(--sched-surface);
+  z-index: 6;
+}
+
+.sched-table-class-name {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .sched-table-nganh-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 0.25rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
+  padding: 0.1875rem 0.4375rem;
+  border-radius: 0.375rem;
   background: var(--sched-surface);
   color: var(--sched-muted);
   border: 1px solid var(--sched-line);
-  margin-top: 3px;
+  margin-top: 0.1875rem;
+  white-space: nowrap;
 }
 
+.sched-table-nganh-dot {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 50%;
+  margin: 0;
+  display: inline-block;
+  flex-shrink: 0;
+  background: var(--card-accent, var(--sched-accent));
+}
 
+.sched-table-time-info {
+  font-size: 0.75rem;
+  color: var(--sched-muted);
+  white-space: nowrap;
+}
+
+.sched-table-teachers-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+  min-width: 13rem;
+}
+
+.sched-table-col-target {
+  white-space: nowrap;
+}
+
+.sched-table-age-highlight {
+  font-weight: 700;
+  color: var(--sched-ink);
+}
+
+.sched-table-age-info {
+  font-size: 0.75rem;
+  color: var(--sched-muted);
+}
+
+.sched-table-recruiting {
+  color: var(--sched-accent-text);
+  font-style: italic;
+}
+
+.sched-table-col-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sched-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sched-accent-text);
+  text-decoration: none;
+  padding: 0.625rem 0.75rem;
+  min-height: 2.75rem;
+  border-radius: 0.375rem;
+  background: var(--sched-surface);
+  border: 1px solid var(--sched-line);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sched-card-link:hover {
+  background: var(--sched-accent);
+  color: #ffffff;
+  border-color: var(--sched-accent);
+}
+
+.dark .sched-card-link:hover {
+  background: var(--sched-accent);
+  color: #151c18;
+}
 
 /* ════ ROOM DIRECTORY / CAMPUS MAP GUIDE ════ */
 .sched-rooms-section {
-  margin-top: 48px;
-  padding: 32px;
+  margin-top: 3rem;
+  padding: 2rem;
   background: var(--sched-paper);
   border: 1px solid var(--sched-line);
-  border-radius: 24px;
+  border-radius: 1.5rem;
   box-shadow: var(--sched-card-shadow);
 }
 
 .sched-rooms-header {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
+}
+
+.sched-rooms-title {
+  font-size: 1.5rem;
+  margin-top: 0.25rem;
+  color: var(--sched-ink);
+}
+
+.sched-rooms-desc {
+  font-size: 0.875rem;
+  color: var(--sched-muted);
+  margin-top: 0.25rem;
 }
 
 .sched-rooms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.75rem;
 }
 
 .sched-room-button {
   background: var(--sched-surface);
   border: 1px solid var(--sched-line);
-  border-radius: 14px;
-  min-height: 54px;
-  padding: 12px 14px;
+  border-radius: 0.875rem;
+  min-height: 3.25rem; /* >= 44px */
+  padding: 0.75rem 0.875rem;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .sched-room-button:hover,
@@ -1311,35 +1989,35 @@
 }
 
 .sched-room-button strong {
-  font-size: 13.5px;
+  font-size: 0.875rem;
   color: var(--sched-ink);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
 }
 
 .sched-room-button span {
-  font-size: 11.5px;
+  font-size: 0.75rem;
   color: var(--sched-muted);
 }
 
 /* ════ GUIDELINES & CTA ════ */
 .sched-guidelines {
-  margin-top: 40px;
+  margin-top: 2.5rem;
   background: linear-gradient(135deg, rgba(146, 113, 64, 0.06) 0%, rgba(146, 113, 64, 0.02) 100%);
   border: 1px solid var(--sched-line);
   border-left: 4px solid var(--sched-accent);
-  border-radius: 20px;
-  padding: 24px 28px;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.75rem;
   display: flex;
-  gap: 20px;
+  gap: 1.25rem;
   align-items: flex-start;
 }
 
 .sched-guidelines-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
   background: var(--sched-gold-bg);
   color: var(--sched-accent);
   display: flex;
@@ -1348,37 +2026,98 @@
   flex-shrink: 0;
 }
 
+.sched-guidelines-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--sched-ink);
+}
+
+.sched-guidelines-list {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--sched-muted);
+  padding-left: 1.125rem;
+  margin: 0;
+}
+
 .sched-cta {
-  margin-top: 56px;
+  margin-top: 3.5rem;
   text-align: center;
-  padding: 48px 24px;
+  padding: 3rem 1.5rem;
   background: var(--sched-paper);
   border: 1px solid var(--sched-line);
-  border-radius: 28px;
+  border-radius: 1.75rem;
   box-shadow: var(--sched-card-shadow);
   position: relative;
   overflow: hidden;
 }
 
+.sched-cta-title {
+  font-size: clamp(1.75rem, 2.5vw + 1rem, 2.25rem); /* AGENTS.md: H2 28-32px mobile, 32-40px desktop */
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--sched-ink);
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; /* AGENTS.md: Dùng serif cho H1/H2 */
+  text-wrap: balance;
+}
+
+.sched-cta .sched-cta-desc {
+  font-size: 1rem;
+  color: var(--sched-muted);
+  max-width: 35rem;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.sched-cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
 .sched-cta-btn {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
   align-items: center;
-  gap: 8px;
-  padding: 14px 32px;
-  border-radius: 9999px;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  min-height: 2.75rem; /* 44px */
+  border-radius: 0.75rem; /* AGENTS.md: Điều khiển 8-12px, chống vỡ pill form */
   background: var(--sched-primary);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--sched-on-primary);
+  font-size: 0.875rem;
   font-weight: 700;
   text-decoration: none;
+  border: 1px solid transparent; /* match outline btn for equal box model */
   transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
-  margin-top: 20px;
   box-shadow: 0 4px 14px -2px rgba(49, 78, 62, 0.32);
 }
 
 .dark .sched-cta-btn {
   background: var(--sched-primary);
-  color: #19251d;
+  color: var(--sched-on-primary);
+  box-shadow: 0 4px 14px -2px rgba(214, 184, 131, 0.25);
+}
+
+.sched-cta-btn--outline {
+  background: transparent;
+  border-color: var(--sched-line);
+  color: var(--sched-ink);
+  box-shadow: none; /* Khắc phục double border */
+}
+
+.dark .sched-cta-btn--outline {
+  background: transparent;
+  color: var(--sched-ink);
+  border-color: var(--sched-line);
+  box-shadow: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1390,55 +2129,100 @@
 
 /* ════ MOBILE RESPONSIVE POLISH (<640px) ════ */
 @media (max-width: 640px) {
+  .sched-table th:first-child,
+  .sched-table td:first-child,
+  .sched-table-col-num {
+    width: 2rem;
+    min-width: 2rem;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .sched-table th:nth-child(2),
+  .sched-table td:nth-child(2) {
+    left: 2rem;
+    min-width: 7.25rem;
+    padding: 0.5rem 0.5rem;
+  }
+
   .sched-rooms-section {
-    padding: 20px 16px;
-    border-radius: 18px;
-    margin-top: 36px;
+    padding: 1.25rem 1rem;
+    border-radius: 1.125rem;
+    margin-top: 2.25rem;
   }
 
   .sched-rooms-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   .sched-room-button {
-    min-height: 48px;
-    padding: 10px;
-    border-radius: 12px;
+    min-height: 3rem;
+    padding: 0.625rem;
+    border-radius: 0.75rem;
   }
 
   .sched-room-button strong {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .sched-room-button span {
-    font-size: 10.5px;
+    font-size: 0.75rem;
   }
 
   .sched-guidelines {
-    padding: 18px 16px;
-    border-radius: 16px;
-    gap: 14px;
-    margin-top: 28px;
+    padding: 1.125rem 1rem;
+    border-radius: 1rem;
+    gap: 0.875rem;
+    margin-top: 1.75rem;
     flex-direction: column;
   }
 
   .sched-guidelines-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.625rem;
   }
 
   .sched-cta {
-    padding: 32px 18px;
-    border-radius: 20px;
-    margin-top: 36px;
+    padding: 2rem 1.125rem;
+    border-radius: 1.25rem;
+    margin-top: 2.25rem;
+  }
+
+  .sched-cta-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .sched-cta-btn {
     width: 100%;
     justify-content: center;
-    padding: 13px 20px;
+    padding: 0.8125rem 1.25rem;
   }
 }
 
+/* ════ PREFERS-REDUCED-MOTION SUPPORT ════ */
+@media (prefers-reduced-motion: reduce) {
+  /* Only suppress transitions & animations — never touch transforms used for layout (e.g. translateY(-50%) on icons) */
+  .sched-page *,
+  .sched-page *::before,
+  .sched-page *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* For elements that use transform ONLY for animation (not layout), reset explicitly */
+  .sched-bento-card,
+  .sched-filter-pill,
+  .sched-btn-primary,
+  .sched-btn-secondary,
+  .sched-thumb-bar,
+  .sched-thumb-tab-btn,
+  .sched-thumb-action-btn,
+  .sched-pin-btn {
+    transition: none !important;
+    animation: none !important;
+  }
+}

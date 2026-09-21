@@ -5,12 +5,11 @@ import React from "react";
  *
  * Tách khỏi ReportsTab và bọc React.memo vì được render lặp lại
  * nhiều lần trong mỗi hàng của bảng (columns.length ô / hàng x số lớp).
- * Với memo, khi 1 hàng re-render (ví dụ do hover state của hàng khác),
- * các cell không đổi props sẽ không phải tính toán lại percent.
+ * Chuẩn hóa 100% REM và tabular-nums cho toàn bộ số liệu.
  */
 function StatCellImpl({ count, total }) {
-  if (total === 0) {
-    return <span className="text-stone-300 dark:text-stone-600">—</span>;
+  if (total === 0 || count === undefined) {
+    return <span className="text-stone-300 dark:text-stone-600 font-sans font-medium">—</span>;
   }
 
   const percent = ((count / total) * 100).toFixed(1);
@@ -18,15 +17,19 @@ function StatCellImpl({ count, total }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span
-        className={`text-[13.5px] font-bold ${
+        className={`text-xs sm:text-sm font-bold font-sans tabular-nums ${
           count === 0
             ? "text-stone-300 dark:text-stone-600"
-            : "text-amber-950 dark:text-amber-50"
+            : "text-[#293d32] dark:text-[#ecece0]"
         }`}
       >
         {count}
       </span>
-      <span className="text-[10px] text-stone-500 dark:text-stone-400 font-medium tracking-wide">
+      <span className={`text-xs font-sans tabular-nums ${
+        count === 0
+          ? "text-stone-300 dark:text-stone-600"
+          : "text-[#575e55] dark:text-[#b0b9ac] font-medium"
+      }`}>
         {percent}%
       </span>
     </div>

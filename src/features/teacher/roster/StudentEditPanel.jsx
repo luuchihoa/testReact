@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { X, User, BookOpen, Camera, Printer, ArrowLeft, Lock, Unlock } from "lucide-react";
 import { useToast } from "../../../components/ui/ToastContext.jsx";
@@ -26,6 +26,17 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
   const [tab, setTab] = useState("profile"); // profile | academic
   const [[_page, direction], setPage] = useState([0, 0]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && !showLockConfirm) {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showLockConfirm, onClose]);
+
   const TABS = ["profile", "academic"];
   const handleTabChange = (tId) => {
     if (tId === tab) return;
@@ -46,7 +57,7 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
         profileLockedBy: nextLocked ? (teacherUsername || "Giáo lý viên") : null,
         profileLockedAt: nextLocked ? new Date().toISOString() : null,
       };
-      showToast(nextLocked ? "Đã khóa chỉnh sửa hồ sơ học sinh" : "Đã mở khóa chỉnh sửa hồ sơ học sinh", "success");
+      showToast(nextLocked ? "Đã khóa chỉnh sửa hồ sơ giáo lý sinh" : "Đã mở khóa chỉnh sửa hồ sơ giáo lý sinh", "success");
       onSaved?.(updated);
       setShowLockConfirm(false);
     } catch (err) {
@@ -75,7 +86,7 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
     try {
       const { blob: resizedBlob, ext } = await resizeImage(file);
       const newAvatarUrl = await uploadStudentAvatarForTeacher(student.username, resizedBlob, ext);
-      showToast("Đã cập nhật ảnh đại diện học sinh!", "success");
+      showToast("Đã cập nhật ảnh đại diện giáo lý sinh!", "success");
       onSaved?.({ ...student, avatar: newAvatarUrl });
     } catch (err) {
       console.error("Upload student avatar error:", err);
@@ -112,7 +123,7 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
             onClick={() => setShowLockConfirm(true)}
             disabled={locking}
             aria-label={student?.isProfileLocked ? "Mở khóa chỉnh sửa hồ sơ" : "Khóa chỉnh sửa hồ sơ"}
-            title={student?.isProfileLocked ? "Hồ sơ đang khóa. Bấm để mở khóa" : "Khóa chỉnh sửa hồ sơ học sinh"}
+            title={student?.isProfileLocked ? "Hồ sơ đang khóa. Bấm để mở khóa" : "Khóa chỉnh sửa hồ sơ giáo lý sinh"}
             className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center transition-colors cursor-pointer active:scale-95 ${
               student?.isProfileLocked 
                 ? "bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] border border-[#927140]/30 dark:border-[#d4b47d]/30"
@@ -125,8 +136,8 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
           <button
             type="button"
             onClick={handlePrint}
-            aria-label="In phiếu học sinh"
-            title="In phiếu học sinh"
+            aria-label="In phiếu giáo lý sinh"
+            title="In phiếu giáo lý sinh"
             className="w-8.5 h-8.5 rounded-xl bg-stone-500/10 hover:bg-[#314e3e]/10 dark:bg-stone-400/10 dark:hover:bg-[#d6b883]/20 text-[#454f46] hover:text-[#314e3e] dark:text-[#b8c2b4] dark:hover:text-[#d6b883] flex items-center justify-center transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
@@ -134,8 +145,8 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Đóng chi tiết học sinh"
-            title="Đóng chi tiết học sinh"
+            aria-label="Đóng chi tiết giáo lý sinh"
+            title="Đóng chi tiết giáo lý sinh"
             className="w-8.5 h-8.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 dark:bg-stone-400/10 dark:hover:bg-stone-400/20 text-[#454f46] dark:text-[#b8c2b4] flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -151,7 +162,7 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
           }`}>
             <img
               src={student.avatar || "/images/avatarDefault.avif"}
-              alt={student.hoTen || "Ảnh đại diện học sinh"}
+              alt={student.hoTen || "Ảnh đại diện giáo lý sinh"}
               className="w-full h-full object-cover"
             />
             {uploadingAvatar && (
@@ -165,8 +176,8 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingAvatar}
-            aria-label="Đổi ảnh đại diện học sinh"
-            title="Đổi ảnh đại diện học sinh"
+            aria-label="Đổi ảnh đại diện giáo lý sinh"
+            title="Đổi ảnh đại diện giáo lý sinh"
             className="absolute bottom-0 right-0 w-8.5 h-8.5 rounded-full shadow-md flex items-center justify-center border-2 border-[#faf8f3] dark:border-[#151c18] bg-[#314e3e] hover:bg-[#253d30] dark:bg-[#d6b883] dark:hover:bg-[#c4a671] text-white dark:text-[#19251d] active:scale-90 transition-all cursor-pointer disabled:opacity-50"
           >
             <Camera className="w-4 h-4" strokeWidth={2.2} />
@@ -181,14 +192,14 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
         </div>
 
         <div className="min-w-0 max-w-full px-2">
-          <h3 className="text-[20px] sm:text-[22px] font-bold text-[#293d32] dark:text-[#ecece0] leading-tight">
+          <h3 className="text-xl sm:text-2xl font-bold text-[#293d32] dark:text-[#ecece0] leading-tight">
             {student.tenThanh ? `${student.tenThanh} ` : ""}{student.hoTen || student.username}
           </h3>
         </div>
 
-        {/* Tab Switcher - Pill style giống /tài-khoản */}
+        {/* Tab Switcher - Pill style */}
         <div className="relative w-full max-w-xs sm:max-w-sm rounded-2xl bg-[#dedfd4]/40 dark:bg-[#354237]/50 p-1 select-none border border-[#dedfd4] dark:border-[#354237] mt-1">
-          <div className="grid grid-cols-2 gap-1 w-full text-xs sm:text-[13px] font-bold">
+          <div className="grid grid-cols-2 gap-1 w-full text-xs sm:text-sm font-bold">
             {[
               { id: "profile", label: "Hồ sơ cá nhân", mobileLabel: "Hồ sơ", Icon: User },
               { id: "academic", label: "Kết quả học tập", mobileLabel: "Học tập", Icon: BookOpen }
@@ -249,8 +260,8 @@ function StudentEditPanel({ student, namHoc, lop, onClose, onSaved }) {
         title={student?.isProfileLocked ? "Mở khóa chỉnh sửa hồ sơ?" : "Khóa chỉnh sửa hồ sơ?"}
         message={
           student?.isProfileLocked
-            ? `Bạn có chắc chắn muốn mở khóa chỉnh sửa hồ sơ cho học sinh "${student.hoTen || student.username}"?`
-            : `Bạn có chắc chắn muốn khóa chỉnh sửa hồ sơ cho học sinh "${student.hoTen || student.username}"? Sau khi khóa, thông tin hộ tịch và bí tích sẽ được bảo vệ và không thể tự ý sửa đổi.`
+            ? `Bạn có chắc chắn muốn mở khóa chỉnh sửa hồ sơ cho giáo lý sinh "${student.hoTen || student.username}"?`
+            : `Bạn có chắc chắn muốn khóa chỉnh sửa hồ sơ cho giáo lý sinh "${student.hoTen || student.username}"? Sau khi khóa, thông tin hộ tịch và bí tích sẽ được bảo vệ và không thể tự ý sửa đổi.`
         }
         confirmLabel={student?.isProfileLocked ? "Mở khóa" : "Khóa hồ sơ"}
         icon={student?.isProfileLocked ? Unlock : Lock}

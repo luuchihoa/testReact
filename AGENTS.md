@@ -1,12 +1,18 @@
 # Tiêu chuẩn thiết kế và phát triển — Ban Giáo lý An Ngãi
 
-> Phiên bản 1.0 · Ngày 11/09/2026
+> Phiên bản 1.1 · Ngày 17/09/2026
 > Áp dụng cho agent, lập trình viên và người duyệt thay đổi trong repository này.
 
 ## 1. Phạm vi và cách áp dụng
 
 Đọc file này trước khi thiết kế, sửa giao diện hoặc thay đổi luồng sử dụng. Mục tiêu là một website **trang trọng, ấm áp, dễ đọc và dễ thao tác**, phục vụ thiếu nhi, phụ huynh, giáo lý viên và ban quản trị.
 
+- **BẮT BUỘC ƯU TIÊN MOBILE-FIRST:** Mọi thiết kế và sửa đổi giao diện phải đặt trải nghiệm trên màn hình di động (320px – 430px) lên hàng đầu, tối ưu hoàn hảo trên mobile trước khi mở rộng lên Tablet và Desktop.
+- **BẮT BUỘC ĐỘ TƯƠNG PHẢN WCAG AAA:** Tương phản văn bản thường phải đạt $\ge 7.0:1$; văn bản lớn $\ge 4.5:1$; viền điều khiển/focus $\ge 3.0:1$ trên cả chế độ Sáng (Light) và Tối (Dark).
+- **BẮT BUỘC CHUẨN HÓA 100% REM:** Toàn bộ văn bản phải dùng thang đo `rem` (`text-xs` đến `text-2xl`), KHÔNG dùng `text-[...px]` cố định để tôn trọng cài đặt cỡ chữ trong `/cài-đặt`.
+- **BẮT BUỘC CHỐNG VỠ GIAO DIỆN KHI TĂNG CỠ CHỮ (Font Scaling Resilience):** Tuyệt đối KHÔNG dùng chiều cao cố định (`h-10`, `h-12`, `h-[...px]`) cho các thẻ/container chứa chữ; luôn dùng `min-h-[...]`, `py-*` và responsive wrap để giao diện tự co giãn khi người dùng chọn cỡ chữ "Rất lớn" (20px) hoặc zoom 200%.
+- **BẮT BUỘC VÙNG NGÓN TAY CÁI & SAFE AREA (Thumb Zone & iOS Insets):** Bố trí các nút thao tác chính (Lưu, Xác nhận, Đóng popup) ở nửa dưới màn hình; xử lý an toàn `safe-area-inset-bottom` trên iOS để không bị che bởi Home indicator.
+- **BẮT BUỘC BẢO MẬT THIẾU NHI & CHUẨN THUẬT NGỮ CÔNG GIÁO:** Không để lộ số điện thoại, điểm số, thông tin riêng tư của thiếu nhi ra trang công khai; dùng đúng danh xưng phụng vụ (Giáo lý sinh, Giáo lý viên, Cha Tuyên úy, Niên khóa...).
 - **BẮT BUỘC:** tiêu chí phải đạt trong phần được sửa hoặc tạo mới.
 - **NÊN:** mặc định áp dụng; nếu có lý do khác, ghi ngắn gọn trong phần bàn giao.
 - **KHÔNG:** hành vi cần tránh vì làm sai thông tin, mất khả năng sử dụng hoặc phá vỡ cấu trúc dự án.
@@ -97,7 +103,7 @@
 - NÊN đưa token dùng chung vào một nguồn CSS duy nhất khi nhiệm vụ có phạm vi chuẩn hóa. Không tuyên bố token đã được dùng chung chỉ vì đã viết vào tài liệu này.
 - Với các namespace đang có như `--about-*`, `--c-*`, `--cc-*`, có thể ánh xạ sang token chung trong đợt sửa liên quan; tránh thay đồng loạt ngoài phạm vi.
 
-### Kích thước và khoảng cách
+### Kích thước, khoảng cách và chuẩn hóa REM
 
 | Thành phần | Mặc định |
 | --- | --- |
@@ -105,22 +111,48 @@
 | Lề ngang | Mobile 16–20px; desktop tối thiểu 32px |
 | Khoảng cách section | Mobile 40–48px; desktop 64–84px |
 | Khoảng cách trong nhóm | Theo thang 4, 8, 12, 16, 24, 32px |
-| H1 giới thiệu | Mobile khoảng 36–44px; desktop 48–64px, co giãn bằng `clamp()` |
-| H2 | Mobile 28–32px; desktop 32–40px |
-| Nội dung chính | 1rem; dòng 1.6–1.8; đoạn đọc dài khoảng 60–75 ký tự mỗi dòng |
-| Chữ phụ/nhãn cần đọc | NÊN từ 0.75rem; không dùng chữ rất nhỏ để nhét thông tin |
-| Input, select, textarea trên mobile | Tối thiểu 1rem ở cỡ chữ mặc định |
+| H1 giới thiệu | Mobile khoảng 36–44px; desktop 48–64px, co giãn bằng `clamp()` hoặc `text-2xl`/`text-3xl` |
+| H2 | Mobile 28–32px; desktop 32–40px, tương ứng `text-xl`/`text-2xl` |
+| Nội dung chính | 1rem (`text-base`); dòng 1.6–1.8; đoạn đọc dài khoảng 60–75 ký tự mỗi dòng |
+| Chữ phụ/nhãn cần đọc | Tối thiểu từ 0.75rem (`text-xs`); không dùng chữ rất nhỏ để nhét thông tin |
+| Input, select, textarea trên mobile | Tối thiểu 1rem (`text-base`) ở cỡ chữ mặc định |
 | Vùng chạm điều khiển | Tối thiểu 44 × 44 CSS px |
 | Bo góc trang công khai | Điều khiển 8px; card/panel 12–16px; pill dành cho badge/bộ lọc |
 
-- Ưu tiên `rem` cho chữ để tôn trọng cài đặt cỡ chữ của ứng dụng. Kiểm tra lại khi người dùng tăng cỡ chữ.
-- Không thu nhỏ chữ để giải quyết tràn; đổi bố cục, cho xuống dòng hoặc rút gọn câu chữ.
+#### Bảng ánh xạ Tailwind REM bắt buộc:
+
+| Class Tailwind | Giá trị REM | Kích thước chuẩn (16px) | Vai trò áp dụng |
+| :--- | :--- | :--- | :--- |
+| `text-xs` | `0.75rem` | 12px | Nhãn nhỏ, chú thích phụ, badge, metadata |
+| `text-sm` | `0.875rem` | 14px | Nhãn form, phụ đề, mô tả ngắn, nội dung phụ |
+| `text-base` | `1rem` | 16px | Nội dung chính, đoạn văn đọc, ô nhập liệu |
+| `text-lg` | `1.125rem` | 18px | Tiêu đề phụ, điểm nhấn, số liệu quan trọng |
+| `text-xl` | `1.25rem` | 20px | Tiêu đề section (H2/H3), thẻ nhóm |
+| `text-2xl` | `1.5rem` | 24px | Tiêu đề trang chính (H1) |
+
+- **BẮT BUỘC:** 100% cỡ chữ văn bản dùng class `rem` chuẩn (`text-xs` đến `text-2xl`...) để tôn trọng cài đặt cỡ chữ của ứng dụng (`/cài-đặt`).
+- **KHÔNG:** Dùng các class pixel cố định như `text-[11px]`, `text-[12px]`, `text-[13px]`, `text-[14px]`, `text-[15px]` vì làm vô hiệu hóa tính năng cài đặt cỡ chữ.
+- **KHÔNG:** Thu nhỏ chữ bằng pixel cứng để giải quyết tràn; **BẮT BUỘC** đổi bố cục (flex-col, grid responsive, co giãn padding, truncate, hoặc cho xuống dòng).
+- **BẮT BUỘC CHỐNG VỠ GIAO DIỆN (No Fixed Height on Text Containers):** KHÔNG dùng `h-10`, `h-12`, `h-[...px]`, `max-h-[...px]` cho các container, card, badge hoặc nút chứa văn bản. Luôn dùng `min-h-[44px]`, padding `py-2` đến `py-3`, `px-3` và `flex-wrap` hoặc `flex-col` để khi người dùng chọn cỡ chữ "Rất lớn" (20px base) hoặc zoom 200%, nội dung không bị cắt xén hay đè chữ.
 - Hình vòm/bo góc lớn được dùng cho ảnh hero đặc trưng, không áp lên mọi card.
 - Shadow nhẹ là tùy chọn. Không bắt buộc blur, kính mờ, gradient, glow, pattern hoặc chữ in hoa cho label biểu mẫu.
 
 ## 6. Responsive và khả năng sử dụng
 
-- BẮT BUỘC kiểm tra 320px, 390px, 768px và 1280px cho bố cục mới; kiểm tra thêm breakpoint riêng nếu có.
+- **BẮT BUỘC ƯU TIÊN MOBILE-FIRST:**
+  - Bắt đầu thiết kế, căn chỉnh bố cục và kiểm thử trên các kích thước di động nhỏ trước: **320px (iPhone SE 1), 375px (iPhone SE 2/3), 390px (iPhone 12/13/14), 430px (iPhone Pro Max)** trước khi mở rộng lên Tablet (768px) và Desktop (1280px).
+  - Mọi thao tác cốt lõi, bảng điểm, danh sách, bộ lọc, nút bấm phải mượt mà và ngón tay cái chạm dễ dàng trên mobile.
+- **BẮT BUỘC VÙNG NGÓN TAY CÁI & SAFE AREA (Thumb Zone & iOS Insets):**
+  - Bố trí các nút bấm quan trọng (Lưu, Xác nhận, Tiếp tục, Đóng popup, Điểm danh) ở **nửa dưới màn hình (Thumb zone)** để người dùng dễ thao tác bằng một tay. Tránh đặt nút chính ở góc xa trên cùng bên trái.
+  - Xử lý padding an toàn cho đáy màn hình trên iPhone (`pb-[env(safe-area-inset-bottom)]`) và tai thỏ/Dynamic Island (`pt-[env(safe-area-inset-top)]`) để tránh bị che khuất bởi thanh Home bar hoặc camera.
+- **BẮT BUỘC TRẢI NGHIỆM MẠNG YẾU & SKELETON LOADING (Low-connectivity UX):**
+  - Tuyệt đối KHÔNG dùng spinner xoay tròn vô định giữa màn hình trống; **BẮT BUỘC** dùng khung xương (**Skeleton loading**) mô phỏng đúng kích thước khối nội dung để tránh giật layout (Cumulative Layout Shift - CLS).
+  - Các biểu mẫu nhập liệu dài (Đăng ký học giáo lý, góp ý, soạn bài) nên tự động lưu nháp (`localStorage`) để không bị mất nội dung khi rớt mạng 4G/Wifi.
+- **BẮT BUỘC ĐỘ TƯƠNG PHẢN WCAG AAA:**
+  - Tương phản văn bản thường (dưới 18pt / 24px) tối thiểu **$\ge 7.0:1$** trên nền thực tế (kiểm tra cả Light mode và Dark mode).
+  - Tương phản văn bản lớn ($\ge 18\text{pt}$ hoặc bold $\ge 14\text{pt}$) tối thiểu **$\ge 4.5:1$**.
+  - Thành phần điều khiển, đường viền ô nhập liệu và chỉ báo focus tối thiểu **$\ge 3.0:1$**.
+  - Không truyền đạt trạng thái duy nhất bằng màu; luôn đi kèm icon, ký tự hoặc nhãn chữ.
 - Không được có cuộn ngang toàn trang. Không dùng `overflow-x: hidden` để che phần nội dung bị tràn chưa xử lý.
 - Nội dung quan trọng và hành động chính phải hiện trên thiết bị cảm ứng; không phụ thuộc hover.
 - Hiệu ứng hover trang trí dùng `@media (hover: hover) and (pointer: fine)`. `md:hover` chỉ liên quan độ rộng, không chứng minh thiết bị có chuột.
@@ -130,8 +162,7 @@
 - Không lồng button/link bên trong một link khác.
 - Một trang có một H1; không lồng `<main>` vào `<main>` mà layout đã cung cấp.
 - Ảnh nội dung có `alt`; ảnh trang trí có `alt=""`; icon trang trí ẩn khỏi công cụ hỗ trợ.
-- Nút chỉ có icon phải có tên truy cập. Mọi điều khiển phải có focus nhìn thấy được.
-- Mục tiêu nghiệm thu nội bộ: tương phản chữ thường tối thiểu 4.5:1; chữ lớn và thành phần điều khiển/focus cần thiết tối thiểu 3:1 trên nền thực tế. Không ghi “đạt WCAG” khi chưa kiểm tra phạm vi tương ứng.
+- Nút chỉ có icon phải có tên truy cập (`aria-label`). Mọi điều khiển phải có focus nhìn thấy được.
 - Kiểm tra bằng bàn phím và khi phóng to trang 200%; không cắt mất nội dung hoặc hành động.
 
 ## 7. Biểu mẫu, trạng thái và phản hồi
@@ -163,10 +194,58 @@
 - Có thể dùng native `<dialog>` hoặc component hiện có đã đáp ứng hành vi trên; không mặc định mọi modal cũ đều đạt.
 - Thư viện ảnh có nút trước/sau, bộ đếm, chú thích; phím mũi tên hoạt động trong trình xem ảnh. Đổi bộ lọc không làm sai ảnh đang chọn.
 - FAQ dùng button với `aria-expanded`, `aria-controls` hoặc phần tử HTML phù hợp; nội dung đóng không được nhận focus.
-- Chuyển động là tùy chọn. CSS đủ cho hover/transition đơn giản; dùng Framer Motion khi có nhu cầu thực tế.
-- Transition thông thường khoảng 150–300ms. Reveal nếu dùng phải nhẹ, có điểm dừng và không trì hoãn thao tác.
-- Khi `prefers-reduced-motion: reduce`: bỏ parallax, chuyển động trang trí lặp và cuộn mượt; vẫn giữ thông báo trạng thái bằng chữ.
-- Không bắt buộc `AnimatePresence` chỉ để hiện/ẩn một câu trả lời. Không animate toàn bộ bảng hoặc danh sách dài theo độ trễ tăng không giới hạn.
+
+### 8.1. Tinh thần chuyển động của website Giáo lý Công giáo
+
+Chuyển động phải giữ cảm giác **trang nghiêm, ấm áp và dễ tập trung**. Animation dùng để dẫn dắt sự chú ý, giải thích thay đổi giao diện hoặc phản hồi thao tác; không dùng chỉ để làm giao diện có vẻ sinh động.
+
+- **BẮT BUỘC:** Trước khi sửa hoặc thiết kế lại một trang đang có animation, kiểm tra chuyển động hiện hữu và quyết định rõ phần nào giữ, sửa hoặc bỏ. Không được xóa toàn bộ animation có ích chỉ vì tái cấu trúc JSX/CSS.
+- **BẮT BUỘC:** Nội dung và thao tác phải dùng được ngay cả khi JavaScript animation không chạy hoặc người dùng bật giảm chuyển động.
+- **NÊN:** Trang công khai như giới thiệu, tuyển sinh và trang khối học có chuyển động dẫn dắt nhẹ ở hero, section quan trọng và thay đổi trạng thái nếu không làm chậm thao tác.
+- **NÊN:** Trang bài học, Kinh Thánh, phụng vụ và nội dung cầu nguyện chỉ dùng fade, crossfade hoặc chuyển trạng thái nhẹ.
+- **NÊN:** Màn hình quản trị, giáo viên, tài khoản, bảng và biểu mẫu chỉ dùng chuyển động chức năng cho modal, accordion, loading, lỗi, thành công và thay đổi cấu trúc cần giải thích.
+- **KHÔNG:** Bắt buộc mọi section hoặc mọi card phải animate. Nội dung đã rõ ở trạng thái tĩnh có thể giữ tĩnh.
+- **KHÔNG:** Dùng bounce, shake, confetti, chữ chạy, glow nhấp nháy, parallax mạnh hoặc animation lặp chỉ để trang trí.
+- **KHÔNG:** Làm Thánh giá, Mình Thánh Chúa, ảnh tượng, biểu tượng cầu nguyện hoặc biểu tượng phụng vụ xoay, nảy, pulse hay bay lặp. Ảnh và biểu tượng tôn giáo chỉ nên giữ tĩnh hoặc fade-in nhẹ cùng nội dung.
+
+### 8.2. Mức chuyển động mặc định
+
+| Trường hợp | Chuyển động mặc định |
+| --- | --- |
+| Hero trang công khai | Fade và dịch dọc 12–20px, 350–500ms; có thể stagger badge, H1, đoạn dẫn và CTA 50–80ms |
+| Section reveal | Fade và dịch dọc 12–20px, 300–450ms, chạy một lần khi vào viewport |
+| Card reveal | Dịch dọc không quá 16px; stagger 40–60ms/mục và không kéo dài vô hạn |
+| Hover có chuột | Đổi nhẹ màu, viền, shadow hoặc dịch lên tối đa 2px trong 150–220ms |
+| Accordion, modal, menu | 180–300ms; ưu tiên opacity, height hoặc scale rất nhẹ từ khoảng 0.98 lên 1 |
+| Form sang lỗi/thành công | Fade/crossfade 180–300ms; quản lý focus ngay sau khi trạng thái đổi |
+| Smooth scroll | Thông thường không quá 600ms; phải có offset cho header và đích focus phù hợp |
+
+- Các giá trị trên là chuẩn mặc định, không phải lý do để thêm animation khi chuyển động không mang lại lợi ích.
+- Reveal danh sách dùng `viewport: { once: true }` hoặc cơ chế tương đương. Danh sách dài không stagger từng dòng; giới hạn tổng độ trễ để nội dung cuối không phải chờ.
+- Không animate từng input, từng dòng bảng hoặc toàn bộ danh sách nghiệp vụ. Không trì hoãn hiển thị lỗi, nút chính hoặc dữ liệu người dùng cần đọc ngay.
+- CSS đủ cho hover và transition đơn giản. Dùng Framer Motion khi cần phối hợp sequence, layout, enter/exit hoặc reduced motion; không thêm thư viện mới chỉ cho một fade đơn giản.
+- `AnimatePresence` là tùy chọn cho FAQ đơn giản, nhưng NÊN dùng cho chuyển đổi có thay thế nội dung như form → thành công, lỗi → thử lại hoặc modal enter/exit nếu giúp tránh thay đổi đột ngột.
+
+### 8.3. Reduced motion và tính ổn định
+
+- **BẮT BUỘC:** Khi `prefers-reduced-motion: reduce`, bỏ transform, parallax, animation lặp và smooth scroll; nội dung xuất hiện ngay và không bị giữ ở `opacity: 0`.
+- **BẮT BUỘC:** Loading, lỗi, thành công và trạng thái nghiệp vụ luôn có nhãn chữ; không truyền đạt chỉ bằng spinner, màu hoặc chuyển động.
+- **BẮT BUỘC:** Chuyển động thay đổi chiều cao không được làm mất focus hoặc khiến người dùng mất vị trí đang đọc.
+- Spinner có thể dùng cạnh nhãn trạng thái trong lúc xử lý ngắn, nhưng phải dừng chuyển động ở reduced motion; skeleton dùng khi đang tải cấu trúc nội dung và cần giữ ổn định bố cục.
+- Hover trang trí chỉ chạy trong `@media (hover: hover) and (pointer: fine)`. `md:hover` không thay thế kiểm tra khả năng hover.
+- Tránh dùng `transition-all` khi chỉ cần chuyển một vài thuộc tính; chỉ định `color`, `background-color`, `border-color`, `opacity`, `box-shadow` hoặc `transform` để giảm chuyển động ngoài ý muốn.
+
+### 8.4. Nghiệm thu chuyển động
+
+Phần giao diện có animation chỉ được coi là đã kiểm tra khi đã xem:
+
+- Lần tải đầu trang và khi cuộn nhanh qua các section.
+- Mobile 320px, 390px và desktop 1280px; kiểm tra thêm 768px theo quy định responsive.
+- `prefers-reduced-motion: reduce`.
+- Điều hướng bằng bàn phím, focus sau smooth scroll, modal và thay đổi trạng thái form.
+- Form hoặc dữ liệu ở trạng thái loading, lỗi, chưa xác định và thành công nếu có.
+- Nội dung không bị giữ ở `opacity: 0`, không nhảy bố cục quá mức và không có animation lặp gây mất tập trung.
+- Thiết bị cảm ứng không phụ thuộc hover để nhìn thấy trạng thái hoặc hành động.
 
 ## 9. Nội dung, ảnh và độ tin cậy
 
@@ -182,6 +261,26 @@
 - Tài nguyên từ `public` phải tương thích `import.meta.env.BASE_URL`; không giả định website luôn triển khai ở `/`.
 - Không hiển thị CTA mở nội dung placeholder. Nếu bản đồ/video chưa hoạt động, cung cấp hành động thật thay thế.
 - Tiêu đề/mô tả trang phải phản ánh nội dung; dọn metadata khi chuyển route. Metadata client không phải bằng chứng bot chia sẻ mạng xã hội đã đọc được.
+
+### Chuẩn hóa Thuật ngữ Công giáo & Phụng vụ
+
+Tuyệt đối không dùng thuật ngữ thế tục cho các khái niệm Giáo lý / Công giáo:
+
+| Thuật ngữ thế tục (KHÔNG DÙNG) | Thuật ngữ Công giáo chuẩn (BẮT BUỘC DÙNG) |
+| :--- | :--- |
+| Học sinh, học viên, học sinh giáo lý | **Giáo lý sinh / Thiếu nhi** |
+| Thầy cô, giáo viên, cô giáo | **Giáo lý viên / Huynh trưởng** |
+| Giờ học thêm, giờ học văn hóa | **Giờ học Giáo lý** |
+| Cha xứ, ông linh mục, cha giáo | **Cha Xứ / Cha Tuyên úy / Linh mục** |
+| Năm học | **Niên khóa** (ví dụ: *Niên khóa 2026 – 2027*) |
+| Đạo đức, hạnh kiểm trường lớp | **Hạnh kiểm / Chuyên cần / Sống đạo** |
+| Đơn vị, chi nhánh, phân hiệu | **Xứ đoàn / Phân đoàn / Ngành / Chi đoàn** |
+| Phòng học | **Phòng Giáo lý / Lớp Giáo lý** |
+
+### Bảo vệ Quyền riêng tư & Dữ liệu Thiếu nhi
+
+- **BẮT BUỘC BẢO MẬT THÔNG TIN THIẾU NHI:** Tuyệt đối **KHÔNG** hiển thị công khai số điện thoại phụ huynh, địa chỉ nhà, ngày sinh chi tiết hoặc bảng điểm của các em thiếu nhi ra các trang công cộng (public routes).
+- Dữ liệu này chỉ được phép truy xuất trong trang cá nhân (`/tài-khoản`) sau khi đã đăng nhập và xác thực đúng vai trò phụ huynh hoặc Giáo lý viên phụ trách lớp.
 
 ## 10. Cấu trúc mã, dữ liệu và bảo mật
 
@@ -221,6 +320,15 @@ node --test src/features/contact/contactForm.test.js
 
 ### Checklist của người thực hiện và người duyệt
 
+- [ ] **Chuyển động có chủ đích:** Đã kiểm tra animation hiện hữu trước khi sửa; giữ hoặc thay thế chuyển động có ích, không xóa toàn bộ không lý do và không thêm hiệu ứng trang trí gây phân tâm.
+- [ ] **Reduced motion:** Đã kiểm tra `prefers-reduced-motion`; nội dung xuất hiện ngay, không còn transform/parallax/smooth scroll hoặc animation lặp, và trạng thái vẫn có nhãn chữ.
+- [ ] **Ưu tiên Mobile-first:** Đã kiểm tra và tối ưu hoàn hảo trên màn hình nhỏ **320px (iPhone SE 1), 375px (iPhone SE 2/3), 390px** trước khi lên desktop; không phụ thuộc hover.
+- [ ] **Chuẩn độ tương phản WCAG AAA:** Chữ thường đạt $\ge 7.0:1$, chữ lớn $\ge 4.5:1$, điều khiển/focus $\ge 3.0:1$ trên cả chế độ Sáng và Tối.
+- [ ] **Chuẩn hóa 100% REM & Chống vỡ chữ:** Toàn bộ cỡ chữ dùng class rem chuẩn (`text-xs` đến `text-2xl`); **KHÔNG có `text-[...px]` cứng**; không dùng `h-fixed` trên container chữ; hiển thị hoàn hảo ở cỡ chữ "Rất lớn" và khi zoom 200%.
+- [ ] **Vùng chạm điều khiển & Thumb Zone:** Mọi nút bấm, switch, tab đạt tối thiểu **$44 \times 44\text{ CSS px}$**; nút chính nằm ở nửa dưới màn hình; xử lý `safe-area-inset-bottom` trên iOS.
+- [ ] **Tải trang mượt mà (Skeleton loading):** Dùng skeleton cho trạng thái tải, tuyệt đối không dùng spinner vô định làm giật layout (CLS).
+- [ ] **Thuật ngữ Công giáo chuẩn mực:** Dùng đúng danh xưng phụng vụ (Giáo lý sinh, Giáo lý viên, Cha Tuyên úy, Niên khóa...).
+- [ ] **Bảo mật dữ liệu thiếu nhi:** Không để lộ số điện thoại, điểm số, thông tin cá nhân ra ngoài trang công khai.
 - [ ] Thay đổi đúng route đang chạy và đúng phạm vi yêu cầu.
 - [ ] Hành động chính dễ tìm; không còn nút giả, link sai hoặc placeholder mới.
 - [ ] Bố cục đạt các kích thước quy định; không tràn ngang; không đè điều hướng mobile.

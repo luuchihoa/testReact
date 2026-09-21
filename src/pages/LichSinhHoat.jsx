@@ -1,228 +1,417 @@
-import React, { useState, useEffect } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Calendar, Tent, BookOpen, Sparkles, Flame, Sun, Info } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { motion as Motion, useReducedMotion } from "framer-motion";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Sparkles,
+  Info,
+  CalendarDays,
+  Mail,
+  FileCheck,
+  Compass
+} from "lucide-react";
+import {
+  ACADEMIC_YEAR,
+  ACTIVITY_CATEGORIES,
+  WEEKLY_ROUTINE,
+  ACADEMIC_EVENTS_2026_2027,
+  SKILL_MODULES
+} from "../data/lichSinhHoatData.js";
+import "./LichSinhHoat.css";
 
-import { usePageMotion } from "../hooks/usePageMotion.js";
-
-const KHOI_STYLE = {
-  "Kinh Thánh":                    { icon: BookOpen, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10", border: "border-amber-200/60 dark:border-amber-500/20" },
-  "Vào Đời & Thêm Sức":           { icon: Flame,    color: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/10", border: "border-orange-200/60 dark:border-orange-500/20" },
-  "Thêm Sức 1 & Rước Lễ Lần Đầu 1": { icon: Sparkles, color: "text-stone-700 dark:text-stone-400", bg: "bg-stone-100 dark:bg-stone-500/10", border: "border-stone-200/60 dark:border-stone-500/20" },
-};
-
-const SESSION_TIME = "19h15 – 20h30";
-
-const WEEKS = [
-  {
-    range: "07/06 – 13/06",
-    days: [
-      { date: "07/06", weekday: "Chúa Nhật", session: SESSION_TIME, khoi: "Thêm Sức 1 & Rước Lễ Lần Đầu 1" },
-      { date: "09/06", weekday: "Thứ 3",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "10/06", weekday: "Thứ 4",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-      { date: "11/06", weekday: "Thứ 5",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "12/06", weekday: "Thứ 6",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-    ],
-  },
-  {
-    range: "14/06 – 20/06",
-    days: [
-      { date: "14/06", weekday: "Chúa Nhật", session: SESSION_TIME, khoi: "Thêm Sức 1 & Rước Lễ Lần Đầu 1" },
-      { date: "16/06", weekday: "Thứ 3",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "17/06", weekday: "Thứ 4",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-      { date: "18/06", weekday: "Thứ 5",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "19/06", weekday: "Thứ 6",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-    ],
-  },
-  {
-    range: "21/06 – 27/06",
-    days: [
-      { date: "21/06", weekday: "Chúa Nhật", session: SESSION_TIME, khoi: "Thêm Sức 1 & Rước Lễ Lần Đầu 1" },
-      { date: "23/06", weekday: "Thứ 3",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "24/06", weekday: "Thứ 4",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-      { date: "25/06", weekday: "Thứ 5",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "26/06", weekday: "Thứ 6",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-    ],
-  },
-  {
-    range: "28/06 – 04/07",
-    isLastBeforeCamp: true,
-    days: [
-      { date: "28/06", weekday: "Chúa Nhật", session: SESSION_TIME, khoi: "Thêm Sức 1 & Rước Lễ Lần Đầu 1" },
-      { date: "30/06", weekday: "Thứ 3",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "01/07", weekday: "Thứ 4",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-      { date: "02/07", weekday: "Thứ 5",     session: SESSION_TIME, khoi: "Vào Đời & Thêm Sức" },
-      { date: "03/07", weekday: "Thứ 6",     session: SESSION_TIME, khoi: "Kinh Thánh" },
-    ],
-  },
+const PERIOD_OPTIONS = [
+  { id: "all", label: "Cả Niên Khóa" },
+  { id: "q3_2026", label: "Quý 3/2026" },
+  { id: "q4_2026", label: "Quý 4/2026" },
+  { id: "q1_2027", label: "Quý 1/2027" },
+  { id: "q2_2027", label: "Quý 2/2027" },
 ];
 
-function parseDayDate(dateStr) {
-  const [d, m] = dateStr.split("/");
-  const year = parseInt(m) >= 6 ? 2026 : 2027; 
-  return new Date(year, parseInt(m) - 1, parseInt(d));
-}
-
-function isTodayDate(dateStr) {
-  const today = new Date();
-  const d = parseDayDate(dateStr);
-  return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-}
-
-function DayCard({ day }) {
-  const style = KHOI_STYLE[day.khoi];
-  const Icon = style.icon;
-  const isToday = isTodayDate(day.date);
-
-  return (
-    <div
-      className={`
-        flex items-center gap-4 rounded-[1.5rem] border p-4 transition-all duration-300 backdrop-blur-sm
-        ${isToday
-          ? "bg-amber-900 border-amber-950 text-amber-50 shadow-xl dark:bg-amber-100 dark:border-amber-200 dark:text-amber-950 scale-[1.02]"
-          : `bg-white/90 dark:bg-stone-800/50 border-amber-900/10 dark:border-amber-100/10 shadow-sm hover:shadow-md dark:shadow-none`
-        }
-      `}
-    >
-      <div className="flex-shrink-0 w-12 text-center">
-        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 ${isToday ? "text-amber-300 dark:text-amber-700" : "text-stone-400 dark:text-stone-500"}`}>
-          {day.weekday}
-        </p>
-        <p className={`text-xl font-extrabold tracking-tight ${isToday ? "text-amber-50 dark:text-amber-950" : "text-stone-800 dark:text-stone-100"}`}>
-          {day.date}
-        </p>
-      </div>
-
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isToday ? "bg-white/20 dark:bg-black/10 text-white dark:text-stone-900" : `${style.bg} ${style.color}`}`}>
-        <Icon className="w-4 h-4" />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 mb-0.5">
-          <p className={`text-[13px] font-bold leading-tight truncate ${isToday ? "text-amber-50 dark:text-amber-950" : "text-stone-900 dark:text-stone-100"}`}>
-            {day.khoi}
-          </p>
-          {isToday && (
-            <span className="flex-shrink-0 text-[10px] font-extrabold bg-amber-500 text-stone-950 dark:bg-amber-600 dark:text-white rounded-full px-2 py-0.5 leading-none uppercase tracking-wide">
-              Hôm nay
-            </span>
-          )}
-        </div>
-        <p className={`text-[12px] font-medium ${isToday ? "text-amber-200 dark:text-amber-800" : "text-stone-500 dark:text-stone-400"}`}>
-          {day.session}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function LichSinhHoat() {
-  const { mc, fadeUp, heroReveal, vp } = usePageMotion();
+  const prefersReduced = useReducedMotion();
+  const [activeTab, setActiveTab] = useState("timeline"); // "timeline" | "routine" | "skills"
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState("all");
+
+  // Cập nhật tiêu đề trang chuẩn mực
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = `Lịch Sinh Hoạt & Sự Kiện Giáo Lý ${ACADEMIC_YEAR} | Giáo xứ An Ngãi`;
+    return () => {
+      document.title = prevTitle;
+    };
+  }, []);
+
+  // Lọc danh sách sự kiện dựa trên category và period
+  const filteredEvents = useMemo(() => {
+    return ACADEMIC_EVENTS_2026_2027.filter((evt) => {
+      const matchCat = categoryFilter === "all" || evt.category === categoryFilter;
+      const matchPeriod =
+        periodFilter === "all" ||
+        (periodFilter === "q3_2026" && evt.quarter === "Q3/2026") ||
+        (periodFilter === "q4_2026" && evt.quarter === "Q4/2026") ||
+        (periodFilter === "q1_2027" && evt.quarter === "Q1/2027") ||
+        (periodFilter === "q2_2027" && evt.quarter === "Q2/2027");
+      return matchCat && matchPeriod;
+    });
+  }, [categoryFilter, periodFilter]);
+
+  // Motion variants chuẩn AGENTS.md §8:
+  const heroContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: prefersReduced ? 0 : 0.06,
+        delayChildren: prefersReduced ? 0 : 0.04,
+      },
+    },
+  };
+
+  const heroItem = {
+    hidden: { opacity: 0, y: prefersReduced ? 0 : 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: prefersReduced ? 0.15 : 0.38, ease: "easeOut" },
+    },
+  };
+
+  const chipsContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: prefersReduced ? 0 : 0.05,
+        delayChildren: prefersReduced ? 0 : 0.1,
+      },
+    },
+  };
+
+  const chipItem = {
+    hidden: { opacity: 0, y: prefersReduced ? 0 : 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: prefersReduced ? 0.15 : 0.32, ease: "easeOut" },
+    },
+  };
+
+  const sectionReveal = {
+    initial: { opacity: 0, y: prefersReduced ? 0 : 14 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-40px 0px" },
+    transition: { duration: prefersReduced ? 0.15 : 0.4, ease: "easeOut" },
+  };
+
+  const cardReveal = {
+    initial: { opacity: 0, y: prefersReduced ? 0 : 12 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-30px 0px" },
+    transition: { duration: prefersReduced ? 0.15 : 0.35, ease: "easeOut" },
+  };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 font-sans antialiased overflow-x-hidden selection:bg-amber-500/30 transition-colors duration-500">
+    <div className="act-page antialiased">
+      {/* ════ HERO SECTION ════ */}
+      <Motion.header
+        className="act-hero"
+        variants={heroContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <div className="act-shell">
+          <div className="act-hero-grid">
+            <div className="act-hero-left">
+              <Motion.div variants={heroItem} className="act-hero-eyebrow">
+                <span className="act-dot" aria-hidden="true" />
+                <span className="act-eyebrow">
+                  Xứ đoàn Mẹ Mân Côi · Niên khóa {ACADEMIC_YEAR}
+                </span>
+              </Motion.div>
 
-      {/* ══ HERO ══ */}
-      <header className="relative max-w-4xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-20 text-center overflow-hidden">
-        {!mc.isMobile && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-200/40 dark:bg-amber-900/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
+              <Motion.h1 variants={heroItem} className="act-hero-title">
+                Lịch Sinh Hoạt <em>&amp; Sự Kiện Giáo Lý</em>
+              </Motion.h1>
+
+              <Motion.p variants={heroItem} className="act-hero-desc">
+                Kế hoạch sinh hoạt phụng vụ, đào tạo đức tin và các chương trình ngoại khóa, dã ngoại, hội trại truyền thống của Xứ đoàn Hùng Tâm Dũng Chí Giáo xứ An Ngãi.
+              </Motion.p>
+            </div>
+
+            {/* 4 Overview Chips 2x2: Stagger cascade */}
+            <Motion.div
+              variants={chipsContainer}
+              className="act-overview-chips"
+              aria-label="Tóm tắt lịch sinh hoạt"
+            >
+              <Motion.div variants={chipItem} className="act-overview-chip">
+                <span className="act-chip-cat">Niên Khóa</span>
+                <span className="act-chip-value">{ACADEMIC_YEAR}</span>
+                <span className="act-chip-label">Áp dụng toàn Xứ đoàn</span>
+              </Motion.div>
+              <Motion.div variants={chipItem} className="act-overview-chip">
+                <span className="act-chip-cat">Sự Kiện Lớn</span>
+                <span className="act-chip-value">21 Hoạt Động</span>
+                <span className="act-chip-label">Trải dài 10 tháng</span>
+              </Motion.div>
+              <Motion.div variants={chipItem} className="act-overview-chip">
+                <span className="act-chip-cat">Định Kỳ</span>
+                <span className="act-chip-value">4 Khung Giờ</span>
+                <span className="act-chip-label">Chúa Nhật &amp; trong tuần</span>
+              </Motion.div>
+              <Motion.div variants={chipItem} className="act-overview-chip">
+                <span className="act-chip-cat">Kỹ Năng</span>
+                <span className="act-chip-value">4 Chuyên Đề</span>
+                <span className="act-chip-label">Huấn luyện hàng đội</span>
+              </Motion.div>
+            </Motion.div>
+          </div>
+        </div>
+      </Motion.header>
+
+      {/* ════ STICKY NAVIGATION & TAB SELECTOR ════ */}
+      <nav className="act-nav-sticky" aria-label="Bộ chọn chế độ xem lịch sinh hoạt">
+        <div className="act-shell">
+          <div className="act-tab-group">
+            <button
+              type="button"
+              onClick={() => setActiveTab("timeline")}
+              className={`act-tab-btn ${activeTab === "timeline" ? "active" : ""}`}
+              aria-current={activeTab === "timeline" ? "true" : undefined}
+            >
+              <Calendar size={16} aria-hidden="true" />
+              <span>Dòng Thời Gian Sự Kiện ({ACADEMIC_EVENTS_2026_2027.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("routine")}
+              className={`act-tab-btn ${activeTab === "routine" ? "active" : ""}`}
+              aria-current={activeTab === "routine" ? "true" : undefined}
+            >
+              <Clock size={16} aria-hidden="true" />
+              <span>Lịch Tuần Cố Định</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("skills")}
+              className={`act-tab-btn ${activeTab === "skills" ? "active" : ""}`}
+              aria-current={activeTab === "skills" ? "true" : undefined}
+            >
+              <Compass size={16} aria-hidden="true" />
+              <span>Kỹ Năng Hàng Đội ({SKILL_MODULES.length})</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ════ MAIN CONTENT AREA ════ */}
+      <main className="act-content-shell">
+        {/* ── TAB 1: DÒNG THỜI GIAN SỰ KIỆN ── */}
+        {activeTab === "timeline" && (
+          <section aria-label="Dòng thời gian sự kiện niên khóa">
+            {/* Filter Pills */}
+            <div className="act-filters-wrap">
+              <div className="w-full flex flex-wrap items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--act-accent-text)] mr-1">
+                  Niên kỳ:
+                </span>
+                {PERIOD_OPTIONS.map((period) => (
+                  <button
+                    key={period.id}
+                    type="button"
+                    onClick={() => setPeriodFilter(period.id)}
+                    className={`act-filter-pill ${periodFilter === period.id ? "active" : ""}`}
+                    aria-pressed={periodFilter === period.id}
+                  >
+                    <span>{period.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-full flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--act-accent-text)] mr-1">
+                  Phân loại:
+                </span>
+                {ACTIVITY_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`act-filter-pill ${categoryFilter === cat.id ? "active" : ""}`}
+                    aria-pressed={categoryFilter === cat.id}
+                  >
+                    <span>{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Event List */}
+            <div className="act-event-list">
+              {filteredEvents.map((evt) => (
+                <Motion.article
+                  key={evt.id}
+                  className={`act-event-card ${evt.isFeatured ? "featured" : ""}`}
+                  {...cardReveal}
+                >
+                  <div className="act-event-header">
+                    <div className="act-event-date-wrap">
+                      <span className="act-event-badge-cat">{evt.categoryLabel}</span>
+                      <span className="act-event-date">
+                        {evt.weekday}, {evt.date}
+                      </span>
+                    </div>
+                    {evt.isFeatured && (
+                      <span className="act-event-badge-cat" style={{ background: "var(--act-gold-bg)", color: "var(--act-accent-text)" }}>
+                        <Sparkles size={12} className="inline mr-1" aria-hidden="true" /> Trọng tâm
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="act-event-title">{evt.title}</h3>
+
+                  <div className="act-event-meta">
+                    <span className="act-meta-item">
+                      <Clock size={14} aria-hidden="true" />
+                      <span>{evt.time}</span>
+                    </span>
+                    <span className="act-meta-item">
+                      <MapPin size={14} aria-hidden="true" />
+                      <span>{evt.location}</span>
+                    </span>
+                    <span className="act-meta-item">
+                      <Users size={14} aria-hidden="true" />
+                      <span>{evt.audience}</span>
+                    </span>
+                  </div>
+
+                  {evt.verse && (
+                    <div className="act-event-verse">
+                      {evt.verse}
+                    </div>
+                  )}
+
+                  <p className="act-event-summary">{evt.summary}</p>
+
+                  {evt.notes && (
+                    <div className="act-event-notes">
+                      <Info size={15} className="flex-shrink-0 mt-0.5" aria-hidden="true" />
+                      <span>{evt.notes}</span>
+                    </div>
+                  )}
+                </Motion.article>
+              ))}
+
+              {filteredEvents.length === 0 && (
+                <div className="act-event-card text-center py-10">
+                  <p className="text-[var(--act-muted)]">
+                    Không tìm thấy sự kiện nào trong danh mục đã chọn.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
-        <div className="relative">
-          <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0} className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50 rounded-full mb-6 shadow-sm">
-            <Calendar className="w-3.5 h-3.5" /> Lịch sinh hoạt
-          </motion.div>
+        {/* ── TAB 2: LỊCH TUẦN CỐ ĐỊNH ── */}
+        {activeTab === "routine" && (
+          <section aria-label="Khung giờ sinh hoạt cố định trong tuần">
+            <div className="act-routine-list">
+              {WEEKLY_ROUTINE.map((dayGroup) => (
+                <Motion.div
+                  key={dayGroup.day}
+                  className={`act-routine-day-card ${dayGroup.highlight ? "highlight" : ""}`}
+                  {...cardReveal}
+                >
+                  <div className="act-routine-day-head">
+                    <div className="act-routine-day-title-group">
+                      <h2>{dayGroup.day}</h2>
+                      <p>{dayGroup.subtitle}</p>
+                    </div>
+                    {dayGroup.badge && (
+                      <span className="act-event-badge-cat">{dayGroup.badge}</span>
+                    )}
+                  </div>
 
-          <motion.h1 variants={heroReveal} initial="hidden" animate="visible" custom={0.05} className="font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight text-amber-950 dark:text-amber-50 mb-5 leading-[1.08] font-serif">
-            Hành trình đến{" "}
-            <span className="bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent italic font-serif">
-              Ngày Hội Trại
-            </span>
-          </motion.h1>
-
-          <motion.p variants={heroReveal} initial="hidden" animate="visible" custom={0.1} className="max-w-lg mx-auto text-base text-stone-600 dark:text-stone-400 font-medium leading-relaxed">
-            Bốn tuần sinh hoạt cùng nhau chuẩn bị tâm hồn và tinh thần, hướng tới ngày hội trại lớn.
-          </motion.p>
-        </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-6 pb-24 space-y-16">
-
-        {/* ══ HỘI TRẠI BANNER ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.15}>
-          <div className="relative bg-gradient-to-br from-amber-800 to-amber-950 dark:from-amber-700 dark:to-amber-900 rounded-[2rem] p-8 md:p-10 overflow-hidden text-center shadow-lg">
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-amber-400/20 blur-3xl rounded-full pointer-events-none" />
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-orange-500/20 blur-3xl rounded-full pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="w-16 h-16 rounded-[1.25rem] bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/10">
-                <Tent className="w-8 h-8 text-amber-100" />
-              </div>
-              <p className="text-[12px] font-extrabold uppercase tracking-widest text-amber-200/80 mb-2">Hội Trại</p>
-              <h2 className="font-extrabold tracking-tight text-3xl md:text-4xl text-amber-50 mb-4 font-serif">Thứ Bảy, 04/07/2026</h2>
-              <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2.5 mb-5">
-                <Sun className="w-4 h-4 text-amber-300" />
-                <p className="text-[13px] font-bold text-amber-50 tracking-wide">Chủ đề: "Anh em là ánh sáng thế gian"</p>
-              </div>
-              <p className="text-[14px] text-amber-100/90 max-w-md mx-auto font-medium leading-relaxed">
-                Mt 5,14 — Ngày hội ngộ của tất cả các khối, cùng nhau sống tinh thần truyền giáo và lan tỏa ánh sáng Tin Mừng.
-              </p>
+                  <div className="act-routine-timeline">
+                    {dayGroup.timeline.map((slot, sIdx) => (
+                      <div key={sIdx} className="act-timeline-slot">
+                        <div className="act-slot-time">
+                          {slot.time}
+                        </div>
+                        <div className="act-slot-content">
+                          <h4>{slot.title}</h4>
+                          <div className="act-slot-meta">
+                            <span className="act-meta-item">
+                              <MapPin size={13} aria-hidden="true" />
+                              <span>{slot.location}</span>
+                            </span>
+                            <span className="act-meta-item">
+                              <Users size={13} aria-hidden="true" />
+                              <span>{slot.audience}</span>
+                            </span>
+                          </div>
+                          <p className="act-slot-desc">{slot.details}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Motion.div>
+              ))}
             </div>
+          </section>
+        )}
+
+        {/* ── TAB 3: KỸ NĂNG CHUYÊN MÔN HÀNG ĐỘI ── */}
+        {activeTab === "skills" && (
+          <section aria-label="Chương trình rèn luyện kỹ năng chuyên môn">
+            <Motion.div className="act-skills-grid" {...sectionReveal}>
+              {SKILL_MODULES.map((skill) => (
+                <Motion.div key={skill.id} className="act-skill-card" {...cardReveal}>
+                  <div className="act-skill-num">Mô-đun {skill.num}</div>
+                  <h3>{skill.title}</h3>
+                  <div className="act-skill-meta">
+                    <span className="act-skill-badge">{skill.level}</span>
+                    <span className="act-skill-badge">{skill.target}</span>
+                  </div>
+                  <p className="act-skill-desc">{skill.desc}</p>
+                </Motion.div>
+              ))}
+            </Motion.div>
+          </section>
+        )}
+
+        {/* ════ CALL TO ACTION & KÊNH LIÊN HỆ ════ */}
+        <Motion.section className="act-cta-section" {...sectionReveal} aria-label="Tra cứu thông tin liên quan">
+          <h3 className="act-cta-title">Tra Cứu Thông Tin Giảng Dạy &amp; Nội Quy</h3>
+          <p className="act-cta-desc">
+            Để nắm rõ danh sách phòng học, phân công giáo lý viên hoặc quy chế chuyên cần, quý phụ huynh và Giáo lý sinh có thể tra cứu nhanh:
+          </p>
+          <div className="act-cta-actions">
+            <Link to="/lịch-học" className="act-btn-primary">
+              <CalendarDays size={16} aria-hidden="true" />
+              <span>Xem Thời Khóa Biểu 30 Lớp</span>
+            </Link>
+            <Link to="/quy-định" className="act-btn-secondary">
+              <FileCheck size={16} aria-hidden="true" />
+              <span>Xem Nội Quy Giáo Lý</span>
+            </Link>
+            <Link to="/liên-hệ" className="act-btn-secondary">
+              <Mail size={16} aria-hidden="true" />
+              <span>Liên Hệ Ban Giáo Lý</span>
+            </Link>
           </div>
-        </motion.section>
+        </Motion.section>
 
-        {/* ══ LEGEND ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.2}>
-          <div className="flex flex-wrap justify-center gap-2.5">
-            {Object.entries(KHOI_STYLE).map(([name, style]) => {
-              const Icon = style.icon;
-              return (
-                <span key={name} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-bold border bg-white/80 dark:bg-stone-800/40 backdrop-blur-sm ${style.border} ${style.color}`}>
-                  <Icon className="w-3.5 h-3.5" /> {name}
-                </span>
-              );
-            })}
-          </div>
-        </motion.section>
-
-        {/* ══ TIMELINE 4 TUẦN ══ */}
-        <div className="space-y-12">
-          {WEEKS.map((week, idx) => (
-            <motion.div key={week.range} variants={fadeUp} initial="hidden" whileInView="visible" viewport={vp} custom={idx * 0.05 + 0.15} className="relative">
-              {!mc.isMobile && <div className="absolute left-[1.15rem] top-12 bottom-0 w-px bg-amber-900/10 dark:bg-amber-100/10 -z-10" />}
-
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex-shrink-0 w-10 h-10 rounded-[1rem] bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 flex items-center justify-center text-sm font-extrabold shadow-sm">
-                  {idx + 1}
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-0.5">Tuần {idx + 1}</p>
-                  <h3 className="text-lg font-extrabold text-amber-950 dark:text-amber-50 font-serif">{week.range}</h3>
-                </div>
-                {week.isLastBeforeCamp && (
-                  <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-100/50 border border-amber-500/30 dark:text-amber-300 dark:bg-amber-900/30 dark:border-amber-500/30 rounded-full px-3 py-1.5 uppercase tracking-wide">
-                    <Tent className="w-3.5 h-3.5" /> Tuần hội trại
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:pl-[3.5rem]">
-                {week.days.map((day) => <DayCard key={day.date} day={day} />)}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ══ GHI CHÚ ══ */}
-        <motion.section initial="hidden" whileInView="visible" viewport={vp} variants={fadeUp} custom={0.3}>
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/30 rounded-[1.75rem] p-6 text-center sm:text-left backdrop-blur-sm">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-200/50 dark:bg-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400">
-              <Info className="w-5 h-5" />
-            </div>
-            <p className="text-[14px] text-stone-600 dark:text-stone-400 font-medium leading-relaxed pt-1">
-              Lịch sinh hoạt có thể thay đổi tùy theo điều kiện thực tế. Vui lòng theo dõi thông báo cập nhật từ giáo lý viên phụ trách từng khối để nắm bắt thông tin nhanh nhất.
-            </p>
-          </div>
-        </motion.section>
+        <p className="act-footnote">
+          Văn bản Kế hoạch Sinh hoạt &amp; Sự kiện Giáo lý &middot; Xứ đoàn Mẹ Mân Côi &middot; Giáo xứ An Ngãi
+          <br />
+          Cập nhật lần cuối: Tháng 09/2026 &bull; Niên khóa {ACADEMIC_YEAR}
+        </p>
       </main>
     </div>
   );

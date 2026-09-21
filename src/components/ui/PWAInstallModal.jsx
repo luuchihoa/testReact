@@ -67,9 +67,9 @@ export default function PWAInstallModal({
                 <img
                   src={`${import.meta.env.BASE_URL}images/pwa-v2/icon-192.png`}
                   alt="Logo Ban Giáo Lý"
-                  className="w-12 h-12 rounded-2xl p-0.5 bg-[#FAF8F3] dark:bg-[#141B16] border border-stone-200/80 dark:border-stone-700/80 shadow-sm object-contain"
+                  className="w-14 h-14 rounded-2xl shadow-md object-contain"
                 />
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#314e3e] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#314e3e] text-white flex items-center justify-center text-xs font-bold shadow-xs border border-white/40">
                   ✓
                 </span>
               </div>

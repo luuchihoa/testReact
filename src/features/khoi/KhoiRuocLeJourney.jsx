@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
 
@@ -56,9 +57,9 @@ export default function KhoiRuocLeJourney({ items }) {
     <>
       <section id="hanh-trinh" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
       <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-        <p className="text-[11px] font-bold tracking-widest uppercase text-lime-600 dark:text-lime-400 ml-1">Lộ trình Đào Tạo</p>
-        <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Hành trình Khám phá &amp; Gặp gỡ</h2>
-        <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
+        <p className="text-xs font-bold tracking-widest uppercase text-[#27400e] dark:text-lime-200 ml-1">Lộ trình Đào Tạo</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Hành trình Khám phá &amp; Gặp gỡ</h2>
+        <p className="text-sm sm:text-base font-medium text-[#38433a] dark:text-stone-200 leading-relaxed max-w-xl">
           Chương trình học gồm 6 chặng cốt lõi, chuyển hóa từ kiến thức căn bản đến thực hành nội tâm và sống chứng tá đời thường.
         </p>
       </div>
@@ -76,20 +77,21 @@ export default function KhoiRuocLeJourney({ items }) {
             onClick={() => setSelectedStep(item)}
             role="button"
             tabIndex={0}
+            aria-label={`${item.title} - Chạm để xem chi tiết`}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedStep(item); }}
-            className={`group text-left rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl hover:shadow-xl active:scale-[0.98] transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[220px] border-amber-900/10 dark:border-amber-100/10 ${
+            className={`group text-left rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl hover:shadow-xl active:scale-[0.98] transition-[transform,box-shadow,border-color] duration-300 cursor-pointer flex flex-col justify-between min-h-[220px] border-amber-900/10 dark:border-amber-100/10 ${
               (i === 2 || i === 4) ? "sm:col-span-2 lg:col-span-2" : "col-span-1"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[32px] font-black font-mono tracking-tight text-amber-900/10 dark:text-amber-100/10 md:group-hover:text-lime-500/30 dark:group-hover:text-lime-400/20 transition-colors">{item.step}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm ${item.badge}`}>
+                <span className="text-3xl font-black font-mono tracking-tight text-amber-900/10 dark:text-amber-100/10 md:group-hover:text-lime-500/30 dark:group-hover:text-lime-400/20 transition-colors">{item.step}</span>
+                <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm ${item.badge}`}>
                   Chi tiết
                 </span>
               </div>
-              <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hover:text-lime-600 dark:group-hover:text-lime-400 transition-colors mb-2.5">{item.title}</h3>
-              <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
+              <h3 className="text-lg sm:text-xl font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hover:text-[#27400e] dark:group-hover:text-lime-200 transition-colors mb-2.5">{item.title}</h3>
+              <p className="text-sm text-[#38433a] dark:text-stone-200 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
             </div>
           </motion.div>
         ))}
@@ -112,6 +114,7 @@ export default function KhoiRuocLeJourney({ items }) {
               <motion.div
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="rl-step-title"
                 drag={isMobile ? "y" : false}
                 dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={{ top: 0.1, bottom: 0.6 }}
@@ -121,25 +124,35 @@ export default function KhoiRuocLeJourney({ items }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: isMobile ? "100%" : 20, scale: isMobile ? 1 : 0.95 }}
                 transition={{ duration: 0.4, ease: APPLE_EASE }}
-                className="relative w-full md:max-w-xl pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
+                className="relative w-full md:max-w-xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex justify-center pt-4 pb-2 md:hidden touch-none active:cursor-grabbing">
                   <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
                 </div>
 
-                <div className="flex items-center gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-100/50 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 text-xl font-bold font-mono text-amber-800 dark:text-amber-500 border border-amber-900/5 dark:border-amber-700/30 select-none">
-                    {selectedStep.step}
+                <div className="flex items-center justify-between gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-100/50 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 text-xl font-bold font-mono text-[#632c02] dark:text-amber-200 border border-amber-900/5 dark:border-amber-700/30 select-none">
+                      {selectedStep.step}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 id="rl-step-title" className="font-extrabold font-serif text-xl tracking-tight leading-tight truncate">{selectedStep.title}</h3>
+                      <p className="text-xs text-[#27400e] dark:text-lime-200 font-bold uppercase tracking-widest mt-1.5 truncate">{selectedStep.details.subtitle}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-extrabold font-serif text-[22px] tracking-tight leading-tight truncate">{selectedStep.title}</h3>
-                    <p className="text-[12px] text-lime-600 dark:text-lime-400 font-bold uppercase tracking-widest mt-1.5 truncate">{selectedStep.details.subtitle}</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStep(null)}
+                    aria-label="Đóng chi tiết chặng"
+                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full p-2 text-stone-700 hover:text-stone-900 dark:text-stone-200 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <div className="flex gap-2 px-6 sm:px-8 py-3 bg-stone-50/50 dark:bg-stone-900/30 flex-wrap touch-none">
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-amber-900/5 dark:border-amber-100/5 shadow-sm">
+                  <span className="text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 border border-amber-900/5 dark:border-amber-100/5 shadow-sm">
                     ⏱ Thời lượng: {selectedStep.details.duration}
                   </span>
                 </div>
@@ -149,19 +162,19 @@ export default function KhoiRuocLeJourney({ items }) {
                 <div className="p-6 sm:p-8 pt-5 space-y-6 overflow-y-auto overscroll-contain flex-1 text-left">
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-stone-700 dark:text-stone-200 mb-2.5">
                         Ý nghĩa mục tiêu
                       </h4>
-                      <p className="text-[14.5px] leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
+                      <p className="text-sm sm:text-base leading-relaxed text-stone-700 dark:text-stone-200 font-medium">
                         {selectedStep.details.meaning}
                       </p>
                     </div>
 
                     <div className="bg-stone-50/50 dark:bg-stone-900/30 p-4 sm:p-5 rounded-2xl border border-amber-900/5 dark:border-amber-100/5">
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-lime-700 dark:text-lime-500 mb-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-[#27400e] dark:text-lime-200 mb-2.5">
                         Bài học &amp; Thực hành cốt lõi
                       </h4>
-                      <p className="text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 font-medium">
+                      <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-200 font-medium">
                         {selectedStep.details.highlight}
                       </p>
                     </div>

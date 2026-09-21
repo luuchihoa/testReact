@@ -7320,7 +7320,7 @@
     {
       "text": "Những Thánh Lễ nào sẽ có hát Kinh Vinh Danh?",
       "choices": {
-        "A": "Chủ nhật trừ mùa vọng và mùa chay",
+        "A": "Chúa Nhật trừ mùa vọng và mùa chay",
         "B": "Lễ trọng",
         "C": "Lễ kính",
         "D": "Cá 3 đều đúng"
@@ -7538,7 +7538,7 @@
       "correct": "D"
     },
     {
-      "text": "Tại Giáo Tỉnh Hà Nội, ngoài các Lễ Chủ Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
+      "text": "Tại Giáo Tỉnh Hà Nội, ngoài các Lễ Chúa Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
       "choices": {
         "A": 1,
         "B": 2,
@@ -7558,7 +7558,7 @@
       "correct": "A"
     },
     {
-      "text": "Tại Giáo Tỉnh Huế, ngoài các Lễ Chủ Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
+      "text": "Tại Giáo Tỉnh Huế, ngoài các Lễ Chúa Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
       "choices": {
         "A": 1,
         "B": 2,
@@ -7578,7 +7578,7 @@
       "correct": "A"
     },
     {
-      "text": "Tại Giáo Tỉnh TPHCM, ngoài các Lễ Chủ Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
+      "text": "Tại Giáo Tỉnh TPHCM, ngoài các Lễ Chúa Nhật, 1 năm Phụng vụ có thêm mấy lễ trọng buộc?",
       "choices": {
         "A": 1,
         "B": 2,
@@ -8108,7 +8108,7 @@
       "correct": "A"
     },
     {
-      "text": "Trong Phụng vụ, các bài đọc Chủ Nhật năm A thường được lấy từ sách nào?",
+      "text": "Trong Phụng vụ, các bài đọc Chúa Nhật năm A thường được lấy từ sách nào?",
       "choices": {
         "A": "Tin Mừng Matthêu",
         "B": "Tin Mừng Maccô",
@@ -8118,7 +8118,7 @@
       "correct": "A"
     },
     {
-      "text": "Trong Phụng vụ, các bài đọc Chủ Nhật năm B thường được lấy từ sách nào?",
+      "text": "Trong Phụng vụ, các bài đọc Chúa Nhật năm B thường được lấy từ sách nào?",
       "choices": {
         "A": "Tin Mừng Matthêu",
         "B": "Tin Mừng Maccô",
@@ -8128,7 +8128,7 @@
       "correct": "D"
     },
     {
-      "text": "Trong Phụng vụ, các bài đọc Chủ Nhật năm C thường được lấy từ sách nào?",
+      "text": "Trong Phụng vụ, các bài đọc Chúa Nhật năm C thường được lấy từ sách nào?",
       "choices": {
         "A": "Tin Mừng Matthêu",
         "B": "Tin Mừng Maccô",
@@ -8518,7 +8518,7 @@
       "correct": "A"
     },
     {
-      "text": "Việc mừng kính các ngày lễ trọng được dời lên Chủ Nhật trước hoặc sau đó gọi là?",
+      "text": "Việc mừng kính các ngày lễ trọng được dời lên Chúa Nhật trước hoặc sau đó gọi là?",
       "choices": {
         "A": "Đại lễ",
         "B": "Lễ buộc",

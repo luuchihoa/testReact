@@ -2,18 +2,21 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { 
-  AlertCircle, Save, Calendar, BarChart2, CheckCircle2, 
-  Calculator, Sparkles, GraduationCap, RotateCcw 
+  AlertCircle, Save, Calendar, BarChart2,
+  Sparkles, GraduationCap, RotateCcw 
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { StatCard, ConfirmDialog } from "../../../components/ui/StudentShared.jsx";
 import { ATTENDANCE_STATUS, RANK_COLORS, formatHocLuc, formatHanhKiem } from "../../../components/ui/studentSharedUtils.js";
 import { Spinner } from "../../../components/ui/Skeleton.jsx";
 import { 
-  fetchStudentAcademic, fetchClassTermRanges, fetchTermLocks,
-  saveStudentGrades, saveStudentTermSummary, saveStudentYearSummary, saveStudentAttendance 
+  fetchStudentAcademic, fetchClassTermRanges, fetchTermLocks, fetchAcademicHolidays,
+  saveStudentGrades, saveStudentTermSummary, saveStudentYearSummary 
 } from "../api.js";
-import { HK_INT_MAP, STATUS_CYCLE, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_KIEM_OPTIONS } from "../constants.js";
+import { buildSundayList, getDefaultTermRanges, parseISODate, toISODate } from "../utils.js";
+import { HK_INT_MAP, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_KIEM_OPTIONS } from "../constants.js";
+
+const SCORE_INPUT_FIELDS = GRADE_FIELDS.filter((f) => f.key !== "diem_tb");
 
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 const SLIDE_VARIANTS = {
@@ -58,22 +61,17 @@ const HANH_KIEM_CHIP_COLORS = RANK_CHIP_COLORS;
 
 function calculateAutoDTB(g) {
   if (!g) return null;
-  const m = g.diem_mieng;
-  const v = g.diem_vo;
-  const p15 = g.diem_15_phut;
-  const t1 = g.diem_1_tiet;
-  const thi = g.diem_thi;
-
-  let totalScore = 0;
-  let totalWeight = 0;
-
-  if (m !== null && m !== undefined && m !== "") { totalScore += Number(m); totalWeight += 1; }
-  if (v !== null && v !== undefined && v !== "") { totalScore += Number(v); totalWeight += 1; }
-  if (p15 !== null && p15 !== undefined && p15 !== "") { totalScore += Number(p15); totalWeight += 1; }
-  if (t1 !== null && t1 !== undefined && t1 !== "") { totalScore += Number(t1) * 2; totalWeight += 2; }
-  if (thi !== null && thi !== undefined && thi !== "") { totalScore += Number(thi) * 3; totalWeight += 3; }
-
-  if (totalWeight === 0) return null;
+  const parts = [
+    { v: g.diem_mieng,   w: 1 },
+    { v: g.diem_vo,      w: 1 },
+    { v: g.diem_15_phut, w: 1 },
+    { v: g.diem_1_tiet,  w: 2 },
+    { v: g.diem_thi,     w: 3 },
+  ];
+  const hasAll = parts.every((p) => p.v !== null && p.v !== undefined && p.v !== "" && !isNaN(Number(p.v)));
+  if (!hasAll) return null;
+  const totalWeight = parts.reduce((s, p) => s + p.w, 0); // 8
+  const totalScore  = parts.reduce((s, p) => s + Number(p.v) * p.w, 0);
   return Math.round((totalScore / totalWeight) * 10) / 10;
 }
 
@@ -90,7 +88,7 @@ function suggestHocLuc(score) {
 function EditableScoreCell({ label, value, onChange, disabled }) {
   return (
     <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-xl p-2.5 sm:p-3 text-center border border-[#dedfd4] dark:border-[#354237] shadow-xs focus-within:ring-2 focus-within:ring-[#314e3e]/30 dark:focus-within:ring-[#d6b883]/30 transition-all">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1 truncate">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1 truncate">{label}</p>
       <input
         type="number" 
         min="0" 
@@ -141,13 +139,11 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
   const [loading, setLoading] = useState(!cache[cacheKey]);
   const [grades, setGrades] = useState({});
   const [term, setTerm] = useState({});
-  const [baseAttendance, setBaseAttendance] = useState({}); 
-  const [attendanceOverrides, setAttendanceOverrides] = useState({}); 
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [savingGrades, setSavingGrades] = useState(false);
-  const [savingAttendance, setSavingAttendance] = useState(false);
   const [dirtyGrades, setDirtyGrades] = useState(false);
   const [confirmGradesOpen, setConfirmGradesOpen] = useState(false);
-  const [confirmAttendanceOpen, setConfirmAttendanceOpen] = useState(false);
 
   // Data for Year View comparison
   const [hk1Academic, setHk1Academic] = useState(null);
@@ -163,16 +159,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
     setConfirmGradesOpen(true);
   };
 
-  const requestSaveAttendance = () => {
-    if (isLocked) return;
-    const changedDates = Object.keys(attendanceOverrides);
-    if (changedDates.length === 0) { 
-      showToast("Không có thay đổi điểm danh", "warning"); 
-      return; 
-    }
-    setConfirmAttendanceOpen(true);
-  };
-
   const handleDiscardChanges = () => {
     const cached = cache[cacheKey];
     if (cached) {
@@ -182,7 +168,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       setGrades({});
       setTerm({ username: student.username, nam_hoc: namHoc, lop, hoc_ky: hocKyInt });
     }
-    setAttendanceOverrides({});
     setDirtyGrades(false);
     showToast("Đã hủy các thay đổi chưa lưu", "info");
   };
@@ -194,7 +179,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
     const oldIdx = HK_LIST.indexOf(hocKy);
     setHocKy(k);
     setHkPage([newIdx, newIdx > oldIdx ? 1 : -1]);
-    setAttendanceOverrides({});
     setDirtyGrades(false);
   };
 
@@ -210,20 +194,21 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       setTermLocks(cached.termLocks);
       setHk1Academic(cached.hk1Academic);
       setHk2Academic(cached.hk2Academic);
-      setBaseAttendance(cached.baseAttendance);
+      setAttendanceData(cached.attendanceData ?? []);
+      setHolidays(cached.holidays ?? []);
       setLoading(false);
       return;
     }
 
     (async () => {
       setLoading(true);
-      setAttendanceOverrides({});
       setDirtyGrades(false);
       try {
         const promises = [
           fetchStudentAcademic(student.username, namHoc, hocKyInt),
           fetchClassTermRanges(lop, namHoc),
           fetchTermLocks(lop, namHoc),
+          fetchAcademicHolidays(namHoc),
         ];
 
         if (hocKy === "CN") {
@@ -231,21 +216,21 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
           promises.push(fetchStudentAcademic(student.username, namHoc, 2));
         }
 
-        const [result, ranges, locks, hk1Res, hk2Res] = await Promise.all(promises);
+        const [result, ranges, locks, holidaysData, hk1Res, hk2Res] = await Promise.all(promises);
         if (cancelled) return;
 
         const resGrades = result.grades ?? {};
         const resTerm = result.term ?? { username: student.username, nam_hoc: namHoc, lop, hoc_ky: hocKyInt };
-        const attMap = {};
-        (result.attendanceExceptions ?? []).forEach(({ ngay, trang_thai }) => { attMap[ngay] = trang_thai; });
+        const resAttendance = result.attendanceExceptions ?? [];
 
         setGrades(resGrades);
         setTerm(resTerm);
         setClassRanges(ranges);
         setTermLocks(locks);
+        setHolidays(holidaysData ?? []);
         if (hk1Res) setHk1Academic(hk1Res);
         if (hk2Res) setHk2Academic(hk2Res);
-        setBaseAttendance(attMap);
+        setAttendanceData(resAttendance);
 
         // Store into cache
         setCache((prev) => ({
@@ -255,9 +240,10 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
             term: resTerm,
             classRanges: ranges,
             termLocks: locks,
+            holidays: holidaysData ?? [],
             hk1Academic: hk1Res ?? null,
             hk2Academic: hk2Res ?? null,
-            baseAttendance: attMap
+            attendanceData: resAttendance
           }
         }));
       } catch (err) {
@@ -270,35 +256,131 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
     return () => { cancelled = true; };
   }, [student.username, namHoc, hocKyInt, hocKy, lop, showToast, cacheKey, cache]);
 
-  const currentRange = classRanges[hocKy];
+  const currentSemesterKey = hocKyInt === 2 ? "HK2" : "HK1";
 
   const attendanceList = useMemo(() => {
-    return (currentRange?.sundays ?? []).map((sunday) => {
-      const isoDate = sunday.toISOString().slice(0, 10);
-      const trangThai = attendanceOverrides[isoDate] ?? baseAttendance[isoDate] ?? "co_mat";
-      return { date: sunday, isoDate, trangThai };
+    if (hocKy === "CN") return [];
+
+    let sundays = [];
+    if (classRanges?.[currentSemesterKey]?.sundays?.length) {
+      sundays = classRanges[currentSemesterKey].sundays;
+    } else {
+      const fallback = getDefaultTermRanges(namHoc)[currentSemesterKey];
+      sundays = fallback?.sundays ?? [];
+    }
+
+    const exceptionMap = new Map(
+      (attendanceData ?? []).map(({ ngay, trang_thai }) => [toISODate(ngay), trang_thai])
+    );
+
+    const holidayMap = new Map(
+      (holidays ?? [])
+        .filter((h) => !h.hoc_ky || Number(h.hoc_ky) === Number(hocKyInt))
+        .map((h) => [toISODate(h.ngay), h])
+    );
+
+    const todayIso = toISODate(new Date());
+
+    // 1. Ánh xạ danh sách các ngày Chúa Nhật chuẩn từ khung lịch trung tâm
+    const list = sundays.map((sDate) => {
+      const dateObj = typeof sDate === "string" ? parseISODate(sDate) : (sDate instanceof Date ? sDate : new Date(sDate));
+      const isoDate = toISODate(dateObj);
+      const holiday = holidayMap.get(isoDate);
+      const isPastOrToday = isoDate <= todayIso;
+
+      let trang_thai = "null";
+      if (exceptionMap.has(isoDate)) {
+        trang_thai = exceptionMap.get(isoDate);
+      } else if (holiday && isPastOrToday) {
+        trang_thai = "nghi_le";
+      }
+
+      return {
+        date: dateObj,
+        isoDate,
+        trang_thai,
+        isPastOrToday,
+        holidayName: holiday?.ten_ngay_le || "",
+      };
     });
-  }, [currentRange, baseAttendance, attendanceOverrides]);
 
-  const presentCount = attendanceList.filter(a => a.trangThai === "co_mat").length;
-  const totalCount = attendanceList.length;
-  const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-
-  const cycleStatus = (isoDate, current) => {
-    if (isLocked) return;
-    const idx = STATUS_CYCLE.indexOf(current);
-    const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-    setAttendanceOverrides((prev) => ({ ...prev, [isoDate]: next }));
-  };
-
-  const handleMarkAllPresent = () => {
-    if (isLocked) return;
-    const newOverrides = {};
-    attendanceList.forEach(({ isoDate }) => {
-      newOverrides[isoDate] = "co_mat";
+    // 2. Bổ sung các ngày nghỉ từ academic_holidays nếu không trùng với các ngày Chúa Nhật đã tạo
+    const existingIsoDates = new Set(list.map((item) => item.isoDate));
+    (holidays ?? []).forEach((h) => {
+      if (h.ngay && (!h.hoc_ky || Number(h.hoc_ky) === Number(hocKyInt))) {
+        const iso = toISODate(h.ngay);
+        if (iso && !existingIsoDates.has(iso)) {
+          const d = parseISODate(h.ngay);
+          if (!isNaN(d.getTime())) {
+            const isPastOrToday = iso <= todayIso;
+            let trang_thai = "null";
+            if (exceptionMap.has(iso)) {
+              trang_thai = exceptionMap.get(iso);
+            } else if (isPastOrToday) {
+              trang_thai = "nghi_le";
+            }
+            list.push({
+              date: d,
+              isoDate: iso,
+              trang_thai,
+              isPastOrToday,
+              holidayName: h.ten_ngay_le || "Ngày nghỉ lễ",
+            });
+            existingIsoDates.add(iso);
+          }
+        }
+      }
     });
-    setAttendanceOverrides(newOverrides);
-  };
+
+    // 3. Bổ sung các ngày điểm danh bất thường khác (nếu có bản ghi trong DB ngoài danh sách)
+    (attendanceData ?? []).forEach(({ ngay, trang_thai }) => {
+      if (ngay) {
+        const iso = toISODate(ngay);
+        if (iso && !existingIsoDates.has(iso)) {
+          const d = parseISODate(ngay);
+          if (!isNaN(d.getTime())) {
+            const holiday = holidayMap.get(iso);
+            const isPastOrToday = iso <= todayIso;
+            list.push({
+              date: d,
+              isoDate: iso,
+              trang_thai: trang_thai || (holiday && isPastOrToday ? "nghi_le" : "null"),
+              isPastOrToday,
+              holidayName: holiday?.ten_ngay_le || "",
+            });
+            existingIsoDates.add(iso);
+          }
+        }
+      }
+    });
+
+    // Sắp xếp thứ tự thời gian tăng dần tuyệt đối theo chuỗi ngày ISO (YYYY-MM-DD)
+    list.sort((a, b) => a.isoDate.localeCompare(b.isoDate));
+    return list;
+  }, [classRanges, currentSemesterKey, hocKyInt, namHoc, attendanceData, holidays, hocKy]);
+
+  // Thống kê chuyên cần
+  const attendanceCounts = useMemo(() => {
+    const counts = { co_mat: 0, nghi_khong_phep: 0, nghi_phep: 0, nghi_le: 0, chua_cap_nhat: 0 };
+    attendanceList.forEach(({ trang_thai }) => { 
+      if (trang_thai === "co_mat") counts.co_mat++;
+      else if (trang_thai === "nghi_khong_phep") counts.nghi_khong_phep++; 
+      else if (trang_thai === "nghi_phep") counts.nghi_phep++; 
+      else if (trang_thai === "nghi_le" || trang_thai === "le_trong") counts.nghi_le++;
+      else counts.chua_cap_nhat++;
+    });
+    counts.tong_nghi = counts.nghi_khong_phep + counts.nghi_phep;
+    counts.tong_da_diem_danh = counts.co_mat + counts.nghi_phep + counts.nghi_khong_phep + counts.nghi_le;
+    return counts;
+  }, [attendanceList]);
+
+  const totalWeeks = attendanceList.length;
+  const recordedCount = attendanceCounts.tong_da_diem_danh;
+  const validPresentCount = attendanceCounts.co_mat + attendanceCounts.nghi_le;
+  const attendanceRate = recordedCount > 0 
+    ? Math.max(0, Math.min(100, Math.round((validPresentCount / recordedCount) * 100))) 
+    : 0;
+  const rateDisplay = recordedCount > 0 ? `${attendanceRate}%` : "—";
 
   const handleScoreChange = useCallback((fieldKey, val) => {
     setDirtyGrades(true);
@@ -318,21 +400,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       return nextGrades;
     });
   }, []);
-
-  const handleApplyAutoDTB = () => {
-    const autoDTB = calculateAutoDTB(grades);
-    if (autoDTB !== null) {
-      setDirtyGrades(true);
-      setGrades((p) => ({ ...p, diem_tb: autoDTB }));
-      const suggested = suggestHocLuc(autoDTB);
-      if (suggested) {
-        setTerm((p) => ({ ...p, hoc_luc: suggested }));
-      }
-      showToast(`Đã áp dụng ĐTB tự động: ${autoDTB} (${suggested})`, "info");
-    } else {
-      showToast("Chưa có điểm kiểm tra để tính ĐTB", "warning");
-    }
-  };
 
   const saveGradesAndTerm = async () => {
     if (isLocked) return;
@@ -358,7 +425,6 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
           diem_thi: grades.diem_thi ?? null,
           diem_tb: grades.diem_tb ?? null,
           ghi_chu: grades.ghi_chu ?? "",
-          updated_at: new Date().toISOString(),
         };
         await saveStudentGrades(gradesPayload);
 
@@ -392,43 +458,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
     }
   };
 
-  const saveAttendance = async () => {
-    if (isLocked) return;
-    const changedDates = Object.keys(attendanceOverrides);
-    if (changedDates.length === 0) { showToast("Không có thay đổi điểm danh", "warning"); return; }
-
-    setSavingAttendance(true);
-    try {
-      const rows = changedDates.map((isoDate) => ({
-        username: student.username, nam_hoc: namHoc, hoc_ky: hocKyInt,
-        ngay: isoDate, trang_thai: attendanceOverrides[isoDate],
-      }));
-      await saveStudentAttendance(rows);
-
-      const updatedBase = { ...baseAttendance, ...attendanceOverrides };
-      setBaseAttendance(updatedBase);
-      setAttendanceOverrides({});
-
-      // Update cache
-      setCache((prev) => ({
-        ...prev,
-        [cacheKey]: {
-          ...prev[cacheKey],
-          baseAttendance: updatedBase
-        }
-      }));
-
-      showToast("Đã lưu điểm danh học sinh!", "success");
-    } catch (err) {
-      console.error("saveAttendance error:", err);
-      showToast("Lưu điểm danh thất bại: " + (err.message || ""), "error");
-    } finally {
-      setSavingAttendance(false);
-    }
-  };
-
   const calculatedAutoDTB = useMemo(() => calculateAutoDTB(grades), [grades]);
-  const hasAttendanceChanges = Object.keys(attendanceOverrides).length > 0;
 
   return (
     <Motion.div 
@@ -437,14 +467,14 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
       transition={{ duration: 0.3, ease: APPLE_EASE }} 
       className="flex flex-col gap-6"
     >
-      {/* ACADEMIC HEADER: Title & Semester Selector (Đồng bộ /tài-khoản/thành-tích) */}
+      {/* ACADEMIC HEADER: Title & Semester Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#dedfd4]/60 dark:border-[#354237]/60">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-[#314e3e]/10 dark:bg-[#d6b883]/15 flex items-center justify-center text-[#314e3e] dark:text-[#d6b883] border border-[#dedfd4] dark:border-[#354237] shrink-0">
             <GraduationCap className="w-5 h-5" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0] truncate leading-tight">
+            <h3 className="text-base font-bold text-[#293d32] dark:text-[#ecece0] truncate leading-tight">
               Sổ điểm & Điểm danh chuyên cần
             </h3>
             <p className="text-xs font-medium text-[#454f46] dark:text-[#b8c2b4] mt-0.5">
@@ -453,9 +483,9 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
           </div>
         </div>
 
-        {/* Segmented Selector Học kỳ (Đồng bộ Pill Switcher cả Mobile & Desktop) */}
+        {/* Segmented Selector Học kỳ */}
         <div className="w-full sm:w-auto shrink-0">
-          <div className="grid grid-cols-3 gap-1 bg-[#dedfd4]/40 dark:bg-[#354237]/50 p-1 rounded-2xl border border-[#dedfd4] dark:border-[#354237] select-none text-xs sm:text-[13px] font-bold">
+          <div className="grid grid-cols-3 gap-1 bg-[#dedfd4]/40 dark:bg-[#354237]/50 p-1 rounded-2xl border border-[#dedfd4] dark:border-[#354237] select-none text-xs sm:text-sm font-bold">
             {[
               { id: "HK1", label: "Học kỳ I", shortLabel: "HK I" },
               { id: "HK2", label: "Học kỳ II", shortLabel: "HK II" },
@@ -538,7 +568,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                 <div className="overflow-x-auto rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xs">
                   <table className="w-full text-xs text-left">
                     <thead>
-                      <tr className="border-b border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4] uppercase font-bold text-[10.5px]">
+                      <tr className="border-b border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4] uppercase font-bold text-xs">
                         <th className="py-3 px-4">Tiêu chí</th>
                         <th className="py-3 px-4 text-center">Học kỳ I</th>
                         <th className="py-3 px-4 text-center">Học kỳ II</th>
@@ -590,33 +620,15 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
               <>
                 {/* 3. BẢNG ĐIỂM KIỂM TRA */}
                 <div className={`space-y-3 ${isLocked ? "opacity-75" : ""}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
                       <BarChart2 className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" strokeWidth={2} /> 
                       <span>Bảng điểm kiểm tra</span>
                     </h4>
-
-                    {calculatedAutoDTB !== null && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#454f46] dark:text-[#b8c2b4]">
-                          ĐTB hệ số: <strong className="font-mono text-[#314e3e] dark:text-[#d6b883] text-sm">{calculatedAutoDTB}</strong>
-                        </span>
-                        {!isLocked && (
-                          <button
-                            type="button"
-                            onClick={handleApplyAutoDTB}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] text-xs font-bold hover:bg-[#314e3e]/20 transition-all cursor-pointer"
-                          >
-                            <Calculator className="w-3.5 h-3.5" /> 
-                            <span>Tự động tính</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                    {GRADE_FIELDS.map((f) => (
+                    {SCORE_INPUT_FIELDS.map((f) => (
                       <EditableScoreCell 
                         key={f.key} 
                         label={f.label} 
@@ -630,52 +642,30 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
 
                 <div className="border-t border-[#dedfd4]/60 dark:border-[#354237]/60" />
 
-                {/* 4. ĐIỂM DANH CHUYÊN CẦN */}
-                <div className={`space-y-3 ${isLocked ? "opacity-75" : ""}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" strokeWidth={2} />
-                        <span>Điểm danh chuyên cần <span className="normal-case font-normal">({totalCount} tuần)</span></span>
-                      </h4>
-                      {!isLocked && totalCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleMarkAllPresent}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 transition-all cursor-pointer"
-                          title="Đánh dấu có mặt cho tất cả các buổi trong kỳ"
-                        >
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Có mặt tất cả</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {hasAttendanceChanges && (
-                      <button 
-                        type="button" 
-                        disabled={isLocked || savingAttendance} 
-                        onClick={requestSaveAttendance}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-95 transition-all disabled:opacity-40 cursor-pointer"
-                      >
-                        {savingAttendance ? <Spinner className="h-3.5 w-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                        <span>{savingAttendance ? "Đang lưu…" : "Lưu điểm danh"}</span>
-                      </button>
-                    )}
+                {/* 4. THEO DÕI CHUYÊN CẦN */}
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" strokeWidth={2} />
+                      <span>Theo dõi chuyên cần</span>
+                    </h4>
+                    <span className="text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium">
+                      {recordedCount > 0 ? `${recordedCount}/${totalWeeks} buổi đã điểm danh` : "Chưa có buổi điểm danh"}
+                    </span>
                   </div>
 
                   {/* Thanh tỉ lệ chuyên cần */}
-                  {totalCount > 0 && (
-                    <div className="bg-[#fffefa] dark:bg-[#1e2821] p-3.5 rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs">
-                      <div className="flex justify-between text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4] mb-1.5">
-                        <span>Tỉ lệ chuyên cần</span>
-                        <span className="font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{attendanceRate}%</span>
+                  {totalWeeks > 0 && (
+                    <div>
+                      <div className="flex justify-between text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] mb-1.5">
+                        <span>Tỷ lệ chuyên cần</span>
+                        <span className="text-[#314e3e] dark:text-[#d6b883] font-black">{rateDisplay}</span>
                       </div>
-                      <div className="h-2 w-full bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-[#dedfd4] dark:bg-[#354237] rounded-full overflow-hidden flex">
                         <Motion.div 
                           initial={{ width: 0 }} 
                           animate={{ width: `${attendanceRate}%` }} 
-                          transition={{ duration: 0.5, ease: "easeOut" }}
+                          transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
                           className="h-full bg-emerald-600 dark:bg-emerald-500 rounded-full"
                         />
                       </div>
@@ -683,53 +673,74 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                   )}
 
                   {/* Chú thích trạng thái */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-[#454f46] dark:text-[#b8c2b4]">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium text-[#575e55] dark:text-[#b0b9ac]">
                     {Object.entries(ATTENDANCE_STATUS).filter(([k]) => k !== "null").map(([k, v]) => (
-                      <span key={k} className="flex items-center gap-1.5">
+                      <span key={k} className="inline-flex items-center gap-1.5">
                         <span className={`w-2.5 h-2.5 rounded-full ${v.color}`} />
-                        {v.label}
+                        <span>{v.label}</span>
                       </span>
                     ))}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-stone-300 dark:bg-stone-600 border border-dashed border-stone-400" />
+                      <span>Chưa điểm danh</span>
+                    </span>
                   </div>
 
-                  {totalCount === 0 ? (
-                    <div className="flex flex-col items-center gap-1.5 py-6 text-[#454f46] dark:text-[#b8c2b4]">
-                      <Calendar className="w-8 h-8 opacity-40" />
-                      <p className="text-xs">Chưa có lịch điểm danh cho học kỳ này.</p>
+                  {/* Timeline danh sách các buổi học */}
+                  {attendanceList.length > 0 ? (
+                    <div className="w-full min-w-0 overflow-hidden">
+                      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin" data-lenis-prevent>
+                        {attendanceList.map(({ date, isoDate, trang_thai, holidayName }) => {
+                          const isRecorded = trang_thai && trang_thai !== "null";
+                          const status = ATTENDANCE_STATUS[trang_thai] ?? ATTENDANCE_STATUS["null"];
+                          const isHoliday = trang_thai === "nghi_le" || trang_thai === "le_trong" || Boolean(holidayName);
+                          const statusSymbol = 
+                            trang_thai === "co_mat" ? "✓" :
+                            trang_thai === "nghi_phep" ? "P" :
+                            trang_thai === "nghi_khong_phep" ? "K" :
+                            isHoliday ? "✝" : "—";
+
+                          const badgeClass = isRecorded
+                            ? `${status.color} text-white font-black`
+                            : isHoliday
+                              ? "bg-blue-50/70 dark:bg-blue-950/40 border border-blue-400/80 dark:border-blue-500/80 text-blue-700 dark:text-blue-300 font-bold"
+                              : "bg-stone-100 dark:bg-stone-800/80 border border-dashed border-stone-300 dark:border-stone-600 text-[#575e55] dark:text-[#b0b9ac] font-bold";
+
+                          const tooltipTitle = holidayName
+                            ? (isRecorded
+                                ? `${holidayName} (${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}) - Đã nghỉ lễ`
+                                : `${holidayName} (${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}) - Sắp nghỉ lễ`)
+                            : `${status.label} - ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+
+                          return (
+                            <div key={isoDate} className="flex flex-col items-center gap-1 shrink-0 w-10 sm:w-11">
+                              <span 
+                                className={`w-8 h-8 rounded-full shadow-2xs ${badgeClass} flex items-center justify-center text-xs leading-none transition-transform hover:scale-105`} 
+                                title={tooltipTitle}
+                              >
+                                {statusSymbol}
+                              </span>
+                              <span className="text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] whitespace-nowrap">
+                                {date.getDate()}/{date.getMonth() + 1}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin" data-lenis-prevent>
-                      {attendanceList.map(({ date, isoDate, trangThai }) => {
-                        const status = ATTENDANCE_STATUS[trangThai];
-                        const isDirty = isoDate in attendanceOverrides;
-                        return (
-                          <button 
-                            key={isoDate} 
-                            type="button" 
-                            disabled={isLocked} 
-                            onClick={() => cycleStatus(isoDate, trangThai)}
-                            className="flex flex-col items-center gap-1.5 shrink-0 w-10 group disabled:cursor-not-allowed cursor-pointer"
-                            title={`Nhấp để đổi trạng thái ngày ${isoDate}`}
-                          >
-                            <span className={`w-8 h-8 rounded-full ${status.color} border-2 ${
-                              isDirty ? "border-[#314e3e] dark:border-[#d6b883] scale-105 ring-2 ring-[#314e3e]/30" : "border-white dark:border-[#1e2821]"
-                            } shadow-xs flex items-center justify-center transition-all`}>
-                              <span className={`text-[11px] font-bold font-mono ${trangThai === "co_mat" ? "text-emerald-950 dark:text-emerald-50" : "text-white"}`}>
-                                {date.getDate()}
-                              </span>
-                            </span>
-                            <span className="text-[10px] font-medium text-[#454f46] dark:text-[#b8c2b4]">
-                              {date.getDate()}/{date.getMonth() + 1}
-                            </span>
-                          </button>
-                        );
-                      })}
+                    <div className="flex flex-col items-center gap-1.5 py-6 text-[#575e55] dark:text-[#b0b9ac]">
+                      <Calendar className="w-8 h-8 opacity-40" />
+                      <p className="text-xs font-semibold">Chưa có lịch điểm danh cho học kỳ này.</p>
                     </div>
                   )}
 
-                  <div className="pt-2 flex justify-between text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4]">
-                    <span>Có mặt: <strong className="text-emerald-700 dark:text-emerald-400 font-mono">{presentCount}</strong> buổi</span>
-                    <span>Vắng: <strong className="text-red-700 dark:text-red-400 font-mono">{totalCount - presentCount}</strong> buổi</span>
+                  {/* Thống kê chi tiết chuyên cần */}
+                  <div className="pt-2.5 border-t border-[#dedfd4] dark:border-[#354237] grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold text-[#575e55] dark:text-[#b0b9ac]">
+                    <div>Có mặt: <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">{attendanceCounts.co_mat}</span></div>
+                    <div>Nghỉ phép: <span className="text-[#713f12] dark:text-[#fde047] font-extrabold">{attendanceCounts.nghi_phep}</span></div>
+                    <div>Không phép: <span className="text-[#7f1d1d] dark:text-[#fca5a5] font-extrabold">{attendanceCounts.nghi_khong_phep}</span></div>
+                    <div>Đã điểm danh: <span className="text-[#293d32] dark:text-[#ecece0] font-extrabold">{recordedCount}/{totalWeeks}</span></div>
                   </div>
                 </div>
               </>
@@ -739,21 +750,11 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
 
             {/* 5. TỔNG KẾT HỌC KỲ / CẢ NĂM */}
             <div className={`space-y-3 ${isLocked ? "opacity-75" : ""}`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
                   <GraduationCap className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" strokeWidth={2} />
                   <span>{hocKy === "CN" ? "Tổng kết cả năm" : "Đánh giá & Tổng kết học kỳ"}</span>
                 </h4>
-                
-                <button 
-                  type="button" 
-                  disabled={isLocked || savingGrades} 
-                  onClick={requestSaveGrades}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-95 transition-all disabled:opacity-40 cursor-pointer self-start sm:self-auto"
-                >
-                  {savingGrades ? <Spinner className="h-3.5 w-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                  <span>{savingGrades ? "Đang lưu…" : "Lưu điểm & Đánh giá"}</span>
-                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 bg-[#fffefa] dark:bg-[#1e2821] p-4 sm:p-5 rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs">
@@ -761,11 +762,11 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                 {/* 1. Học lực (Chip Selector) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
                       Học lực
                     </span>
                     {term.hoc_luc && (
-                      <span className="text-[11px] font-bold text-[#314e3e] dark:text-[#d6b883]">
+                      <span className="text-xs font-bold text-[#314e3e] dark:text-[#d6b883]">
                         {formatHocLuc(term.hoc_luc)}
                       </span>
                     )}
@@ -801,11 +802,11 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                 {/* 2. Hạnh kiểm (Chip Selector) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
                       Hạnh kiểm
                     </span>
                     {term.hanh_kiem && (
-                      <span className="text-[11px] font-bold text-[#314e3e] dark:text-[#d6b883]">
+                      <span className="text-xs font-bold text-[#314e3e] dark:text-[#d6b883]">
                         {formatHanhKiem(term.hanh_kiem)}
                       </span>
                     )}
@@ -840,7 +841,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
 
                 {/* 3. Vị thứ */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
                     Vị thứ
                   </span>
                   <input 
@@ -859,7 +860,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
 
                 {/* 4. Ghi chú nhận xét của GLV */}
                 <div className="flex flex-col gap-2 col-span-full">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4]">
                     Ghi chú nhận xét của GLV
                   </span>
                   <textarea 
@@ -870,7 +871,7 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                       setDirtyGrades(true);
                       setTerm((p) => ({ ...p, ghi_chu: e.target.value }));
                     }}
-                    placeholder="Nhận xét sự chuyên cần, thái độ học tập và rèn luyện của học sinh..."
+                    placeholder="Nhận xét sự chuyên cần, thái độ học tập và rèn luyện của giáo lý sinh..."
                     className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] p-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 resize-none disabled:opacity-60 transition-all shadow-2xs placeholder:text-[#454f46]/40 dark:placeholder:text-[#b8c2b4]/40" 
                   />
                 </div>
@@ -880,35 +881,29 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         )}
       </AnimatePresence>
 
-      {/* Floating Action Bar when unsaved grades or attendance */}
+      {/* Floating Action Bar when unsaved grades */}
       {typeof document !== "undefined" && createPortal(
         <AnimatePresence>
-          {(dirtyGrades || hasAttendanceChanges) && (
+          {dirtyGrades && (
             <Motion.div 
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-[100] flex justify-center pointer-events-none px-3 sm:px-4"
+              className="fixed bottom-3 sm:bottom-6 pb-[max(0.5rem,env(safe-area-inset-bottom))] left-0 right-0 z-[100] flex justify-center pointer-events-none px-3 sm:px-4"
             >
               <div className="pointer-events-auto bg-[#fffefa]/95 dark:bg-[#1e2821]/95 backdrop-blur-md rounded-2xl sm:rounded-full shadow-xl border border-[#dedfd4] dark:border-[#354237] px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 max-w-lg w-auto">
                 <span className="text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-[#d6b883] animate-pulse shrink-0" />
-                  <span className="hidden sm:inline">
-                    {dirtyGrades && hasAttendanceChanges 
-                      ? "Có thay đổi điểm & điểm danh chưa lưu" 
-                      : dirtyGrades 
-                      ? "Có thay đổi điểm số chưa lưu" 
-                      : "Có thay đổi điểm danh chưa lưu"}
-                  </span>
-                  <span className="sm:hidden text-[11px] font-bold">Chưa lưu</span>
+                  <span className="hidden sm:inline">Có thay đổi chưa lưu</span>
+                  <span className="sm:hidden text-xs font-bold">Chưa lưu</span>
                 </span>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     onClick={handleDiscardChanges}
-                    disabled={savingGrades || savingAttendance}
+                    disabled={savingGrades}
                     className="px-2.5 py-1.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 text-xs font-bold text-[#454f46] dark:text-[#b8c2b4] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 active:scale-95"
                     title="Hủy bỏ các thay đổi chưa lưu"
                   >
@@ -916,31 +911,16 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
                     <span>Hủy</span>
                   </button>
 
-                  {hasAttendanceChanges && (
-                    <button 
-                      type="button" 
-                      disabled={savingAttendance} 
-                      onClick={requestSaveAttendance}
-                      className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-xl text-xs font-bold bg-stone-500/10 hover:bg-stone-500/20 text-[#293d32] dark:text-[#ecece0] transition-colors cursor-pointer disabled:opacity-50 active:scale-95"
-                    >
-                      {savingAttendance ? <Spinner className="h-3.5 w-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                      <span className="hidden sm:inline">Lưu điểm danh</span>
-                      <span className="sm:hidden">Điểm danh</span>
-                    </button>
-                  )}
-
-                  {dirtyGrades && (
-                    <button 
-                      type="button" 
-                      disabled={savingGrades} 
-                      onClick={requestSaveGrades}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                    >
-                      {savingGrades ? <Spinner className="h-3.5 w-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                      <span className="hidden sm:inline">Lưu điểm & Đánh giá</span>
-                      <span className="sm:hidden">Lưu điểm</span>
-                    </button>
-                  )}
+                  <button 
+                    type="button" 
+                    disabled={savingGrades} 
+                    onClick={requestSaveGrades}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingGrades ? <Spinner className="h-3.5 w-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                    <span className="hidden sm:inline">Lưu thay đổi</span>
+                    <span className="sm:hidden">Lưu</span>
+                  </button>
                 </div>
               </div>
             </Motion.div>
@@ -949,11 +929,11 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         document.body
       )}
 
-      {/* Dialog xác nhận lưu điểm & đánh giá */}
+      {/* Dialog xác nhận lưu thay đổi */}
       <ConfirmDialog
         open={confirmGradesOpen}
         icon={GraduationCap}
-        title="Xác nhận lưu điểm & đánh giá?"
+        title="Xác nhận lưu thay đổi?"
         confirmLabel="Xác nhận lưu"
         cancelLabel="Kiểm tra lại"
         loading={savingGrades}
@@ -966,85 +946,40 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
         <div className="rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] p-3 space-y-2 text-xs">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-bold text-[#293d32] dark:text-[#ecece0] text-[13.5px] truncate">
+              <p className="font-bold text-[#293d32] dark:text-[#ecece0] text-sm sm:text-base truncate">
                 {student.tenThanh ? `${student.tenThanh} ` : ""}{student.hoTen}
               </p>
-              <p className="text-[11px] text-[#454f46] dark:text-[#b8c2b4] font-medium">
+              <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] font-medium">
                 Lớp {lop} • {hocKy === "CN" ? "Tổng kết cả năm" : `Học kỳ ${hocKy === "HK1" ? "1" : "2"}`}
               </p>
             </div>
-            <span className="shrink-0 px-2 py-0.5 rounded-lg font-mono text-[11px] font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4]">
+            <span className="shrink-0 px-2 py-0.5 rounded-lg font-mono text-xs font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4]">
               @{student.username}
             </span>
           </div>
           
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px] font-semibold text-[#454f46] dark:text-[#b8c2b4]">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4]">
               ĐTB: <strong className="text-[#314e3e] dark:text-[#d6b883] font-black">{calculatedAutoDTB !== null && calculatedAutoDTB !== undefined ? calculatedAutoDTB : "--"}</strong>
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px] font-semibold text-[#454f46] dark:text-[#b8c2b4]">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4]">
               Học lực: <strong className="text-[#293d32] dark:text-[#ecece0]">{term.hoc_luc ? formatHocLuc(term.hoc_luc) : "Chưa xếp"}</strong>
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px] font-semibold text-[#454f46] dark:text-[#b8c2b4]">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4]">
               Hạnh kiểm: <strong className="text-[#293d32] dark:text-[#ecece0]">{term.hanh_kiem ? formatHanhKiem(term.hanh_kiem) : "Chưa xếp"}</strong>
             </span>
             {term.vi_thu && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px] font-semibold text-[#454f46] dark:text-[#b8c2b4]">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4]">
                 Hạng: <strong className="text-[#293d32] dark:text-[#ecece0]">{term.vi_thu}</strong>
               </span>
             )}
           </div>
 
           {term.ghi_chu && (
-            <p className="text-[11px] text-[#454f46] dark:text-[#b8c2b4] italic line-clamp-1 border-t border-[#dedfd4]/40 dark:border-[#354237]/40 pt-1.5">
+            <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] italic line-clamp-1 border-t border-[#dedfd4]/40 dark:border-[#354237]/40 pt-1.5">
               "{term.ghi_chu}"
             </p>
           )}
-        </div>
-      </ConfirmDialog>
-
-      {/* Dialog xác nhận lưu điểm danh */}
-      <ConfirmDialog
-        open={confirmAttendanceOpen}
-        icon={Calendar}
-        title="Xác nhận lưu điểm danh?"
-        confirmLabel="Xác nhận lưu"
-        cancelLabel="Kiểm tra lại"
-        loading={savingAttendance}
-        onConfirm={async () => {
-          await saveAttendance();
-          setConfirmAttendanceOpen(false);
-        }}
-        onCancel={() => !savingAttendance && setConfirmAttendanceOpen(false)}
-      >
-        <div className="rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] p-3 space-y-2 text-xs">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="font-bold text-[#293d32] dark:text-[#ecece0] text-[13.5px] truncate">
-                {student.tenThanh ? `${student.tenThanh} ` : ""}{student.hoTen}
-              </p>
-              <p className="text-[11px] text-[#454f46] dark:text-[#b8c2b4] font-medium">
-                Lớp {lop} • {hocKy === "HK1" ? "Học kỳ 1" : "Học kỳ 2"}
-              </p>
-            </div>
-            <span className="shrink-0 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#314e3e] dark:text-[#d6b883]">
-              {Object.keys(attendanceOverrides).length} ngày điều chỉnh
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-[110px] overflow-y-auto" data-lenis-prevent>
-            {Object.entries(attendanceOverrides).map(([isoDate, statusKey]) => {
-              const status = ATTENDANCE_STATUS[statusKey] || { label: statusKey, color: "bg-stone-500" };
-              const dateObj = new Date(isoDate);
-              return (
-                <span key={isoDate} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px] font-medium">
-                  <span className={`w-2 h-2 rounded-full ${status.color}`} />
-                  <span className="font-mono text-[#293d32] dark:text-[#ecece0] font-semibold">{dateObj.getDate()}/{dateObj.getMonth() + 1}</span>
-                  <span className="text-[#454f46] dark:text-[#b8c2b4]">({status.label})</span>
-                </span>
-              );
-            })}
-          </div>
         </div>
       </ConfirmDialog>
     </Motion.div>

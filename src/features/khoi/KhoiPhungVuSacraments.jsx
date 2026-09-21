@@ -1,216 +1,241 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
-import { usePageMotion } from "../../hooks/usePageMotion.js";
+import React from "react";
+import { BookOpen, User, ShieldCheck } from "lucide-react";
+import {
+  BaptismalWaterIcon,
+  HolySpiritFlameIcon,
+  EucharistHostChaliceIcon,
+  KingdomKeysIcon,
+  AnointingOilIcon,
+  HolyOrdersStoleIcon,
+  IntertwinedWeddingRingsIcon
+} from "../../components/shared/LiturgicalIcons.jsx";
 
-const APPLE_EASE = [0.16, 1, 0.3, 1];
-const MOBILE_BREAKPOINT = 768;
+// 3 Nhóm Bảy Bí Tích Cứu Độ (Theo Giáo Lý Hội Thánh Công Giáo)
+const SACRAMENT_GROUPS = [
+  {
+    groupId: "sacraments-initiation",
+    groupTitle: "1. Các Bí Tích Khai Tâm Kitô Giáo",
+    groupSubtitle: "3 Bí Tích Nền Tảng · Đặt Định Nền Móng Đời Sống Đức Tin",
+    groupDesc: "Đặt nền móng cho toàn bộ đời sống Kitô hữu: được sinh ra trong sự sống mới, được củng cố bằng Thần Khí và được nuôi dưỡng bằng Lương Thực Trường Sinh.",
+    badge: "Khai Tâm",
+    gridType: "grid-3",
+    sacraments: [
+      {
+        id: "rua-toi",
+        name: "Bí Tích Rửa Tội",
+        type: "Khai Tâm Nền Tảng",
+        statusBadge: "Đã lãnh nhận",
+        colorKey: "sky",
+        ribbonColor: "#0284c7",
+        icon: BaptismalWaterIcon,
+        scripture: 'Mt 28, 19: "Hãy đi rửa tội cho muôn dân nhân danh Cha và Con và Thánh Thần."',
+        short: "Cửa ngõ đời sống thiêng liêng, tái sinh làm con Thiên Chúa và tháp nhập vào Thân Thể Hội Thánh.",
+        sign: "Nước tự nhiên đổ trên đầu 3 lần cùng lời tuyên phong nhân danh Ba Ngôi cực thánh.",
+        grace: "Tẩy sạch tội nguyên tổ, tái sinh làm con Chúa và ghi ấn tín thiêng liêng vĩnh viễn.",
+        minister: "Giám mục / Linh mục (nguy tử: mọi người)",
+        seal: "Ấn tín vĩnh viễn (1 lần)"
+      },
+      {
+        id: "them-suc",
+        name: "Bí Tích Thêm Sức",
+        type: "Khai Tâm Trưởng Thành",
+        statusBadge: "Đã lãnh nhận",
+        colorKey: "orange",
+        ribbonColor: "#ea580c",
+        icon: HolySpiritFlameIcon,
+        scripture: 'Cv 1, 8: "Anh em sẽ nhận được sức mạnh của Thánh Thần để làm chứng cho Thầy."',
+        short: "Hoàn tất ân sủng Phép Rửa, đón nhận dồi dào Chúa Thánh Thần để trưởng thành làm chứng cho Tin Mừng.",
+        sign: "Đức Giám mục đặt tay thinh lặng và xức Dầu Thánh (Chrisma) hình Thánh Giá trên trán.",
+        grace: "Ban 7 ơn Thánh Thần, gia tăng sức mạnh đức tin để can đảm sống đạo và làm chứng tá.",
+        minister: "Đức Giám mục (hoặc Linh mục ủy quyền)",
+        seal: "Ấn tín vĩnh viễn (1 lần)"
+      },
+      {
+        id: "thanh-the",
+        name: "Bí Tích Thánh Thể",
+        type: "Nguồn Mạch & Đỉnh Cao",
+        statusBadge: "Hiệp lễ mỗi Chúa Nhật",
+        colorKey: "amber",
+        ribbonColor: "#d97706",
+        icon: EucharistHostChaliceIcon,
+        scripture: 'Ga 6, 54: "Ai ăn Thịt và uống Máu Ta, thì có sự sống đời đời trong chính mình."',
+        short: "Nguồn mạch và đỉnh cao đời sống Kitô hữu; Mình và Máu Thánh Chúa Kitô hiện diện thực sự nuôi hồn.",
+        sign: "Bánh miến không men và Rượu nho tự nhiên cùng Lời Truyền Phép thánh hiến của Chủ tế.",
+        grace: "Kết hiệp mật thiết với Chúa Giêsu, nuôi dưỡng sự sống linh hồn và hiệp nhất Dân Chúa.",
+        minister: "Giám mục / Linh mục (Thừa tác viên: GLV)",
+        seal: "Lãnh nhận thường xuyên"
+      }
+    ]
+  },
+  {
+    groupId: "sacraments-healing",
+    groupTitle: "2. Các Bí Tích Chữa Lành",
+    groupSubtitle: "2 Bí Tích · Phục Hồi & Nâng Đỡ Tinh Thần Lẫn Thể Xác",
+    groupDesc: "Chúa Giêsu – Thầy Thuốc linh hồn và thể xác – tiếp tục sứ vụ tha thứ tội lỗi, xoa dịu đau thương và ban sức mạnh cho tín hữu.",
+    badge: "Chữa Lành",
+    gridType: "grid-2",
+    sacraments: [
+      {
+        id: "hoa-giai",
+        name: "Bí Tích Hoà Giải (Giải Tội)",
+        type: "Chữa Lành Linh Hồn",
+        statusBadge: "Lãnh nhận thường xuyên",
+        colorKey: "indigo",
+        ribbonColor: "#6366f1",
+        icon: KingdomKeysIcon,
+        scripture: 'Ga 20, 23: "Các con tha tội cho ai, thì tội người ấy được tha; cầm giữ ai, thì bị cầm giữ."',
+        short: "Tha thứ mọi tội lỗi sau Phép Rửa, hòa giải người hối nhân với Thiên Chúa và cộng đoàn Hội Thánh.",
+        sign: "Lòng ăn năn sám hối thật lòng, xưng thú tội lỗi và đón nhận Lời Tha Tội từ Linh mục.",
+        grace: "Phục hồi ơn nghĩa tử làm con Chúa, tẩy sạch vết nhơ tội lỗi và ban bình an tâm hồn.",
+        minister: "Giám mục / Linh mục có quyền giải tội",
+        seal: "Lãnh nhận thường xuyên"
+      },
+      {
+        id: "xuc-dau",
+        name: "Bí Tích Xức Dầu Bệnh Nhân",
+        type: "Chữa Lành & Nâng Đỡ",
+        statusBadge: "Khi bệnh nặng / nguy tử",
+        colorKey: "teal",
+        ribbonColor: "#0d9488",
+        icon: AnointingOilIcon,
+        scripture: 'Gc 5, 14: "Ai trong anh em đau yếu, hãy mời các kỳ mục Hội Thánh đến để cầu nguyện và xức dầu."',
+        short: "Ban ân sủng nâng đỡ, can đảm và bình an cho người tín hữu đang đau bệnh nặng hay tuổi già yếu.",
+        sign: "Linh mục đặt tay thinh lặng và xức Dầu Bệnh Nhân (OI) trên trán, tay kèm lời nguyện.",
+        grace: "Ban sức mạnh kiên nhẫn, kết hiệp với Cuộc Khổ Nạn của Chúa và tha thứ mọi tội lỗi.",
+        minister: "Giám mục / Linh mục cử hành thánh lễ",
+        seal: "Lãnh nhận khi cần thiết"
+      }
+    ]
+  },
+  {
+    groupId: "sacraments-vocation",
+    groupTitle: "3. Các Bí Tích Phục Vụ Cộng Đoàn & Ơn Gọi",
+    groupSubtitle: "2 Bí Tích · Thánh Hiến Vì Ơn Cứu Độ Của Tha Nhân",
+    groupDesc: "Được thánh hiến để phụng sự cộng đoàn Dân Chúa qua tác vụ thánh tông truyền hoặc qua đời sống gia đình Kitô giáo thánh thiện.",
+    badge: "Phục Vụ & Ơn Gọi",
+    gridType: "grid-2",
+    sacraments: [
+      {
+        id: "truyen-chuc",
+        name: "Bí Tích Truyền Chức Thánh",
+        type: "Tác Vụ Thánh Tông Truyền",
+        statusBadge: "Ơn gọi Tông đồ",
+        colorKey: "bronze",
+        ribbonColor: "#b45309",
+        icon: HolyOrdersStoleIcon,
+        scripture: '1 Tm 4, 14: "Đừng thờ ơ với đặc sủng Chúa ban qua lời ngôn sứ và việc đặt tay của các kỳ mục."',
+        short: "Thánh hiến người phục vụ Dân Chúa qua 3 cấp bậc: Giám mục, Linh mục và Phó tế theo truyền thống Tông đồ.",
+        sign: "Đức Giám mục đặt tay thinh lặng và đọc lời nguyện thánh hiến trọng thể trước Dân Chúa.",
+        grace: "In ấn tín vĩnh viễn, ban năng quyền nhân danh Đức Kitô Đầu hướng dẫn Dân Thiên Chúa.",
+        minister: "Chỉ Đức Giám mục hiệp thông Hội Thánh",
+        seal: "Ấn tín vĩnh viễn (1 lần)"
+      },
+      {
+        id: "hon-phoi",
+        name: "Bí Tích Hôn Phối",
+        type: "Giao Ước Gia Đình",
+        statusBadge: "Đời sống Hôn nhân",
+        colorKey: "rose",
+        ribbonColor: "#e11d48",
+        icon: IntertwinedWeddingRingsIcon,
+        scripture: 'Mt 19, 6: "Sự gì Thiên Chúa đã phối hợp kết hiệp, loài người không bao giờ được phép phân ly."',
+        short: "Giao ước tình yêu thánh thiện, chung thủy và bất khả phân ly giữa người nam và người nữ trước mặt Chúa.",
+        sign: "Đôi bạn tự do bày tỏ sự ưng thuận nhận nhau làm vợ chồng và trao nhẫn cưới thánh hiến.",
+        grace: "Thánh hóa tình yêu lứa đôi, ban ơn sống trung tín trọn đời và cùng nuôi dạy con cái.",
+        minister: "Đôi tân hôn (Linh mục chứng hôn)",
+        seal: "Giao ước trọn đời"
+      }
+    ]
+  }
+];
 
-export default function KhoiPhungVuSacraments({ items }) {
-  const [selectedSacrament, setSelectedSacrament] = useState(null);
-  const { fadeUp, vp, lenis } = usePageMotion();
-  const sacramentSheetY = useMotionValue(0);
-
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
-  );
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleSacramentDragEnd = (event, info) => {
-    if (info.offset.y > 100 || info.velocity.y > 500) setSelectedSacrament(null);
-    else sacramentSheetY.set(0);
-  };
-
-  useEffect(() => {
-    if (selectedSacrament) {
-      sacramentSheetY.set(0);
-      if (isMobile) document.body.style.overflow = "hidden";
-      lenis?.stop();
-    } else {
-      document.body.style.overflow = "";
-      lenis?.start();
-    }
-    return () => { 
-      document.body.style.overflow = ""; 
-      lenis?.start();
-    };
-  }, [selectedSacrament, isMobile, sacramentSheetY, lenis]);
-
-  useEffect(() => {
-    if (!selectedSacrament) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") setSelectedSacrament(null);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedSacrament]);
-
+export default function KhoiPhungVuSacraments({ groups = SACRAMENT_GROUPS }) {
   return (
-    <>
-      <section className="py-20 sm:py-24 bg-stone-50/50 dark:bg-[#1C1917]/50 border-y border-amber-900/5 dark:border-amber-100/5 relative z-10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-orange-600 dark:text-orange-400 ml-1">Bí tích học</p>
-          <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Bảy Bí Tích — Bảy Cánh Cửa Ân Sủng</h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-            Mỗi Bí tích là một cuộc gặp gỡ thực sự với Chúa Kitô — không phải nghi lễ hình thức mà là hành động thiêng liêng của chính Thiên Chúa qua dấu chỉ hữu hình.
-          </p>
-        </div>
-
-        <div className="space-y-12 sm:space-y-16">
-          {/* Nhóm 1: Khai Tâm */}
-          <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100/80 dark:bg-amber-900/30 flex items-center justify-center border border-amber-200/50 dark:border-amber-800/30 shadow-sm">
-                <span className="text-xl">🌅</span>
+    <div className="pv-liturgical-content">
+      {groups.map((group) => (
+        <div key={group.groupId} className="pv-group-block">
+          <div className="pv-group-header">
+            <div className="pv-group-title-wrap">
+              <div className="pv-group-badge-line">
+                <span className="pv-group-pill">{group.badge}</span>
+                <span className="pv-group-subtitle">{group.groupSubtitle}</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold font-serif text-amber-950 dark:text-amber-50">Các Bí Tích Khai Tâm</h3>
+              <h3 className="pv-group-title">{group.groupTitle}</h3>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {items.slice(0, 3).map((s, i) => (
-                <SacramentCard key={s.id} s={s} i={i} fadeUp={fadeUp} vp={vp} setSelectedSacrament={setSelectedSacrament} />
-              ))}
-            </div>
+            <p className="pv-group-desc">{group.groupDesc}</p>
           </div>
 
-          {/* Nhóm 2: Chữa Lành */}
-          <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-100/80 dark:bg-pink-900/30 flex items-center justify-center border border-pink-200/50 dark:border-pink-800/30 shadow-sm">
-                <span className="text-xl">🤍</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold font-serif text-amber-950 dark:text-amber-50">Các Bí Tích Chữa Lành</h3>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-              {items.slice(3, 5).map((s, i) => (
-                <SacramentCard key={s.id} s={s} i={i} fadeUp={fadeUp} vp={vp} setSelectedSacrament={setSelectedSacrament} />
-              ))}
-            </div>
-          </div>
-
-          {/* Nhóm 3: Phục Vụ */}
-          <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100/80 dark:bg-orange-900/30 flex items-center justify-center border border-orange-200/50 dark:border-orange-800/30 shadow-sm">
-                <span className="text-xl">🕊️</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold font-serif text-amber-950 dark:text-amber-50">Các Bí Tích Phục Vụ</h3>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-              {items.slice(5).map((s, i) => (
-                <SacramentCard key={s.id} s={s} i={i} fadeUp={fadeUp} vp={vp} setSelectedSacrament={setSelectedSacrament} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-      <AnimatePresence>
-        {selectedSacrament && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: APPLE_EASE }}
-              onClick={() => setSelectedSacrament(null)}
-              className="fixed inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm z-50 pointer-events-auto"
-            />
-            <div data-lenis-prevent className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
-              <motion.div
-                role="dialog"
-                aria-modal="true"
-                drag={isMobile ? "y" : false}
-                dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={{ top: 0.1, bottom: 0.6 }}
-                onDragEnd={handleSacramentDragEnd}
-                style={{ y: sacramentSheetY }}
-                initial={{ opacity: 0, y: isMobile ? "100%" : 30, scale: isMobile ? 1 : 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: isMobile ? "100%" : 20, scale: isMobile ? 1 : 0.95 }}
-                transition={{ duration: 0.4, ease: APPLE_EASE }}
-                className="relative w-full md:max-w-xl pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-center pt-4 pb-2 md:hidden touch-none active:cursor-grabbing">
-                  <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
-                </div>
-
-                <div className="flex items-start gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
-                  <div className="w-14 h-14 rounded-2xl bg-stone-100/80 dark:bg-stone-800/80 flex items-center justify-center shadow-inner flex-shrink-0 text-2xl select-none border border-stone-200/50 dark:border-stone-700/50">
-                    {selectedSacrament.icon}
-                  </div>
-                  <div className="flex-1 min-w-0 mt-1">
-                    <h3 className="font-extrabold font-serif text-[22px] tracking-tight leading-tight truncate">{selectedSacrament.name}</h3>
-                    <p className="text-[12px] text-orange-600 dark:text-orange-400 font-bold tracking-widest uppercase mt-1.5">{selectedSacrament.short}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 px-6 sm:px-8 pb-4 flex-wrap touch-none mt-2">
-                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 shadow-sm border border-stone-200/50 dark:border-stone-700/50">
-                    🏷 {selectedSacrament.details.type}
-                  </span>
-                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 shadow-sm border border-stone-200/50 dark:border-stone-700/50">
-                    ✋ {selectedSacrament.details.minister}
-                  </span>
-                </div>
-
-                <div className="p-6 sm:p-8 pt-4 space-y-6 overflow-y-auto overscroll-contain flex-1 text-left">
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">Ý nghĩa thần học</h4>
-                    <p className="text-[14.5px] leading-relaxed text-stone-600 dark:text-stone-300 font-medium">{selectedSacrament.details.meaning}</p>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="bg-stone-50/50 dark:bg-stone-900/30 p-4 sm:p-5 rounded-2xl border border-amber-900/5 dark:border-amber-100/5">
-                      <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 dark:text-orange-400 mb-3.5">Nghi thức & Đặc trưng</h4>
-                      <p className="text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 font-medium">{selectedSacrament.details.highlight}</p>
+          <div className={group.gridType === "grid-3" ? "pv-sacrament-grid-3" : "pv-sacrament-grid-2"}>
+            {group.sacraments.map((sacrament) => {
+              const SacramentIcon = sacrament.icon;
+              return (
+                <div
+                  key={sacrament.id}
+                  className={`pv-sacrament-card sacrament-${sacrament.id}`}
+                  style={{
+                    "--sacrament-ribbon": `var(--pv-lit-${sacrament.colorKey}-ribbon)`,
+                    "--sacrament-color-text": `var(--pv-lit-${sacrament.colorKey}-text)`
+                  }}
+                >
+                  <div className="pv-sacrament-card-main">
+                    <div className="pv-sacrament-top">
+                      <div className="pv-sacrament-icon-wrap">
+                        <SacramentIcon className="pv-sacrament-vector-icon" />
+                      </div>
+                      <span className="pv-sacrament-status-badge">
+                        {sacrament.statusBadge}
+                      </span>
                     </div>
 
-                    <div className="text-center text-xl pt-2 tracking-widest select-none opacity-80">
-                      {selectedSacrament.details.emoji}
+                    <h4 className="pv-sacrament-name">{sacrament.name}</h4>
+                    <div className="pv-sacrament-type-tag">{sacrament.type}</div>
+
+                    <p className="pv-sacrament-short">{sacrament.short}</p>
+
+                    <div className="pv-sacrament-scripture">
+                      <BookOpen className="pv-scripture-icon" size={14} aria-hidden="true" />
+                      <span className="pv-scripture-text">{sacrament.scripture}</span>
+                    </div>
+                  </div>
+
+                  <div className="pv-sacrament-micro-grid">
+                    <div className="pv-micro-card pv-micro-sign">
+                      <div className="pv-micro-header">
+                        <span className="pv-micro-tag">Dấu chỉ hữu hình</span>
+                        <span className="pv-micro-subtitle">Chất thể &amp; Mô thức</span>
+                      </div>
+                      <p className="pv-micro-body">{sacrament.sign}</p>
+                    </div>
+
+                    <div className="pv-micro-card pv-micro-grace">
+                      <div className="pv-micro-header">
+                        <span className="pv-micro-tag">Ân sủng thiêng liêng</span>
+                        <span className="pv-micro-subtitle">Hiệu quả Bí tích</span>
+                      </div>
+                      <p className="pv-micro-body">{sacrament.grace}</p>
+                    </div>
+                  </div>
+
+                  <div className="pv-sacrament-footer">
+                    <div className="pv-sacrament-footer-item" title="Thừa tác viên cử hành">
+                      <User className="pv-footer-icon" size={13} aria-hidden="true" />
+                      <span className="pv-footer-text">
+                        <strong>Thừa tác:</strong> {sacrament.minister}
+                      </span>
+                    </div>
+                    <div className="pv-sacrament-footer-item" title="Hiệu quả ấn tín thiêng liêng">
+                      <ShieldCheck className="pv-footer-icon" size={13} aria-hidden="true" />
+                      <span className="pv-footer-text">
+                        <strong>Ấn tín:</strong> {sacrament.seal}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-function SacramentCard({ s, i, fadeUp, vp, setSelectedSacrament }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={vp}
-      custom={i * 0.08}
-      whileHover={{ y: -6, scale: 1.01 }}
-      onClick={() => setSelectedSacrament(s)}
-      className={`group cursor-pointer rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col transition-all duration-300 hover:shadow-xl active:scale-[0.98] ${s.color}`}
-    >
-      <div className="flex items-center justify-between mb-6">
-        <div className="w-14 h-14 rounded-2xl bg-orange-100/80 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0 text-2xl select-none border border-orange-200/50 dark:border-orange-800/30 shadow-sm">
-          {s.icon}
+              );
+            })}
+          </div>
         </div>
-        <span className="text-[10px] font-bold px-3 py-1 rounded-full text-orange-700 bg-orange-100/80 dark:text-orange-400 dark:bg-orange-900/30 border border-orange-200/50 dark:border-orange-800/30 shadow-sm uppercase tracking-widest whitespace-nowrap text-center flex-shrink-0">
-          Tìm hiểu
-        </span>
-      </div>
-      <h3 className="text-[20px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-3">{s.name}</h3>
-      <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium flex-1">{s.short}</p>
-      <span className="mt-5 inline-flex w-fit text-[10px] font-bold px-3 py-1 rounded-full bg-stone-100/80 dark:bg-stone-800/80 text-stone-500 dark:text-stone-400 shadow-sm border border-stone-200/50 dark:border-stone-700/50">
-        {s.details.type}
-      </span>
-    </motion.div>
+      ))}
+    </div>
   );
 }

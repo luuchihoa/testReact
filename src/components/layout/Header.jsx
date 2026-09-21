@@ -11,22 +11,22 @@ import {
   CalendarDays, FileText, Phone, Settings, ShieldCheck,
   ScrollText, User, Home, GraduationCap, Info, Menu, X,
   LayoutDashboard, Bell, Loader2, CheckCheck, Megaphone, BellOff,
-  ArrowRight, Smartphone, Download,
+  ArrowRight, Smartphone, Download, Baby, Wheat, Compass
 } from "lucide-react";
 import { normalizeNotificationLink } from "../../features/account/utils.js";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
-  { path: "/khối-chiên-con",    label: "Chiên Con",  sub: "Lớp 1 – 2",       icon: Heart,    accent: "#be185d", bg: "bg-pink-100/80 dark:bg-pink-500/20",     ring: "ring-pink-300 dark:ring-pink-500/40"     },
-  { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "Lớp 3 – 4",       icon: Sparkles, accent: "#4d7c0f", bg: "bg-lime-100/80 dark:bg-lime-500/20",     ring: "ring-lime-300 dark:ring-lime-500/40"     },
-  { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Lớp 5 – 6",       icon: Flame,    accent: "#a16207", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
-  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",           icon: Church,   accent: "#c2410c", bg: "bg-orange-100/80 dark:bg-orange-500/20", ring: "ring-orange-300 dark:ring-orange-500/40" },
-  { path: "/khối-kinh-thánh",   label: "Kinh Thánh", sub: "Lớp 8 – 9",       icon: BookOpen, accent: "#b91c1c", bg: "bg-red-100/80 dark:bg-red-500/20",       ring: "ring-red-300 dark:ring-red-500/40"       },
-  { path: "/khối-vào-đời",      label: "Vào Đời",    sub: "Lớp 10 – 11",     icon: Globe,    accent: "#78350f", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
+  { path: "/khối-chiên-con",    label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2", icon: Baby,     accent: "#16a34a", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
+  { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "RLLĐ 1 & 2",         icon: Wheat,    accent: "#15803d", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
+  { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Thêm Sức 1 & 2",     icon: Flame,    accent: "#a16207", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
+  { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",              icon: Church,   accent: "#c2410c", bg: "bg-orange-100/80 dark:bg-orange-500/20", ring: "ring-orange-300 dark:ring-orange-500/40" },
+  { path: "/khối-kinh-thánh",   label: "Kinh Thánh", sub: "Kinh Thánh 1 & 2",   icon: BookOpen, accent: "#b91c1c", bg: "bg-red-100/80 dark:bg-red-500/20",       ring: "ring-red-300 dark:ring-red-500/40"       },
+  { path: "/khối-vào-đời",      label: "Vào Đời",    sub: "Vào Đời 1 & 2",      icon: Compass,  accent: "#b91c1c", bg: "bg-red-100/80 dark:bg-red-500/20",       ring: "ring-red-300 dark:ring-red-500/40"       },
 ];
 
 const COMMUNITY_ITEMS = [
-  { path: "/tuyển-sinh",     label: "Tuyển sinh",     icon: Users,        desc: "Đăng ký học viên mới",     accent: "#15803d", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
+  { path: "/tuyển-sinh",     label: "Tuyển sinh",     icon: Users,        desc: "Đăng ký Giáo lý sinh mới", accent: "#15803d", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
   { path: "/lịch-học",       label: "Lịch học",       icon: CalendarDays, desc: "Xem lịch giáo lý tuần",    accent: "#0369a1", bg: "bg-sky-100/80 dark:bg-sky-500/20",         ring: "ring-sky-300 dark:ring-sky-500/40" },
   { path: "/lịch-sinh-hoạt", label: "Lịch sinh hoạt", icon: Sparkles,     desc: "Theo dõi sự kiện giáo xứ", accent: "#7e22ce", bg: "bg-purple-100/80 dark:bg-purple-500/20",   ring: "ring-purple-300 dark:ring-purple-500/40" },
   { path: "/tài-liệu",       label: "Tài liệu",       icon: FileText,     desc: "Tải bài giảng & học liệu", accent: "#0f766e", bg: "bg-teal-100/80 dark:bg-teal-500/20",       ring: "ring-teal-300 dark:ring-teal-500/40" },
@@ -48,16 +48,30 @@ const ACCOUNT_ITEMS = [
 // Nhãn hiển thị + màu nhận diện
 const ROLE_LABELS = {
   admin:   "Quản trị viên",
-  teacher: "Giáo viên",
-  student: "Học sinh",
+  teacher: "Giáo lý viên",
+  student: "Giáo lý sinh",
   user:    "Thành viên",
 };
 
 const ROLE_ACCENTS = {
-  admin:   "#dc2626", 
-  teacher: "#2563eb", 
-  student: "#16a34a", 
-  user:    "#78716c", 
+  admin:   "#991b1b", 
+  teacher: "#1e40af", 
+  student: "#166534", 
+  user:    "#44403c", 
+};
+
+const ROLE_BADGE_CLASSES = {
+  admin:   "text-[#7f1d1d] dark:text-[#fca5a5] bg-red-100/80 dark:bg-red-950/60",
+  teacher: "text-[#1e3a8a] dark:text-[#93c5fd] bg-blue-100/80 dark:bg-blue-950/60",
+  student: "text-[#14532d] dark:text-[#86efac] bg-emerald-100/80 dark:bg-emerald-950/60",
+  user:    "text-[#292524] dark:text-[#d6d3d1] bg-stone-100/80 dark:bg-stone-800/60",
+};
+
+const ROLE_TEXT_CLASSES = {
+  admin:   "text-[#991b1b] dark:text-[#f87171]",
+  teacher: "text-[#1e40af] dark:text-[#60a5fa]",
+  student: "text-[#166534] dark:text-[#4ade80]",
+  user:    "text-[#44403c] dark:text-[#d6d3d1]",
 };
 
 const ROLE_EXTRA_ITEMS = {
@@ -160,7 +174,7 @@ function useScrollPosition() {
 function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggle, onLogin }) {
   if (!isLogin) return (
     <button type="button" onClick={onLogin}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-amber-900 dark:bg-amber-100 px-5 text-[13px] font-bold text-amber-50 dark:text-amber-950 shadow-sm hover:bg-amber-950 dark:hover:bg-amber-50 transition-colors">
+      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-amber-900 dark:bg-amber-100 px-4 py-1.5 text-xs sm:text-sm font-bold text-amber-50 dark:text-amber-950 shadow-sm hover:bg-amber-950 dark:hover:bg-amber-50 transition-colors">
       <LogIn className="w-3.5 h-3.5" />Đăng nhập
     </button>
   );
@@ -168,7 +182,7 @@ function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggl
   return (
     <button type="button" onClick={onToggle} aria-expanded={isOpen}
       className={`flex items-center gap-2 rounded-full border transition-all pl-0.5 pr-3 py-0.5 ${
-        isOpen ? "border-amber-900/30 dark:border-amber-100/30 bg-amber-900/5 dark:bg-amber-100/10 shadow-inner" : "border-amber-900/15 dark:border-amber-100/15 bg-white/50 dark:bg-stone-800/60 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
+        isOpen ? "border-amber-900/30 dark:border-amber-100/30 bg-amber-900/5 dark:bg-amber-100/10 shadow-inner" : "border-amber-900/15 dark:border-amber-100/15 bg-white/50 dark:stone-800/60 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
       }`}>
       <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: roleAccent }}>
         <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="h-full w-full object-cover" />
@@ -196,7 +210,7 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
             {/* Cột Danh sách Khối (2/3 chiều rộng) */}
             <div className="w-2/3 p-5">
               <div className="mb-4">
-                <p className="text-[12px] font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] font-serif">Chương trình giáo lý</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#5e4420] dark:text-[#dfc599] font-serif">Chương trình giáo lý</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {KHOI_ITEMS.map((khoi) => {
@@ -210,8 +224,8 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
                         <Icon className="w-4 h-4" style={{ color: khoi.accent }} />
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-[14px] font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>{khoi.label}</p>
-                        <p className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8] truncate mt-0.5">{khoi.sub}</p>
+                        <p className={`text-sm font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>{khoi.label}</p>
+                        <p className="text-xs font-medium text-[#3d4a41] dark:text-[#cdd4c8] truncate mt-0.5">{khoi.sub}</p>
                       </div>
                     </button>
                   );
@@ -222,16 +236,16 @@ function KhoiMegaMenu({ isOpen, onClose, navigate, currentPath }) {
             {/* Cột Nổi bật (Featured - 1/3 chiều rộng) */}
             <div className="w-1/3 bg-[#f4efe4] dark:bg-[#161c18] p-6 flex flex-col justify-between border-l border-[#dedfd4] dark:border-[#354237]">
               <div>
-                <div className="w-10 h-10 rounded-full bg-white dark:bg-[#1e2821] shadow-sm flex items-center justify-center mb-4 text-[#7c5c2d] dark:text-[#d4b47d]">
-                  <Star className="w-5 h-5 text-[#927140] dark:text-[#d4b47d]" />
+                <div className="w-10 h-10 rounded-full bg-white dark:bg-[#1e2821] shadow-sm flex items-center justify-center mb-4 text-[#5e4420] dark:text-[#dfc599]">
+                  <Star className="w-5 h-5 text-[#927140] dark:text-[#dfc599]" />
                 </div>
-                <h4 className="text-[14px] font-bold text-[#293d32] dark:text-[#f2f2e8] font-serif leading-snug mb-2">Lời Chúa cho Thiếu Nhi</h4>
-                <p className="text-[12.5px] font-medium text-[#26362d] dark:text-[#e8ede6] italic leading-relaxed">"Hãy để trẻ nhỏ đến cùng Thầy, đừng ngăn cấm chúng, vì Nước Thiên Chúa thuộc về những ai giống như chúng."</p>
-                <p className="text-[12px] font-bold text-[#6b4d21] dark:text-[#d4b47d] mt-2.5">— Mc 10, 14</p>
+                <h4 className="text-sm font-bold text-[#293d32] dark:text-[#f2f2e8] font-serif leading-snug mb-2">Lời Chúa cho Thiếu Nhi</h4>
+                <p className="text-xs font-medium text-[#26362d] dark:text-[#e8ede6] italic leading-relaxed">"Hãy để trẻ nhỏ đến cùng Thầy, đừng ngăn cấm chúng, vì Nước Thiên Chúa thuộc về những ai giống như chúng."</p>
+                <p className="text-xs font-bold text-[#5e4420] dark:text-[#dfc599] mt-2.5">— Mc 10, 14</p>
               </div>
               <button
                 onClick={() => { navigate("/giới-thiệu"); onClose(); }}
-                className="group flex items-center justify-center gap-1.5 mt-6 w-full py-2.5 bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] rounded-xl text-[12.5px] font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
+                className="group flex items-center justify-center gap-1.5 mt-6 w-full py-2.5 bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] rounded-xl text-xs font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
               >
                 <span>Tìm hiểu thêm</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
@@ -266,7 +280,7 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
           className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[500px] max-w-[calc(100vw-32px)] rounded-[2rem] border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xl dark:shadow-black/40 z-50 overflow-hidden"
         >
           <div className="p-5 pb-3">
-            <p className="text-[12px] font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] font-serif">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#5e4420] dark:text-[#dfc599] font-serif">
               Kênh thông tin & Sinh hoạt
             </p>
           </div>
@@ -288,10 +302,10 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
                     <Icon className="w-4 h-4" style={{ color: item.accent }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[13.5px] font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>
+                    <p className={`text-sm font-bold leading-snug ${isActive ? "text-[#293d32] dark:text-[#f2f2e8]" : "text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d]"}`}>
                       {item.label}
                     </p>
-                    <p className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8] leading-tight mt-0.5 line-clamp-1">
+                    <p className="text-xs font-medium text-[#3d4a41] dark:text-[#cdd4c8] leading-tight mt-0.5 line-clamp-1">
                       {item.desc}
                     </p>
                   </div>
@@ -301,13 +315,13 @@ function CommunityDropdown({ isOpen, onClose, navigate, currentPath }) {
           </div>
 
           <div className="px-5 py-3 bg-[#faf8f3] dark:bg-[#151c18] border-t border-[#dedfd4] dark:border-[#354237] flex items-center justify-between">
-            <span className="text-[12px] font-medium text-[#3d4a41] dark:text-[#cdd4c8]">
+            <span className="text-xs font-medium text-[#3d4a41] dark:text-[#cdd4c8]">
               Sinh hoạt: <strong className="text-[#293d32] dark:text-[#f2f2e8]">Chúa Nhật 07:30 – 10:30</strong>
             </span>
             <button
               type="button"
               onClick={() => { navigate("/liên-hệ"); onClose(); }}
-              className="text-[12px] font-bold text-[#7c5c2d] dark:text-[#d4b47d] hover:text-[#314e3e] dark:hover:text-white transition-colors"
+              className="text-xs font-bold text-[#5e4420] dark:text-[#dfc599] hover:text-[#314e3e] dark:hover:text-white transition-colors"
             >
               Hỗ trợ trực tiếp →
             </button>
@@ -327,10 +341,10 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
           className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-2xl dark:shadow-black/40 z-50 overflow-hidden flex flex-col"
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 shrink-0">
-            <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
+            <p className="text-sm font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
             {hasUnread && (
               <button type="button" onClick={onMarkAllRead}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors">
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors">
                 <CheckCheck className="w-3.5 h-3.5" /> Đánh dấu đã đọc
               </button>
             )}
@@ -339,7 +353,7 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
           <div className="max-h-[50vh] overflow-y-auto" data-lenis-prevent>
             {loading && (
               <div className="flex items-center justify-center gap-2 py-12 text-stone-400 dark:text-stone-500">
-                <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13px] font-medium">Đang tải…</span>
+                <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-sm font-medium">Đang tải…</span>
               </div>
             )}
 
@@ -348,7 +362,7 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
                 <div className="w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
                   <BellOff className="w-6 h-6" />
                 </div>
-                <p className="text-[13px] font-medium text-stone-500 dark:text-stone-400">Bạn chưa có thông báo nào</p>
+                <p className="text-sm font-medium text-[#465447] dark:text-[#b0b9ac]">Bạn chưa có thông báo nào</p>
               </div>
             )}
 
@@ -364,11 +378,11 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-[14px] leading-snug ${!n.read ? "font-bold text-amber-950 dark:text-amber-50" : "font-semibold text-stone-700 dark:text-stone-300"}`}>{n.title}</p>
+                      <p className={`text-sm leading-snug ${!n.read ? "font-bold text-amber-950 dark:text-amber-50" : "font-semibold text-stone-700 dark:text-stone-300"}`}>{n.title}</p>
                       {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
                     </div>
-                    <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
-                    <p className="text-[11px] font-medium text-stone-400 dark:text-stone-500 mt-2">{timeAgoVi(n.created_at)}</p>
+                    <p className="text-xs text-[#465447] dark:text-[#b0b9ac] mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
+                    <p className="text-xs font-medium text-[#465447] dark:text-[#b0b9ac] mt-2">{timeAgoVi(n.created_at)}</p>
                   </div>
                 </button>
               );
@@ -379,7 +393,7 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
             <div className="p-3 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shrink-0 text-center">
               <button 
                 onClick={() => { navigate("/tài-khoản/thông-báo"); onClose(); }} 
-                className="text-[12px] font-bold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+                className="text-xs font-bold text-[#5e4420] dark:text-[#dfc599] hover:text-[#314e3e] dark:hover:text-[#ffffff] transition-colors"
               >
                 Xem tất cả thông báo
               </button>
@@ -410,7 +424,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">{username || "Thành viên"}</p>
-                <p className="text-[10px] font-semibold" style={{ color: roleAccent }}>{roleLabel}</p>
+                <p className={`text-xs font-semibold ${ROLE_TEXT_CLASSES[role] || ROLE_TEXT_CLASSES.user}`}>{roleLabel}</p>
               </div>
             </div>
           </div>
@@ -421,7 +435,7 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
 
           {extraItems.length > 0 && (
             <div className="py-1 border-b border-amber-900/10 dark:border-amber-100/10">
-              <p className="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">
+              <p className="px-4 pt-1 pb-1.5 text-xs font-bold uppercase tracking-wider text-[#5e4420] dark:text-[#dfc599]">
                 Công cụ {roleLabel.toLowerCase()}
               </p>
               {extraItems.map((item) => {
@@ -516,14 +530,14 @@ function KhoiSheet({ open, onClose, navigate }) {
               type="button"
               onClick={onClose}
               aria-label="Đóng bảng khối học"
-              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
+              className="absolute right-3 top-3 z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
             >
-              <X className="w-4 h-4" strokeWidth={2.5} />
+              <X className="w-5 h-5" strokeWidth={2.5} />
             </button>
 
-            <div className="px-5 pt-2 pb-2 border-b border-[#dedfd4] dark:border-[#354237]">
-              <h2 className="text-[16px] font-bold text-[#293d32] dark:text-[#ecece0]">Khối giáo lý</h2>
-              <p className="text-[12px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5">Chọn khối để xem chương trình và lịch học</p>
+            <div className="px-5 pr-14 pt-2 pb-2 border-b border-[#dedfd4] dark:border-[#354237]">
+              <h2 className="text-base font-bold text-[#293d32] dark:text-[#ecece0]">Khối giáo lý</h2>
+              <p className="text-xs text-[#465447] dark:text-[#b0b9ac] mt-0.5">Chọn khối để xem chương trình và lịch học</p>
             </div>
 
             <div className="overflow-y-auto overscroll-contain flex-1 p-3.5 pb-6">
@@ -542,10 +556,10 @@ function KhoiSheet({ open, onClose, navigate }) {
                       </div>
                       
                       <div className="flex-1 min-w-0"> 
-                        <p className="text-[14px] font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
+                        <p className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
                           {k.label}
                         </p>
-                        <p className="text-[11px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-snug line-clamp-1">
+                        <p className="text-xs text-[#465447] dark:text-[#b0b9ac] mt-0.5 leading-snug line-clamp-1">
                           {k.sub}
                         </p>
                       </div>
@@ -620,9 +634,9 @@ function MoreMenuSheet({
               type="button"
               onClick={onClose}
               aria-label="Đóng bảng tiện ích"
-              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
+              className="absolute right-3 top-3 z-10 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-500/10 dark:bg-stone-400/10 flex items-center justify-center hover:bg-stone-500/15 dark:hover:bg-stone-400/20 active:scale-95 transition-all text-[#293d32] dark:text-[#ecece0]"
             >
-              <X className="w-4 h-4" strokeWidth={2.5} />
+              <X className="w-5 h-5" strokeWidth={2.5} />
             </button>
  
             <div className="overflow-y-auto overscroll-contain flex-1">
@@ -630,7 +644,7 @@ function MoreMenuSheet({
               <button
                 type="button"
                 onClick={() => { onProfilePress(); onClose(); }}
-                className="flex w-full items-center gap-3 px-5 py-4 border-b border-[#dedfd4] dark:border-[#354237] text-left active:bg-white dark:active:bg-[#1e2821] transition-colors"
+                className="flex w-full items-center gap-3 px-5 pr-14 py-4 border-b border-[#dedfd4] dark:border-[#354237] text-left active:bg-white dark:active:bg-[#1e2821] transition-colors"
               >
                 {isLogin ? (
                   <>
@@ -643,17 +657,16 @@ function MoreMenuSheet({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0] truncate">
+                        <p className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] truncate">
                           {username || "Thành viên"}
                         </p>
                         <span
-                          className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                          style={{ color: roleAccent, background: `${roleAccent}18` }}
+                          className={`flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full ${ROLE_BADGE_CLASSES[role] || ROLE_BADGE_CLASSES.user}`}
                         >
                           {roleLabel}
                         </span>
                       </div>
-                      <p className="text-[13px] text-[#575e55] dark:text-[#b0b9ac]">
+                      <p className="text-xs text-[#465447] dark:text-[#b0b9ac] truncate">
                         {role === "student" ? "Xem hồ sơ & thành tích →" : "Xem thông tin hồ sơ →"}
                       </p>
                     </div>
@@ -661,13 +674,13 @@ function MoreMenuSheet({
                 ) : (
                   <>
                     <div className="w-12 h-12 rounded-full bg-[#dedfd4]/40 dark:bg-[#354237]/50 flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-[#575e55] dark:text-[#b0b9ac]" />
+                      <User className="w-5 h-5 text-[#465447] dark:text-[#b0b9ac]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-bold text-[#293d32] dark:text-[#ecece0]">Bạn chưa đăng nhập</p>
-                      <p className="text-[13px] text-[#575e55] dark:text-[#b0b9ac]">Đăng nhập để truy cập tài khoản</p>
+                      <p className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] truncate">Bạn chưa đăng nhập</p>
+                      <p className="text-xs text-[#465447] dark:text-[#b0b9ac] line-clamp-1">Đăng nhập để truy cập tài khoản</p>
                     </div>
-                    <span className="flex-shrink-0 flex h-9 items-center gap-1.5 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] px-4 text-[13px] font-bold text-[#ffffff] dark:text-[#19251d] shadow-xs active:scale-95 transition-transform">
+                    <span className="flex-shrink-0 flex min-h-[36px] sm:min-h-[40px] py-1.5 items-center gap-1.5 rounded-xl bg-[#314e3e] dark:bg-[#d6b883] px-3 text-xs sm:text-sm font-bold text-[#ffffff] dark:text-[#19251d] shadow-xs active:scale-95 transition-transform">
                       <LogIn className="w-3.5 h-3.5" strokeWidth={2.5} />
                       Đăng nhập
                     </span>
@@ -684,7 +697,7 @@ function MoreMenuSheet({
  
               {isLogin && extraItems.length > 0 && (
                 <div className="py-1 border-b border-[#dedfd4] dark:border-[#354237]">
-                  <p className="px-5 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+                  <p className="px-5 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-[#465447] dark:text-[#b0b9ac]">
                     Công cụ {roleLabel.toLowerCase()}
                   </p>
                   {extraItems.map((item) => {
@@ -703,7 +716,7 @@ function MoreMenuSheet({
                           style={{ color: isActive ? roleAccent : "#8c9489" }}
                           strokeWidth={1.75}
                         />
-                        <span className="text-[14px] font-medium text-[#293d32] dark:text-[#ecece0]" style={isActive ? { color: roleAccent } : undefined}>{item.label}</span>
+                        <span className="text-sm font-medium text-[#293d32] dark:text-[#ecece0]" style={isActive ? { color: roleAccent } : undefined}>{item.label}</span>
                       </button>
                     );
                   })}
@@ -725,15 +738,15 @@ function MoreMenuSheet({
                       <Smartphone className="w-[17px] h-[17px]" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0 pr-1">
-                      <p className="text-[14px] text-[#293d32] dark:text-[#ecece0] font-semibold tracking-tight leading-tight">
+                      <p className="text-sm text-[#293d32] dark:text-[#ecece0] font-semibold tracking-tight leading-tight">
                         Cài đặt ứng dụng
                       </p>
-                      <p className="text-[12px] text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-tight truncate font-medium">
+                      <p className="text-xs text-[#465447] dark:text-[#b0b9ac] mt-0.5 leading-tight truncate font-medium">
                         Thêm vào màn hình chính để mở nhanh
                       </p>
                     </div>
                     <div className="flex-shrink-0">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1 rounded-full shadow-xs">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1 rounded-full shadow-xs">
                         <Download className="w-3 h-3" strokeWidth={2.5} /> Cài đặt
                       </span>
                     </div>
@@ -756,11 +769,11 @@ function MoreMenuSheet({
                     >
                       <Icon
                         className={`w-[18px] h-[18px] flex-shrink-0 ${
-                          isActive ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                          isActive ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#465447] dark:text-[#b0b9ac]"
                         }`}
                         strokeWidth={1.75}
                       />
-                      <span className="text-[14px] font-medium">{item.label}</span>
+                      <span className="text-sm font-medium">{item.label}</span>
                     </button>
                   );
                 })}
@@ -771,7 +784,7 @@ function MoreMenuSheet({
                   <button
                     type="button"
                     onClick={() => { onLogout(); onClose(); }}
-                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-[1rem] bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[14px] font-bold active:bg-red-100 dark:active:bg-red-500/20 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-[1rem] bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 text-sm font-bold active:bg-red-100 dark:active:bg-red-500/20 transition-colors"
                   >
                     <LogOut className="w-4 h-4" strokeWidth={2} />
                     Đăng xuất tài khoản
@@ -794,8 +807,8 @@ function QuickLink({ icon: Icon, label, onClick, accent = false }) {
       onClick={onClick}
       className="flex flex-col items-center gap-1.5 py-3.5 rounded-[1rem] bg-white dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-xs active:bg-[#faf8f3] dark:active:bg-[#253229] transition-colors"
     >
-      <Icon className={`w-[18px] h-[18px] ${accent ? "text-[#927140] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"}`} strokeWidth={1.75} />
-      <span className="text-[12px] font-semibold text-[#293d32] dark:text-[#ecece0] leading-none">{label}</span>
+      <Icon className={`w-[18px] h-[18px] ${accent ? "text-[#5e4420] dark:text-[#dfc599]" : "text-[#465447] dark:text-[#b0b9ac]"}`} strokeWidth={1.75} />
+      <span className="text-xs font-semibold text-[#293d32] dark:text-[#ecece0] leading-none">{label}</span>
     </button>
   );
 }
@@ -825,7 +838,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
       <nav 
         role="navigation"
         aria-label="Điều hướng di động"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#faf8f3]/95 dark:bg-[#151c18]/95 backdrop-blur-xl border-t border-[#dedfd4] dark:border-[#354237] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-black/30"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#faf8f3]/95 dark:bg-[#151c18]/95 backdrop-blur-xl border-t border-[#dedfd4] dark:border-[#354237] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-black/30"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex h-16 items-stretch justify-around px-1.5">
@@ -845,7 +858,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                   aria-expanded={khoiSheetOpen}
                   aria-label="Mở danh sách Khối học"
                   className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
-                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#465447] dark:text-[#b0b9ac]"
                   }`}
                 >
                   <div className="relative w-12 h-7 flex items-center justify-center">
@@ -858,7 +871,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                     )}
                     <Icon className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                   </div>
-                  <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{item.label}</span>
+                  <span className="text-xs font-bold tracking-tight mt-0.5 truncate max-w-full px-0.5">{item.label}</span>
                 </motion.button>
               );
             }
@@ -875,7 +888,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                   aria-expanded={moreSheetOpen}
                   aria-label={isLogin ? `Tài khoản cá nhân, ${username || "Thành viên"}` : "Mở bảng Tiện ích"}
                   className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
-                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                    active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#465447] dark:text-[#b0b9ac]"
                   }`}
                 >
                   <div className="relative w-12 h-7 flex items-center justify-center">
@@ -897,7 +910,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                       <Menu className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                     )}
                   </div>
-                  <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{isLogin ? "Cá nhân" : "Tiện ích"}</span>
+                  <span className="text-xs font-bold tracking-tight mt-0.5 truncate max-w-full px-0.5">{isLogin ? "Cá nhân" : "Tiện ích"}</span>
                 </motion.button>
               );
             }
@@ -913,7 +926,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                 aria-current={active ? "page" : undefined}
                 aria-label={item.label}
                 className={`flex-1 flex flex-col items-center justify-center pt-1 pb-1 transition-colors select-none ${
-                  active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"
+                  active ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#465447] dark:text-[#b0b9ac]"
                 }`}
               >
                 <div className="relative w-12 h-7 flex items-center justify-center">
@@ -926,7 +939,7 @@ function BottomTabBar({ location, navigate, isLogin, onProfilePress, onLogout, a
                   )}
                   <Icon className="relative z-10 w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                 </div>
-                <span className="text-[0.6875rem] font-bold tracking-tight mt-0.5">{item.label}</span>
+                <span className="text-xs font-bold tracking-tight mt-0.5 truncate max-w-full px-0.5">{item.label}</span>
               </motion.button>
             );
           })}
@@ -1184,21 +1197,21 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
             onClick={() => navigate("/")} 
             className="flex items-center gap-2.5 sm:gap-3 select-none rounded-xl p-1 -ml-1 sm:p-1.5 sm:-ml-1.5 group transition-colors hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] min-w-0 max-w-[calc(100%-48px)] sm:max-w-none"
           >
-            <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
-              <img src="/images/logo_htdc.png" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:rotate-6" />
+            <div className="relative flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <img src="/images/logo_htdc.png" alt="Logo Ban Giáo Lý" className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.18)]" />
             </div>
             <div className="flex flex-col items-start text-left min-w-0">
-              <span className="text-sm font-extrabold tracking-tight text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] md:text-base font-serif transition-colors truncate w-full">BAN GIÁO LÝ</span>
-              <span className="mt-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-[#7c5c2d] dark:text-[#d4b47d] font-mono truncate max-w-[175px] xs:max-w-none">HTDC · XỨ ĐOÀN MẸ MÂN CÔI</span>
+              <span className="text-sm font-extrabold tracking-tight text-[#293d32] dark:text-[#ecece0] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] lg:text-base font-serif transition-colors truncate w-full">BAN GIÁO LÝ</span>
+              <span className="mt-0.5 text-xs font-bold uppercase tracking-wider sm:tracking-widest text-[#5e4420] dark:text-[#dfc599] font-mono truncate max-w-[175px] xs:max-w-none">XỨ ĐOÀN MẸ MÂN CÔI</span>
             </div>
           </button>
 
-          <nav aria-label="Điều hướng chính" className="hidden md:flex items-center gap-0.5">
+          <nav aria-label="Điều hướng chính" className="hidden lg:flex items-center gap-0.5">
             {MAIN_ITEMS.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <button key={item.path} type="button" onClick={() => navigate(item.path)}
-                  className={`px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isActive ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+                  className={`px-3.5 py-1.5 text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isActive ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
                 >
                   {item.label}
                 </button>
@@ -1212,7 +1225,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 aria-expanded={openMenu === "khoi"}
                 aria-controls="khoi-megamenu-panel"
                 onClick={(e) => toggle("khoi", e)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isKhoiActive || openMenu === "khoi" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isKhoiActive || openMenu === "khoi" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
               >
                 <span>Khối học</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "khoi" ? "rotate-180" : ""}`} />
@@ -1226,7 +1239,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 aria-expanded={openMenu === "community"}
                 aria-controls="community-dropdown-panel"
                 onClick={(e) => toggle("community", e)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[13.5px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isCommunityActive || openMenu === "community" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${isCommunityActive || openMenu === "community" ? "text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 font-bold" : "font-medium text-[#38453d] dark:text-[#f0f2eb] hover:text-[#293d32] dark:hover:text-[#ffffff] hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10"}`}
               >
                 <span>Sinh hoạt</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openMenu === "community" ? "rotate-180" : ""}`} />
@@ -1240,7 +1253,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               <button
                 type="button"
                 onClick={install}
-                className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/50 transition-colors shadow-xs"
+                className="hidden xl:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/50 transition-colors shadow-xs"
                 title="Cài đặt ứng dụng lên máy tính"
               >
                 <Download className="w-3.5 h-3.5" strokeWidth={2.2} />
@@ -1278,7 +1291,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               <button
                 type="button"
                 onClick={() => navigate("/cài-đặt")}
-                className={`hidden md:flex relative w-9 h-9 items-center justify-center rounded-full transition-colors ${
+                className={`flex relative w-11 h-11 items-center justify-center rounded-full transition-colors ${
                   location.pathname === "/cài-đặt"
                     ? "text-amber-800 dark:text-amber-300 bg-amber-900/10 dark:bg-amber-100/10"
                     : isScrolled
@@ -1291,7 +1304,7 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 <Settings className="w-[18px] h-[18px]" strokeWidth={1.8} />
               </button>
             )}
-            <div ref={accountRef} className="relative hidden md:block">
+            <div ref={accountRef} className="relative hidden lg:block">
               <AccountTriggerButton isLogin={isLogin} avatar={avatar} username={username} role={role} isOpen={openMenu === "account"} onToggle={(e) => toggle("account", e)} onLogin={toggleModal} />
               {isLogin && <AccountDropdown isOpen={openMenu === "account"} onClose={() => setOpenMenu(null)} navigate={navigate} currentPath={location.pathname} avatar={avatar} username={username} role={role} onLogout={handleLogout} onOpenProfile={handleProfilePress} />}
             </div>

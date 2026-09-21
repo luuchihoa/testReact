@@ -47,7 +47,7 @@ function MailIcon() {
 function LinkGroup({ title, links, onAction }) {
   return (
     <div className="flex flex-col space-y-4">
-      <h3 className="text-[12px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
         {title}
       </h3>
       <ul className="flex flex-col space-y-2.5">
@@ -57,21 +57,21 @@ function LinkGroup({ title, links, onAction }) {
               <button
                 type="button"
                 onClick={() => onAction?.(link.action)}
-                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#314e3e]"
+                className="group relative text-left text-sm font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#314e3e]"
               >
                 <span>{link.label}</span>
               </button>
             ) : link.isExternal || link.path.startsWith("mailto:") ? (
               <a
                 href={link.path}
-                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
+                className="group relative text-left text-sm font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
               >
                 <span>{link.label}</span>
               </a>
             ) : (
               <Link
                 to={link.path}
-                className="group relative text-left text-[13.5px] font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
+                className="group relative text-left text-sm font-medium text-[#575e55] transition-colors hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0]"
               >
                 <span>{link.label}</span>
               </Link>
@@ -139,24 +139,24 @@ export default function Footer() {
           {/* Cột 1: Thương hiệu (Chiếm 4 cột trên lg) */}
           <div className="space-y-6 lg:col-span-4 lg:pr-8">
             <div className="flex items-center gap-3.5 select-none">
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
                 <img
                   src="/images/logo_htdc.png"
                   alt="Ban Giáo Lý Giáo xứ An Ngãi"
-                  className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+                  className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-[18px] font-bold tracking-tight text-[#293d32] dark:text-[#ecece0] font-serif leading-tight">
+                <span className="text-lg font-bold tracking-tight text-[#293d32] dark:text-[#ecece0] font-serif leading-tight">
                   Ban Giáo Lý
                 </span>
-                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-[#7c5c2d] font-mono dark:text-[#d4b47d]">
+                <p className="mt-0.5 text-xs font-bold uppercase tracking-widest text-[#7c5c2d] font-mono dark:text-[#d4b47d]">
                   HTDC · Xứ đoàn Mẹ Mân Côi
                 </p>
               </div>
             </div>
 
-            <p className="text-[13.5px] font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
+            <p className="text-sm font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
               Nền tảng học hỏi và kết nối đức tin cho cộng đoàn. Đồng hành cùng giáo lý viên, phụ huynh và thiếu nhi giáo xứ.
             </p>
 
@@ -197,10 +197,10 @@ export default function Footer() {
           {/* Cột 4: Đăng ký nhận tin (Chiếm 4 cột trên lg) */}
           <div className="space-y-4 lg:col-span-4 lg:pl-4">
             <div className="space-y-1.5">
-              <h4 className="text-[12px] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
                 Nhận tin tức
               </h4>
-              <p className="text-[13px] font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
+              <p className="text-sm font-normal leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
                 Đăng ký để nhận các thông báo quan trọng và tài liệu mới nhất qua Email.
               </p>
             </div>
@@ -221,13 +221,13 @@ export default function Footer() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={subscribing}
                   placeholder="Nhập địa chỉ email..."
-                  className="w-full rounded-2xl border border-[#dedfd4] bg-white py-3.5 pl-10 pr-4 text-[14px] font-medium text-[#293d32] placeholder-[#6b7280] shadow-sm transition-all focus:border-[#314e3e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#314e3e]/10 disabled:opacity-60 dark:border-[#354237] dark:bg-[#1e2821] dark:text-[#ecece0] dark:placeholder-[#9ca3af] dark:focus:border-[#d4b47d] dark:focus:bg-[#1e2821]"
+                  className="w-full rounded-2xl border border-[#dedfd4] bg-white py-3.5 pl-10 pr-4 text-sm font-medium text-[#293d32] placeholder-[#6b7280] shadow-sm transition-all focus:border-[#314e3e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#314e3e]/10 disabled:opacity-60 dark:border-[#354237] dark:bg-[#1e2821] dark:text-[#ecece0] dark:placeholder-[#9ca3af] dark:focus:border-[#d4b47d] dark:focus:bg-[#1e2821]"
                 />
               </div>
               <button
                 type="submit"
                 disabled={subscribing}
-                className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] py-3.5 text-[14px] font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm motion-reduce:transform-none transition-all duration-200 ease-out disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1e2821]"
+                className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#314e3e] hover:bg-[#273e32] text-white dark:bg-[#d4b47d] dark:hover:bg-[#dfc394] dark:text-[#151c18] py-3.5 text-sm font-bold shadow-sm hover:shadow-md hover:shadow-[#314e3e]/20 dark:hover:shadow-[#d4b47d]/15 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm motion-reduce:transform-none transition-all duration-200 ease-out disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1e2821]"
               >
                 {subscribing ? (
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -249,15 +249,15 @@ export default function Footer() {
         <div className="md:mt-16 mb-[env(safe-area-inset-bottom)] md:mb-0 flex flex-col items-center justify-center gap-4 border-t border-[#dedfd4] pt-6 md:pt-8 text-center md:flex-row md:justify-between dark:border-[#354237]">
           
           <div className="flex flex-col items-center gap-1 md:items-start">
-            <p className="text-[11px] font-bold tracking-widest uppercase text-[#7c5c2d] dark:text-[#d4b47d]">
+            <p className="text-xs font-bold tracking-widest uppercase text-[#7c5c2d] dark:text-[#d4b47d]">
               HTDC Xứ đoàn Mẹ Mân Côi
             </p>
-            <p className="text-[12.5px] font-medium text-[#575e55] dark:text-[#b0b9ac]">
+            <p className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac]">
               © {year} Giáo xứ An Ngãi. All rights reserved.
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-[12.5px] font-semibold text-[#575e55] select-none md:justify-end dark:text-[#b0b9ac]">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs font-semibold text-[#575e55] select-none md:justify-end dark:text-[#b0b9ac]">
             <Link to="/quy-định" className="transition-colors hover:text-[#293d32] dark:hover:text-[#ecece0]">
               Quy định sử dụng
             </Link>

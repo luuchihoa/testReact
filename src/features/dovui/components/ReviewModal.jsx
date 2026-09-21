@@ -1,8 +1,26 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { APPLE_EASE } from "../utils/dovuiUtils.js";
 
 const ReviewModal = memo(({ history, onClose }) => {
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -10,6 +28,9 @@ const ReviewModal = memo(({ history, onClose }) => {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
       data-lenis-prevent
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="review-modal-title"
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
@@ -23,13 +44,15 @@ const ReviewModal = memo(({ history, onClose }) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xl">📖</span>
-            <h3 className="text-[17px] font-bold font-serif text-amber-950 dark:text-amber-50 m-0">
+            <h3 id="review-modal-title" className="text-[17px] font-bold font-serif text-amber-950 dark:text-amber-50 m-0">
               Chi Tiết Bài Làm ({history.filter((h) => h.isCorrect).length}/{history.length} câu đúng)
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+            aria-label="Đóng"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors cursor-pointer"
           >
             ✕
           </button>

@@ -1,320 +1,474 @@
-import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../../components/ui/ToastContext.jsx";
-import { Loader2, CalendarDays, User, ArrowLeft, Clock, Share2, Link2 } from "lucide-react";
+import { ArrowLeft, Share2, Link2, AlertCircle, RefreshCw, X } from "lucide-react";
+import { usePageMotion } from "../../hooks/usePageMotion.js";
+import { ArticlePublicContent } from "./ArticlePublicContent.jsx";
 
 // Định nghĩa các icon mạng xã hội SVG thống nhất
 const FacebookIcon = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
   </svg>
 );
 
 const MessengerIcon = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.914 1.458 5.513 3.738 7.21v3.834a.75.75 0 001.166.628l4.135-2.756c.31.042.627.066.948.066 5.523 0 10-4.145 10-9.258C22 6.145 17.523 2 12 2zm1.095 12.35l-2.457-2.62-4.793 2.62 5.27-5.6 2.457 2.62 4.793-2.62-5.27 5.6z"/>
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.914 1.458 5.513 3.738 7.21v3.834a.75.75 0 001.166.628l4.135-2.756c.31.042.627.066.948.066 5.523 0 10-4.145 10-9.258C22 6.145 17.523 2 12 2zm1.095 12.35l-2.457-2.62-4.793 2.62 5.27-5.6 2.457 2.62 4.793-2.62-5.27 5.6z" />
   </svg>
 );
 
 const ZaloIcon = ({ className }) => (
-  <div className={`${className} flex items-center justify-center font-black select-none text-[13px]`} style={{ fontFamily: 'sans-serif' }}>
+  <div className={`${className} flex items-center justify-center font-black select-none text-xs leading-none`} style={{ fontFamily: "sans-serif" }} aria-hidden="true">
     Z
   </div>
 );
 
-function formatDateVi(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-// Danh sách kênh chia sẻ dùng chung cho cả popover desktop và bottom sheet
-// mobile — tránh lặp lại markup 2 lần khi chỉ khác nhau về kích thước/bố cục.
 const SHARE_CHANNELS = [
-  { key: "facebook",  label: "Facebook",       Icon: FacebookIcon,  color: "#1877F2" },
-  { key: "messenger", label: "Messenger",      Icon: MessengerIcon, color: "#0084FF" },
-  { key: "zalo",      label: "Zalo",           Icon: ZaloIcon,      color: "#0068FF" },
-  { key: "copy",      label: "Sao chép liên kết", Icon: Link2,      color: "#92400E" },
+  { key: "facebook", label: "Facebook", Icon: FacebookIcon, color: "#1877F2" },
+  { key: "messenger", label: "Messenger", Icon: MessengerIcon, color: "#0084FF" },
+  { key: "zalo", label: "Zalo", Icon: ZaloIcon, color: "#0068FF" },
+  { key: "copy", label: "Sao chép liên kết", Icon: Link2, color: "#314e3e" },
 ];
 
-import { usePageMotion } from "../../hooks/usePageMotion.js";
+function ArticleDetailSkeleton() {
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 animate-pulse" aria-busy="true" aria-label="Đang tải bài viết...">
+      {/* Back button skeleton */}
+      <div className="h-10 w-36 bg-[#dedfd4]/60 dark:bg-[#354237]/60 rounded-xl mb-6"></div>
+
+      {/* Category skeleton */}
+      <div className="h-6 w-24 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded-full mb-4"></div>
+
+      {/* Title skeleton */}
+      <div className="space-y-3 mb-6">
+        <div className="h-8 sm:h-10 w-full bg-[#dedfd4]/70 dark:bg-[#354237]/70 rounded-xl"></div>
+        <div className="h-8 sm:h-10 w-3/4 bg-[#dedfd4]/60 dark:bg-[#354237]/60 rounded-xl"></div>
+      </div>
+
+      {/* Meta info skeleton */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#dedfd4] dark:border-[#354237] pb-5 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="h-5 w-28 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded-lg"></div>
+          <div className="h-5 w-24 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded-lg"></div>
+          <div className="h-5 w-20 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded-lg"></div>
+        </div>
+        <div className="h-9 w-24 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded-xl"></div>
+      </div>
+
+      {/* Cover skeleton */}
+      <div className="w-full aspect-video md:aspect-[21/9] bg-[#dedfd4]/60 dark:bg-[#354237]/60 rounded-2xl sm:rounded-3xl mb-8"></div>
+
+      {/* Content skeleton */}
+      <div className="space-y-4">
+        <div className="h-4 w-full bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded"></div>
+        <div className="h-4 w-11/12 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded"></div>
+        <div className="h-4 w-full bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded"></div>
+        <div className="h-4 w-4/5 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded"></div>
+        <div className="h-4 w-full bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded"></div>
+      </div>
+    </div>
+  );
+}
 
 export default function ArticleDetail() {
-  const { fadeUp, vp } = usePageMotion();
+  const { fadeUp } = usePageMotion();
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
+
   const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [viewState, setViewState] = useState("loading"); // "loading" | "success" | "error" | "notFound"
+  const [errorMessage, setErrorMessage] = useState(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const shareButtonRef = useRef(null);
+  const sheetCloseButtonRef = useRef(null);
 
-    (async () => {
-      setLoading(true);
-      setNotFound(false);
+  // 1. Tải bài viết chỉ khi status = 'published'
+  const loadArticle = useCallback(async () => {
+    setViewState("loading");
+    setErrorMessage(null);
 
+    try {
       const { data, error } = await supabase
         .from("articles")
-        .select("*")
+        .select("*, author:users!articles_author_username_fkey(username, ho_va_ten, ten_thanh)")
         .eq("slug", slug)
+        .eq("status", "published")
         .maybeSingle();
 
-      if (cancelled) return;
       if (error) {
-        console.error("ArticleDetail: fetch error:", error);
+        console.error("ArticleDetail fetch error:", error);
+        setErrorMessage(error.message || "Không thể tải nội dung bài viết");
+        setViewState("error");
+        return;
       }
+
       if (!data) {
-        setNotFound(true);
+        setViewState("notFound");
+        setArticle(null);
       } else {
         setArticle(data);
+        setViewState("success");
       }
-      setLoading(false);
-    })();
-
-    return () => { cancelled = true; };
+    } catch (err) {
+      console.error("ArticleDetail unexpected error:", err);
+      setErrorMessage("Đã xảy ra lỗi kết nối khi tải bài viết");
+      setViewState("error");
+    }
   }, [slug]);
 
+  useEffect(() => {
+    let isSubscribed = true;
+    async function run() {
+      if (isSubscribed) {
+        await loadArticle();
+      }
+    }
+    run();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [loadArticle]);
+
+  // 2. Browser Metadata (Title & Meta Description)
+  useEffect(() => {
+    if (viewState !== "success" || !article) return;
+
+    const originalTitle = document.title;
+    document.title = `${article.title} | Ban Giáo lý An Ngãi`;
+
+    let metaDesc = document.querySelector('meta[name="description"]');
+    let originalDesc = metaDesc ? metaDesc.getAttribute("content") : null;
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.name = "description";
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute("content", article.summary || article.title);
+
+    return () => {
+      document.title = originalTitle;
+      if (originalDesc !== null && metaDesc) {
+        metaDesc.setAttribute("content", originalDesc);
+      }
+    };
+  }, [viewState, article]);
+
+  // 3. Quản lý Modal/Bottom Sheet Focus Trap, Escape, Body Scroll Lock
+  useEffect(() => {
+    if (!isShareOpen) return;
+
+    const triggerEl = shareButtonRef.current;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // Focus nút đóng khi mở
+    const timer = setTimeout(() => {
+      sheetCloseButtonRef.current?.focus();
+    }, 50);
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsShareOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      triggerEl?.focus();
+    };
+  }, [isShareOpen]);
+
+  // 4. Xử lý nút quay lại danh sách bài viết
+  const handleBackNavigation = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/bài-viết");
+    }
+  };
+
+  // 5. Thao tác chia sẻ bài viết
   const shareTo = async (channel) => {
     setIsShareOpen(false);
     const url = window.location.href;
-    
+
     const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
     if ((channel === "facebook" || channel === "messenger" || channel === "zalo") && isLocal) {
       showToast("Lưu ý: Link localhost không hiển thị được nội dung xem trước trên mạng xã hội.", "info");
     }
 
     if (channel === "facebook") {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
     } else if (channel === "messenger") {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        window.open(`fb-messenger://share/?link=${encodeURIComponent(url)}`, "_blank");
+        window.open(`fb-messenger://share/?link=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
       } else {
-        window.open(`https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=2914944195427211&redirect_uri=${encodeURIComponent(url)}`, "_blank");
+        window.open(
+          `https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=2914944195427211&redirect_uri=${encodeURIComponent(url)}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
       }
     } else if (channel === "zalo") {
-      window.open(`https://sp.zalo.me/share_to_zalo?url=${encodeURIComponent(url)}`, "_blank");
+      window.open(`https://sp.zalo.me/share_to_zalo?url=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
     } else if (channel === "copy") {
       try {
         await navigator.clipboard.writeText(url);
-        showToast("Đã sao chép liên kết vào bộ nhớ tạm!", "success");
-      } catch (err) {
-        console.error("Copy error:", err);
+        showToast("Đã sao chép liên kết bài viết vào bộ nhớ tạm", "success");
+      } catch {
         showToast("Không thể sao chép liên kết", "error");
       }
     }
   };
 
-  if (loading) {
+  // ── TRẠNG THÁI 1: LOADING ──
+  if (viewState === "loading") {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex items-center justify-center gap-2.5 py-24 text-stone-500">
-        <Loader2 className="w-6 h-6 animate-spin text-amber-900 dark:text-amber-500" />
-        <span className="text-sm font-bold">Đang tải nội dung…</span>
+      <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18]">
+        <ArticleDetailSkeleton />
       </div>
     );
   }
 
-  if (notFound || !article) {
+  // ── TRẠNG THÁI 2: LỖI KẾT NỐI (ERROR) ──
+  if (viewState === "error") {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex flex-col items-center justify-center gap-4 text-center px-6 py-20"
-      >
-        <p className="text-xl font-bold font-serif text-amber-950 dark:text-amber-50">Không tìm thấy bài viết</p>
-        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 max-w-xs">Bài viết có thể đã bị gỡ hoặc chưa được duyệt bởi ban quản trị.</p>
-        <Link to="/bài-viết" className="text-sm font-bold text-amber-900 dark:text-amber-500 md:hover:underline">
-          ← Quay lại danh sách bài viết
-        </Link>
-      </motion.div>
+      <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] flex flex-col items-center justify-center gap-4 text-center px-4 py-20">
+        <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#293d32] dark:text-[#ecece0]">
+            Chưa thể tải bài viết
+          </h1>
+          <p className="text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] mt-1 max-w-sm">
+            {errorMessage || "Đã xảy ra lỗi kết nối. Vui lòng kiểm tra lại mạng và thử lại."}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            type="button"
+            onClick={loadArticle}
+            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] dark:bg-[#d6b883] text-[#fffefa] dark:text-[#151c18] hover:opacity-95 active:scale-[0.98] transition-all shadow-xs"
+          >
+            <RefreshCw className="w-4 h-4" /> Thử lại
+          </button>
+          <button
+            type="button"
+            onClick={handleBackNavigation}
+            className="min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237]"
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
     );
   }
 
-  const wordCount = (article.content || "").trim().split(/\s+/).filter(Boolean).length;
-  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  // ── TRẠNG THÁI 3: NOT FOUND / UNPUBLISHED ──
+  if (viewState === "notFound" || !article) {
+    return (
+      <Motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] flex flex-col items-center justify-center gap-4 text-center px-4 py-20"
+      >
+        <div className="w-16 h-16 rounded-full bg-[#dedfd4]/40 dark:bg-[#354237]/40 flex items-center justify-center text-[#314e3e] dark:text-[#d6b883] mb-1">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#293d32] dark:text-[#ecece0]">
+          Không tìm thấy bài viết
+        </h1>
+        <p className="text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] max-w-sm">
+          Bài viết có thể đã bị gỡ, chưa được xuất bản hoặc liên kết không chính xác.
+        </p>
+        <Link
+          to="/bài-viết"
+          className="min-h-[44px] inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] dark:bg-[#d6b883] text-[#fffefa] dark:text-[#151c18] hover:opacity-95 active:scale-[0.98] transition-all shadow-xs mt-2"
+        >
+          <ArrowLeft className="w-4 h-4" /> Quay lại danh sách bài viết
+        </Link>
+      </Motion.div>
+    );
+  }
+
+  // ── TRẠNG THÁI 4: SUCCESS (HIỂN THỊ NỘI DUNG CHI TIẾT) ──
+  const desktopShareDropdown = (
+    <div className="relative">
+      <button
+        ref={shareButtonRef}
+        type="button"
+        onClick={() => setIsShareOpen(!isShareOpen)}
+        aria-haspopup="dialog"
+        aria-expanded={isShareOpen}
+        aria-controls="share-popover-menu"
+        aria-label="Chia sẻ bài viết này"
+        className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-xs sm:text-sm font-bold text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#25332a] active:scale-95 transition-all shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883]"
+      >
+        <Share2 className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+        <span>Chia sẻ</span>
+      </button>
+
+      {/* Popover Dropdown Desktop */}
+      <AnimatePresence>
+        {isShareOpen && (
+          <>
+            <Motion.div
+              id="share-popover-menu"
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.15 }}
+              style={{ transformOrigin: "top right" }}
+              className="md:block hidden absolute right-0 mt-2 w-56 bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-2xl shadow-xl py-2 z-50"
+            >
+              <div className="px-4 py-1.5 mb-1">
+                <span className="text-[0.6875rem] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+                  Chia sẻ bài viết
+                </span>
+              </div>
+              {SHARE_CHANNELS.slice(0, 3).map((channel) => (
+                <button
+                  key={channel.key}
+                  type="button"
+                  onClick={() => shareTo(channel.key)}
+                  className="w-full text-left px-4 py-2.5 min-h-[44px] text-xs sm:text-sm font-semibold text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#25332a] flex items-center gap-3 transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${channel.color}1A`, color: channel.color }}>
+                    <channel.Icon className="w-4 h-4" />
+                  </div>
+                  <span>{channel.label}</span>
+                </button>
+              ))}
+              <div className="border-t border-[#dedfd4] dark:border-[#354237] my-1.5" />
+              <button
+                type="button"
+                onClick={() => shareTo("copy")}
+                className="w-full text-left px-4 py-2.5 min-h-[44px] text-xs sm:text-sm font-semibold text-[#314e3e] dark:text-[#d6b883] hover:bg-[#faf8f3] dark:hover:bg-[#25332a] flex items-center gap-3 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-[#314e3e]/10 dark:bg-[#d6b883]/20 flex items-center justify-center text-[#314e3e] dark:text-[#d6b883] shrink-0">
+                  <Link2 className="w-4 h-4" />
+                </div>
+                <span>Sao chép liên kết</span>
+              </button>
+            </Motion.div>
+            <div className="md:block hidden fixed inset-0 z-40" onClick={() => setIsShareOpen(false)} aria-hidden="true" />
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 transition-colors duration-500 overflow-x-hidden">
-
-      <motion.div
+    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] transition-colors duration-300 pb-16">
+      <Motion.div
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-        className="max-w-3xl mx-auto px-5 sm:px-6 py-8 sm:py-12"
+        className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10"
       >
-        
-        {/* Nút quay lại (Secondary Button) */}
-        <motion.div variants={fadeUp} className="mb-8">
-          <Link to="/bài-viết" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13.5px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-all duration-300 active:scale-[0.98] md:hover:bg-stone-200 dark:md:hover:bg-stone-700">
-            <ArrowLeft className="w-4 h-4" /> Tất cả bài viết
-          </Link>
-        </motion.div>
-
-        {/* Chuyên mục bài viết (Nhãn phụ) */}
-        {article.category && (
-          <motion.span
-            variants={fadeUp}
-            className="inline-block mb-4 px-3 py-1.5 rounded-lg bg-amber-50/80 dark:bg-amber-900/20 text-[11px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-400/80 border border-amber-200/50 dark:border-amber-800/30"
+        {/* Nút quay lại (Khôi phục scroll danh sách) */}
+        <Motion.div variants={fadeUp} className="mb-6">
+          <button
+            type="button"
+            onClick={handleBackNavigation}
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] transition-all duration-200 active:scale-[0.98] hover:border-[#314e3e]/50 dark:hover:border-[#d6b883]/50 shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883]"
           >
-            {article.category}
-          </motion.span>
-        )}
+            <ArrowLeft className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+            <span>Tất cả bài viết</span>
+          </button>
+        </Motion.div>
 
-        {/* Tiêu đề bài viết */}
-        <motion.h1
-          variants={fadeUp}
-          className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold font-serif text-amber-950 dark:text-amber-50 tracking-tight leading-tight mb-6"
-        >
-          {article.title}
-        </motion.h1>
+        {/* Nội dung bài viết công khai (Shared Component) */}
+        <Motion.div variants={fadeUp}>
+          <ArticlePublicContent
+            article={article}
+            titleAs="h1"
+            headerExtra={desktopShareDropdown}
+          />
+        </Motion.div>
+      </Motion.div>
 
-        {/* Meta thông tin chi tiết */}
-        <motion.div
-          variants={fadeUp}
-          className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-900/10 dark:border-amber-100/10 pb-5 mb-8 text-[13px] text-stone-500 dark:text-stone-400 font-medium"
-        >
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="inline-flex items-center gap-1.5 text-amber-950 dark:text-amber-50 font-bold"><User className="w-4 h-4 text-stone-400" /> {article.author_username}</span>
-            <span className="inline-flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-stone-400" /> {formatDateVi(article.published_at || article.updated_at)}</span>
-            <span className="inline-flex items-center gap-1.5"><Clock className="w-4 h-4 text-stone-400" /> {readingTime} phút đọc</span>
-          </div>
-
-          <div className="relative">
-            <motion.button
-              type="button"
-              onClick={() => setIsShareOpen(!isShareOpen)}
-              whileTap={{ scale: 0.96 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/40 text-[13px] font-bold text-stone-700 dark:text-stone-200 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 transition-colors shadow-sm backdrop-blur-sm"
-              title="Chia sẻ bài viết này"
-            >
-              <Share2 className="w-4 h-4 text-amber-900 dark:text-amber-500" /> Chia sẻ
-            </motion.button>
-
-            {/* Popover Dropdown cho Desktop */}
-            <AnimatePresence>
-              {isShareOpen && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ transformOrigin: "top right" }}
-                    className="md:block hidden absolute right-0 mt-3 w-56 bg-white/90 dark:bg-[#1C1917]/90 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-2xl shadow-lg py-3 z-50"
-                  >
-                    <div className="px-4 py-1.5 mb-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70">Chia sẻ bài viết</span>
-                    </div>
-                    {SHARE_CHANNELS.slice(0, 3).map(({ key, label, Icon, color }) => (
-                      <button key={key} type="button" onClick={() => shareTo(key)} className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-stone-700 dark:text-stone-300 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 flex items-center gap-3 transition-colors">
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}1A`, color }}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        {label}
-                      </button>
-                    ))}
-                    <div className="border-t border-amber-900/5 dark:border-amber-100/5 my-2"></div>
-                    <button type="button" onClick={() => shareTo("copy")} className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-amber-900 dark:text-amber-500 md:hover:bg-amber-50/50 dark:md:hover:bg-amber-900/20 flex items-center gap-3 transition-colors">
-                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-900 dark:text-amber-500 flex-shrink-0">
-                        <Link2 className="w-4 h-4" />
-                      </div>
-                      Sao chép liên kết
-                    </button>
-                  </motion.div>
-                  <div className="md:block hidden fixed inset-0 z-40" onClick={() => setIsShareOpen(false)}></div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* Ảnh bìa bài viết */}
-        {article.cover_image && (
-          <motion.div
-            variants={fadeUp}
-            className="w-full rounded-[28px] overflow-hidden shadow-sm mb-10 max-h-[460px] border border-amber-900/5 dark:border-amber-100/5 bg-white/50 dark:bg-stone-900/30"
-          >
-            <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
-          </motion.div>
-        )}
-
-        {/* Nội dung bài viết Markdown */}
-        <motion.div variants={fadeUp} className="prose prose-stone dark:prose-invert prose-lg max-w-none 
-          prose-headings:font-serif prose-headings:text-amber-950 dark:prose-headings:text-amber-50 prose-headings:tracking-tight
-          prose-p:leading-relaxed prose-p:text-stone-700 dark:prose-p:text-stone-300
-          prose-a:text-amber-800 dark:prose-a:text-amber-500 prose-a:font-semibold hover:prose-a:text-amber-600
-          prose-img:rounded-[20px] prose-img:shadow-sm prose-img:mx-auto prose-img:border prose-img:border-amber-900/5 dark:prose-img:border-amber-100/5
-          prose-li:marker:text-amber-900/50 dark:prose-li:marker:text-amber-500/50 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:rounded-r-2xl prose-blockquote:before:content-none prose-blockquote:after:content-none prose-blockquote:not-italic w-full max-w-full overflow-x-hidden break-words prose-a:break-all prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:max-w-full prose-table:overflow-x-auto"
-        >
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            skipHtml
-            components={{ a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" /> }}
-          >
-            {article.content}
-          </ReactMarkdown>
-        </motion.div>
-      </motion.div>
-
-      {/* Mobile Bottom Sheet Menu chia sẻ */}
+      {/* ── MOBILE BOTTOM SHEET MENU CHIA SẺ ── */}
       <AnimatePresence>
         {isShareOpen && (
-          <div className="md:hidden block fixed inset-0 z-50">
-            <motion.div 
+          <div
+            className="md:hidden block fixed inset-0 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-sheet-title"
+          >
+            {/* Backdrop */}
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-10 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm" 
+              className="fixed inset-0 z-10 bg-black/50 backdrop-blur-xs"
               onClick={() => setIsShareOpen(false)}
+              aria-hidden="true"
             />
-            
-            <motion.div 
+
+            {/* Sheet content */}
+            <Motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl rounded-t-[32px] border-t border-amber-900/10 dark:border-amber-100/10 px-6 pt-4 pb-12 shadow-2xl flex flex-col gap-5"
+              className="fixed bottom-0 left-0 right-0 z-20 bg-[#fffefa] dark:bg-[#1e2821] border-t border-[#dedfd4] dark:border-[#354237] rounded-t-3xl px-5 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
+              data-lenis-prevent
             >
-              <div className="w-12 h-1.5 bg-stone-200 dark:bg-stone-800 rounded-full mx-auto mb-1"></div>
-              
-              <div className="flex items-center justify-between border-b border-amber-900/10 dark:border-amber-100/10 pb-4">
+              <div className="w-12 h-1.5 bg-[#dedfd4] dark:bg-[#354237] rounded-full mx-auto mb-1" />
+
+              <div className="flex items-center justify-between border-b border-[#dedfd4] dark:border-[#354237] pb-3">
                 <div>
-                  <h3 className="text-[14px] font-bold text-amber-950 dark:text-amber-50 uppercase tracking-wider">Chia sẻ bài viết</h3>
-                  <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium mt-1">Lựa chọn nền tảng bạn muốn chia sẻ</p>
+                  <h2 id="share-sheet-title" className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] uppercase tracking-wider">
+                    Chia sẻ bài viết
+                  </h2>
+                  <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium mt-0.5">
+                    Chọn nền tảng bạn muốn chia sẻ
+                  </p>
                 </div>
-                <button 
-                  type="button" 
-                  onClick={() => setIsShareOpen(false)} 
-                  className="text-[12px] font-bold text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-4 py-2 rounded-xl active:scale-95 transition-all"
+                <button
+                  ref={sheetCloseButtonRef}
+                  type="button"
+                  onClick={() => setIsShareOpen(false)}
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs font-bold text-[#293d32] dark:text-[#ecece0] bg-[#faf8f3] dark:bg-[#25332a] border border-[#dedfd4] dark:border-[#354237] px-3 py-2 rounded-xl active:scale-95 transition-all"
+                  aria-label="Đóng bảng chia sẻ"
                 >
-                  Đóng
+                  <X className="w-4 h-4 mr-1" /> Đóng
                 </button>
               </div>
-              
-              <div className="grid grid-cols-4 gap-4 py-2 text-center">
-                {SHARE_CHANNELS.map(({ key, label, Icon, color }) => (
-                  <motion.button
-                    key={key}
+
+              {/* Lưới 2x2 ở màn hình hẹp 320px, 4 cột ở >=400px */}
+              <div className="grid grid-cols-2 min-[400px]:grid-cols-4 gap-3 py-2 text-center">
+                {SHARE_CHANNELS.map((channel) => (
+                  <button
+                    key={channel.key}
                     type="button"
-                    onClick={() => shareTo(key)}
-                    whileTap={{ scale: 0.9 }}
-                    className="flex flex-col items-center gap-2.5"
+                    onClick={() => shareTo(channel.key)}
+                    className="min-h-[44px] flex flex-col items-center gap-2 p-2.5 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] active:scale-95 transition-transform"
                   >
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${color}1A`, color }}>
-                      <Icon className="w-6 h-6" />
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-2xs" style={{ backgroundColor: `${channel.color}1A`, color: channel.color }}>
+                      <channel.Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[11.5px] font-bold text-stone-700 dark:text-stone-300">{label}</span>
-                  </motion.button>
+                    <span className="text-xs font-bold text-[#293d32] dark:text-[#ecece0]">{channel.label}</span>
+                  </button>
                 ))}
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>

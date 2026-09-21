@@ -35,57 +35,58 @@ export const CENTRAL_MASS = {
   location: "Thánh đường Giáo xứ An Ngãi",
   desc: "Tâm điểm quy tụ toàn thể Huynh Trưởng, Giáo Lý Viên và Thiếu Nhi cả 2 Ca",
   type: "Lễ Chúa Nhật",
+  classesCount: 29, // 29 lớp chính quy (Chiên Con đến Vào Đời); Khối Vườn Trẻ học giờ riêng theo lứa tuổi sơ khởi
 };
 
 export const NGANH_LIST = [
   {
     id: "all",
-    name: "Tất cả ngành",
+    name: "Tất cả khối",
     shortName: "Tất cả",
   },
   {
     id: "chinh-chien",
-    name: "Ngành Chinh Chiến",
-    shortName: "Chinh Chiến",
+    name: "Khối Vào Đời",
+    shortName: "Vào Đời",
     color: "red",
     badgeClass: "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800/40",
     dotClass: "bg-red-500",
     khoiList: ["Khối Vào Đời"],
-    scarf: "Khăn Đỏ",
-    meaning: "Chiến tâm (vượt khó) & Chinh dũng (chiến thắng)"
+    scarf: "Khăn Đỏ Có Viền",
+    meaning: "Chiến tâm (vượt khó) & Chinh dũng (chiến thắng) — Dấn thân làm chứng nhân Tin Mừng"
   },
   {
     id: "nhiet-quang",
-    name: "Ngành Nhiệt Quang",
-    shortName: "Nhiệt Quang",
+    name: "Khối Kinh Thánh & Phụng Vụ",
+    shortName: "Kinh Thánh & Phụng Vụ",
     color: "orange",
     badgeClass: "bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/40",
     dotClass: "bg-orange-500",
     khoiList: ["Khối Kinh Thánh", "Khối Phụng Vụ"],
-    scarf: "Khăn Da Cam",
-    meaning: "Nhiệt tâm (sốt sắng) & Quang dũng (sáng suốt)"
+    scarf: "Khăn Cam & Đỏ Có Viền",
+    meaning: "Nhiệt tâm (sốt sắng) & Quang dũng (sáng suốt) — Phụng sự Bàn Thờ & Lời Chúa"
   },
   {
     id: "kim-hoan",
-    name: "Ngành Kim Hoan",
-    shortName: "Kim Hoan",
+    name: "Khối Thêm Sức",
+    shortName: "Thêm Sức",
     color: "amber",
     badgeClass: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40",
     dotClass: "bg-amber-500",
     khoiList: ["Khối Thêm Sức"],
-    scarf: "Khăn Vàng",
-    meaning: "Kim tâm (quảng đại) & Hoan dũng (vui tươi)"
+    scarf: "Khăn Vàng Có Viền",
+    meaning: "Kim tâm (quảng đại) & Hoan dũng (vui tươi) — Tràn đầy 7 Ơn Chúa Thánh Thần"
   },
   {
     id: "au-dung",
-    name: "Ngành Ấu (Ấu Hùng – Ấu Dũng)",
-    shortName: "Ngành Ấu",
+    name: "Khối Khai Tâm & Rước Lễ",
+    shortName: "Khai Tâm & Rước Lễ",
     color: "lime",
     badgeClass: "bg-lime-50 text-lime-800 border-lime-200 dark:bg-lime-950/40 dark:text-lime-300 dark:border-lime-800/40",
     dotClass: "bg-lime-500",
-    khoiList: ["Khối Rước Lễ", "Khối Chiên Con"],
-    scarf: "Khăn Xanh Lá Chuối Non",
-    meaning: "Tươi trẻ – Vươn lên – Vâng phục"
+    khoiList: ["Khối Rước Lễ", "Khối Khai Tâm"],
+    scarf: "Khăn Xanh Lá (Trơn & Viền)",
+    meaning: "Tươi trẻ – Vươn lên – Đón rước Thánh Thể & Mầm non Đức tin"
   },
 ];
 
@@ -523,7 +524,7 @@ export const SCHEDULE_CLASSES = [
     time: "09:15 – 10:00",
     day: "Chúa Nhật",
     nganhId: "au-dung",
-    khoiName: "Khối Chiên Con",
+    khoiName: "Khối Khai Tâm",
     teachers: ["C.Dung", "C.N.Hân"],
     studentsCount: 29,
     birthYear: 2019,
@@ -539,7 +540,7 @@ export const SCHEDULE_CLASSES = [
     time: "09:15 – 10:00",
     day: "Chúa Nhật",
     nganhId: "au-dung",
-    khoiName: "Khối Chiên Con",
+    khoiName: "Khối Khai Tâm",
     teachers: ["C.Ân", "B.Ngọc"],
     studentsCount: 31,
     birthYear: 2019,
@@ -555,7 +556,7 @@ export const SCHEDULE_CLASSES = [
     time: "09:15 – 10:00",
     day: "Chúa Nhật",
     nganhId: "au-dung",
-    khoiName: "Khối Chiên Con",
+    khoiName: "Khối Khai Tâm",
     teachers: ["Sr.Tuyết", "C.Tâm"],
     studentsCount: null, // Đang tuyển sinh
     birthYear: 2020,
@@ -571,7 +572,7 @@ export const SCHEDULE_CLASSES = [
     time: "09:15 – 10:00",
     day: "Chúa Nhật",
     nganhId: "au-dung",
-    khoiName: "Khối Chiên Con",
+    khoiName: "Khối Khai Tâm",
     teachers: ["C.Vân", "C.K.Liên"],
     studentsCount: null, // Đang tuyển sinh
     birthYear: 2020,
@@ -587,7 +588,7 @@ export const SCHEDULE_CLASSES = [
     time: "09:15 – 10:00",
     day: "Chúa Nhật",
     nganhId: "au-dung",
-    khoiName: "Khối Chiên Con",
+    khoiName: "Khối Khai Tâm",
     teachers: ["C.Châu", "C.Viên"],
     studentsCount: null, // Đang tuyển sinh
     birthYear: 2021,

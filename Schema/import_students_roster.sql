@@ -1,9 +1,77 @@
 -- ============================================================
 --  MIGRATION: HỖ TRỢ IMPORT DANH SÁCH HỌC SINH TỪ FILE EXCEL
---  Tự động thêm vào users, enrollments và tạo tài khoản Auth
---  Mật khẩu mặc định: 'bangiaoly'
+--  - Tự động nhận diện học sinh cũ theo Họ Tên Tiếng Việt có dấu + Ngày Sinh
+--  - Tự động sinh mã học sinh dạng: [tên][họ][năm sinh] (ví dụ: annguyen15)
+--  - Tự động xử lý xung đột trùng tên: annguyen15_2, annguyen15_3...
+--  - Tự động tạo tài khoản Auth (mật khẩu mặc định: 'bangiaoly')
+--  - Ghi danh vào bảng public.enrollments
 -- ============================================================
 
+-- Kích hoạt tiện ích mở rộng pgcrypto nếu chưa có
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Hàm loại bỏ dấu tiếng Việt thuần túy để tạo username không dấu (Không phụ thuộc unaccent)
+CREATE OR REPLACE FUNCTION public.remove_vietnamese_tones(str TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT lower(regexp_replace(
+    translate(
+      coalesce(str, ''),
+      'áàảãạăắằẳẵặâấầẩẫậđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ',
+      'aaaaaaaaaaaaaaaaadeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyAAAAAAAAAAAAAAAAADEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY'
+    ),
+    '[^a-zA-Z0-9]', '', 'g'
+  ));
+$$;
+
+-- Hàm tạo base username: [tên][họ][2 số cuối năm sinh] (ví dụ: annguyen15)
+CREATE OR REPLACE FUNCTION public.generate_student_base_username(p_ho_ten TEXT, p_ngay_sinh DATE)
+RETURNS TEXT
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+  v_clean_words TEXT[];
+  v_first_name  TEXT;
+  v_last_name   TEXT;
+  v_year_str    TEXT;
+  v_base        TEXT;
+BEGIN
+  IF p_ho_ten IS NULL OR trim(p_ho_ten) = '' THEN
+    RETURN 'hocsinh';
+  END IF;
+
+  -- Tách các từ trong họ tên
+  v_clean_words := string_to_array(trim(regexp_replace(p_ho_ten, '\s+', ' ', 'g')), ' ');
+  
+  -- Lấy tên (từ cuối cùng) và họ (từ đầu tiên)
+  IF array_length(v_clean_words, 1) >= 2 THEN
+    v_first_name := public.remove_vietnamese_tones(v_clean_words[array_length(v_clean_words, 1)]);
+    v_last_name  := public.remove_vietnamese_tones(v_clean_words[1]);
+  ELSE
+    v_first_name := public.remove_vietnamese_tones(v_clean_words[1]);
+    v_last_name  := '';
+  END IF;
+
+  -- Lấy 2 số cuối năm sinh nếu có
+  IF p_ngay_sinh IS NOT NULL THEN
+    v_year_str := to_char(p_ngay_sinh, 'YY');
+  ELSE
+    v_year_str := '';
+  END IF;
+
+  v_base := v_first_name || v_last_name || v_year_str;
+  IF v_base = '' THEN
+    v_base := 'hocsinh';
+  END IF;
+
+  RETURN v_base;
+END;
+$$;
+
+-- Hàm chính: Import danh sách học sinh vào lớp và tự động quản lý tài khoản
 CREATE OR REPLACE FUNCTION public.admin_import_class_roster(
   p_lop      TEXT,
   p_nam_hoc  TEXT,
@@ -15,29 +83,35 @@ SECURITY DEFINER
 SET search_path = public, auth, extensions
 AS $$
 DECLARE
-  v_item          JSONB;
-  v_username      TEXT;
-  v_ho_ten        TEXT;
-  v_ten_thanh     TEXT;
-  v_ngay_sinh     DATE;
-  v_ngay_rua_toi  DATE;
-  v_ngay_ruoc_le  DATE;
-  v_ngay_them_suc DATE;
-  v_role          TEXT;
-  v_gioi_tinh     TEXT;
-  v_ten_cha       TEXT;
-  v_ten_me        TEXT;
-  v_sdt           TEXT;
-  v_giao_xom      TEXT;
-  v_avatar        TEXT;
-  v_fake_email    TEXT;
-  v_auth_id       UUID;
-  v_hashed_pw     TEXT;
-  v_is_new        BOOLEAN;
-  v_total         INT := 0;
-  v_new_users     INT := 0;
-  v_updated_users INT := 0;
-  v_enrolled      INT := 0;
+  v_item               JSONB;
+  v_raw_username       TEXT;
+  v_username           TEXT;
+  v_matched_username   TEXT;
+  v_base_username      TEXT;
+  v_candidate          TEXT;
+  v_counter            INT;
+  v_batch_usernames    TEXT[] := ARRAY[]::TEXT[];
+  v_ho_ten             TEXT;
+  v_ten_thanh          TEXT;
+  v_ngay_sinh          DATE;
+  v_ngay_rua_toi       DATE;
+  v_ngay_ruoc_le       DATE;
+  v_ngay_them_suc      DATE;
+  v_role               TEXT;
+  v_gioi_tinh          TEXT;
+  v_ten_cha            TEXT;
+  v_ten_me             TEXT;
+  v_sdt                TEXT;
+  v_giao_xom           TEXT;
+  v_avatar             TEXT;
+  v_fake_email         TEXT;
+  v_auth_id            UUID;
+  v_hashed_pw          TEXT;
+  v_is_new             BOOLEAN;
+  v_total              INT := 0;
+  v_new_users          INT := 0;
+  v_updated_users      INT := 0;
+  v_enrolled           INT := 0;
 BEGIN
   -- 1. Kiểm tra quyền Admin
   IF NOT public.is_admin() THEN
@@ -64,18 +138,18 @@ BEGIN
   END IF;
 
   -- 2. Mã hóa mật khẩu mặc định 'bangiaoly' bằng Blowfish bcrypt
-  v_hashed_pw := extensions.crypt('bangiaoly', extensions.gen_salt('bf', 10));
+  v_hashed_pw := crypt('bangiaoly', gen_salt('bf', 10));
 
   -- 3. Duyệt qua từng học sinh trong mảng JSONB
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_students)
   LOOP
     v_total := v_total + 1;
 
-    v_username := trim(v_item->>'username');
-    v_ho_ten   := trim(v_item->>'ho_va_ten');
+    v_ho_ten := trim(v_item->>'ho_va_ten');
+    v_raw_username := NULLIF(trim(v_item->>'username'), '');
 
-    -- Bỏ qua dòng thiếu họ tên hoặc username
-    IF v_ho_ten IS NULL OR v_ho_ten = '' OR v_username IS NULL OR v_username = '' THEN
+    -- Bỏ qua dòng thiếu họ tên
+    IF v_ho_ten IS NULL OR v_ho_ten = '' THEN
       CONTINUE;
     END IF;
 
@@ -129,6 +203,58 @@ BEGIN
       v_ngay_them_suc := NULL;
     END;
 
+    -- 4. NHẬN DIỆN DANH TÍNH HỌC SINH CŨ (SO KHỚP TIẾNG VIỆT CÓ DẤU CHÍNH XÁC)
+    v_matched_username := NULL;
+    
+    IF v_ngay_sinh IS NOT NULL THEN
+      SELECT username INTO v_matched_username
+      FROM public.users
+      WHERE LOWER(TRIM(ho_va_ten)) = LOWER(TRIM(v_ho_ten))
+        AND ngay_sinh = v_ngay_sinh
+      ORDER BY created_at ASC
+      LIMIT 1;
+    END IF;
+
+    -- Nếu không có ngày sinh hoặc chưa tìm thấy, kiểm tra theo SĐT phụ huynh
+    IF v_matched_username IS NULL AND v_sdt IS NOT NULL AND trim(v_sdt) <> '' THEN
+      SELECT username INTO v_matched_username
+      FROM public.users
+      WHERE LOWER(TRIM(ho_va_ten)) = LOWER(TRIM(v_ho_ten))
+        AND sdt = v_sdt
+      ORDER BY created_at ASC
+      LIMIT 1;
+    END IF;
+
+    -- 5. XÁC ĐỊNH MÃ USERNAME CHO HỌC SINH
+    IF v_matched_username IS NOT NULL THEN
+      -- Đã tồn tại học sinh cũ trong DB: Tái sử dụng chính username này
+      v_username := v_matched_username;
+    ELSE
+      -- Học sinh mới: Nếu file có sẵn mã hợp lệ chưa trùng thì dùng, ngược lại tự động sinh mã
+      IF v_raw_username IS NOT NULL 
+         AND NOT EXISTS (SELECT 1 FROM public.users WHERE username = lower(v_raw_username))
+         AND NOT (lower(v_raw_username) = ANY(v_batch_usernames)) THEN
+        v_username := lower(v_raw_username);
+      ELSE
+        -- Sinh mã chuẩn: [tên][họ][năm sinh] và tự động tăng _2, _3... nếu bị trùng
+        v_base_username := public.generate_student_base_username(v_ho_ten, v_ngay_sinh);
+        v_candidate := v_base_username;
+        v_counter := 2;
+
+        WHILE EXISTS (SELECT 1 FROM public.users WHERE username = v_candidate) 
+           OR (v_candidate = ANY(v_batch_usernames))
+        LOOP
+          v_candidate := v_base_username || '_' || v_counter;
+          v_counter := v_counter + 1;
+        END LOOP;
+
+        v_username := v_candidate;
+      END IF;
+
+      -- Đưa vào danh sách batch để chống trùng lặp giữa các dòng trong cùng 1 file
+      v_batch_usernames := array_append(v_batch_usernames, v_username);
+    END IF;
+
     -- Xử lý vai trò (role): Mặc định tự động gán 'student'
     v_role := trim(COALESCE(v_item->>'role', 'student'));
     IF v_role NOT IN ('student', 'user', 'teacher', 'admin') THEN
@@ -151,11 +277,11 @@ BEGIN
     -- Email quy chuẩn dùng đăng nhập: username@giaoly.local
     v_fake_email := lower(v_username) || '@giaoly.local';
 
-    -- 4. Kiểm tra hoặc tạo tài khoản Auth trong auth.users
+    -- 6. Kiểm tra hoặc tạo tài khoản Auth trong auth.users
     SELECT id INTO v_auth_id FROM auth.users WHERE email = v_fake_email LIMIT 1;
 
     IF v_auth_id IS NULL THEN
-      v_auth_id := extensions.gen_random_uuid();
+      v_auth_id := gen_random_uuid();
 
       INSERT INTO auth.users (
         instance_id,
@@ -203,7 +329,7 @@ BEGIN
         false
       );
     ELSE
-      -- Đã có tài khoản auth: Đảm bảo cập nhật mật khẩu mặc định, xác nhận email và chuẩn hóa token rỗng (tránh Scan NULL của Go)
+      -- Đã có tài khoản auth: Đảm bảo cập nhật mật khẩu mặc định, xác nhận email và chuẩn hóa token rỗng
       UPDATE auth.users
       SET
         encrypted_password         = v_hashed_pw,
@@ -248,7 +374,7 @@ BEGIN
       NOW()
     );
 
-    -- 5. Thêm hoặc Cập nhật vào bảng public.users
+    -- 7. Thêm hoặc Cập nhật vào bảng public.users
     INSERT INTO public.users (
       username,
       auth_id,
@@ -306,7 +432,7 @@ BEGIN
       v_updated_users := v_updated_users + 1;
     END IF;
 
-    -- 6. Ghi danh vào bảng public.enrollments
+    -- 8. Ghi danh vào bảng public.enrollments
     INSERT INTO public.enrollments (username, nam_hoc, lop)
     VALUES (v_username, p_nam_hoc, p_lop)
     ON CONFLICT (username, nam_hoc) DO UPDATE
@@ -328,3 +454,5 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_import_class_roster(TEXT, TEXT, JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.remove_vietnamese_tones(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.generate_student_base_username(TEXT, DATE) TO authenticated;

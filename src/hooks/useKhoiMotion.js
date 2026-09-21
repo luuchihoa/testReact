@@ -1,61 +1,101 @@
-import { useRef } from "react";
-import { useScroll, useTransform } from "framer-motion";
-import { useLenis } from "lenis/react";
-
-import { useMotionConfig } from "./useMotionConfig.js";
-
-// Fallback chuẩn Apple Motion Curves — dùng khi useMotionConfig() chưa sẵn sàng
-// (giữ nguyên giá trị đã dùng rải rác trong các file Khoi*.jsx trước refactor)
-const DEFAULT_MC = {
-  yOffset: 30,
-  duration: (d) => d || 0.6,
-  delay: (d) => d || 0,
-  stagger: 0.08,
-  isMobile: false,
-  reduced: false,
-  vp: () => ({ once: true, margin: "-12% 0px" }),
-  heroParallax: [0, -60],
-};
-
 /**
- * Gộp toàn bộ boilerplate motion (hero parallax, fadeUp variants, viewport config)
- * từng bị lặp lại giữa KhoiChienCon.jsx, KhoiRuocLe.jsx, ... về một chỗ.
- *
- * Dùng: const { heroRef, lenis, mc, heroY, fadeUp, heroReveal, vp } = useKhoiMotion();
+ * useKhoiMotion.js
+ * Hook chuẩn hóa hiệu ứng chuyển động trang nghiêm, ấm áp cho nhóm trang Khối Giáo lý
+ * Tuân thủ nghiêm ngặt AGENTS.md v1.1:
+ * - Hỗ trợ hoàn hảo prefers-reduced-motion (initial: false, hidden/visible: opacity 1, y 0, duration 0)
+ * - Hero entrance: Fade & y: 14px, 420ms, stagger 60ms
+ * - Section reveal: Fade & y: 14px, 360ms, viewport once
+ * - Card reveal: stagger 50ms, y: 12px
  */
+
+import { useReducedMotion } from "framer-motion";
+
 export function useKhoiMotion() {
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const lenis = useLenis();
+  const shouldReduceMotion = useReducedMotion();
 
-  const systemConfig = useMotionConfig();
-  const mc = systemConfig || DEFAULT_MC;
-
-  const heroY = useTransform(scrollY, [0, 600], mc.heroParallax || [0, -60]);
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: mc.yOffset },
-    visible: (d = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: { 
-        duration: mc.duration(0.8),
-        ease: [0.16, 1, 0.3, 1], 
-        delay: mc.delay(d) 
+  if (shouldReduceMotion) {
+    return {
+      shouldReduceMotion: true,
+      heroContainerVariants: {
+        hidden: { opacity: 1, y: 0 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0 } },
       },
-    }),
+      heroItemVariants: {
+        hidden: { opacity: 1, y: 0 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0 } },
+      },
+      sectionRevealProps: {
+        initial: false,
+        transition: { duration: 0 },
+      },
+      gridContainerVariants: {
+        hidden: { opacity: 1, y: 0 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0 } },
+      },
+      cardItemVariants: {
+        hidden: { opacity: 1, y: 0 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0 } },
+      },
+    };
+  }
+
+  return {
+    shouldReduceMotion: false,
+    heroContainerVariants: {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.06,
+          delayChildren: 0.04,
+        },
+      },
+    },
+    heroItemVariants: {
+      hidden: {
+        opacity: 0,
+        y: 14,
+      },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: 0.42,
+          ease: [0.16, 1, 0.3, 1],
+        },
+      },
+    },
+    sectionRevealProps: {
+      initial: { opacity: 0, y: 14 },
+      whileInView: { opacity: 1, y: 0 },
+      viewport: { once: true, margin: "-8% 0px" },
+      transition: {
+        duration: 0.36,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+    gridContainerVariants: {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.05,
+        },
+      },
+    },
+    cardItemVariants: {
+      hidden: {
+        opacity: 0,
+        y: 12,
+      },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: 0.32,
+          ease: [0.16, 1, 0.3, 1],
+        },
+      },
+    },
   };
-
-  const heroReveal = {
-    hidden: { opacity: 0, y: 24 },
-    visible: (d = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 100, damping: 18, mass: 0.7, delay: mc.delay(d) },
-    }),
-  };
-
-  const vp = mc.vp();
-
-  return { heroRef, lenis, mc, heroY, fadeUp, heroReveal, vp };
 }

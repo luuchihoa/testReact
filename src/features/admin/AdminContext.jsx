@@ -46,23 +46,56 @@ export function AdminProvider({ children }) {
   const isFirstLoad = useRef(true);
 
   const [pendingDangKy, setPendingDangKy] = useState(0);
+  const [pendingGopY, setPendingGopY] = useState(0);
+  const [pendingBaiViet, setPendingBaiViet] = useState(0);
   const [roleCounts, setRoleCounts] = useState({ admin: 0, teacher: 0, student: 0, user: 0 });
 
+  const [pendingStatus, setPendingStatus] = useState({
+    dangKy: { loading: true, error: null },
+    gopY: { loading: true, error: null },
+    baiViet: { loading: true, error: null },
+  });
+
   const refreshPendingDangKy = useCallback(async () => {
-    try { setPendingDangKy(await fetchPendingDangKyCount()); } 
-    catch (err) { console.error("load pending dang ky count error:", err); }
+    setPendingStatus((prev) => ({ ...prev, dangKy: { loading: true, error: null } }));
+    try {
+      const count = await fetchPendingDangKyCount();
+      setPendingDangKy(count);
+      setPendingStatus((prev) => ({ ...prev, dangKy: { loading: false, error: null } }));
+      return { ok: true, count };
+    } catch (err) {
+      console.error("load pending dang ky count error:", err);
+      setPendingStatus((prev) => ({ ...prev, dangKy: { loading: false, error: err } }));
+      return { ok: false, error: err };
+    }
   }, []);
 
-  const [pendingGopY, setPendingGopY] = useState(0);
   const refreshPendingGopY = useCallback(async () => {
-    try { setPendingGopY(await fetchPendingLienHeCount()); } 
-    catch (err) { console.error("load pending gop y count error:", err); }
+    setPendingStatus((prev) => ({ ...prev, gopY: { loading: true, error: null } }));
+    try {
+      const count = await fetchPendingLienHeCount();
+      setPendingGopY(count);
+      setPendingStatus((prev) => ({ ...prev, gopY: { loading: false, error: null } }));
+      return { ok: true, count };
+    } catch (err) {
+      console.error("load pending gop y count error:", err);
+      setPendingStatus((prev) => ({ ...prev, gopY: { loading: false, error: err } }));
+      return { ok: false, error: err };
+    }
   }, []);
 
-  const [pendingBaiViet, setPendingBaiViet] = useState(0);
   const refreshPendingBaiViet = useCallback(async () => {
-    try { setPendingBaiViet(await fetchPendingArticlesCount()); }
-    catch (err) { console.error("load pending bai viet count error:", err); }
+    setPendingStatus((prev) => ({ ...prev, baiViet: { loading: true, error: null } }));
+    try {
+      const count = await fetchPendingArticlesCount();
+      setPendingBaiViet(count);
+      setPendingStatus((prev) => ({ ...prev, baiViet: { loading: false, error: null } }));
+      return { ok: true, count };
+    } catch (err) {
+      console.error("load pending bai viet count error:", err);
+      setPendingStatus((prev) => ({ ...prev, baiViet: { loading: false, error: err } }));
+      return { ok: false, error: err };
+    }
   }, []);
 
   useEffect(() => {
@@ -147,16 +180,35 @@ export function AdminProvider({ children }) {
       setClasses((prev) => 
         JSON.stringify(prev) === JSON.stringify(classList) ? prev : classList
       );
-
+      return { ok: true };
     } catch (err) {
       console.error("load admin data error:", err);
-      stableShowToast("Không tải được dữ liệu quản trị", "error");
+      if (opts?.showToastOnError !== false) {
+        stableShowToast("Không tải được dữ liệu quản trị", "error");
+      }
+      return { ok: false, error: err };
     } finally {
       isFirstLoad.current = false;
       setLoading(false);
     }
   }, [namHoc, stableShowToast]);
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  const refreshAll = useCallback(async (opts = {}) => {
+    const [allRes, dkRes, gyRes, bvRes] = await Promise.all([
+      loadAll({ ...opts, showToastOnError: false }),
+      refreshPendingDangKy(),
+      refreshPendingGopY(),
+      refreshPendingBaiViet(),
+    ]);
+
+    const results = [allRes, dkRes, gyRes, bvRes];
+    const successCount = results.filter(r => r?.ok).length;
+    const isSuccess = successCount === results.length;
+    const isPartial = successCount > 0 && !isSuccess;
+
+    return { ok: isSuccess, partial: isPartial, results };
+  }, [loadAll, refreshPendingDangKy, refreshPendingGopY, refreshPendingBaiViet]);
 
   /* ==========================================================
      3. SỬA LỖI CRASH: Thay vì gọi hàm setUsers không tồn tại, 
@@ -174,17 +226,18 @@ export function AdminProvider({ children }) {
     namHoc, setNamHoc, namHocList, setNamHocList,
     roleCounts,
     classes, setClasses,
-    loading, loadAll,
+    loading, loadAll, refreshAll,
     showToast: stableShowToast, // Truyền xuống hàm đã bọc an toàn
     handleRoleChanged,
     pendingDangKy, refreshPendingDangKy,
     pendingGopY, refreshPendingGopY,
     pendingBaiViet, refreshPendingBaiViet,
+    pendingStatus,
   }), [
-    namHoc, namHocList, roleCounts, classes, loading, loadAll, 
+    namHoc, namHocList, roleCounts, classes, loading, loadAll, refreshAll,
     stableShowToast, handleRoleChanged, pendingDangKy, 
     refreshPendingDangKy, pendingGopY, refreshPendingGopY, 
-    pendingBaiViet, refreshPendingBaiViet
+    pendingBaiViet, refreshPendingBaiViet, pendingStatus
   ]);
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;

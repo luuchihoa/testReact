@@ -80,14 +80,41 @@ function normalizeGender(val) {
   return "";
 }
 
-// Tự sinh mã học sinh duy nhất nếu file để trống
-function generateAutoUsername(hoTen, ngaySinh, index) {
-  const cleanName = removeVietnameseTones(hoTen || "hs")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-  const yearSuffix = ngaySinh ? ngaySinh.slice(2, 4) : "";
-  const randomSuffix = String(Math.floor(100 + Math.random() * 900));
-  return `hs_${cleanName.slice(-8)}${yearSuffix}_${index + 1}${randomSuffix.slice(0, 2)}`;
+// Hàm tạo base username: [tên][họ][2 số cuối năm sinh] (ví dụ: annguyen15)
+export function generateStudentBaseUsername(hoTen, ngaySinh) {
+  if (!hoTen || typeof hoTen !== "string") return "hocsinh";
+  const cleanWords = hoTen.trim().split(/\s+/).filter(Boolean);
+  if (cleanWords.length === 0) return "hocsinh";
+  
+  let firstName = "";
+  let lastName = "";
+  if (cleanWords.length >= 2) {
+    firstName = removeVietnameseTones(cleanWords[cleanWords.length - 1]).toLowerCase().replace(/[^a-z0-9]/g, "");
+    lastName = removeVietnameseTones(cleanWords[0]).toLowerCase().replace(/[^a-z0-9]/g, "");
+  } else {
+    firstName = removeVietnameseTones(cleanWords[0]).toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  let yearSuffix = "";
+  if (ngaySinh && typeof ngaySinh === "string" && ngaySinh.length >= 4) {
+    // ngaySinh chuẩn YYYY-MM-DD
+    yearSuffix = ngaySinh.slice(2, 4);
+  }
+
+  return `${firstName}${lastName}${yearSuffix}` || "hocsinh";
+}
+
+// Tự sinh mã học sinh duy nhất (tự động tăng _2, _3... nếu bị trùng tên và năm sinh trong file)
+export function generateAutoUsername(hoTen, ngaySinh, existingSet = new Set()) {
+  const base = generateStudentBaseUsername(hoTen, ngaySinh);
+  let candidate = base;
+  let counter = 2;
+  while (existingSet.has(candidate.toLowerCase())) {
+    candidate = `${base}_${counter}`;
+    counter += 1;
+  }
+  existingSet.add(candidate.toLowerCase());
+  return candidate;
 }
 
 /**
@@ -132,7 +159,7 @@ export async function parseStudentRosterExcel(file) {
     const tenThanh = String(findField(["ten thanh", "bon mang", "thanh"])).trim();
     let rawUsername = String(findField(["ma hoc sinh", "ma hs", "username", "ten dang nhap", "tai khoan"])).trim();
 
-    // Nếu không có Họ tên VÀ không có Tên Thánh VÀ không có Mã HS -> dòng trống hoặc định dạng dư ở cuối bảng, bỏ qua
+    // Nếu không có Họ tên VÀ không có Tên Thánh -> dòng trống hoặc định dạng dư ở cuối bảng, bỏ qua
     if (!hoVaTen && !tenThanh && !rawUsername) {
       return;
     }
@@ -168,17 +195,17 @@ export async function parseStudentRosterExcel(file) {
       rowErrors.push(`Hàng ${rowNum}: Thiếu hoặc sai Họ và tên`);
     }
 
-    // Xử lý mã học sinh (username)
+    // Xử lý mã học sinh (username): Tự động sinh mã chuẩn annguyen15 (hoặc annguyen15_2 nếu trùng trong file)
     let username = rawUsername ? rawUsername.toLowerCase().replace(/\s+/g, "") : "";
     if (!username) {
-      username = generateAutoUsername(hoVaTen, ngaySinh, idx);
+      username = generateAutoUsername(hoVaTen, ngaySinh, existingUsernamesInFile);
     } else {
       // Kiểm tra trùng username trong cùng 1 file
       if (existingUsernamesInFile.has(username.toLowerCase())) {
         rowErrors.push(`Hàng ${rowNum}: Trùng mã học sinh "${username}" trong file`);
       }
+      existingUsernamesInFile.add(username.toLowerCase());
     }
-    existingUsernamesInFile.add(username.toLowerCase());
 
     const studentItem = {
       rowIndex: rowNum,
@@ -220,16 +247,15 @@ export async function parseStudentRosterExcel(file) {
 }
 
 /**
- * Tải file Excel mẫu chuẩn hóa về máy người dùng
+ * Tải file Excel mẫu chuẩn hóa về máy người dùng (Không yêu cầu cột Mã học sinh)
  */
 export async function downloadSampleExcel(lopName = "KhaiTam", namHoc = "2025-2026") {
   const XLSX = await getXLSX();
 
-  // Dữ liệu mẫu minh họa
+  // Dữ liệu mẫu minh họa: Không cần cột Mã học sinh
   const sampleData = [
     {
       "STT": 1,
-      "Mã học sinh": "hs_annguyen",
       "Tên Thánh": "Giuse",
       "Họ và tên": "Nguyễn Văn An",
       "Ngày sinh (DD/MM/YYYY)": "15/08/2015",
@@ -244,7 +270,6 @@ export async function downloadSampleExcel(lopName = "KhaiTam", namHoc = "2025-20
     },
     {
       "STT": 2,
-      "Mã học sinh": "", // Để trống để test tính năng tự sinh mã
       "Tên Thánh": "Maria",
       "Họ và tên": "Trần Thị Mai",
       "Ngày sinh (DD/MM/YYYY)": "20/10/2015",
@@ -257,6 +282,20 @@ export async function downloadSampleExcel(lopName = "KhaiTam", namHoc = "2025-20
       "Số điện thoại": "0987654321",
       "Giáo xóm": "Xóm 3",
     },
+    {
+      "STT": 3,
+      "Tên Thánh": "Giuse",
+      "Họ và tên": "Nguyễn Mệnh Trịnh",
+      "Ngày sinh (DD/MM/YYYY)": "15/08/2015",
+      "Giới tính": "Nam",
+      "Ngày Rửa Tội (DD/MM/YYYY)": "15/09/2015",
+      "Ngày Rước Lễ Lần Đầu (DD/MM/YYYY)": "",
+      "Ngày Thêm Sức (DD/MM/YYYY)": "",
+      "Tên Cha": "Tôma Hùng",
+      "Tên Mẹ": "Têrêsa Nga",
+      "Số điện thoại": "0905123456",
+      "Giáo xóm": "Xóm 2",
+    },
   ];
 
   const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -264,7 +303,6 @@ export async function downloadSampleExcel(lopName = "KhaiTam", namHoc = "2025-20
   // Đặt độ rộng các cột cho đẹp mắt
   ws["!cols"] = [
     { wch: 6 },  // STT
-    { wch: 18 }, // Mã học sinh
     { wch: 14 }, // Tên Thánh
     { wch: 24 }, // Họ và tên
     { wch: 22 }, // Ngày sinh
@@ -285,6 +323,218 @@ export async function downloadSampleExcel(lopName = "KhaiTam", namHoc = "2025-20
   const fileName = `Mau_Danh_Sach_${safeLop}_${namHoc}.xlsx`;
   return await triggerSafeExcelDownload(XLSX, wb, fileName);
 }
+
+/**
+ * Tải file Excel mẫu danh sách Người dùng (Giáo lý viên, Quản trị viên, Thành viên, Giáo lý sinh) - 8 cột chuẩn hóa
+ */
+export async function downloadSampleUsersExcel() {
+  const XLSX = await getXLSX();
+
+  const sampleData = [
+    {
+      "STT": 1,
+      "Tên Thánh": "Phêrô",
+      "Họ và tên": "Nguyễn Văn An",
+      "Ngày sinh (DD/MM/YYYY)": "15/08/1995",
+      "Giới tính": "Nam",
+      "Vai trò": "Giáo lý viên",
+      "Số điện thoại": "0901234567",
+      "Giáo xóm": "Xóm 1",
+    },
+    {
+      "STT": 2,
+      "Tên Thánh": "Maria",
+      "Họ và tên": "Trần Thị Thúy Nhi",
+      "Ngày sinh (DD/MM/YYYY)": "20/11/1998",
+      "Giới tính": "Nữ",
+      "Vai trò": "Giáo lý viên",
+      "Số điện thoại": "0912345678",
+      "Giáo xóm": "Xóm 2",
+    },
+    {
+      "STT": 3,
+      "Tên Thánh": "Giuse",
+      "Họ và tên": "Đặng Quang Huy",
+      "Ngày sinh (DD/MM/YYYY)": "10/02/1990",
+      "Giới tính": "Nam",
+      "Vai trò": "Quản trị viên",
+      "Số điện thoại": "0933445566",
+      "Giáo xóm": "Xóm 3",
+    },
+    {
+      "STT": 4,
+      "Tên Thánh": "Anna",
+      "Họ và tên": "Phạm Thị Thảo",
+      "Ngày sinh (DD/MM/YYYY)": "05/06/1985",
+      "Giới tính": "Nữ",
+      "Vai trò": "Thành viên",
+      "Số điện thoại": "0988776655",
+      "Giáo xóm": "Xóm 1",
+    },
+    {
+      "STT": 5,
+      "Tên Thánh": "Têrêsa",
+      "Họ và tên": "Nguyễn Thị Ngọc",
+      "Ngày sinh (DD/MM/YYYY)": "12/04/2014",
+      "Giới tính": "Nữ",
+      "Vai trò": "Giáo lý sinh",
+      "Số điện thoại": "0977112233",
+      "Giáo xóm": "Xóm 2",
+    },
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(sampleData);
+
+  ws["!cols"] = [
+    { wch: 6 },  // STT
+    { wch: 14 }, // Tên Thánh
+    { wch: 24 }, // Họ và tên
+    { wch: 22 }, // Ngày sinh
+    { wch: 12 }, // Giới tính
+    { wch: 18 }, // Vai trò
+    { wch: 16 }, // Số điện thoại
+    { wch: 18 }, // Giáo xóm
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DanhSachNguoiDung");
+
+  const fileName = `Mau_Danh_Sach_Nguoi_Dung.xlsx`;
+  return await triggerSafeExcelDownload(XLSX, wb, fileName);
+}
+
+/**
+ * Đọc file Excel và parse thành danh sách người dùng chuẩn hóa cho trang /quản-trị/người-dùng (8 cột cơ bản)
+ */
+export async function parseUsersExcel(file) {
+  const XLSX = await getXLSX();
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type: "array" });
+
+  const firstSheetName = wb.SheetNames[0];
+  if (!firstSheetName) {
+    throw new Error("File Excel không có sheet nào.");
+  }
+
+  const worksheet = wb.Sheets[firstSheetName];
+  const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+  if (!rawRows || rawRows.length === 0) {
+    throw new Error("File Excel không có dữ liệu.");
+  }
+
+  const normalizedUsers = [];
+  const errors = [];
+  const existingUsernamesInFile = new Set();
+
+  rawRows.forEach((row, idx) => {
+    const findField = (keys) => {
+      for (const k of Object.keys(row)) {
+        const cleanK = removeVietnameseTones(k).toLowerCase().replace(/[^a-z0-9]/g, "");
+        for (const target of keys) {
+          const cleanTarget = removeVietnameseTones(target).toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (cleanK.includes(cleanTarget)) return row[k];
+        }
+      }
+      return "";
+    };
+
+    const hoVaTen = String(findField(["ho va ten", "ho ten", "ten nguoi dung", "ten giao vien", "ten hoc sinh", "ho va ten dem"])).trim();
+    const tenThanh = String(findField(["ten thanh", "bon mang", "thanh"])).trim();
+    let rawUsername = String(findField(["ma tai khoan", "username", "ten dang nhap", "tai khoan", "ma nguoi dung", "ma hs"])).trim();
+
+    if (!hoVaTen && !tenThanh && !rawUsername) {
+      return;
+    }
+
+    const rawNgaySinh = findField(["ngay sinh", "sinh nhat", "ngay thang nam sinh"]);
+    const ngaySinh = parseExcelDate(rawNgaySinh);
+
+    // Chuẩn hóa vai trò
+    const rawRole = removeVietnameseTones(String(findField(["vai tro", "role", "chuc vu", "phan quyen"]))).toLowerCase().replace(/[^a-z0-9]/g, "");
+    let role = "teacher";
+    if (rawRole.includes("student") || rawRole.includes("giaolysinh") || rawRole.includes("hocsinh") || rawRole === "gls") {
+      role = "student";
+    } else if (rawRole.includes("admin") || rawRole.includes("quantrivien") || rawRole === "qtv") {
+      role = "admin";
+    } else if (rawRole.includes("user") || rawRole.includes("thanhvien") || rawRole.includes("phuhuynh")) {
+      role = "user";
+    } else if (rawRole.includes("teacher") || rawRole.includes("giaolyvien") || rawRole === "glv") {
+      role = "teacher";
+    }
+
+    // Tự động gán trạng thái thông minh theo vai trò
+    const rawTrangThai = String(findField(["trang thai", "status"])).trim();
+    let trangThai = role === "teacher" ? "Chưa phân công" : (role === "student" ? "Chưa xếp lớp" : "Hoạt động");
+    if (rawTrangThai) {
+      const cleanTT = removeVietnameseTones(rawTrangThai).toLowerCase();
+      if (cleanTT.includes("nghi day")) trangThai = "Nghỉ dạy";
+      else if (cleanTT.includes("dang day")) trangThai = "Đang dạy";
+      else if (cleanTT.includes("chua phan cong")) trangThai = "Chưa phân công";
+      else if (cleanTT.includes("nghi hoc")) trangThai = "Nghỉ học";
+      else if (cleanTT.includes("dang hoc")) trangThai = "Đang học";
+      else if (cleanTT.includes("chua xep lop")) trangThai = "Chưa xếp lớp";
+      else if (cleanTT.includes("hoan thanh")) trangThai = "Hoàn thành";
+      else if (cleanTT.includes("hoat dong")) trangThai = "Hoạt động";
+    }
+
+    const gioiTinh = normalizeGender(findField(["gioi tinh", "phai", "sex"]));
+    const sdt = String(findField(["so dien thoai", "sdt", "dien thoai", "phone", "sdt phu huynh"])).replace(/[^0-9]/g, "");
+    const giaoXom = String(findField(["giao xom", "xom", "khu giao họ", "dia chi"])).trim();
+
+    const rowNum = idx + 2;
+    const rowErrors = [];
+
+    if (!hoVaTen || hoVaTen.length < 2) {
+      rowErrors.push(`Hàng ${rowNum}: Thiếu hoặc sai Họ và tên`);
+    }
+
+    let username = rawUsername ? rawUsername.toLowerCase().replace(/\s+/g, "") : "";
+    if (!username) {
+      username = generateAutoUsername(hoVaTen, ngaySinh, existingUsernamesInFile);
+    } else {
+      if (existingUsernamesInFile.has(username.toLowerCase())) {
+        rowErrors.push(`Hàng ${rowNum}: Trùng mã tài khoản "${username}" trong file`);
+      }
+      existingUsernamesInFile.add(username.toLowerCase());
+    }
+
+    const userItem = {
+      rowIndex: rowNum,
+      username,
+      ho_va_ten: hoVaTen,
+      ten_thanh: tenThanh,
+      ngay_sinh: ngaySinh || null,
+      raw_ngay_sinh: rawNgaySinh ? String(rawNgaySinh) : "",
+      role,
+      trang_thai: trangThai,
+      gioi_tinh: gioiTinh,
+      sdt,
+      giao_xom: giaoXom,
+      isValid: rowErrors.length === 0,
+      errors: rowErrors,
+    };
+
+    if (rowErrors.length > 0) {
+      errors.push(...rowErrors);
+    }
+
+    normalizedUsers.push(userItem);
+  });
+
+  const validCount = normalizedUsers.filter((u) => u.isValid).length;
+  const invalidCount = normalizedUsers.length - validCount;
+
+  return {
+    users: normalizedUsers,
+    total: normalizedUsers.length,
+    validCount,
+    invalidCount,
+    errors,
+  };
+}
+
+
 
 let _xlsxPromise = null;
 
@@ -438,6 +688,306 @@ export async function exportClassRosterExcel(lopName, namHoc, roster) {
   const fileName = `DanhSach_Lop_${safeFileLop}_${namHoc}.xlsx`;
   return await triggerSafeExcelDownload(XLSX, wb, fileName);
 }
+
+/**
+ * Xuất file Excel danh sách đăng ký học giáo lý
+ */
+export async function exportDangKyExcel(records = [], filterLabel = "Tất cả", namHoc = "2026–2027") {
+  const XLSX = await preloadXLSX();
+
+  const header = [
+    "STT",
+    "Họ và Tên",
+    "Năm sinh",
+    "Độ tuổi",
+    "Số điện thoại",
+    "Giáo xóm",
+    "Khối đăng ký",
+    "Trạng thái",
+    "Thời gian nộp",
+    "Ghi chú phụ huynh",
+    "Ghi chú BQT",
+    "Người xử lý",
+  ];
+
+  const STATUS_MAP = {
+    moi: "Chờ xử lý (Mới)",
+    da_lien_he: "Đã liên hệ",
+    da_xep_lop: "Đã xếp lớp",
+    tu_choi: "Từ chối",
+  };
+
+  const currentYear = new Date().getFullYear();
+
+  const dataRows = records.map((r, index) => [
+    index + 1,
+    r.ho_ten || "",
+    r.nam_sinh || "",
+    r.nam_sinh ? `${currentYear - r.nam_sinh} tuổi` : "",
+    r.sdt || "",
+    r.giao_xom || "",
+    r.khoi_dang_ky || "",
+    STATUS_MAP[r.trang_thai] || r.trang_thai || "",
+    r.created_at ? new Date(r.created_at).toLocaleString("vi-VN") : "",
+    r.ghi_chu || "",
+    r.ghi_chu_admin || "",
+    r.xu_ly_boi ? `${r.xu_ly_boi} (${r.xu_ly_luc ? new Date(r.xu_ly_luc).toLocaleDateString("vi-VN") : ""})` : "",
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    [`DANH SÁCH ĐĂNG KÝ HỌC GIÁO LÝ (${filterLabel.toUpperCase()}) - NIÊN KHÓA ${namHoc}`],
+    [`Ngày xuất: ${new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`],
+    [],
+    header,
+    ...dataRows,
+  ]);
+
+  ws["!cols"] = [
+    { wch: 6 },  // STT
+    { wch: 22 }, // Họ tên
+    { wch: 10 }, // Năm sinh
+    { wch: 10 }, // Độ tuổi
+    { wch: 15 }, // SĐT
+    { wch: 14 }, // Giáo xóm
+    { wch: 18 }, // Khối
+    { wch: 16 }, // Trạng thái
+    { wch: 20 }, // Thời gian nộp
+    { wch: 28 }, // Ghi chú phụ huynh
+    { wch: 28 }, // Ghi chú BQT
+    { wch: 22 }, // Người xử lý
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const safeSheet = `DangKy_${filterLabel}`.replace(/[:\\\/\?\*\[\]]/g, "_").slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, safeSheet);
+
+  const safeFilter = String(filterLabel || "All").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `DangKyGiaoLy_${safeFilter}_${namHoc}.xlsx`;
+  return await triggerSafeExcelDownload(XLSX, wb, fileName);
+}
+
+/**
+ * Xuất file Excel danh sách thư góp ý & liên hệ
+ */
+export async function exportLienHeExcel(records = [], filterLabel = "Tất cả") {
+  const XLSX = await preloadXLSX();
+
+  const header = [
+    "STT",
+    "Họ và Tên",
+    "Số điện thoại",
+    "Chủ đề",
+    "Nội dung góp ý / liên hệ",
+    "Trạng thái",
+    "Thời gian gửi",
+  ];
+
+  const STATUS_MAP = {
+    moi: "Chờ phản hồi (Mới)",
+    da_doc: "Đã đọc",
+    da_xu_ly: "Đã xử lý",
+  };
+
+  function parseTopicAndBody(raw) {
+    if (!raw) return { topic: "Khác", content: "" };
+    const match = raw.match(/^\[Chủ đề:\s*([^\]]+)\]\s*\n?([\s\S]*)$/i);
+    if (match) {
+      return { topic: match[1].trim(), content: match[2].trim() };
+    }
+    return { topic: "Khác", content: raw.trim() };
+  }
+
+  const dataRows = records.map((r, index) => {
+    const parsed = parseTopicAndBody(r.noi_dung);
+    return [
+      index + 1,
+      r.ho_ten || "",
+      r.sdt || "",
+      parsed.topic,
+      parsed.content,
+      STATUS_MAP[r.trang_thai] || r.trang_thai || "",
+      r.created_at ? new Date(r.created_at).toLocaleString("vi-VN") : "",
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    [`DANH SÁCH HÒM THƯ GÓP Ý & LIÊN HỆ (${filterLabel.toUpperCase()})`],
+    [`Ngày xuất: ${new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`],
+    [],
+    header,
+    ...dataRows,
+  ]);
+
+  ws["!cols"] = [
+    { wch: 6 },  // STT
+    { wch: 22 }, // Họ tên
+    { wch: 16 }, // SĐT
+    { wch: 20 }, // Chủ đề
+    { wch: 50 }, // Nội dung
+    { wch: 18 }, // Trạng thái
+    { wch: 22 }, // Thời gian gửi
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const safeSheet = `GopY_${filterLabel}`.replace(/[:\\\/\?\*\[\]]/g, "_").slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, safeSheet);
+
+  const safeFilter = String(filterLabel || "All").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `HomThuGopY_${safeFilter}_${new Date().getFullYear()}.xlsx`;
+  return await triggerSafeExcelDownload(XLSX, wb, fileName);
+}
+
+/**
+ * Xuất file Excel danh sách người dùng & phân quyền xứ đoàn
+ */
+export async function exportUsersExcel(users = [], filterLabel = "Tất cả", getLopName = () => null) {
+  const XLSX = await preloadXLSX();
+
+  const ROLE_VI = {
+    admin: "Quản trị viên",
+    teacher: "Giáo lý viên",
+    student: "Giáo lý sinh",
+    user: "Thành viên",
+  };
+
+  const header = [
+    "STT",
+    "Tên Thánh",
+    "Họ và Tên",
+    "Tên tài khoản (@username)",
+    "Vai trò",
+    "Lớp phụ trách / Đang học",
+    "Trạng thái",
+  ];
+
+  const dataRows = users.map((u, index) => {
+    const lop = typeof getLopName === "function" ? getLopName(u.username, u) : (u.lopHoc || "");
+    let status = u.trangThai || "Hoạt động";
+    if (u.role === "teacher") {
+      status = (lop && lop !== "—") ? "Đang dạy" : "Chưa phân công";
+    } else if (u.role === "student") {
+      status = (lop && lop !== "—") ? "Đang học" : (u.trangThai || "Chưa xếp lớp");
+    }
+    return [
+      index + 1,
+      u.tenThanh || "",
+      u.hoTen || u.username,
+      `@${u.username}`,
+      ROLE_VI[u.role] || u.role || "",
+      lop || "—",
+      status,
+    ];
+  });
+
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    [`DANH SÁCH TÀI KHOẢN & PHÂN QUYỀN XỨ ĐOÀN (${String(filterLabel).toUpperCase()})`],
+    [`Ngày xuất: ${new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`],
+    [`Tổng số: ${users.length} tài khoản`],
+    [],
+    header,
+    ...dataRows,
+  ]);
+
+  ws["!cols"] = [
+    { wch: 6 },  // STT
+    { wch: 16 }, // Tên Thánh
+    { wch: 24 }, // Họ và Tên
+    { wch: 22 }, // Username
+    { wch: 18 }, // Vai trò
+    { wch: 26 }, // Lớp
+    { wch: 16 }, // Trạng thái
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const safeSheet = `NguoiDung_${filterLabel}`.replace(/[:\\\/\?\*\[\]]/g, "_").slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, safeSheet);
+
+  const safeFilter = String(filterLabel || "All").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `DanhSachTaiKhoan_${safeFilter}_${new Date().getFullYear()}.xlsx`;
+  return await triggerSafeExcelDownload(XLSX, wb, fileName);
+}
+
+/**
+ * Xuất Báo Cáo Tổng Hợp Các Lớp Học & Giáo Lý Viên Phụ Trách - Toàn bộ Niên Khóa
+ */
+export async function exportAllClassesSummaryExcel(classes = [], namHoc = "2026–2027", teachersByLop = {}, teachers = []) {
+  const XLSX = await preloadXLSX();
+
+  const getGlvNames = (lop) => {
+    const usernames = teachersByLop[lop] || [];
+    if (!usernames.length) return "Chưa phân công";
+    return usernames
+      .map((u) => {
+        const t = teachers.find((tch) => tch.username === u);
+        const holy = t?.ten_thanh || t?.tenThanh || "";
+        const name = t?.ho_va_ten || t?.hoTen || u;
+        return holy ? `${holy} ${name}` : name;
+      })
+      .join(", ");
+  };
+
+  const getKhoiName = (lop) => {
+    const lower = (lop || "").toLowerCase();
+    if (lower.includes("chiên con") || lower.includes("khai tâm") || lower.includes("vườn trẻ") || lower.includes("cc")) return "Khối Khai Tâm (5–7 tuổi)";
+    if (lower.includes("rước lễ") || lower.includes("rl") || lower.includes("rllđ")) return "Khối Rước Lễ Lần Đầu (8–9 tuổi)";
+    if (lower.includes("thêm sức") || lower.includes("ts")) return "Khối Thêm Sức (10–11 tuổi)";
+    if (lower.includes("phụng vụ") || lower.includes("pv") || lower.includes("bao đồng")) return "Khối Phụng Vụ (12 tuổi)";
+    if (lower.includes("kinh thánh") || lower.includes("kt")) return "Khối Kinh Thánh (13–14 tuổi)";
+    if (lower.includes("vào đời") || lower.includes("vd")) return "Khối Vào Đời (15–16 tuổi)";
+    return "Lớp Giáo Lý";
+  };
+
+  const totalStudents = classes.reduce((sum, c) => sum + (c.studentCount || 0), 0);
+
+  const header = [
+    "STT",
+    "Tên Lớp học",
+    "Ngành / Khối Giáo lý",
+    "Giáo lý viên phụ trách",
+    "Sĩ số Giáo lý sinh",
+    "Khóa sổ HK1",
+    "Khóa sổ HK2",
+  ];
+
+  const dataRows = classes.map((c, idx) => [
+    idx + 1,
+    c.lop || "",
+    getKhoiName(c.lop),
+    getGlvNames(c.lop),
+    c.studentCount || 0,
+    c.locks?.[1] ? "Đã khóa" : "Đang mở",
+    c.locks?.[2] ? "Đã khóa" : "Đang mở",
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    [`BÁO CÁO TỔNG HỢP DANH SÁCH LỚP HỌC & GIÁO LÝ VIÊN PHỤ TRÁCH`],
+    [`Niên khóa: ${namHoc} · Ngày xuất: ${new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`],
+    [`Tổng số lớp: ${classes.length} Lớp · Tổng số Giáo lý sinh: ${totalStudents} Em`],
+    [],
+    header,
+    ...dataRows,
+  ]);
+
+  ws["!cols"] = [
+    { wch: 6 },  // STT
+    { wch: 20 }, // Tên Lớp
+    { wch: 30 }, // Khối
+    { wch: 35 }, // GLV phụ trách
+    { wch: 20 }, // Sĩ số
+    { wch: 16 }, // Khóa sổ HK1
+    { wch: 16 }, // Khóa sổ HK2
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const safeSheet = `TongHop_LopHoc_${namHoc}`.replace(/[:\\\/\?\*\[\]]/g, "_").slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, safeSheet);
+
+  const safeNamHoc = String(namHoc || "2026-2027").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `BaoCao_TongHop_LopHoc_${safeNamHoc}.xlsx`;
+  return await triggerSafeExcelDownload(XLSX, wb, fileName);
+}
+
 
 /**
  * Kích hoạt hộp thoại In / PDF của trình duyệt kèm thông báo Toast và trạng thái đang mở.

@@ -328,7 +328,7 @@ export async function exportSummaryReportPdf({
             </div>
           </div>
           <div style="text-align: right; font-size: 11.5px; color: #57534e; line-height: 1.5;">
-            <div>Sĩ số: <strong style="color: #1c1917;">${rows.length}</strong> học sinh</div>
+            <div>Sĩ số: <strong style="color: #1c1917;">${rows.length}</strong> giáo lý sinh</div>
             <div>Đánh giá: <strong>${hkLabel}</strong></div>
             <div style="font-size: 10.5px; color: #78716c; margin-top: 4px;">Ngày xuất: ${currentDate}</div>
           </div>
@@ -437,6 +437,8 @@ export async function exportStatsReportPdf({
   term = "HK1",
   config = {},
   stats = [],
+  systemTotals = null,
+  isReconciliation = false,
 }) {
   const TERM_LABELS = {
     HK1: "Học kỳ I",
@@ -447,21 +449,29 @@ export async function exportStatsReportPdf({
   const currentDate = new Date().toLocaleDateString("vi-VN");
   const columns = config.columns || [];
 
-  // Tính dòng tổng cộng
-  let totalSiSo = 0;
-  let totalXepLoai = 0;
-  const colTotals = {};
-  columns.forEach(c => { colTotals[c.key] = 0; });
+  // Sử dụng systemTotals hoặc tự tính trên stats
+  const totals = systemTotals?.trustedTotals;
+  const validCount = systemTotals?.validClassCount ?? stats.filter(s => !s.hasAnomaly).length;
+  const totalCount = systemTotals?.totalClasses ?? stats.length;
 
-  stats.forEach(s => {
-    const siSo = s.studentCount ?? s.siSo ?? 0;
-    const xepLoai = s.totalGraded ?? s.daXepLoai ?? 0;
-    totalSiSo += siSo;
-    totalXepLoai += xepLoai;
-    columns.forEach(c => {
-      colTotals[c.key] += (s[c.key] || 0);
-    });
+  let totalSiSo = totals ? totals.studentCount : 0;
+  let totalXepLoai = totals ? totals.totalGraded : 0;
+  const colTotals = {};
+  columns.forEach(c => {
+    colTotals[c.key] = totals ? (totals[c.key] || 0) : 0;
   });
+
+  if (!totals) {
+    stats.forEach(s => {
+      const siSo = s.studentCount ?? s.siSo ?? 0;
+      const xepLoai = s.totalGraded ?? s.daXepLoai ?? 0;
+      totalSiSo += siSo;
+      totalXepLoai += xepLoai;
+      columns.forEach(c => {
+        colTotals[c.key] += (s[c.key] || 0);
+      });
+    });
+  }
 
   // Báo cáo thống kê phân chia trang (khổ ngang mỗi trang chứa ~15 lớp)
   const pagesData = stats.length <= 15 ? [stats] : chunkArray(stats, 15);
@@ -481,22 +491,22 @@ export async function exportStatsReportPdf({
           <div>
             <div style="font-size: 11px; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: 0.5px;">GIÁO PHẬN ĐÀ NẴNG — GIÁO XỨ AN NGÃI — BAN GIÁO LÝ</div>
             <div style="font-size: 20px; font-weight: 800; color: #1c1917; margin-top: 4px; text-transform: uppercase;">
-              BÁO CÁO THỐNG KÊ — ${String(config.label || "KẾT QUẢ").toUpperCase()}
+              ${isReconciliation ? "BẢN ĐỐI CHIẾU THỐNG KÊ (DỮ LIỆU CẦN RÀ SOÁT)" : "BÁO CÁO THỐNG KÊ"} — ${String(config.label || "KẾT QUẢ").toUpperCase()}
             </div>
             <div style="font-size: 13px; font-weight: 600; color: #44403c; margin-top: 3px;">
               Đánh giá: <span style="color: #b45309; font-weight: 700;">${termLabel}</span> — Niên khóa: ${namHoc}
             </div>
           </div>
           <div style="text-align: right; font-size: 11.5px; color: #57534e; line-height: 1.5;">
-            <div>Tổng số lớp: <strong style="color: #1c1917;">${stats.length}</strong> lớp</div>
-            <div>Tổng học sinh: <strong style="color: #1c1917;">${totalSiSo}</strong> em</div>
+            <div>Tổng số lớp: <strong style="color: #1c1917;">${stats.length}</strong> lớp ${isReconciliation ? `(${validCount} hợp lệ)` : ""}</div>
+            <div>Tổng Giáo lý sinh: <strong style="color: #1c1917;">${totalSiSo}</strong> em</div>
             <div style="font-size: 10.5px; color: #78716c; margin-top: 4px;">Ngày lập báo cáo: ${currentDate}</div>
           </div>
         </div>
       ` : `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #d97706; padding-bottom: 8px; margin-bottom: 12px;">
           <div style="font-size: 13px; font-weight: 700; color: #1c1917; text-transform: uppercase;">
-            Báo cáo thống kê ${config.label || ""} — ${termLabel} (${namHoc}) <span style="font-weight: 400; font-size: 11px; color: #78716c;">(Trang tiếp theo)</span>
+            ${isReconciliation ? "Bản đối chiếu thống kê" : "Báo cáo thống kê"} ${config.label || ""} — ${termLabel} (${namHoc}) <span style="font-weight: 400; font-size: 11px; color: #78716c;">(Trang tiếp theo)</span>
           </div>
           <div style="font-size: 11px; color: #78716c;">Ngày xuất: ${currentDate}</div>
         </div>
@@ -528,13 +538,16 @@ export async function exportStatsReportPdf({
           ${pageRows.map((s, pIdx) => {
             const globalIdx = startIndex + pIdx + 1;
             const isOdd = globalIdx % 2 === 1;
-            const bg = isOdd ? "#ffffff" : "#fefce8";
+            const bg = s.hasAnomaly ? "#fff1f2" : isOdd ? "#ffffff" : "#fefce8";
             const siSo = s.studentCount ?? s.siSo ?? 0;
             const daXepLoai = s.totalGraded ?? s.daXepLoai ?? 0;
             return `
             <tr style="background: ${bg}; font-size: 11.5px; color: #1c1917;">
               <td style="border: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; color: #78716c;">${globalIdx}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: left; font-weight: 700; color: #78350f;">${s.lop}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: left; font-weight: 700; color: #78350f;">
+                ${s.lop}
+                ${s.hasAnomaly ? `<br><span style="font-size: 9.5px; font-weight: normal; color: #b91c1c;">[${s.anomalyReasons.join("; ")}]</span>` : ""}
+              </td>
               <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; font-weight: 600;">${siSo}</td>
               <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; font-weight: 600; color: #0369a1;">${daXepLoai}</td>
               ${columns.map(col => {
@@ -552,7 +565,7 @@ export async function exportStatsReportPdf({
           <!-- DÒNG TỔNG CỘNG TRANG CUỐI -->
           ${isLastPage ? `
             <tr style="background: #fef3c7; font-size: 12px; font-weight: 800; color: #78350f; border-top: 2px solid #b45309;">
-              <td style="border: 1px solid #d97706; padding: 7px 6px; text-align: center;" colspan="2">TỔNG CỘNG HỆ THỐNG</td>
+              <td style="border: 1px solid #d97706; padding: 7px 6px; text-align: center;" colspan="2">TỔNG CỘNG (LỚP HỢP LỆ)</td>
               <td style="border: 1px solid #d97706; padding: 7px 8px; text-align: center;">${totalSiSo}</td>
               <td style="border: 1px solid #d97706; padding: 7px 8px; text-align: center; color: #0369a1;">${totalXepLoai}</td>
               ${columns.map(col => {
@@ -591,7 +604,7 @@ export async function exportStatsReportPdf({
 
       <!-- SỐ TRANG -->
       <div style="position: absolute; bottom: 14px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 10px; color: #a8a29e; border-top: 1px solid #e7e5e4; padding-top: 6px;">
-        <div>Hệ thống Quản lý Giáo lý — Thống kê báo cáo chính thức</div>
+        <div>Hệ thống Quản lý Giáo lý — ${isReconciliation ? "Bản đối chiếu thống kê" : "Thống kê báo cáo chính thức"}</div>
         <div>Trang ${pageIdx + 1} / ${totalPages}</div>
       </div>
     `;

@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from "react";
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { usePageMotion } from "../hooks/usePageMotion.js";
 import { usePWAInstall } from "../components/ui/PWAInstallContext.jsx";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase.js";
+import { useToast } from "../components/ui/ToastContext.jsx";
 import {
-  Type, Moon, Sun, Bell, CalendarDays, Trophy,
-  ShieldCheck, FileText, Info, ChevronRight, Settings as SettingsIcon,
-  Smartphone, Download
+  Settings, Type, Moon, Sun, Bell, CalendarDays, Trophy,
+  Smartphone, Download, RotateCcw, Info,
+  ShieldCheck, FileText, ChevronRight, Quote, Check
 } from "lucide-react";
 
 const FONT_OPTIONS = [
-  { key: "sm",   label: "Nhỏ",        px: "13px" },
-  { key: "base", label: "Trung bình", px: "15px" },
-  { key: "lg",   label: "Lớn",        px: "17px" },
-  { key: "xl",   label: "Lớn hơn",   px: "19px" },
+  { key: "sm",   label: "Nhỏ",     desc: "14px" },
+  { key: "base", label: "Chuẩn",   desc: "16px" },
+  { key: "lg",   label: "Lớn",     desc: "18px" },
+  { key: "xl",   label: "Rất lớn", desc: "20px" },
 ];
 
 function SectionLabel({ children }) {
   return (
-    <p className="text-[12px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 px-4 mb-2 mt-7 first:mt-0 select-none">
+    <p className="text-xs font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] px-1 mb-2 mt-6 first:mt-0 select-none">
       {children}
     </p>
   );
@@ -27,85 +28,66 @@ function SectionLabel({ children }) {
 
 function SettingCard({ children }) {
   return (
-    <div className="rounded-2xl overflow-hidden border border-amber-900/10 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 backdrop-blur-sm divide-y divide-amber-900/5 dark:divide-amber-100/5 shadow-sm">
+    <div className="rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] divide-y divide-[#dedfd4]/60 dark:divide-[#354237]/60 shadow-xs overflow-hidden">
       {children}
     </div>
   );
 }
 
-function Row({ icon, iconBg, iconColor, label, sub, right, onClick }) {
-  return (
-    <motion.div
-      whileTap={onClick ? { backgroundColor: "var(--row-active)" } : undefined}
-      onClick={onClick}
-      className={`flex items-center gap-3.5 px-4 py-3.5 transition-colors duration-150 select-none relative
-        [--row-active:rgba(146,64,14,0.05)] dark:[--row-active:rgba(253,230,138,0.05)]
-        ${onClick ? "cursor-pointer active:bg-[on-state]" : ""}`}
-    >
-      <div
-        className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center flex-shrink-0 transition-colors shadow-sm"
-        style={{ backgroundColor: iconBg }}
-      >
-        {React.cloneElement(icon, { size: 17, strokeWidth: 2.2, color: iconColor })}
-      </div>
-      
-      <div className="flex-1 min-w-0 pr-1">
-        <p className="text-[15px] text-amber-950 dark:text-amber-50 font-semibold tracking-tight leading-tight">
-          {label}
-        </p>
-        {sub && (
-          <p className="text-[12px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight font-medium truncate">
-            {sub}
-          </p>
-        )}
-      </div>
-      
-      <div className="flex-shrink-0 flex items-center gap-2">
-        {right}
-      </div>
-    </motion.div>
-  );
-}
-
-function Toggle({ checked, onChange }) {
+function Toggle({ checked, onChange, label, disabled = false }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ease-in-out focus:outline-none border border-black/5 dark:border-white/5 ${
-        checked ? "bg-amber-600 dark:bg-amber-500" : "bg-stone-200 dark:bg-stone-700"
-      }`}
+      className={`relative inline-flex items-center justify-center min-w-[48px] min-h-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] rounded-full transition-opacity ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <span
-        className={`absolute top-[1.5px] left-[2px] w-[26px] h-[26px] rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
-          checked ? "translate-x-[20px]" : "translate-x-0"
+        className={`w-[48px] h-[28px] rounded-full transition-colors duration-200 ease-in-out border border-[#dedfd4] dark:border-[#354237] ${
+          checked 
+            ? "bg-[#314e3e] dark:bg-[#d6b883]" 
+            : "bg-[#e5e7eb] dark:bg-[#2a372e]"
         }`}
-      />
+      >
+        <span
+          className={`block w-[22px] h-[22px] rounded-full bg-white dark:bg-[#151c18] shadow-xs transition-transform duration-200 ease-in-out mt-[2px] ml-[2px] ${
+            checked ? "translate-x-[20px]" : "translate-x-0"
+          }`}
+        />
+      </span>
     </button>
   );
 }
 
-function FontPills({ fontSize, setFontSize }) {
+function FontSegmented({ fontSize, setFontSize }) {
   return (
-    <div className="flex bg-stone-100/80 dark:bg-stone-800 p-1 rounded-xl select-none border border-black/5 dark:border-white/5 items-center gap-0.5">
+    <div 
+      role="radiogroup" 
+      aria-label="Chọn cỡ chữ hiển thị" 
+      className="grid grid-cols-4 gap-1 p-1 bg-[#faf8f3] dark:bg-[#151c18] rounded-xl border border-[#dedfd4] dark:border-[#354237] w-full"
+    >
       {FONT_OPTIONS.map((opt) => {
         const active = fontSize === opt.key;
         return (
           <button
             key={opt.key}
             type="button"
+            role="radio"
+            aria-checked={active}
             onClick={() => setFontSize(opt.key)}
-            style={{ fontSize: opt.px, lineHeight: 1 }}
-            className={`w-9 h-8 flex items-center justify-center rounded-lg font-bold transition-all duration-200 ${
+            className={`min-h-[44px] px-2 py-1.5 rounded-lg flex flex-col items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${
               active
-                ? "bg-white dark:bg-stone-600 text-amber-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5"
-                : "text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-stone-200/50 dark:hover:bg-stone-700/50"
+                ? "bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-xs"
+                : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] hover:bg-stone-500/5 dark:hover:bg-stone-400/5"
             }`}
-            aria-label={opt.label}
           >
-            A
+            <span className="text-xs sm:text-sm font-bold leading-tight">{opt.label}</span>
+            <span className={`text-[0.7rem] sm:text-xs font-medium leading-none mt-0.5 ${active ? "text-white/80 dark:text-[#19251d]/80" : "text-[#575e55]/80 dark:text-[#b0b9ac]/80"}`}>
+              {opt.desc}
+            </span>
           </button>
         );
       })}
@@ -113,12 +95,97 @@ function FontPills({ fontSize, setFontSize }) {
   );
 }
 
-import { supabase } from "../lib/supabase.js";
-import { useToast } from "../components/ui/ToastContext.jsx";
+function FontLivePreview({ fontSize }) {
+  const currentOption = FONT_OPTIONS.find((o) => o.key === fontSize) || FONT_OPTIONS[1];
+  return (
+    <div className="p-3.5 bg-[#faf8f3] dark:bg-[#151c18] rounded-xl border border-[#dedfd4] dark:border-[#354237] space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] flex items-center gap-1.5">
+          <Quote className="w-3 h-3 shrink-0" />
+          Xem trước văn bản
+        </span>
+        <span className="text-xs font-bold text-[#575e55] dark:text-[#b0b9ac]">
+          {currentOption.label} ({currentOption.desc})
+        </span>
+      </div>
+      <p className="text-sm sm:text-base text-[#293d32] dark:text-[#ecece0] font-medium leading-relaxed italic transition-all duration-200">
+        “Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường con đi.”
+      </p>
+      <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium text-right">
+        — Thánh Vịnh 119:105
+      </p>
+    </div>
+  );
+}
+
+function SettingItem({ icon, label, sub, right, children }) {
+  return (
+    <div className="p-3.5 sm:p-4 transition-colors">
+      <div className="flex items-center justify-between gap-3 min-h-[36px]">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {icon && (
+            <div className="w-8 h-8 rounded-lg bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] shrink-0 shadow-2xs">
+              {icon}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] leading-snug">
+              {label}
+            </p>
+            {sub && (
+              <p className="text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-snug">
+                {sub}
+              </p>
+            )}
+          </div>
+        </div>
+        {right && (
+          <div className="shrink-0 flex items-center gap-2">
+            {right}
+          </div>
+        )}
+      </div>
+      {children && (
+        <div className="mt-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SettingLinkItem({ icon, label, sub, to }) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center justify-between gap-3 p-3.5 sm:p-4 min-h-[48px] hover:bg-stone-500/5 dark:hover:bg-stone-400/5 active:bg-stone-500/10 dark:active:bg-stone-400/10 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {icon && (
+          <div className="w-8 h-8 rounded-lg bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] shrink-0 shadow-2xs group-hover:border-[#314e3e]/40 dark:group-hover:border-[#d4b47d]/40 transition-colors">
+            {icon}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] leading-snug group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] transition-colors">
+            {label}
+          </p>
+          {sub && (
+            <p className="text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] mt-0.5 leading-snug">
+              {sub}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="shrink-0 flex items-center text-[#575e55] dark:text-[#b0b9ac] group-hover:text-[#314e3e] dark:group-hover:text-[#d4b47d] transition-colors pr-1">
+        <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+      </div>
+    </Link>
+  );
+}
 
 export default function Setting({ fontSize, setFontSize }) {
   const { heroReveal } = usePageMotion();
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const { install, isInstalled } = usePWAInstall();
   
@@ -155,20 +222,25 @@ export default function Setting({ fontSize, setFontSize }) {
     loadPreferences();
   }, []);
 
-  const handleDarkMode = (val) => { setDarkMode(val); localStorage.setItem("theme", val ? "dark" : "light"); document.documentElement.classList.toggle("dark", val); };
+  const handleDarkMode = (val) => { 
+    setDarkMode(val); 
+    localStorage.setItem("theme", val ? "dark" : "light"); 
+    document.documentElement.classList.toggle("dark", val); 
+  };
 
   const updatePreference = async (field, val, setter) => {
     setter(val);
     if (!username) {
-      showToast("Vui lòng đăng nhập để lưu cài đặt", "warning");
+      showToast("Vui lòng đăng nhập để lưu cài đặt này vào tài khoản", "info");
       return;
     }
     try {
       const { error } = await supabase.from("users").update({ [field]: val }).eq("username", username);
       if (error) throw error;
+      showToast("Đã lưu cài đặt thông báo", "success");
     } catch (err) {
       console.error(err);
-      showToast("Lỗi lưu cài đặt", "error");
+      showToast("Lỗi khi lưu cài đặt", "error");
     }
   };
 
@@ -176,85 +248,173 @@ export default function Setting({ fontSize, setFontSize }) {
   const handleNotifSchedule = (val) => updatePreference("notif_schedule", val, setNotifSchedule);
   const handleNotifScore = (val) => updatePreference("notif_score", val, setNotifScore);
 
-  const currentLabel = FONT_OPTIONS.find((o) => o.key === fontSize)?.label ?? "Trung bình";
+  const handleClearCache = () => {
+    try {
+      const preserveKeys = new Set(["theme", "fontSize", "sb-access-token", "sb-refresh-token"]);
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && !preserveKeys.has(k) && !k.startsWith("sb-")) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      showToast("Đã làm mới bộ nhớ đệm thành công", "success");
+    } catch {
+      showToast("Không thể làm mới bộ nhớ", "error");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 antialiased transition-colors duration-500 relative overflow-hidden">
-      {/* Ambient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-amber-200/30 dark:bg-amber-900/20 blur-[100px] rounded-full pointer-events-none" />
-      
-      {/* Background Pattern Đồng Bộ */}
-      <div className="fixed inset-0 w-full h-screen bg-[linear-gradient(to_right,#92400E08_1px,transparent_1px),linear-gradient(to_bottom,#92400E08_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#FDE68A05_1px,transparent_1px),linear-gradient(to_bottom,#FDE68A05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
-
-      <motion.div variants={heroReveal} initial="hidden" animate="visible" custom={0} className="mx-auto max-w-xl px-4 pt-8 pb-16 relative z-10">
-        
+    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] antialiased transition-colors duration-300">
+      <Motion.div 
+        variants={heroReveal} 
+        initial="hidden" 
+        animate="visible" 
+        custom={0} 
+        className="mx-auto max-w-xl px-4 pt-6 pb-20 sm:pt-8 sm:pb-24"
+      >
+        {/* Header */}
         <div className="mb-6 px-1 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 flex items-center justify-center shadow-sm">
-            <SettingsIcon size={20} strokeWidth={2.2} />
+          <div className="w-10 h-10 rounded-xl bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 text-[#314e3e] dark:text-[#d4b47d] border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center shrink-0 shadow-2xs">
+            <Settings className="w-5 h-5" strokeWidth={2.2} />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-amber-950 dark:text-amber-50 font-serif">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight text-[#293d32] dark:text-[#ecece0] font-serif leading-tight">
               Cài đặt
             </h1>
-            <p className="text-[13px] text-stone-500 dark:text-stone-400 font-medium">
+            <p className="text-xs sm:text-sm text-[#575e55] dark:text-[#b0b9ac] font-medium leading-tight mt-0.5">
               Thiết lập hệ thống & giao diện học tập
             </p>
           </div>
         </div>
 
-        <SectionLabel>Giao diện</SectionLabel>
+        {/* Nhóm Giao diện */}
+        <SectionLabel>Giao diện & Trải nghiệm</SectionLabel>
         <SettingCard>
-          <Row icon={<Type />} iconBg="#B45309" iconColor="#FFFFFF" label="Cỡ chữ" sub={`Đang chọn: ${currentLabel}`} right={<FontPills fontSize={fontSize} setFontSize={setFontSize} />} />
-          <Row icon={darkMode ? <Moon /> : <Sun />} iconBg={darkMode ? "#4F46E5" : "#D97706"} iconColor="#FFFFFF" label="Chế độ tối" sub={darkMode ? "Đang bật" : "Đang tắt"} right={<Toggle checked={darkMode} onChange={handleDarkMode} />} />
+          <SettingItem
+            icon={<Type className="w-4 h-4" />}
+            label="Cỡ chữ hiển thị"
+            sub="Điều chỉnh cỡ chữ phù hợp với mắt đọc"
+          >
+            <div className="space-y-2.5">
+              <FontSegmented fontSize={fontSize} setFontSize={setFontSize} />
+              <FontLivePreview fontSize={fontSize} />
+            </div>
+          </SettingItem>
+
+          <SettingItem
+            icon={darkMode ? <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
+            label="Giao diện tối (Dark mode)"
+            sub={darkMode ? "Đang bật chế độ tối bảo vệ mắt" : "Đang dùng chế độ sáng"}
+            right={<Toggle checked={darkMode} onChange={handleDarkMode} label="Bật hoặc tắt chế độ tối" />}
+          />
         </SettingCard>
 
-        <SectionLabel>Thông báo</SectionLabel>
+        {/* Nhóm Thông báo */}
+        <SectionLabel>Thông báo & Nhắc nhở</SectionLabel>
         <SettingCard>
-          <Row icon={<Bell />} iconBg="#059669" iconColor="#FFFFFF" label="Thông báo hệ thống" sub="Lịch học, thông báo chung, tin tức" right={<Toggle checked={notifSystem} onChange={handleNotifSystem} />} />
+          <SettingItem
+            icon={<Bell className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
+            label="Thông báo hệ thống"
+            sub="Lịch học, thông báo chung từ ban giáo lý"
+            right={<Toggle checked={notifSystem} onChange={handleNotifSystem} label="Bật hoặc tắt thông báo hệ thống" />}
+          />
           <AnimatePresence initial={false}>
             {notifSystem && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2, ease: "easeInOut" }} className="overflow-hidden divide-y divide-amber-900/5 dark:divide-amber-100/5">
-                <Row icon={<CalendarDays />} iconBg="#2563EB" iconColor="#FFFFFF" label="Nhắc lịch sinh hoạt" sub="Thông báo trước giờ tập trung 1 tiếng" right={<Toggle checked={notifSchedule} onChange={handleNotifSchedule} />} />
-                <Row icon={<Trophy />} iconBg="#DC2626" iconColor="#FFFFFF" label="Thông báo học tập" sub="Cập nhật khi có kết quả làm bài mới" right={<Toggle checked={notifScore} onChange={handleNotifScore} />} />
-              </motion.div>
+              <Motion.div 
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: "auto" }} 
+                exit={{ opacity: 0, height: 0 }} 
+                transition={{ duration: 0.2, ease: "easeInOut" }} 
+                className="overflow-hidden divide-y divide-[#dedfd4]/60 dark:divide-[#354237]/60"
+              >
+                <SettingItem
+                  icon={<CalendarDays className="w-4 h-4 text-blue-700 dark:text-blue-400" />}
+                  label="Nhắc lịch sinh hoạt"
+                  sub="Thông báo trước giờ tập trung Chúa Nhật"
+                  right={<Toggle checked={notifSchedule} onChange={handleNotifSchedule} label="Bật hoặc tắt nhắc lịch sinh hoạt" />}
+                />
+                <SettingItem
+                  icon={<Trophy className="w-4 h-4 text-amber-700 dark:text-amber-400" />}
+                  label="Thông báo học tập"
+                  sub="Cập nhật khi có kết quả bài kiểm tra hoặc điểm mới"
+                  right={<Toggle checked={notifScore} onChange={handleNotifScore} label="Bật hoặc tắt thông báo kết quả học tập" />}
+                />
+              </Motion.div>
             )}
           </AnimatePresence>
         </SettingCard>
 
-        <SectionLabel>Ứng dụng</SectionLabel>
+        {/* Nhóm Ứng dụng & Dữ liệu */}
+        <SectionLabel>Ứng dụng & Bộ nhớ</SectionLabel>
         <SettingCard>
-          <Row
-            icon={<Smartphone />}
-            iconBg="#059669"
-            iconColor="#FFFFFF"
-            label="Cài đặt ứng dụng PWA"
-            sub={isInstalled ? "Ứng dụng đã được thêm vào màn hình chính" : "Mở nhanh không cần duyệt web, hỗ trợ ngoại tuyến"}
-            onClick={install}
+          <SettingItem
+            icon={<Smartphone className="w-4 h-4 text-[#314e3e] dark:text-[#d4b47d]" />}
+            label="Ứng dụng PWA"
+            sub={isInstalled ? "Đã cài đặt trên màn hình chính của thiết bị" : "Cài đặt ứng dụng để mở nhanh và dùng ngoại tuyến"}
             right={
               isInstalled ? (
-                <span className="text-[12px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#064e3b] dark:text-[#6ee7b7] bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-600/30 px-2.5 py-1 rounded-full">
+                  <Check className="w-3 h-3" />
                   Đã cài đặt
                 </span>
               ) : (
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    install();
-                  }}
-                  className="flex items-center gap-1 text-[12px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 active:scale-95 px-3 py-1.5 rounded-lg shadow-xs transition-transform"
+                  onClick={install}
+                  className="min-h-[44px] px-3.5 py-1.5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white dark:text-[#19251d] bg-[#314e3e] dark:bg-[#d6b883] hover:opacity-90 active:scale-95 rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
                 >
-                  <Download size={13} strokeWidth={2.5} />
-                  <span>Cài đặt</span>
+                  <Download className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  <span>Cài đặt PWA</span>
                 </button>
               )
             }
           />
-          <Row icon={<Info />} iconBg="#78716C" iconColor="#FFFFFF" label="Phiên bản phần mềm" right={<span className="text-[13px] font-medium text-stone-400 dark:text-stone-500 pr-2">1.0.0 (Build 2026)</span>} />
-          <Row icon={<ShieldCheck />} iconBg="#10B981" iconColor="#FFFFFF" label="Bảo mật & quyền riêng tư" onClick={() => navigate("/bảo-mật")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />
-          <Row icon={<FileText />} iconBg="#3B82F6" iconColor="#FFFFFF" label="Quy định sử dụng" onClick={() => navigate("/quy-định")} right={<ChevronRight size={16} strokeWidth={2.5} className="text-stone-400 dark:text-stone-500" />} />
+
+          <SettingItem
+            icon={<RotateCcw className="w-4 h-4 text-[#575e55] dark:text-[#b0b9ac]" />}
+            label="Làm mới bộ nhớ đệm"
+            sub="Xóa dữ liệu tạm giúp tải trang mới nhất"
+            right={
+              <button
+                type="button"
+                onClick={handleClearCache}
+                className="min-h-[44px] px-3 py-1.5 inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#293d32] dark:text-[#ecece0] bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] hover:bg-stone-500/5 dark:hover:bg-stone-400/5 active:scale-95 rounded-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
+              >
+                <span>Xóa cache</span>
+              </button>
+            }
+          />
         </SettingCard>
-      </motion.div>
+
+        {/* Nhóm Thông tin & Điều khoản */}
+        <SectionLabel>Thông tin & Pháp lý</SectionLabel>
+        <SettingCard>
+          <SettingItem
+            icon={<Info className="w-4 h-4 text-[#575e55] dark:text-[#b0b9ac]" />}
+            label="Phiên bản phần mềm"
+            sub="Ban Giáo lý Giáo xứ An Ngãi"
+            right={
+              <span className="text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] px-2.5 py-1 rounded-lg">
+                1.0.0 (Build 2026)
+              </span>
+            }
+          />
+          <SettingLinkItem
+            icon={<ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
+            label="Bảo mật & Quyền riêng tư"
+            sub="Chính sách bảo vệ thông tin thiếu nhi & phụ huynh"
+            to="/bảo-mật"
+          />
+          <SettingLinkItem
+            icon={<FileText className="w-4 h-4 text-blue-700 dark:text-blue-400" />}
+            label="Quy định sử dụng"
+            sub="Nội quy & hướng dẫn sử dụng cổng thông tin"
+            to="/quy-định"
+          />
+        </SettingCard>
+      </Motion.div>
     </div>
   );
 }

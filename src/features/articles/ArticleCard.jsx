@@ -1,115 +1,186 @@
-import React from "react";
+import React, { forwardRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { CalendarDays, User, Clock, Trash2 } from "lucide-react";
-import ArticleStatusBadge from "./ArticleStatusBadge.jsx";
+import { CalendarDays, User, ImageOff, ArrowUpRight } from "lucide-react";
+import { getAuthorDisplayName } from "../admin/articles/format.js";
+import { formatPublishedDate } from "./articleListState.js";
 
-function formatDateVi(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
+/**
+ * ArticleCard
+ *
+ * Component hiển thị Card bài viết trên trang công khai (/bài-viết).
+ * Hỗ trợ 2 biến thể:
+ * - "featured": Card lớn "Bài mới nhất" ở đầu trang danh sách.
+ * - "standard": Card chuẩn (ngang gọn trên mobile <640px, dọc trong grid trên tablet/desktop >=640px).
+ */
+const ArticleCard = forwardRef(function ArticleCard(
+  {
+    article,
+    linkTo,
+    variant = "standard",
+    className = "",
+  },
+  ref
+) {
+  const [imageError, setImageError] = useState(false);
 
-// Thứ tự xuất hiện trong danh sách (index) quyết định độ trễ vào — tạo hiệu
-// ứng lần lượt thay vì tất cả bật lên cùng lúc. Giới hạn ở 8 phần tử đầu để
-// những trang có nhiều bài viết không phải chờ quá lâu mới thấy hết.
-//
-// onDelete (tuỳ chọn): chỉ được truyền vào khi người xem là admin — hiện nút
-// xoá nhanh ngay trên thẻ mà không cần vào khu vực quản trị riêng.
-export default function ArticleCard({ article, linkTo, showStatus = false, index = 0, onDelete }) {
-  // Ước tính thời gian đọc
-  const wordCount = article.content
-    ? article.content.trim().split(/\s+/).filter(Boolean).length
-    : (article.summary || "").trim().split(/\s+/).filter(Boolean).length * 4;
-  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  if (!article) return null;
 
-  const handleDeleteClick = (e) => {
-    // Ngăn không cho click lan ra ngoài Link bọc thẻ (tránh vừa xoá vừa bị
-    // điều hướng sang trang bài viết).
-    e.preventDefault();
-    e.stopPropagation();
-    onDelete?.(article.id);
-  };
+  const authorName = getAuthorDisplayName(article.author, article.author_username);
+  const displayDate = formatPublishedDate(article.published_at);
+  const isFeatured = variant === "featured";
 
-  return (
-    <Link to={linkTo} className="group block h-full">
-      <motion.article
-        layout="position"
-        initial={{ opacity: 0, y: 18, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18 } }}
-        transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.045, ease: [0.16, 1, 0.3, 1] }}
-        whileHover={{ y: -4 }}
-        whileTap={{ scale: 0.98 }}
-        className="h-full flex flex-col bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] overflow-hidden shadow-sm md:hover:shadow-md transition-shadow duration-300"
+  // ── 1. BIẾN THỂ FEATURED ("Bài mới nhất" khổ lớn ở đầu trang) ──
+  if (isFeatured) {
+    return (
+      <Link
+        ref={ref}
+        to={linkTo}
+        data-article-id={article.id}
+        className={`group block w-full rounded-3xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] overflow-hidden shadow-xs hover:border-[#314e3e]/40 dark:hover:border-[#d6b883]/40 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#151c18] ${className}`}
       >
-        
-        {/* Ảnh Thumbnail */}
-        <div className="relative w-full h-44 bg-amber-50/50 dark:bg-stone-900/50 overflow-hidden flex-shrink-0 border-b border-amber-900/5 dark:border-amber-100/5">
-          {article.cover_image ? (
+        <article className="grid grid-cols-1 lg:grid-cols-12 min-h-0">
+          {/* Ảnh bìa Featured */}
+          <div className="lg:col-span-7 relative w-full aspect-video lg:aspect-auto lg:min-h-[340px] bg-[#faf8f3] dark:bg-[#151c18] overflow-hidden border-b lg:border-b-0 lg:border-r border-[#dedfd4] dark:border-[#354237]">
+            {article.cover_image && !imageError ? (
+              <img
+                src={article.cover_image}
+                alt=""
+                onError={() => setImageError(true)}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
+              />
+            ) : (
+              <div className="w-full h-full min-h-[220px] flex flex-col items-center justify-center p-6 text-center text-[#314e3e]/30 dark:text-[#d6b883]/30 bg-[#314e3e]/5 dark:bg-[#314e3e]/10">
+                {imageError ? (
+                  <ImageOff className="w-8 h-8 mb-2" />
+                ) : (
+                  <span className="text-6xl font-serif font-black">{article.title?.[0]?.toUpperCase() || "B"}</span>
+                )}
+              </div>
+            )}
+
+            {article.category && (
+              <div className="absolute top-4 left-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#fffefa]/90 dark:bg-[#1e2821]/90 backdrop-blur-xs text-xs font-bold uppercase tracking-wider text-[#314e3e] dark:text-[#d6b883] border border-[#dedfd4]/80 dark:border-[#354237]/80 shadow-2xs">
+                  {article.category}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Nội dung Featured */}
+          <div className="lg:col-span-5 p-5 sm:p-7 lg:p-8 flex flex-col justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-block text-[0.6875rem] font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d]">
+                  BÀI MỚI NHẤT
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold font-serif text-[#293d32] dark:text-[#ecece0] leading-tight tracking-tight line-clamp-3 group-hover:text-[#314e3e] dark:group-hover:text-[#d6b883] transition-colors">
+                {article.title}
+              </h2>
+
+              {article.summary && (
+                <p className="text-sm sm:text-base font-medium text-[#575e55] dark:text-[#b0b9ac] leading-relaxed line-clamp-3">
+                  {article.summary}
+                </p>
+              )}
+            </div>
+
+            {/* Metadata Tác giả + Ngày đăng */}
+            <div className="pt-4 border-t border-[#dedfd4] dark:border-[#354237] flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#575e55] dark:text-[#b0b9ac]">
+              <span className="inline-flex items-center gap-1.5 font-bold text-[#293d32] dark:text-[#ecece0] truncate max-w-[60%]">
+                <User className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" />
+                <span className="truncate">{authorName}</span>
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 shrink-0 tabular-nums">
+                <CalendarDays className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                <span>{displayDate}</span>
+              </span>
+            </div>
+          </div>
+        </article>
+      </Link>
+    );
+  }
+
+  // ── 2. BIẾN THỂ STANDARD (Ngang trên Mobile <640px, Dọc trong Grid >=640px) ──
+  return (
+    <Link
+      ref={ref}
+      to={linkTo}
+      data-article-id={article.id}
+      className={`group block h-full rounded-2xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] overflow-hidden shadow-2xs hover:border-[#314e3e]/40 dark:hover:border-[#d6b883]/40 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#151c18] ${className}`}
+    >
+      <article className="h-full flex flex-row sm:flex-col p-3.5 sm:p-0">
+        {/* Ảnh Thumbnail: 88px ở 320-389px, 104px ở 390-639px, full-width h-44 ở >=640px */}
+        <div className="relative shrink-0 w-[88px] h-[88px] min-[390px]:w-[104px] min-[390px]:h-[96px] sm:w-full sm:h-44 bg-[#faf8f3] dark:bg-[#151c18] overflow-hidden rounded-xl sm:rounded-none sm:rounded-t-2xl border sm:border-0 sm:border-b border-[#dedfd4] dark:border-[#354237]">
+          {article.cover_image && !imageError ? (
             <img
               src={article.cover_image}
-              alt={article.title}
-              className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-105"
+              alt=""
+              onError={() => setImageError(true)}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover transition-transform duration-300 sm:group-hover:scale-104"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-amber-900/20 dark:text-stone-800 bg-amber-50/30 dark:bg-stone-900/20 text-5xl font-serif font-black">
-              {article.title?.[0]?.toUpperCase() || "B"}
-            </div>
-          )}
-          {(showStatus || onDelete) && (
-            <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-              {showStatus && <ArticleStatusBadge status={article.status} />}
-              {onDelete && (
-                <motion.button
-                  type="button"
-                  onClick={handleDeleteClick}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.045 + 0.15 }}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.9 }}
-                  title="Xoá bài viết (Quản trị)"
-                  aria-label="Xoá bài viết"
-                  className="group/del w-9 h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-stone-900/70 text-red-600 dark:text-red-400 ring-1 ring-black/5 dark:ring-white/10 shadow-sm backdrop-blur-md transition-all duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:hover:bg-red-600 md:hover:text-white md:hover:ring-red-600 focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-500"
-                >
-                  <Trash2 className="w-4 h-4 transition-transform duration-200 md:group-hover/del:scale-110" strokeWidth={2.25} />
-                </motion.button>
+            <div className="w-full h-full flex items-center justify-center text-[#314e3e]/30 dark:text-[#d6b883]/30 bg-[#314e3e]/5 dark:bg-[#314e3e]/10">
+              {imageError ? (
+                <ImageOff className="w-5 h-5 opacity-60" />
+              ) : (
+                <span className="text-2xl sm:text-4xl font-serif font-black">{article.title?.[0]?.toUpperCase() || "B"}</span>
               )}
             </div>
           )}
-        </div>
 
-        {/* Nội dung */}
-        <div className="p-5 sm:p-6 flex-1 flex flex-col">
           {article.category && (
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/70 mb-2">
+            <span className="hidden sm:inline-flex absolute top-3 left-3 items-center px-2.5 py-0.5 rounded-full bg-[#fffefa]/90 dark:bg-[#1e2821]/90 backdrop-blur-xs text-[0.6875rem] font-bold uppercase tracking-wider text-[#314e3e] dark:text-[#d6b883] border border-[#dedfd4]/80 dark:border-[#354237]/80 shadow-2xs">
               {article.category}
             </span>
           )}
-          <h3 className="text-[16px] sm:text-[17px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-snug mb-2.5 line-clamp-2 transition-colors duration-200 md:group-hover:text-amber-800 dark:md:group-hover:text-amber-300">
-            {article.title}
-          </h3>
-          {article.summary && (
-            <p className="text-[13px] text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-2 flex-1 font-medium">
-              {article.summary}
-            </p>
-          )}
-          
-          {/* Footer thông tin Meta */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-4 pt-4 border-t border-amber-900/10 dark:border-amber-100/10 text-[11px] text-stone-500 dark:text-stone-400 font-semibold">
-            <span className="inline-flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5" /> {article.author_username}
+        </div>
+
+        {/* Nội dung Card */}
+        <div className="flex-1 flex flex-col justify-between pl-3.5 sm:p-5 min-w-0">
+          <div>
+            {/* Category tag trên mobile */}
+            {article.category && (
+              <span className="sm:hidden inline-block text-[0.6875rem] font-bold uppercase tracking-wider text-[#7c5c2d] dark:text-[#d4b47d] mb-1">
+                {article.category}
+              </span>
+            )}
+
+            <h3 className="text-sm sm:text-base font-bold font-serif text-[#293d32] dark:text-[#ecece0] leading-snug line-clamp-3 sm:line-clamp-2 group-hover:text-[#314e3e] dark:group-hover:text-[#d6b883] transition-colors break-words">
+              {article.title}
+            </h3>
+
+            {article.summary && (
+              <p className="hidden sm:block text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] leading-relaxed line-clamp-2 mt-2">
+                {article.summary}
+              </p>
+            )}
+          </div>
+
+          {/* Footer Metadata */}
+          <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-[#dedfd4]/60 dark:border-[#354237]/60 flex items-center justify-between gap-2 text-xs font-medium text-[#575e55] dark:text-[#b0b9ac]">
+            <span className="truncate max-w-[60%] font-semibold text-[#293d32] dark:text-[#ecece0]">
+              {authorName}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="w-3.5 h-3.5" />
-              {formatDateVi(article.published_at || article.updated_at)}
-            </span>
-            <span className="inline-flex items-center gap-1.5 ml-auto text-amber-700 dark:text-amber-400">
-              <Clock className="w-3.5 h-3.5" /> {readingTime} phút đọc
+
+            <span className="inline-flex items-center gap-1 shrink-0 tabular-nums text-[0.6875rem] sm:text-xs">
+              <CalendarDays className="w-3 h-3 opacity-70" />
+              <span>{displayDate}</span>
             </span>
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
-}
+});
+
+export default ArticleCard;

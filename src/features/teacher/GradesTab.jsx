@@ -1,13 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, RefreshCw, Save, Users, CalendarDays, Search, X, CheckCircle2, RotateCcw, Calculator } from "lucide-react";
+import {
+  AlertCircle, RefreshCw, Save, Users, CalendarDays, Search,
+  X, CheckCircle2, RotateCcw, Calculator, History, Check,
+  FileSpreadsheet,
+} from "lucide-react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../../components/ui/ToastContext.jsx";
 import { Spinner } from "../../components/ui/Skeleton.jsx";
 import { ConfirmDialog } from "../../components/ui/StudentShared.jsx";
+import GradeAuditModal from "../../components/shared/GradeAuditModal.jsx";
+import GradesExcelModal from "./components/GradesExcelModal.jsx";
 import { useTeacherContext } from "./TeacherContext.jsx";
-import { fetchClassTermRanges, fetchTermLocks } from "./api.js";
+import { fetchClassTermRanges, fetchTermLocks, saveClassGradesBatch } from "./api.js";
 import { sortStudentsByTen, mostRecentSunday, resolveActiveHocKy, computeDiemTB } from "./utils.js";
 import { HK_INT_MAP, GRADE_FIELDS } from "./constants.js";
 
@@ -83,6 +89,7 @@ export default function GradesTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [shakeField, setShakeField] = useState(null);
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
 
   // Search & Filter state
   const [search, setSearch] = useState("");
@@ -115,52 +122,54 @@ export default function GradesTab() {
     return () => { cancelled = true; };
   }, [lop, namHoc]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const usernames = rosterStudents.map((s) => s.username);
-        const { data, error } = await supabase
-          .from("grades")
-          .select("*")
-          .eq("nam_hoc", namHoc)
-          .eq("hoc_ky", hocKyInt)
-          .in("username", usernames);
-        if (error) throw error;
+  const loadGrades = useCallback(async () => {
+    if (!rosterStudents.length) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const usernames = rosterStudents.map((s) => s.username);
+      const { data, error } = await supabase
+        .from("grades")
+        .select("*")
+        .eq("nam_hoc", namHoc)
+        .eq("hoc_ky", hocKyInt)
+        .in("username", usernames);
+      if (error) throw error;
 
-        const byUser = {}; 
-        (data ?? []).forEach((r) => { byUser[r.username] = r; });
-        const full = {}; 
-        
-        rosterStudents.forEach((s) => {
-          const g = byUser[s.username] ?? {};
-          const studentScores = { 
-            diem_mieng: g.diem_mieng, 
-            diem_vo: g.diem_vo, 
-            diem_15_phut: g.diem_15_phut, 
-            diem_1_tiet: g.diem_1_tiet, 
-            diem_thi: g.diem_thi, 
-            diem_tb: g.diem_tb 
-          };
-          // Luôn tự động chuẩn hóa ĐTB theo công thức chuẩn
-          studentScores.diem_tb = computeDiemTB(studentScores);
-          full[s.username] = studentScores;
-        });
+      const byUser = {}; 
+      (data ?? []).forEach((r) => { byUser[r.username] = r; });
+      const full = {}; 
+      
+      rosterStudents.forEach((s) => {
+        const g = byUser[s.username] ?? {};
+        const studentScores = { 
+          diem_mieng: g.diem_mieng, 
+          diem_vo: g.diem_vo, 
+          diem_15_phut: g.diem_15_phut, 
+          diem_1_tiet: g.diem_1_tiet, 
+          diem_thi: g.diem_thi, 
+          diem_tb: g.diem_tb 
+        };
+        // Luôn tự động chuẩn hóa ĐTB theo công thức chuẩn
+        studentScores.diem_tb = computeDiemTB(studentScores);
+        full[s.username] = studentScores;
+      });
 
-        if (!cancelled) {
-          setRows(full);
-          setInitial(full);
-        }
-      } catch (err) {
-        console.error("load grades error:", err);
-        if (!cancelled) showToast("Không tải được bảng điểm", "error");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
+      setRows(full);
+      setInitial(full);
+    } catch (err) {
+      console.error("load grades error:", err);
+      showToast("Không tải được bảng điểm", "error");
+    } finally {
+      setLoading(false);
+    }
   }, [rosterStudents, namHoc, hocKyInt, showToast]);
+
+  useEffect(() => {
+    loadGrades();
+  }, [loadGrades]);
 
   // Xử lý khi sửa điểm thành phần -> ĐTB luôn tự động tính 100% thời gian thực
   const handleScoreChange = useCallback((username, field, raw) => {
@@ -201,7 +210,7 @@ export default function GradesTab() {
     });
     showToast(
       count > 0 
-        ? `Đã tính lại ĐTB chuẩn công thức cho ${count} học sinh!` 
+        ? `Đã tính lại ĐTB chuẩn công thức cho ${count} Giáo lý sinh!` 
         : "Tất cả điểm trung bình đã khớp đúng công thức!",
       "success"
     );
@@ -212,26 +221,41 @@ export default function GradesTab() {
     [rosterStudents, rows, initial]
   );
 
+  const canSave = !isLocked && changedCount > 0;
+
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [auditStudent, setAuditStudent] = useState(null);
 
   const triggerSave = () => {
-    if (isLocked || changedCount === 0) return;
+    if (!canSave) return;
     setShowConfirmModal(true);
   };
 
   const confirmSave = async () => {
     setShowConfirmModal(false);
-    if (isLocked || changedCount === 0) return;
+    if (!canSave) return;
     setSaving(true);
     try {
-      const payload = rosterStudents.map((s) => ({
-        username: s.username, nam_hoc: namHoc, hoc_ky: hocKyInt, lop: lop, ...rows[s.username], updated_at: new Date().toISOString()
+      const changedStudents = rosterStudents.filter(
+        (s) => JSON.stringify(rows[s.username]) !== JSON.stringify(initial[s.username])
+      );
+      const payload = changedStudents.map((s) => ({
+        username: s.username,
+        nam_hoc: namHoc,
+        hoc_ky: hocKyInt,
+        lop: lop,
+        ...rows[s.username],
       }));
-      const { error } = await supabase.from("grades").upsert(payload, { onConflict: "username,nam_hoc,hoc_ky" });
-      if (error) throw error;
+      await saveClassGradesBatch(payload, {
+        allClassRows: rows,
+        rosterUsernames: rosterStudents.map((s) => s.username),
+        namHoc,
+        hocKy: hocKyInt,
+        lop,
+      });
       setInitial(rows);
-      showToast(`Đã lưu bảng điểm thành công!`, "success");
+      showToast(`Đã lưu bảng điểm thành công cho ${changedStudents.length} Giáo lý sinh!`, "success");
     } catch (err) {
       console.error("save grades error:", err);
       showToast("Lưu điểm thất bại", "error");
@@ -306,7 +330,7 @@ export default function GradesTab() {
     return { all: rosterStudents.length, incomplete, attention, excellent };
   }, [rosterStudents, rows, scoreFields]);
 
-  // Danh sách học sinh sau khi tìm kiếm và lọc
+  // Danh sách Giáo lý sinh sau khi tìm kiếm và lọc
   const processedStudents = useMemo(() => {
     let list = rosterStudents;
     if (search.trim()) {
@@ -382,38 +406,47 @@ export default function GradesTab() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-6 border-b border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3]/60 dark:bg-[#151c18]/60">
         <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
           <div className="min-w-0 flex-1 sm:flex-initial">
-            <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-[#19251d] dark:text-[#ffffff] tracking-tight truncate">
-              Nhập điểm {lop}
-            </h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-[#293d32] dark:text-[#ecece0] tracking-tight">
+                Nhập điểm {lop}
+              </h1>
+              {isLocked && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-950 dark:text-amber-200 border border-amber-600/30 shrink-0 flex items-center gap-1">
+                  <span>🔒</span>
+                  <span>Đã khóa sổ</span>
+                </span>
+              )}
+            </div>
+            
             {/* Meta row: Niên khóa + Sĩ số (Desktop: đầy đủ | Mobile: siêu gọn 1 hàng) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-xs text-[#293d32] dark:text-[#ecece0] font-medium whitespace-nowrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-xs text-[#575e55] dark:text-[#b8c2b4] font-medium whitespace-nowrap">
               <span className="inline-flex items-center gap-1">
-                <CalendarDays className="w-3.5 h-3.5 text-[#5e4117] dark:text-[#e0c38c] shrink-0" aria-hidden="true" />
+                <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Niên khóa</span>
-                <strong className="text-[#19251d] dark:text-[#ffffff] font-mono font-bold">{namHoc}</strong>
+                <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{namHoc}</strong>
               </span>
               <span className="opacity-40">•</span>
               <span className="inline-flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-[#1e3d2f] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
+                <Users className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Sĩ số:</span>
-                <strong className="text-[#19251d] dark:text-[#ffffff] font-mono font-bold">{rosterStudents.length}</strong>
-                <span className="hidden sm:inline">học sinh</span>
-                <span className="sm:hidden">HS</span>
+                <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{rosterStudents.length}</strong>
+                <span className="hidden sm:inline">Giáo lý sinh</span>
+                <span className="sm:hidden">GLS</span>
               </span>
             </div>
           </div>
 
-          {/* Mobile Term Selector */}
+          {/* Toggle Học kỳ trên Mobile (gọn gàng, đồng bộ chuẩn như AttendanceTab) */}
           <div className="sm:hidden flex items-center bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-0.5 border border-[#dedfd4] dark:border-[#354237] shrink-0">
             {["HK1", "HK2"].map((k) => (
               <button 
                 key={k} 
                 type="button" 
                 onClick={() => setHocKy(k)}
-                className={`relative min-h-[36px] px-3 py-1 rounded-lg text-xs font-bold transition-colors z-10 cursor-pointer ${
+                className={`relative min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold transition-colors z-10 cursor-pointer ${
                   hocKy === k 
-                    ? "text-[#19251d] dark:text-[#ffffff]" 
-                    : "text-[#293d32] dark:text-[#ecece0]"
+                    ? "text-[#293d32] dark:text-[#ecece0]" 
+                    : "text-[#454f46] dark:text-[#b8c2b4]"
                 }`}
                 aria-pressed={hocKy === k}
               >
@@ -422,30 +455,30 @@ export default function GradesTab() {
                     layoutId="active-grades-hk-pill-mobile"
                     className="absolute inset-0 bg-[#fffefa] dark:bg-[#1e2821] rounded-lg shadow-xs border border-[#dedfd4] dark:border-[#354237]"
                     initial={false}
-                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
                   />
                 )}
-                <span className="relative z-20">{k === "HK1" ? "HK1" : "HK2"}</span>
+                <span className="relative z-20">{k}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Desktop Controls (Progress + Term + Discard + Save) */}
-        <div className="hidden sm:flex items-center justify-end gap-2.5 w-full sm:w-auto">
-          {/* Elegant Desktop Progress Badge */}
+        {/* Học kỳ, Tiến độ & Nút Lưu trên Desktop (sm trở lên) */}
+        <div className="hidden sm:flex items-center justify-end gap-2.5 shrink-0">
+          {/* Tiến độ nhập điểm Desktop */}
           {totalCount > 0 && (
             progressRate === 100 ? (
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-700/40 text-[#064e3b] dark:text-[#6ee7b7] text-xs font-bold shadow-2xs">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-600/30 text-emerald-950 dark:text-emerald-200 text-xs font-bold shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
                 <span>Đã nhập đủ điểm</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-2xs">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-2xs">
                 <div className="flex flex-col min-w-[130px]">
-                  <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className="text-[#293d32] dark:text-[#ecece0]">Tiến độ</span>
-                    <span className="font-mono text-[#19251d] dark:text-[#ffffff]">{progressRate}% ({completedStudentsCount}/{rosterStudents.length} HS)</span>
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-[#575e55] dark:text-[#b0b9ac]">Tiến độ</span>
+                    <span className="font-mono text-[#293d32] dark:text-[#ecece0]">{progressRate}% ({completedStudentsCount}/{rosterStudents.length} GLS)</span>
                   </div>
                   <div className="w-full h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden mt-1">
                     <div 
@@ -458,18 +491,30 @@ export default function GradesTab() {
             )
           )}
 
-          {/* Term Selector */}
-          <div className="flex items-center bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-1 border border-[#dedfd4] dark:border-[#354237]">
+          {/* Nút Xuất / Nhập Excel Desktop */}
+          <button
+            type="button"
+            onClick={() => setExcelModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] shadow-2xs active:scale-[0.98] transition-all cursor-pointer"
+            title="Xuất hoặc Nhập file Excel bảng điểm"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+            <span>Xuất / Nhập Excel</span>
+          </button>
+
+          {/* Học kỳ Segmented Toggle Desktop */}
+          <div className="flex items-center bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-1 border border-[#dedfd4] dark:border-[#354237] shrink-0">
             {["HK1", "HK2"].map((k) => (
               <button 
                 key={k} 
                 type="button" 
                 onClick={() => setHocKy(k)}
-                className={`relative px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200 z-10 cursor-pointer ${
+                className={`relative min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors duration-200 z-10 cursor-pointer ${
                   hocKy === k 
-                    ? "text-[#19251d] dark:text-[#ffffff]" 
-                    : "text-[#293d32] dark:text-[#ecece0] hover:text-[#19251d] dark:hover:text-[#ffffff]"
+                    ? "text-[#293d32] dark:text-[#ecece0]" 
+                    : "text-[#454f46] dark:text-[#b8c2b4] hover:text-[#293d32] dark:hover:text-[#ecece0]"
                 }`}
+                aria-pressed={hocKy === k}
               >
                 {hocKy === k && (
                   <Motion.div
@@ -484,30 +529,33 @@ export default function GradesTab() {
             ))}
           </div>
 
-          {/* Desktop Discard Button (Only when dirty) */}
-          {changedCount > 0 && !isLocked && (
-            <button
-              type="button"
-              onClick={handleDiscardChanges}
-              disabled={saving}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] rounded-xl text-xs font-bold text-[#7f1d1d] dark:text-[#fca5a5] hover:bg-red-500/10 border border-red-600/30 transition-all cursor-pointer disabled:opacity-40"
-              title="Hủy tất cả các thay đổi chưa lưu"
+          {/* Nút Lưu Desktop/Header (Khóa cố định w-[188px] chính xác tuyệt đối như AttendanceTab, triệt tiêu 100% layout shift) */}
+          {canSave ? (
+            <button 
+              type="button" 
+              disabled={saving} 
+              onClick={triggerSave}
+              className="w-[188px] shrink-0 inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+              aria-label={saving ? "Đang lưu bảng điểm..." : `Lưu bảng điểm (${changedCount} thay đổi)`}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Hủy thay đổi</span>
+              {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
+              <span>{saving ? "Đang lưu…" : "Lưu bảng điểm"}</span>
+              {!saving && changedCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-xs font-black bg-white/20 dark:bg-[#19251d]/20 text-white dark:text-[#19251d]">
+                  {changedCount}
+                </span>
+              )}
             </button>
+          ) : (
+            <div 
+              className="w-[188px] shrink-0 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 select-none shadow-xs"
+              role="status"
+              aria-label="Trạng thái: Đã lưu bảng điểm"
+            >
+              <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-300 stroke-[2.5]" aria-hidden="true" />
+              <span>Đã lưu bảng điểm</span>
+            </div>
           )}
-
-          {/* Desktop Save Button */}
-          <button 
-            type="button" 
-            disabled={isLocked || saving || changedCount === 0} 
-            onClick={triggerSave}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[38px] rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? "Đang lưu…" : changedCount > 0 ? `Lưu điểm (${changedCount})` : "Lưu điểm"}</span>
-          </button>
         </div>
       </div>
 
@@ -525,7 +573,7 @@ export default function GradesTab() {
           <div className="sm:hidden space-y-1.5 pb-1">
             <div className="flex items-center justify-between text-xs font-bold text-[#293d32] dark:text-[#ecece0]">
               <span>Tiến độ nhập điểm</span>
-              <span className="font-mono text-[#19251d] dark:text-[#ffffff]">{progressRate}% ({completedStudentsCount}/{rosterStudents.length} HS)</span>
+              <span className="font-mono text-[#293d32] dark:text-[#ecece0]">{progressRate}% ({completedStudentsCount}/{rosterStudents.length} GLS)</span>
             </div>
             <div className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
               <div 
@@ -539,19 +587,19 @@ export default function GradesTab() {
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Ô tìm kiếm */}
           <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 text-[#4a554b] dark:text-[#b8c5b5] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#575e55] dark:text-[#b0b9ac] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm học sinh theo tên, tên thánh…"
-              className="w-full rounded-xl border border-[#616e5f]/50 dark:border-[#677765]/50 bg-[#fffefa] dark:bg-[#1e2821] pl-9.5 pr-8 py-2 min-h-[40px] text-xs font-medium text-[#19251d] dark:text-[#ffffff] placeholder:text-[#4a554b] dark:placeholder:text-[#b8c5b5] focus:outline-none focus:ring-2 focus:ring-[#1e3d2f]/30 dark:focus:ring-[#e5c992]/30 transition-shadow"
+              placeholder="Tìm Giáo lý sinh theo tên, tên thánh…"
+              className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] pl-9.5 pr-8 py-2 min-h-[40px] text-xs font-medium text-[#293d32] dark:text-[#ecece0] placeholder:text-[#575e55]/60 dark:placeholder:text-[#b0b9ac]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 shadow-xs transition-shadow"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4a554b] hover:text-[#19251d] dark:text-[#b8c5b5] dark:hover:text-[#ffffff] p-1 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#575e55] hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0] p-1 cursor-pointer"
                 title="Xóa tìm kiếm"
               >
                 <X className="w-3.5 h-3.5" />
@@ -582,14 +630,14 @@ export default function GradesTab() {
                   >
                     <span>{tab.label}</span>
                     <span
-                      className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono font-bold ${
+                      className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
                         isActive
                           ? "bg-white/20 text-white dark:bg-black/20 dark:text-[#19251d]"
                           : tab.danger
-                          ? "bg-red-100 text-[#7f1d1d] dark:bg-red-950 dark:text-[#fca5a5]"
+                          ? "bg-red-500/20 text-rose-950 dark:text-rose-200 border border-rose-600/30"
                           : tab.highlight
-                          ? "bg-amber-100 text-[#713f12] dark:bg-amber-950 dark:text-[#fde047]"
-                          : "bg-stone-200/90 text-[#19251d] dark:bg-stone-700 dark:text-[#ffffff]"
+                          ? "bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-600/30"
+                          : "bg-stone-200 dark:bg-stone-700 text-[#293d32] dark:text-[#ecece0]"
                       }`}
                     >
                       {tab.count}
@@ -605,9 +653,9 @@ export default function GradesTab() {
               onClick={handleRecalculateAllTB}
               disabled={isLocked}
               title="Tính toán và đồng bộ lại ĐTB toàn lớp theo công thức chuẩn"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-xl bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-xs font-bold text-[#293d32] dark:text-[#ecece0] hover:text-[#19251d] dark:hover:text-[#ffffff] transition-all shrink-0 cursor-pointer disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-xl bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-xs font-bold text-[#293d32] dark:text-[#ecece0] transition-all shrink-0 cursor-pointer disabled:opacity-40 shadow-2xs"
             >
-              <Calculator className="w-3.5 h-3.5 text-[#5e4117] dark:text-[#e0c38c]" />
+              <Calculator className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d]" />
               <span className="hidden sm:inline">Chuẩn hóa ĐTB</span>
             </button>
           </div>
@@ -626,7 +674,7 @@ export default function GradesTab() {
             {processedStudents.length === 0 ? (
               <div className="py-12 px-4 text-center">
                 <p className="text-sm font-semibold text-[#19251d] dark:text-[#ffffff]">
-                  Không tìm thấy học sinh phù hợp
+                  Không tìm thấy Giáo lý sinh phù hợp
                 </p>
                 <p className="text-xs text-[#293d32] dark:text-[#ecece0] mt-1">
                   Thử đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác
@@ -638,7 +686,7 @@ export default function GradesTab() {
                       setSearch("");
                       setFilterType("all");
                     }}
-                    className="mt-3 px-3 py-1.5 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#616e5f]/50 text-xs font-bold text-[#19251d] dark:text-[#ffffff] cursor-pointer"
+                    className="mt-3 px-3 py-1.5 min-h-[36px] rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#616e5f]/50 text-xs font-bold text-[#19251d] dark:text-[#ffffff] cursor-pointer"
                   >
                     Xóa bộ lọc
                   </button>
@@ -681,7 +729,7 @@ export default function GradesTab() {
                               STT #{idx + 1}
                             </span>
                             {isDirty && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#713f12] dark:text-[#fde047]">
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-[#713f12] dark:text-[#fde047]">
                                 ● Đã sửa
                               </span>
                             )}
@@ -689,17 +737,28 @@ export default function GradesTab() {
                         </div>
                       </div>
 
-                      {/* Real-time ĐTB Badge (48x48px) with AAA Contrast */}
-                      <div 
-                        className={`flex flex-col items-center justify-center shrink-0 w-12 h-12 rounded-xl border ${theme.bg} ${theme.border} shadow-2xs`}
-                        aria-label={`Điểm trung bình tự động: ${g.diem_tb ?? "Chưa có"}`}
-                      >
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#293d32] dark:text-[#ecece0]">
-                          ĐTB
-                        </span>
-                        <span className={`text-base font-mono font-bold ${theme.text}`}>
-                          {g.diem_tb ?? "-"}
-                        </span>
+                      {/* Mobile Card Top Right: History Button & ĐTB Badge */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setAuditStudent(s)}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] hover:bg-stone-200/60 dark:hover:bg-stone-800 text-[#575e55] dark:text-[#b0b9ac] hover:text-[#19251d] dark:hover:text-[#ffffff] transition-colors cursor-pointer"
+                          aria-label={`Xem lịch sử điểm của ${s.tenThanh || ""} ${s.hoTen || s.username}`}
+                          title="Xem lịch sử sửa điểm"
+                        >
+                          <History className="w-4 h-4" />
+                        </button>
+                        <div 
+                          className={`flex flex-col items-center justify-center shrink-0 w-12 h-12 rounded-xl border ${theme.bg} ${theme.border} shadow-2xs`}
+                          aria-label={`Điểm trung bình tự động: ${g.diem_tb ?? "Chưa có"}`}
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wider text-[#293d32] dark:text-[#ecece0] scale-90">
+                            ĐTB
+                          </span>
+                          <span className={`text-base font-mono font-bold ${theme.text}`}>
+                            {g.diem_tb ?? "-"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -721,7 +780,7 @@ export default function GradesTab() {
                             >
                               <label 
                                 htmlFor={fieldId}
-                                className="text-[11px] font-bold text-[#293d32] dark:text-[#ecece0] block leading-none mb-1 text-center select-none"
+                                className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] block leading-none mb-1 text-center select-none"
                               >
                                 {f.label}
                               </label>
@@ -764,7 +823,7 @@ export default function GradesTab() {
                             >
                               <label 
                                 htmlFor={fieldId}
-                                className="text-[11px] font-bold text-[#293d32] dark:text-[#ecece0] block leading-none mb-1 text-center select-none"
+                                className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] block leading-none mb-1 text-center select-none"
                               >
                                 {f.label}
                               </label>
@@ -796,11 +855,11 @@ export default function GradesTab() {
 
           {/* --- DESKTOP TABLE VIEW --- */}
           <div className="hidden md:block overflow-auto max-h-[72vh]" data-lenis-prevent>
-            <table className="w-full text-sm border-collapse min-w-[880px] bg-[#fffefa] dark:bg-[#1e2821]">
+            <table className="w-full text-sm border-collapse min-w-[920px] bg-[#fffefa] dark:bg-[#1e2821]">
               <thead className="sticky top-0 z-30 bg-[#faf8f3] dark:bg-[#151c18] border-b border-[#dedfd4] dark:border-[#354237] text-xs font-bold uppercase tracking-wider text-[#293d32] dark:text-[#ecece0]">
                 <tr>
                   <th className="sticky left-0 z-40 bg-[#faf8f3] dark:bg-[#151c18] px-3 py-3.5 text-center w-12 border-r border-[#dedfd4] dark:border-[#354237]">STT</th>
-                  <th className="sticky left-12 z-40 bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3.5 text-left min-w-[210px] border-r border-[#dedfd4] dark:border-[#354237] shadow-xs normal-case tracking-normal">Họ &amp; Tên Học Sinh</th>
+                  <th className="sticky left-12 z-40 bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3.5 text-left min-w-[210px] border-r border-[#dedfd4] dark:border-[#354237] shadow-xs normal-case tracking-normal">Họ &amp; Tên Giáo Lý Sinh</th>
                   {scoreFields.map(f => (
                     <th key={f.key} className="px-2 py-3.5 text-center w-28 border-r border-[#dedfd4] dark:border-[#354237]">
                       <span className="font-bold">{f.label}</span>
@@ -808,6 +867,9 @@ export default function GradesTab() {
                   ))}
                   <th className="px-3 py-3.5 text-center w-28 bg-[#faf8f3]/90 dark:bg-[#151c18]/90 text-[#19251d] dark:text-[#ffffff]">
                     <span className="font-bold">ĐTB</span>
+                  </th>
+                  <th className="px-2 py-3.5 text-center w-16 bg-[#faf8f3] dark:bg-[#151c18] border-l border-[#dedfd4] dark:border-[#354237]">
+                    <span className="font-bold">Lịch sử</span>
                   </th>
                 </tr>
               </thead>
@@ -836,7 +898,7 @@ export default function GradesTab() {
                               {s.hoTen || s.username}
                             </p>
                             {isDirty && (
-                              <span className="text-[10px] font-bold text-[#713f12] dark:text-[#fde047]">● Chưa lưu</span>
+                              <span className="text-xs font-bold text-[#713f12] dark:text-[#fde047]">● Chưa lưu</span>
                             )}
                           </div>
                         </div>
@@ -868,6 +930,18 @@ export default function GradesTab() {
                         >
                           {g.diem_tb ?? "-"}
                         </span>
+                      </td>
+                      {/* Cột Lịch sử sửa điểm */}
+                      <td className="px-2 py-2 text-center border-l border-[#dedfd4] dark:border-[#354237]">
+                        <button
+                          type="button"
+                          onClick={() => setAuditStudent(s)}
+                          className="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] hover:bg-stone-200/70 dark:hover:bg-stone-800 text-[#575e55] dark:text-[#b0b9ac] hover:text-[#19251d] dark:hover:text-[#ffffff] transition-colors cursor-pointer"
+                          aria-label={`Xem lịch sử điểm của ${s.tenThanh || ""} ${s.hoTen || s.username}`}
+                          title="Xem lịch sử sửa điểm"
+                        >
+                          <History className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -911,52 +985,44 @@ export default function GradesTab() {
         </>
       )}
 
-      {/* MOBILE BOTTOM ACTION BAR (Premium Floating Card above BottomTabBar) */}
+      {/* MOBILE BOTTOM ACTION BAR (Matching AttendanceTab with iOS Safe Area & WCAG AAA) */}
       {createPortal(
         <AnimatePresence>
           {changedCount > 0 && !isLocked && (
             <Motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 450, damping: 32 }}
-              className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+70px)] left-3 right-3 z-[80] pointer-events-auto max-w-[440px] mx-auto"
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="fixed bottom-3 sm:bottom-6 left-0 right-0 z-[90] flex justify-center pointer-events-none px-3 sm:px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
             >
-              <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xl p-2.5 sm:p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-[#713f12] dark:text-[#fde047] border border-amber-600/30 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-mono font-bold">{changedCount}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#19251d] dark:text-[#ffffff] truncate">
-                      Đã sửa {changedCount} học sinh
-                    </p>
-                    <p className="text-[11px] text-[#293d32] dark:text-[#ecece0] truncate">
-                      Chưa lưu vào sổ điểm
-                    </p>
-                  </div>
-                </div>
+              <div className="pointer-events-auto bg-[#fffefa]/95 dark:bg-[#1e2821]/95 backdrop-blur-md rounded-2xl shadow-xl border border-[#dedfd4] dark:border-[#354237] p-2 sm:px-4 sm:py-2.5 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 max-w-md w-full sm:w-auto">
+                <span className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] flex items-center gap-1.5 shrink-0 pl-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#d6b883] animate-pulse shrink-0" />
+                  <span className="hidden sm:inline">Có {changedCount} thay đổi điểm số</span>
+                  <span className="sm:hidden text-xs">{changedCount} thay đổi</span>
+                </span>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* Nút HỦY THAY ĐỔI */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     onClick={handleDiscardChanges}
                     disabled={saving}
-                    className="px-3 py-1.5 min-h-[38px] rounded-xl text-xs font-bold text-[#7f1d1d] dark:text-[#fca5a5] hover:bg-red-500/10 border border-red-600/30 transition-all cursor-pointer disabled:opacity-50"
+                    className="min-h-[40px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 text-xs font-bold text-[#454f46] dark:text-[#b8c2b4] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 active:scale-95"
+                    title="Khôi phục lại điểm ban đầu"
                   >
-                    Hủy
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Hủy</span>
                   </button>
 
-                  {/* Nút LƯU ĐIỂM */}
-                  <button
-                    type="button"
-                    onClick={triggerSave}
+                  <button 
+                    type="button" 
+                    onClick={triggerSave} 
                     disabled={saving}
-                    className="flex items-center gap-1.5 px-4 py-1.5 min-h-[38px] rounded-xl bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] font-bold text-xs shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                    className="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
-                    {saving ? <Spinner className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                    <span>{saving ? "Đang lưu…" : "Lưu ngay"}</span>
+                    {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
+                    <span>{saving ? "Đang lưu…" : "Lưu bảng điểm"}</span>
                   </button>
                 </div>
               </div>
@@ -971,7 +1037,7 @@ export default function GradesTab() {
         open={showConfirmModal}
         icon={Save}
         title="Xác nhận lưu bảng điểm?"
-        message={`Bạn đang cập nhật điểm số cho ${changedCount} học sinh trong học kỳ này.`}
+        message={`Bạn đang cập nhật điểm số cho ${changedCount} Giáo lý sinh trong ${hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II"}.`}
         confirmLabel="Lưu ngay"
         cancelLabel="Quay lại"
         loading={saving}
@@ -984,11 +1050,38 @@ export default function GradesTab() {
         open={showDiscardConfirm}
         icon={RotateCcw}
         title="Hủy bỏ các thay đổi?"
-        message={`Tất cả điểm số chưa lưu của ${changedCount} học sinh sẽ được khôi phục về trạng thái ban đầu.`}
+        message={`Tất cả điểm số chưa lưu của ${changedCount} Giáo lý sinh sẽ được khôi phục về trạng thái ban đầu.`}
         confirmLabel="Hủy thay đổi"
         cancelLabel="Giữ lại"
         onConfirm={confirmDiscard}
         onCancel={() => setShowDiscardConfirm(false)}
+      />
+
+      {/* GRADE AUDIT MODAL */}
+      <GradeAuditModal
+        open={!!auditStudent}
+        student={auditStudent}
+        namHoc={namHoc}
+        hocKy={hocKyInt}
+        onClose={() => setAuditStudent(null)}
+        isAdminViewer={false}
+      />
+
+      {/* EXCEL IMPORT / EXPORT MODAL */}
+      <GradesExcelModal
+        open={excelModalOpen}
+        onClose={() => setExcelModalOpen(false)}
+        lop={lop}
+        namHoc={namHoc}
+        hocKy={hocKy}
+        hocKyInt={hocKyInt}
+        students={rosterStudents}
+        rows={rows}
+        isLocked={isLocked}
+        onSuccess={() => {
+          loadGrades();
+        }}
+        showToast={showToast}
       />
     </Motion.div>
   );

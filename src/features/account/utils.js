@@ -42,6 +42,10 @@ export function normalizeNotificationLink(link, notif = null) {
       return "/tài-khoản/thành-tích?ky=NAM";
     }
     if (notif.type === "bai_viet") {
+      const isReviewNotif = /chờ duyệt|bài viết mới/i.test(notif.title || "") || /chờ duyệt/i.test(notif.message || "");
+      if (isReviewNotif) {
+        return "/quản-trị/bài-viết?tab=pending";
+      }
       return "/bài-viết";
     }
     return null;
@@ -58,6 +62,36 @@ export function normalizeNotificationLink(link, notif = null) {
     target = target.replace("/thành-tích", "/tài-khoản/thành-tích");
   } else if (target.startsWith("/tai-khoan/")) {
     target = target.replace("/tai-khoan/", "/tài-khoản/");
+  }
+
+  // Normalize legacy / English admin routes to /quản-trị
+  if (target.startsWith("/admin/articles") || target.startsWith("/admin/bai-viet") || target.startsWith("/quan-tri/bai-viet")) {
+    target = target
+      .replace("/admin/articles", "/quản-trị/bài-viết")
+      .replace("/admin/bai-viet", "/quản-trị/bài-viết")
+      .replace("/quan-tri/bai-viet", "/quản-trị/bài-viết");
+  } else if (target.startsWith("/admin/dashboard") || target.startsWith("/quan-tri/tong-quan")) {
+    target = target.replace("/admin/dashboard", "/quản-trị/tổng-quan").replace("/quan-tri/tong-quan", "/quản-trị/tổng-quan");
+  } else if (target.startsWith("/admin/users") || target.startsWith("/quan-tri/nguoi-dung")) {
+    target = target.replace("/admin/users", "/quản-trị/người-dùng").replace("/quan-tri/nguoi-dung", "/quản-trị/người-dùng");
+  } else if (target.startsWith("/admin/classes") || target.startsWith("/quan-tri/lop-hoc")) {
+    target = target.replace("/admin/classes", "/quản-trị/lớp-học").replace("/quan-tri/lop-hoc", "/quản-trị/lớp-học");
+  } else if (target.startsWith("/admin/grades") || target.startsWith("/quan-tri/so-diem")) {
+    target = target.replace("/admin/grades", "/quản-trị/sổ-điểm").replace("/quan-tri/so-diem", "/quản-trị/sổ-điểm");
+  } else if (target.startsWith("/admin/reports") || target.startsWith("/quan-tri/bao-cao")) {
+    target = target.replace("/admin/reports", "/quản-trị/báo-cáo").replace("/quan-tri/bao-cao", "/quản-trị/báo-cáo");
+  } else if (target.startsWith("/admin/broadcast") || target.startsWith("/quan-tri/thong-bao")) {
+    target = target.replace("/admin/broadcast", "/quản-trị/thông-báo").replace("/quan-tri/thong-bao", "/quản-trị/thông-báo");
+  } else if (target.startsWith("/admin/dang-ky") || target.startsWith("/quan-tri/dang-ky")) {
+    target = target.replace("/admin/dang-ky", "/quản-trị/đăng-ký").replace("/quan-tri/dang-ky", "/quản-trị/đăng-ký");
+  } else if (target.startsWith("/admin/gop-y") || target.startsWith("/quan-tri/gop-y")) {
+    target = target.replace("/admin/gop-y", "/quản-trị/góp-ý").replace("/quan-tri/gop-y", "/quản-trị/góp-ý");
+  } else if (target === "/admin" || target === "/quan-tri") {
+    target = "/quản-trị";
+  } else if (target.startsWith("/admin/")) {
+    target = target.replace("/admin/", "/quản-trị/");
+  } else if (target.startsWith("/quan-tri/")) {
+    target = target.replace("/quan-tri/", "/quản-trị/");
   }
 
   // If this points to /tài-khoản/thành-tích, ensure query parameters are normalized to ?ky=HK1 | HK2 | NAM
@@ -104,6 +138,39 @@ export const RANK_COLORS = {
     "Yếu": "text-[#7f1d1d] dark:text-[#fca5a5]",
   },
 };
+
+/**
+ * Tự động xét Học lực theo Điểm Trung Bình
+ * @param {number|string|null} score
+ * @returns {string} "Giỏi" | "Khá" | "Trung Bình" | "Yếu" | "Kém" | ""
+ */
+export function calculateAutoHocLuc(score) {
+  if (score === null || score === undefined || score === "" || score === "—") return "";
+  const s = Number(score);
+  if (isNaN(s)) return "";
+  if (s >= 8.0) return "Giỏi";
+  if (s >= 6.5) return "Khá";
+  if (s >= 5.0) return "Trung Bình";
+  if (s >= 3.5) return "Yếu";
+  return "Kém";
+}
+
+/**
+ * Tự động xét Hạnh kiểm theo số buổi vắng và chuyên cần
+ * @param {object} counts - { nghi_khong_phep, nghi_phep, tong_nghi, tong_da_diem_danh }
+ * @returns {string} "Tốt" | "Khá" | "Trung Bình" | "Yếu" | ""
+ */
+export function calculateAutoHanhKiem(counts) {
+  if (!counts || !counts.tong_da_diem_danh || counts.tong_da_diem_danh === 0) return "";
+  const kPhep = counts.nghi_khong_phep || 0;
+  const phep = counts.nghi_phep || 0;
+  const tongNghi = counts.tong_nghi !== undefined ? counts.tong_nghi : (kPhep + phep);
+
+  if (kPhep === 0 && phep <= 1) return "Tốt";
+  if (kPhep <= 1 && phep <= 2) return "Khá";
+  if (kPhep <= 2 && tongNghi <= 4) return "Trung Bình";
+  return "Yếu";
+}
 
 export const ATTENDANCE_STATUS = {
   co_mat: {

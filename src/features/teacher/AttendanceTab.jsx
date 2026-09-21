@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { 
   CalendarCheck, Check, AlertCircle, ChevronDown, 
   Users, Save, RotateCcw, Search, X, LayoutGrid, List, 
-  Clock, AlertTriangle, Calendar, CalendarDays, Filter, Zap, CheckCheck
+  Clock, AlertTriangle, Calendar, CalendarDays, Filter, Zap, CheckCheck,
+  FileSpreadsheet, Download, Upload,
 } from "lucide-react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase.js";
@@ -11,7 +12,8 @@ import { useToast } from "../../components/ui/ToastContext.jsx";
 import { Spinner } from "../../components/ui/Skeleton.jsx";
 import { ConfirmDialog } from "../../components/ui/StudentShared.jsx";
 import { useTeacherContext } from "./TeacherContext.jsx";
-import { fetchClassTermRanges, fetchTermLocks } from "./api.js";
+import { fetchClassTermRanges, fetchTermLocks, fetchAcademicHolidays } from "./api.js";
+import AttendanceExcelModal from "./components/AttendanceExcelModal.jsx";
 import {
   sortStudentsByTen, mostRecentSunday, resolveActiveHocKy,
   clampToSundayRange, toISODate, formatVNDate,
@@ -101,10 +103,13 @@ export default function AttendanceTab() {
 
   const [termRanges, setTermRanges] = useState({ HK1: { start: null, sundays: [] }, HK2: { start: null, sundays: [] } });
   const [termLocks, setTermLocks] = useState({});
+  const [holidays, setHolidays] = useState([]);
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const isLocked = !!termLocks[hocKyInt];
   const didAutoSelect = useRef(false);
 
-  // Ref cho thanh trượt ngày Chủ Nhật
+  // Ref cho thanh trượt ngày Chúa Nhật
   const dateStripRef = useRef(null);
   const activeDatePillRef = useRef(null);
 
@@ -112,13 +117,15 @@ export default function AttendanceTab() {
     let cancelled = false;
     (async () => {
       try {
-        const [ranges, locks] = await Promise.all([
+        const [ranges, locks, holiList] = await Promise.all([
           fetchClassTermRanges(lop, namHoc),
           fetchTermLocks(lop, namHoc),
+          fetchAcademicHolidays(namHoc),
         ]);
         if (cancelled) return;
         setTermRanges(ranges);
         setTermLocks(locks);
+        setHolidays(holiList || []);
 
         if (!didAutoSelect.current) {
           didAutoSelect.current = true;
@@ -148,6 +155,14 @@ export default function AttendanceTab() {
 
   const currentRange = termRanges[hocKy];
   const hasSchedule = !!currentRange?.sundays.length;
+
+  const holidaysByDate = useMemo(() => {
+    const map = {};
+    holidays.forEach((h) => { map[h.ngay] = h; });
+    return map;
+  }, [holidays]);
+
+  const currentHoliday = holidaysByDate[date];
   const rosterStudents = useMemo(() => sortStudentsByTen(students), [students]);
 
   // Tự động cuộn date strip đến ngày được chọn
@@ -160,6 +175,8 @@ export default function AttendanceTab() {
       });
     }
   }, [date, hocKy]);
+
+  const [hasSavedInDb, setHasSavedInDb] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,13 +191,19 @@ export default function AttendanceTab() {
           .eq("ngay", date);
         if (error) throw error;
 
+        const isRecorded = (data ?? []).length > 0;
+        setHasSavedInDb(isRecorded);
+
         const saved = {};
         (data ?? []).forEach((r) => { saved[r.username] = r.trang_thai; });
 
         const full = {};
         rosterStudents.forEach((s) => { full[s.username] = saved[s.username] ?? "co_mat"; });
 
-        if (!cancelled) { setStatuses(full); setInitial(full); }
+        if (!cancelled) { 
+          setStatuses(full); 
+          setInitial(isRecorded ? full : {}); 
+        }
       } catch (err) {
         console.error("load bulk attendance error:", err);
         if (!cancelled) showToast("Không tải được điểm danh ngày này", "error");
@@ -189,7 +212,7 @@ export default function AttendanceTab() {
       }
     })();
     return () => { cancelled = true; };
-  }, [date, namHoc, hocKyInt, rosterStudents, showToast]);
+  }, [date, namHoc, hocKyInt, rosterStudents, showToast, refreshKey]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -206,10 +229,12 @@ export default function AttendanceTab() {
     setIsQuickAssignOpen(false);
   };
 
-  const changedCount = useMemo(
-    () => rosterStudents.filter((s) => statuses[s.username] !== initial[s.username]).length,
-    [rosterStudents, statuses, initial]
-  );
+  const changedCount = useMemo(() => {
+    if (!hasSavedInDb) return rosterStudents.length;
+    return rosterStudents.filter((s) => statuses[s.username] !== initial[s.username]).length;
+  }, [rosterStudents, statuses, initial, hasSavedInDb]);
+
+  const canSave = !isLocked && (changedCount > 0 || !hasSavedInDb);
 
   const presentCount = useMemo(
     () => rosterStudents.filter((s) => statuses[s.username] === "co_mat").length,
@@ -263,7 +288,7 @@ export default function AttendanceTab() {
   }, [rosterStudents, statuses]);
 
   const save = () => {
-    if (isLocked || changedCount === 0) return;
+    if (!canSave) return;
     setShowConfirmModal(true);
   };
 
@@ -283,7 +308,8 @@ export default function AttendanceTab() {
       if (error) throw error;
 
       setInitial(statuses);
-      showToast(`Đã lưu điểm danh cho ${rows.length} học sinh`, "success");
+      setHasSavedInDb(true);
+      showToast(`Đã lưu điểm danh cho ${rows.length} Giáo lý sinh`, "success");
     } catch (err) {
       console.error("save bulk attendance error:", err);
       showToast("Lưu điểm danh thất bại", "error");
@@ -292,7 +318,7 @@ export default function AttendanceTab() {
     }
   };
 
-  const todayIso = toISODate(mostRecentSunday());
+  const currentWeekSundayIso = toISODate(mostRecentSunday());
 
   return (
     <Motion.div 
@@ -301,7 +327,7 @@ export default function AttendanceTab() {
       transition={{ duration: 0.4, ease: APPLE_EASE }}
       className="-mx-4 sm:mx-0 rounded-none sm:rounded-2xl border-x-0 border-t-0 sm:border-t border-b sm:border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-none sm:shadow-xs overflow-hidden"
     >
-      {/* 1. HEADER CHÍNH (PHƯƠNG ÁN 1: THẺ CHIP HIỆN ĐẠI & THOÁNG MẮT, BỎ NÚT BACK) */}
+      {/* 1. HEADER CHÍNH (GIAO DIỆN GỌN GÀNG 1 HÀNG TRÊN MOBILE, ẨN NÚT EXCEL TRÊN MOBILE) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-6 border-b border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3]/60 dark:bg-[#151c18]/60">
         <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
           <div className="min-w-0 flex-1 sm:flex-initial">
@@ -310,7 +336,7 @@ export default function AttendanceTab() {
                 Điểm danh {lop}
               </h1>
               {isLocked && (
-                <span className="px-2 py-0.5 rounded-full text-[10.5px] sm:text-xs font-bold bg-amber-500/15 text-amber-950 dark:text-amber-200 border border-amber-600/30 shrink-0 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-950 dark:text-amber-200 border border-amber-600/30 shrink-0 flex items-center gap-1">
                   <span>🔒</span>
                   <span>Đã khóa sổ</span>
                 </span>
@@ -318,7 +344,7 @@ export default function AttendanceTab() {
             </div>
             
             {/* Meta row: Niên khóa + Sĩ số (Desktop: đầy đủ | Mobile: siêu gọn 1 hàng) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-[#575e55] dark:text-[#b8c2b4] font-medium whitespace-nowrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-xs text-[#575e55] dark:text-[#b8c2b4] font-medium whitespace-nowrap">
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Niên khóa</span>
@@ -329,20 +355,20 @@ export default function AttendanceTab() {
                 <Users className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Sĩ số:</span>
                 <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{totalCount}</strong>
-                <span className="hidden sm:inline">học sinh</span>
-                <span className="sm:hidden">HS</span>
+                <span className="hidden sm:inline">Giáo lý sinh</span>
+                <span className="sm:hidden">GLS</span>
               </span>
             </div>
           </div>
 
-          {/* Học kỳ Toggle trên Mobile (Gọn nhẹ ngay trên App Bar) */}
+          {/* Toggle Học kỳ trên Mobile (gọn gàng, ẩn nút Excel trên mobile) */}
           <div className="sm:hidden flex items-center bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-0.5 border border-[#dedfd4] dark:border-[#354237] shrink-0">
             {["HK1", "HK2"].map((k) => (
               <button 
                 key={k} 
                 type="button" 
                 onClick={() => handleHocKyChange(k)}
-                className={`relative min-h-[34px] px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors z-10 cursor-pointer ${
+                className={`relative min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold transition-colors z-10 cursor-pointer ${
                   hocKy === k 
                     ? "text-[#293d32] dark:text-[#ecece0]" 
                     : "text-[#454f46] dark:text-[#b8c2b4]"
@@ -363,8 +389,19 @@ export default function AttendanceTab() {
           </div>
         </div>
 
-        {/* Học kỳ & Nút Lưu trên Desktop (Giữ nguyên 100% bố cục Desktop) */}
-        <div className="hidden sm:flex items-center justify-end gap-2.5 w-auto">
+        {/* Học kỳ, Nút Excel & Nút Lưu trên Desktop (sm trở lên) */}
+        <div className="hidden sm:flex items-center justify-end gap-2.5 shrink-0">
+          {/* Nút Xuất / Nhập Excel Desktop */}
+          <button
+            type="button"
+            onClick={() => setExcelModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] shadow-2xs active:scale-[0.98] transition-all cursor-pointer"
+            title="Xuất hoặc Nhập file Excel điểm danh"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+            <span>Xuất / Nhập Excel</span>
+          </button>
+
           {/* Học kỳ Segmented Toggle Desktop */}
           <div className="flex items-center bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-1 border border-[#dedfd4] dark:border-[#354237] shrink-0">
             {["HK1", "HK2"].map((k) => (
@@ -392,52 +429,76 @@ export default function AttendanceTab() {
             ))}
           </div>
 
-          {/* Nút Lưu Desktop/Header */}
-          <button 
-            type="button" 
-            disabled={isLocked || saving || changedCount === 0} 
-            onClick={save}
-            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? "Đang lưu…" : changedCount > 0 ? `Lưu thay đổi (${changedCount})` : "Lưu điểm danh"}</span>
-          </button>
+          {/* Nút Lưu Desktop/Header (Option 1: Khóa cố định chiều ngang w-[188px] chính xác tuyệt đối, triệt tiêu 100% hiện tượng nhảy nút) */}
+          {canSave ? (
+            <button 
+              type="button" 
+              disabled={saving} 
+              onClick={save}
+              className="w-[188px] shrink-0 inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+              aria-label={saving ? "Đang lưu điểm danh" : `Lưu điểm danh (${changedCount} thay đổi)`}
+            >
+              {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
+              <span>{saving ? "Đang lưu…" : "Lưu điểm danh"}</span>
+              {!saving && changedCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-xs font-black bg-white/20 dark:bg-[#19251d]/20 text-white dark:text-[#19251d]">
+                  {changedCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <div 
+              className="w-[188px] shrink-0 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 select-none shadow-xs"
+              role="status"
+              aria-label="Trạng thái: Đã lưu điểm danh"
+            >
+              <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-300 stroke-[2.5]" aria-hidden="true" />
+              <span>Đã lưu điểm danh</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 2. THANH TRƯỢT CHỦ NHẬT (TOUCH SNAP TRÊN MOBILE, CUỘN MƯỢT TRÊN DESKTOP) */}
+      {/* 2. THANH TRƯỢT CHÚA NHẬT (TOUCH SNAP TRÊN MOBILE, CUỘN MƯỢT TRÊN DESKTOP) */}
       {hasSchedule ? (
         <div className="border-b border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3]/40 dark:bg-[#151c18]/40 p-2.5 sm:p-3 px-3.5 sm:px-6">
-          <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883]" />
-              <span>Buổi học Chủ Nhật:</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+              <span>Buổi học Chúa Nhật ({hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II"}):</span>
             </span>
-            <span className="text-[11px] sm:text-xs font-semibold text-[#293d32] dark:text-[#ecece0]">
-              {currentRange.sundays.find((d) => toISODate(d) === date) 
-                ? `Buổi ${currentRange.sundays.findIndex((d) => toISODate(d) === date) + 1} / ${currentRange.sundays.length}`
-                : "Tùy chọn"}
-            </span>
+            <div className="flex items-center gap-2">
+              {currentRange.isDefault && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#314e3e]/10 dark:bg-[#d6b883]/20 text-[#314e3e] dark:text-[#d6b883] border border-[#314e3e]/20 dark:border-[#d6b883]/30">
+                  Lịch chuẩn Niên khóa
+                </span>
+              )}
+              <span className="text-xs font-semibold text-[#293d32] dark:text-[#ecece0]">
+                Tổng: {currentRange.sundays.length} buổi
+              </span>
+            </div>
           </div>
 
           {/* Cuộn ngang các buổi với snap-center trên Mobile */}
           <div 
             ref={dateStripRef} 
-            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar scroll-smooth snap-x snap-mandatory"
+            className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar scroll-smooth snap-x snap-mandatory"
             tabIndex={0}
-            aria-label="Danh sách các buổi học Chủ Nhật trong học kỳ"
+            aria-label="Danh sách các buổi học Chúa Nhật trong học kỳ"
           >
             {currentRange.sundays.map((d, idx) => {
               const iso = toISODate(d);
               const isSelected = iso === date;
-              const isToday = iso === todayIso;
+              const isThisWeek = iso === currentWeekSundayIso;
+              const holiday = holidaysByDate[iso];
+
               return (
                 <button
                   key={iso}
                   ref={isSelected ? activeDatePillRef : null}
                   type="button"
                   onClick={() => setDate(iso)}
-                  className={`min-h-[40px] sm:min-h-[44px] px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-left shrink-0 transition-all cursor-pointer flex flex-col justify-center snap-center ${
+                  className={`min-h-[44px] px-3.5 py-2 rounded-xl text-left shrink-0 transition-all cursor-pointer flex flex-col justify-center snap-center ${
                     isSelected
                       ? "bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] font-bold shadow-xs scale-[1.02]"
                       : "bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] font-medium"
@@ -446,18 +507,29 @@ export default function AttendanceTab() {
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold">Buổi {idx + 1}</span>
-                    {isToday && (
-                      <span className={`px-1.5 py-0.2 rounded text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wide ${
+                    {isThisWeek && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wide ${
                         isSelected 
                           ? "bg-white/25 text-white dark:bg-[#19251d]/25 dark:text-[#19251d]" 
                           : "bg-emerald-600 text-white"
                       }`}>
-                        Hôm nay
+                        Tuần này
+                      </span>
+                    )}
+                    {holiday && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+                        isSelected
+                          ? "bg-white/30 text-white dark:bg-[#19251d]/30 dark:text-[#19251d]"
+                          : holiday.loai_nghi === 'nghi_tet'
+                            ? "bg-rose-700 text-white"
+                            : "bg-sky-700 text-white"
+                      }`}>
+                        {holiday.loai_nghi === 'nghi_tet' ? "🧧 Tết" : "⛪ Lễ"}
                       </span>
                     )}
                   </div>
-                  <span className={`text-[10.5px] sm:text-[11px] mt-0.5 ${isSelected ? "opacity-90 font-medium" : "text-[#454f46] dark:text-[#b8c2b4]"}`}>
-                    {formatVNDate(d)}
+                  <span className={`text-xs mt-0.5 ${isSelected ? "opacity-90 font-medium" : "text-[#575e55] dark:text-[#b0b9ac]"}`}>
+                    {holiday ? holiday.ten_ngay_le : formatVNDate(d)}
                   </span>
                 </button>
               );
@@ -468,14 +540,41 @@ export default function AttendanceTab() {
         <div className="border-b border-[#dedfd4] dark:border-[#354237] bg-amber-500/10 p-3 sm:px-6 flex items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Chưa cài đặt lịch Chủ Nhật. Chọn ngày tự do:</span>
+            <span>Chưa cài đặt lịch Chúa Nhật. Chọn ngày tự do:</span>
           </div>
           <input 
             type="date" 
             value={date} 
             onChange={(e) => setDate(e.target.value)}
-            className="min-h-[40px] sm:min-h-[44px] rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] py-1.5 sm:py-2 px-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 shadow-xs" 
+            className="min-h-[44px] rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] py-2 px-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 shadow-xs" 
           />
+        </div>
+      )}
+
+      {/* 2.1 BANNER THÔNG BÁO NGÀY NGHỈ LỄ & NÚT GHI NHẬN NHANH */}
+      {currentHoliday && (
+        <div className="border-b border-[#dedfd4] dark:border-[#354237] bg-sky-700/10 dark:bg-sky-600/15 p-3.5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sky-950 dark:text-sky-200">
+          <div className="flex items-center gap-3">
+            <span className="text-xl sm:text-2xl shrink-0">⛪</span>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-sky-950 dark:text-sky-100">
+                Dịp nghỉ lễ: {currentHoliday.ten_ngay_le} ({currentHoliday.loai_nghi === 'nghi_tet' ? 'Nghỉ Tết Nguyên Đán' : 'Lễ Phụng Vụ Xứ Đoàn'})
+              </p>
+              <p className="text-xs text-sky-900/80 dark:text-sky-300/80 mt-0.5">
+                Buổi học này là ngày nghỉ quy định của Giáo xứ, không tính trừ điểm chuyên cần của Giáo lý sinh.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={isLocked}
+            onClick={() => setAll("nghi_le")}
+            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-sky-700 hover:bg-sky-800 text-white shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+            title="Ghi nhận trạng thái Nghỉ Lễ cho tất cả Giáo lý sinh trong lớp"
+          >
+            <Check className="w-4 h-4 stroke-[2.5]" /> Ghi nhận Nghỉ Lễ toàn lớp
+          </button>
         </div>
       )}
 
@@ -494,7 +593,7 @@ export default function AttendanceTab() {
             }`}
           >
             <span>Tất cả</span>
-            <span className={`px-1.5 py-0.5 rounded-md text-[10.5px] sm:text-[11px] ${
+            <span className={`px-1.5 py-0.5 rounded-md text-xs ${
               filterStatus === "all" ? "bg-white/20 dark:bg-black/20" : "bg-stone-200 dark:bg-stone-700"
             }`}>
               {totalCount}
@@ -513,7 +612,7 @@ export default function AttendanceTab() {
           >
             <span className={`w-2.5 h-2.5 rounded-full ${ATTENDANCE_CONFIG.co_mat.dotColor}`} />
             <span>Có mặt</span>
-            <span className="px-1.5 py-0.5 rounded-md text-[10.5px] sm:text-[11px] bg-white/25 dark:bg-black/20 font-bold">
+            <span className="px-1.5 py-0.5 rounded-md text-xs bg-white/25 dark:bg-black/20 font-bold">
               {presentCount}
             </span>
           </button>
@@ -530,7 +629,7 @@ export default function AttendanceTab() {
           >
             <span className={`w-2.5 h-2.5 rounded-full ${ATTENDANCE_CONFIG.nghi_phep.dotColor}`} />
             <span>Phép</span>
-            <span className="px-1.5 py-0.5 rounded-md text-[10.5px] sm:text-[11px] bg-white/25 dark:bg-black/20 font-bold">
+            <span className="px-1.5 py-0.5 rounded-md text-xs bg-white/25 dark:bg-black/20 font-bold">
               {phepCount}
             </span>
           </button>
@@ -547,7 +646,7 @@ export default function AttendanceTab() {
           >
             <span className={`w-2.5 h-2.5 rounded-full ${ATTENDANCE_CONFIG.nghi_khong_phep.dotColor}`} />
             <span>K.Phép</span>
-            <span className="px-1.5 py-0.5 rounded-md text-[10.5px] sm:text-[11px] bg-white/25 dark:bg-black/20 font-bold">
+            <span className="px-1.5 py-0.5 rounded-md text-xs bg-white/25 dark:bg-black/20 font-bold">
               {kPhepCount}
             </span>
           </button>
@@ -565,7 +664,7 @@ export default function AttendanceTab() {
             >
               <span className={`w-2.5 h-2.5 rounded-full ${ATTENDANCE_CONFIG.nghi_le.dotColor}`} />
               <span>Lễ</span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10.5px] sm:text-[11px] bg-white/25 dark:bg-black/20 font-bold">
+              <span className="px-1.5 py-0.5 rounded-md text-xs bg-white/25 dark:bg-black/20 font-bold">
                 {leCount}
               </span>
             </button>
@@ -655,7 +754,7 @@ export default function AttendanceTab() {
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 mt-1.5 w-48 bg-[#fffefa] dark:bg-[#1e2821] rounded-xl shadow-lg border border-[#dedfd4] dark:border-[#354237] z-40 p-1.5 space-y-1"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] px-2 py-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] px-2 py-1">
                     Gán cả lớp thành:
                   </p>
                   {STATUS_CYCLE.map((k) => (
@@ -733,7 +832,7 @@ export default function AttendanceTab() {
 
                   return (
                     <div 
-                      key={s.username}
+                      key={s.username} 
                       className={`flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
                         isDirty 
                           ? "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-amber-500/50 shadow-xs" 
@@ -743,7 +842,7 @@ export default function AttendanceTab() {
                       {/* Left: STT + Avatar + Name */}
                       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                         {/* STT Pill */}
-                        <span className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-[11px] sm:text-xs font-mono font-bold text-[#454f46] dark:text-[#b8c2b4] flex items-center justify-center shrink-0">
+                        <span className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-xs font-mono font-bold text-[#454f46] dark:text-[#b8c2b4] flex items-center justify-center shrink-0">
                           {String(idx + 1).padStart(2, "0")}
                         </span>
 
@@ -767,12 +866,12 @@ export default function AttendanceTab() {
                               {s.hoTen || s.username}
                             </span>
                             {isDirty && (
-                              <span className="px-1.5 py-0.2 rounded text-[9.5px] sm:text-[10px] font-bold bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-500/40">
+                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-500/40">
                                 Đã sửa
                               </span>
                             )}
                           </div>
-                          <p className="text-[10.5px] sm:text-[11px] font-mono text-[#454f46] dark:text-[#b8c2b4] mt-0.5 truncate">
+                          <p className="text-xs font-mono text-[#454f46] dark:text-[#b8c2b4] mt-0.5 truncate">
                             @{s.username}
                           </p>
                         </div>
@@ -791,7 +890,7 @@ export default function AttendanceTab() {
                               type="button"
                               disabled={isLocked}
                               onClick={() => setOne(s.username, k)}
-                              className={`min-h-[44px] px-1 sm:px-2.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 active:scale-95 disabled:cursor-not-allowed cursor-pointer ${
+                              className={`min-h-[44px] px-1 sm:px-2.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 active:scale-95 disabled:cursor-not-allowed cursor-pointer ${
                                 active
                                   ? itemCfg.activeClasses
                                   : itemCfg.inactiveClasses
@@ -843,10 +942,10 @@ export default function AttendanceTab() {
                               {s.hoTen || s.username}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 mt-0.5 text-[10.5px] sm:text-[11px] text-[#454f46] dark:text-[#b8c2b4] font-mono">
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-[#454f46] dark:text-[#b8c2b4] font-mono">
                             <span>STT: {idx + 1}</span>
                             {isDirty && (
-                              <span className="px-1.5 py-0.2 rounded text-[9.5px] sm:text-[10px] font-bold bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-500/40">
+                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-500/40">
                                 Đã sửa
                               </span>
                             )}
@@ -894,10 +993,10 @@ export default function AttendanceTab() {
                   <Filter className="w-6 h-6 opacity-60" />
                 </div>
                 <h3 className="text-sm font-bold text-[#293d32] dark:text-[#ecece0]">
-                  Không tìm thấy học sinh phù hợp
+                  Không tìm thấy Giáo lý sinh phù hợp
                 </h3>
                 <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] mt-1 max-w-sm">
-                  {searchQuery ? `Không có kết quả nào khớp với "${searchQuery}".` : "Không có học sinh nào ở trạng thái lọc này."}
+                  {searchQuery ? `Không có kết quả nào khớp với "${searchQuery}".` : "Không có Giáo lý sinh nào ở trạng thái lọc này."}
                 </p>
                 {(searchQuery || filterStatus !== "all") && (
                   <button
@@ -931,8 +1030,8 @@ export default function AttendanceTab() {
               <p className="font-bold text-[#293d32] dark:text-[#ecece0] text-sm">
                 Lớp {lop} • {hocKy === "HK1" ? "Học kỳ I" : "Học kỳ II"}
               </p>
-              <p className="text-[11px] text-[#454f46] dark:text-[#b8c2b4] font-medium mt-0.5">
-                Ngày: <strong className="text-[#293d32] dark:text-[#ecece0] font-semibold">{formatVNDate(new Date(date))}</strong> ({changedCount} học sinh có thay đổi)
+              <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] font-medium mt-0.5">
+                Ngày: <strong className="text-[#293d32] dark:text-[#ecece0] font-semibold">{formatVNDate(new Date(date))}</strong> ({changedCount} Giáo lý sinh có thay đổi)
               </p>
             </div>
             <span className="shrink-0 px-2.5 py-1 rounded-xl text-xs font-bold bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[#314e3e] dark:text-[#d6b883]">
@@ -962,11 +1061,11 @@ export default function AttendanceTab() {
             )}
           </div>
 
-          {/* Danh sách học sinh vắng để đối chiếu nhanh */}
+          {/* Danh sách Giáo lý sinh vắng để đối chiếu nhanh */}
           {absentStudents.length > 0 && (
             <div className="pt-2 border-t border-[#dedfd4] dark:border-[#354237]">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1.5">
-                Danh sách học sinh vắng ({absentStudents.length}):
+              <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1.5">
+                Danh sách Giáo lý sinh vắng ({absentStudents.length}):
               </p>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-1" data-lenis-prevent>
                 {absentStudents.map((s) => {
@@ -975,13 +1074,13 @@ export default function AttendanceTab() {
                   return (
                     <div 
                       key={s.username}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-[11px]"
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] text-xs"
                     >
                       <span className="font-bold text-[#293d32] dark:text-[#ecece0] truncate">
                         {s.tenThanh && <span className="font-normal text-[#454f46] dark:text-[#b8c2b4] mr-1">{s.tenThanh}</span>}
                         {s.hoTen || s.username}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                         isPhep ? "bg-amber-500/20 text-amber-950 dark:text-amber-200" : "bg-rose-500/20 text-rose-950 dark:text-rose-200"
                       }`}>
                         {isPhep ? "Có phép" : "Không phép"}
@@ -998,7 +1097,7 @@ export default function AttendanceTab() {
       {/* 7. FLOATING ACTION BAR TỐI ƯU MOBILE THUMB-ZONE & SAFE AREA */}
       {createPortal(
         <AnimatePresence>
-          {changedCount > 0 && !isLocked && (
+          {canSave && !isLocked && (
             <Motion.div
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1009,24 +1108,26 @@ export default function AttendanceTab() {
               <div className="pointer-events-auto bg-[#fffefa]/95 dark:bg-[#1e2821]/95 backdrop-blur-md rounded-2xl shadow-xl border border-[#dedfd4] dark:border-[#354237] p-2 sm:px-4 sm:py-2.5 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 max-w-md w-full sm:w-auto">
                 <span className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] flex items-center gap-1.5 shrink-0 pl-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#d6b883] animate-pulse shrink-0" />
-                  <span className="hidden sm:inline">Có {changedCount} thay đổi điểm danh</span>
-                  <span className="sm:hidden text-xs">{changedCount} thay đổi</span>
+                  <span className="hidden sm:inline">{!hasSavedInDb ? "Chưa lưu điểm danh ngày này" : `Có ${changedCount} thay đổi điểm danh`}</span>
+                  <span className="sm:hidden text-xs">{!hasSavedInDb ? "Chưa lưu điểm danh" : `${changedCount} thay đổi`}</span>
                 </span>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStatuses({ ...initial });
-                      showToast("Đã hủy các thay đổi điểm danh", "info");
-                    }}
-                    disabled={saving}
-                    className="min-h-[40px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 text-xs font-bold text-[#454f46] dark:text-[#b8c2b4] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 active:scale-95"
-                    title="Khôi phục lại trạng thái ban đầu"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Hủy</span>
-                  </button>
+                  {hasSavedInDb && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStatuses({ ...initial });
+                        showToast("Đã hủy các thay đổi điểm danh", "info");
+                      }}
+                      disabled={saving}
+                      className="min-h-[40px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-500/10 hover:bg-stone-500/15 text-xs font-bold text-[#454f46] dark:text-[#b8c2b4] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 active:scale-95"
+                      title="Khôi phục lại trạng thái ban đầu"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Hủy</span>
+                    </button>
+                  )}
 
                   <button 
                     type="button" 
@@ -1035,7 +1136,7 @@ export default function AttendanceTab() {
                     className="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-[#314e3e] hover:bg-[#263e32] text-white dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d] shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
                     {saving ? <Spinner className="h-4 w-4" /> : <Save className="w-4 h-4" />}
-                    <span>{saving ? "Đang lưu…" : "Lưu điểm danh"}</span>
+                    <span>{saving ? "Đang lưu…" : !hasSavedInDb ? "Lưu điểm danh" : "Lưu điểm danh"}</span>
                   </button>
                 </div>
               </div>
@@ -1044,6 +1145,26 @@ export default function AttendanceTab() {
         </AnimatePresence>,
         document.body
       )}
+
+      {/* 8. MODAL XUẤT / NHẬP EXCEL ĐIỂM DANH */}
+      <AttendanceExcelModal
+        open={excelModalOpen}
+        onClose={() => setExcelModalOpen(false)}
+        lop={lop}
+        namHoc={namHoc}
+        hocKy={hocKy}
+        hocKyInt={hocKyInt}
+        currentDate={date}
+        students={rosterStudents}
+        statuses={statuses}
+        sundays={currentRange.sundays}
+        holidaysMap={holidaysByDate}
+        isLocked={isLocked}
+        onSuccess={() => {
+          setRefreshKey((k) => k + 1);
+        }}
+        showToast={showToast}
+      />
     </Motion.div>
   );
 }

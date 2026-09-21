@@ -55,7 +55,7 @@ const TODAY = new Date().getDay();
 
 const HOURS = [
   { day: "Thứ Bảy",    time: "08:00 – 11:30",   note: "Sinh hoạt nhóm",          active: TODAY === 6 },
-  { day: "Chủ Nhật",   time: "07:00 – 09:30",   note: "Giáo lý & Thánh Lễ",     active: TODAY === 0 },
+  { day: "Chúa Nhật",   time: "07:00 – 09:30",   note: "Giáo lý & Thánh Lễ",     active: TODAY === 0 },
   { day: "Trong tuần", time: "Theo hẹn trước",  note: "Qua điện thoại / Email",  active: TODAY >= 1 && TODAY <= 5 },
 ];
 
@@ -70,7 +70,7 @@ const FAQS = [
   },
   {
     q: "Làm sao để trở thành Giáo Lý Viên?",
-    a: "Liên hệ qua điện thoại hoặc gặp trực tiếp vào Chủ Nhật sau Thánh Lễ. Ban Giáo Lý có chương trình đào tạo GLV hàng năm.",
+    a: "Liên hệ qua điện thoại hoặc gặp trực tiếp vào Chúa Nhật sau Thánh Lễ. Ban Giáo Lý có chương trình đào tạo GLV hàng năm.",
   },
 ];
 

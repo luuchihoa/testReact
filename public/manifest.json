@@ -1,6 +1,6 @@
 {
-  "name": "Ban Giáo Lý — Giáo Xứ An Ngãi",
-  "short_name": "Ban Giáo Lý",
+  "name": "Ban Giáo Lý An Ngãi",
+  "short_name": "BGL An Ngãi",
   "description": "Ứng dụng Ban Giáo Lý — Giáo Xứ An Ngãi",
   "start_url": "./",
   "display": "standalone",

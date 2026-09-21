@@ -1,47 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion as Motion } from "framer-motion";
 import {
-  Flame, Clock, Sparkles, ChevronDown, HelpCircle,
-  ArrowRight, Church, MapPin, Heart, BookOpen, User, ShieldCheck, Music,
-  Compass, Droplets, Bell, Palette, CheckCircle2, Quote,
-  Calendar, Users
+  Users, Clock, MapPin,
+  Sparkles, ChevronDown,
+  Heart, ShieldCheck, ArrowRight,
+  Church, CheckCircle2, Flame, Droplets, Quote,
+  Calendar, CalendarDays, BookOpen, Compass, Bell
 } from "lucide-react";
-import {
-  AdventCandleIcon,
-  BethlehemStarIcon,
-  LentenCrossIcon,
-  TriduumChaliceCrossIcon,
-  PaschalSunIcon,
-  OrdinaryWheatIcon,
-  ChristKingCrownIcon,
-  BaptismalWaterIcon,
-  HolySpiritFlameIcon,
-  EucharistHostChaliceIcon,
-  KingdomKeysIcon,
-  AnointingOilIcon,
-  HolyOrdersStoleIcon,
-  IntertwinedWeddingRingsIcon
-} from "../components/shared/LiturgicalIcons.jsx";
 import { getKhoiPhungVuData } from "../utils/academicYear.js";
+import {
+  getKhoiConfig,
+  formatTeacherName,
+  getRoomLocation,
+  formatShiftName,
+  getSectorTimeline,
+  asset
+} from "../features/khoi/khoiConfig.js";
+import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
+import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiPhungVuLiturgical from "../features/khoi/KhoiPhungVuLiturgical.jsx";
+import KhoiPhungVuSacraments from "../features/khoi/KhoiPhungVuSacraments.jsx";
 import "./KhoiPhungVu.css";
 
-// Helper định dạng danh xưng Giáo Lý Viên
-const formatTeacherName = (t) => {
-  if (t.startsWith("C.")) return `Chị ${t.slice(2)}`;
-  if (t.startsWith("A.")) return `Anh ${t.slice(2)}`;
-  if (t.startsWith("Sr.")) return `Sr. ${t.slice(3)}`;
-  return t;
-};
-
-// Helper vị trí phòng học
-const getRoomLocation = (room) => {
-  if (room.includes("P1") || room.includes("P2")) return `${room} · Tầng Trệt`;
-  if (room.toLowerCase().includes("hầm")) return "Nhà Hầm Sinh Hoạt";
-  return room;
-};
-
 export default function KhoiPhungVu() {
-  // Lấy dữ liệu tự động tính toán niên khóa và năm sinh theo thời gian thực
+  const config = getKhoiConfig("phung-vu");
   const data = getKhoiPhungVuData();
   const {
     academicYear,
@@ -50,409 +33,144 @@ export default function KhoiPhungVu() {
   } = data;
 
   const [openFaq, setOpenFaq] = useState(null);
-  const [selectedGroup, setSelectedGroup] = useState("all");
   const [activeTab, setActiveTab] = useState("seasons"); // "seasons" | "sacraments"
+  const { shouldReduceMotion, heroContainerVariants, heroItemVariants, sectionRevealProps } = useKhoiMotion();
+
+  // Thống kê động từ nguồn dữ liệu chuẩn
+  const totalClasses = classes.length;
+  const totalTeachers = new Set(classes.flatMap((c) => c.teachers)).size;
+
+  const FloatingIcon = config?.hero?.floatingBadge?.icon || Church;
+
+  // Lịch sinh hoạt tập trung (CENTRAL_MASS & CA_HOC)
+  const timelineData = getSectorTimeline(config, classes);
+  const timelineSteps = timelineData.steps;
+
+  // Trạng thái tuyển sinh thực tế từ module tuyển sinh trung tâm
+  const enrollmentStatus = getEnrollmentStatus();
+  const enrollmentCTA = getSectorEnrollmentCTA({ status: enrollmentStatus, sectorId: "phung-vu" });
 
   useEffect(() => {
     const prevTitle = document.title;
-    document.title = `Khối Phụng Vụ (Lớp 7) · Ngành Nhiệt Quang HTDC · Niên Khóa ${academicYear} | Giáo xứ An Ngãi`;
+    document.title = `Khối Phụng Vụ (${config?.grades || "Lớp 7"}) · Khăn Da Cam Có Viền · Niên Khóa ${academicYear} | Giáo xứ An Ngãi`;
     return () => {
       document.title = prevTitle;
     };
-  }, [academicYear]);
+  }, [academicYear, config]);
 
-  // 6 Chặng sư phạm đức tin trực quan Ngành Nhiệt Quang (Đẳng cấp Bento & Vectors Phụng Vụ)
+  // Cuộn mượt và chuyển focus đến danh sách lớp (tôn trọng reduced motion)
+  const handleScrollToClasses = (e) => {
+    e.preventDefault();
+    const target = document.getElementById("danh-sach-lop");
+    if (target) {
+      target.scrollIntoView({
+        behavior: shouldReduceMotion ? "auto" : "smooth",
+        block: "start"
+      });
+      target.focus({ preventScroll: true });
+    }
+  };
+
+  // Keyboard navigation cho Liturgical Tabs
+  const tabList = [
+    { id: "seasons", label: "Chu Kỳ Năm Phụng Vụ", icon: CalendarDays },
+    { id: "sacraments", label: "Bảy Bí Tích Cứu Độ", icon: Church }
+  ];
+
+  const handleTabKeyDown = (e) => {
+    const currentIndex = tabList.findIndex((t) => t.id === activeTab);
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % tabList.length;
+      setActiveTab(tabList[nextIndex].id);
+      document.getElementById(`pv-tab-${tabList[nextIndex].id}`)?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + tabList.length) % tabList.length;
+      setActiveTab(tabList[prevIndex].id);
+      document.getElementById(`pv-tab-${tabList[prevIndex].id}`)?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActiveTab(tabList[0].id);
+      document.getElementById(`pv-tab-${tabList[0].id}`)?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActiveTab(tabList[tabList.length - 1].id);
+      document.getElementById(`pv-tab-${tabList[tabList.length - 1].id}`)?.focus();
+    }
+  };
+
+  // 6 Chặng sư phạm đức tin trực quan Ngành Nhiệt Quang
   const faithJourneySteps = [
     {
       step: "01",
       icon: Church,
+      practiceIcon: BookOpen,
       title: "Căn Bản Đời Thờ Phượng",
       sub: "Phụng Vụ Là Gì?",
       badge: "Nền Tảng",
-      meaning: "Hiểu rằng Phụng vụ là hành động thánh thiêng của chính Chúa Kitô cùng toàn thể Dân Chúa. Các em không còn tham dự thụ động mà biết mở lòng hiệp dâng trọn vẹn mỗi Chúa Nhật.",
-      practiceIcon: BookOpen,
-      practiceLabel: "Nền tảng giáo lý (SC 10)",
-      highlight: "Khắc sâu chân lý: Phụng vụ là nguồn mạch tuôn trào và chóp đỉnh của toàn bộ đời sống đức tin.",
-      accentColor: "#2e5e43",
-      accentBg: "rgba(46, 94, 67, 0.1)",
-      accentBorder: "rgba(46, 94, 67, 0.25)"
+      practiceLabel: "Hiến chế SC 10",
+      meaning: "Hiểu rằng Phụng vụ là hành động thánh thiêng của chính Chúa Kitô cùng toàn thể Dân Chúa. Các em biết mở lòng hiệp dâng trọn vẹn mỗi Chúa Nhật.",
+      highlight: "Khắc sâu chân lý: Phụng vụ là nguồn mạch tuôn trào và chóp đỉnh của toàn bộ đời sống đức tin Kitô giáo."
     },
     {
       step: "02",
       icon: Compass,
+      practiceIcon: Calendar,
       title: "Vòng Tròn Năm Phụng Vụ",
       sub: "Sống Nhịp Sống Giáo Hội",
       badge: "Thời Gian Thánh",
-      meaning: "Khám phá ý nghĩa các mùa trong năm: Mùa Vọng, Giáng Sinh, Mùa Chay, Tam Nhật Vượt Qua, Phục Sinh và Thường Niên qua từng màu sắc phẩm phục phụng vụ đặc trưng.",
-      practiceIcon: Palette,
       practiceLabel: "4 Sắc áo phụng vụ",
-      highlight: "Nhận biết ý nghĩa biểu tượng: Trắng (Vui mừng), Đỏ (Hy sinh/Thần Khí), Tím (Sám hối), Xanh (Hy vọng).",
-      accentColor: "#9333ea",
-      accentBg: "rgba(147, 51, 234, 0.1)",
-      accentBorder: "rgba(147, 51, 234, 0.25)"
+      meaning: "Khám phá ý nghĩa các mùa trong năm: Mùa Vọng, Giáng Sinh, Mùa Chay, Tam Nhật Vượt Qua, Phục Sinh và Thường Niên qua từng màu sắc phẩm phục.",
+      highlight: "Nhận biết ý nghĩa biểu tượng: Trắng (Vui mừng), Đỏ (Hy sinh/Thần Khí), Tím (Sám hối), Xanh (Hy vọng)."
     },
     {
       step: "03",
       icon: Droplets,
+      practiceIcon: ShieldCheck,
       title: "Bảy Cánh Cửa Ân Sủng",
       sub: "Bảy Suối Nguồn Cứu Độ",
       badge: "Ân Sủng",
-      meaning: "Hiểu sâu 7 Bí tích chia thành 3 nhóm: Khai tâm (Rửa Tội, Thêm Sức, Thánh Thể), Chữa lành (Hòa Giải, Xức Dầu), và Phục vụ cộng đoàn (Truyền Chức, Hôn Phối).",
-      practiceIcon: ShieldCheck,
       practiceLabel: "Dấu chỉ & Ơn thánh",
-      highlight: "Cảm nhận sâu sắc dấu chỉ hữu hình mang lại nguồn ân sủng vô hình dưỡng nuôi linh hồn suốt đời.",
-      accentColor: "#0284c7",
-      accentBg: "rgba(2, 132, 199, 0.1)",
-      accentBorder: "rgba(2, 132, 199, 0.25)"
+      meaning: "Hiểu sâu 7 Bí tích chia thành 3 nhóm: Khai tâm (Rửa Tội, Thêm Sức, Thánh Thể), Chữa lành (Hòa Giải, Xức Dầu), và Phục vụ cộng đoàn (Truyền Chức, Hôn Phối).",
+      highlight: "Cảm nhận sâu sắc dấu chỉ hữu hình mang lại nguồn ân sủng vô hình dưỡng nuôi linh hồn suốt đời."
     },
     {
       step: "04",
       icon: Heart,
+      practiceIcon: Clock,
       title: "Cùng Dâng Thánh Lễ Ý Thức",
       sub: "Đỉnh Cao Của Chúa Nhật",
       badge: "Bàn Tiệc Thánh",
-      meaning: "Học hiểu từng phần của Thánh Lễ: Nghi thức đầu lễ, Phụng vụ Lời Chúa, Phụng vụ Thánh Thể và Nghi thức kết lễ để tham gia tích cực bằng trọn vẹn tâm trí và lời ca.",
-      practiceIcon: Clock,
-      practiceLabel: "Giây phút linh thiêng",
-      highlight: "Cung kính quỳ gối giây phút Truyền Phép và lắng đọng tâm hồn tạ ơn Chúa ngự vào lòng sau khi rước lễ.",
-      accentColor: "#dc2626",
-      accentBg: "rgba(220, 38, 38, 0.1)",
-      accentBorder: "rgba(220, 38, 38, 0.25)"
+      practiceLabel: "Nghi thức thánh thiêng",
+      meaning: "Học hiểu từng phần của Thánh Lễ: Nghi thức đầu lễ, Phụng vụ Lời Chúa, Phụng vụ Thánh Thể và Nghi thức kết lễ để tham gia tích cực bằng trọn vẹn tâm trí.",
+      highlight: "Cung kính giây phút Truyền Phép và lắng đọng tâm hồn tạ ơn Chúa ngự vào lòng sau khi rước lễ."
     },
     {
       step: "05",
       icon: Bell,
+      practiceIcon: CheckCircle2,
       title: "Phụng Sự Nơi Bàn Thờ",
       sub: "Tác Viên Phụng Vụ",
       badge: "Phục Vụ Bàn Thờ",
-      meaning: "Tập dượt các tác vụ cụ thể: Giúp lễ (Lễ sinh), đọc Sách Thánh, dâng lễ vật, giữ trật tự và tham gia ca đoàn phục vụ các cử hành phụng vụ của Xứ đoàn.",
-      practiceIcon: CheckCircle2,
       practiceLabel: "Tác phong nề nếp",
-      highlight: "Rèn luyện dáng đi, cử chỉ trang nghiêm, tề chỉnh và tâm hồn khiêm nhường trước Bàn Thờ Chúa.",
-      accentColor: "#059669",
-      accentBg: "rgba(5, 150, 105, 0.1)",
-      accentBorder: "rgba(5, 150, 105, 0.25)"
+      meaning: "Tập dượt các tác vụ cụ thể: Giúp lễ (Lễ sinh), đọc Sách Thánh, dâng lễ vật, giữ trật tự và tham gia ca đoàn phục vụ các cử hành phụng vụ của Xứ đoàn.",
+      highlight: "Rèn luyện dáng đi, cử chỉ trang nghiêm, tề chỉnh và tâm hồn khiêm nhường trước Bàn Thờ Chúa."
     },
     {
       step: "06",
       icon: Flame,
-      title: "Sống Tinh Thần Nhiệt Quang",
-      sub: "Khăn Da Cam HTDC",
-      badge: "Chứng Nhân Giữa Đời",
-      meaning: "Khăn cam Ngành Nhiệt Quang nhắc nhở ngọn lửa nhiệt tâm sốt sắng và sự sáng suốt. Phụng vụ trong nhà thờ được nối dài bằng đời sống yêu thương, bác ái và làm chứng giữa đời.",
       practiceIcon: Sparkles,
+      title: "Sống Tinh Thần Nhiệt Quang",
+      sub: "Khăn Da Cam Có Viền HTDC",
+      badge: "Chứng Nhân Giữa Đời",
       practiceLabel: "Châm ngôn hành động",
-      highlight: "Nhiệt tâm phụng sự Bàn Thờ Chúa – Quang dũng làm chứng giữa đời bằng lòng trung thực và bác ái.",
-      accentColor: "#f97316",
-      accentBg: "rgba(249, 115, 22, 0.12)",
-      accentBorder: "rgba(249, 115, 22, 0.35)"
+      meaning: "Khăn cam có viền (Cơ Nhiệt Quang HTDC) nhắc nhở ngọn lửa nhiệt tâm sốt sắng và sự sáng suốt. Phụng vụ được nối dài bằng đời sống yêu thương, bác ái giữa đời.",
+      highlight: "Nhiệt tâm phụng sự Bàn Thờ Chúa – Quang dũng làm chứng giữa đời bằng lòng trung thực và bác ái."
     }
   ];
 
-  // 3 Chu Kỳ Năm Phụng Vụ (7 Mùa Phụng Vụ theo trật tự sư phạm Hội Thánh)
-  const liturgicalCycles = [
-    {
-      groupId: "cycle-nhap-the",
-      groupTitle: "Chu Kỳ Nhập Thể",
-      groupSubtitle: "2 Mùa Phụng Vụ · Thiên Chúa Đến Với Nhân Loại",
-      groupDesc: "Khởi đầu Năm Phụng Vụ với tâm tình trông đợi Đấng Cứu Thế và hân hoan mừng Con Thiên Chúa làm người ở giữa chúng ta.",
-      badge: "Nhập Thể",
-      gridType: "grid-2",
-      seasons: [
-        {
-          id: "vong",
-          season: "Mùa Vọng",
-          colorKey: "purple",
-          icon: AdventCandleIcon,
-          colorBadge: "Màu Tím · 4 Tuần",
-          ribbonColor: "#7e22ce",
-          theme: "Trông Đợi & Sám Hối Dọn Đường",
-          desc: "Bốn tuần chuẩn bị tâm hồn đón mừng đại lễ Chúa Giáng Sinh và trông đợi ngày Người lại đến trong vinh quang vĩnh cửu mai sau.",
-          scripture: 'Is 40, 3: "Hãy dọn sẵn con đường cho Đức Chúa, sửa lối cho thẳng để Người ngự đi."',
-          sign: "Vòng hoa Mùa Vọng với 4 cây nến, sắc phục tím trông đợi và Kinh Tiền Tụng Mùa Vọng.",
-          action: "Tỉnh thức cầu nguyện, hy sinh hãm mình dọn máng cỏ tâm hồn đón mừng Chúa Hài Đồng hạ sinh.",
-          culmination: "Đại lễ Chúa Giáng Sinh (25/12)",
-          musicRule: "Không hát Kinh Vinh Danh · Vẫn hát Alleluia"
-        },
-        {
-          id: "giang-sinh",
-          season: "Mùa Giáng Sinh",
-          colorKey: "amber",
-          icon: BethlehemStarIcon,
-          colorBadge: "Màu Trắng/Vàng · ~3 Tuần",
-          ribbonColor: "#d97706",
-          theme: "Ánh Sáng Cứu Độ & Vui Mừng Tạ Ơn",
-          desc: "Niềm vui Con Thiên Chúa làm người ở cùng chúng ta, kéo dài từ đêm Canh Thức Giáng Sinh đến hết lễ Chúa Giêsu Chịu Phép Rửa.",
-          scripture: 'Lc 2, 14: "Vinh danh Thiên Chúa trên trời, bình an dưới thế cho người Chúa thương."',
-          sign: "Hang đá máng cỏ máng rơm, ngôi sao Bethlehem rực rỡ và sắc phục trắng ánh quang vinh.",
-          action: "Hân hoan loan báo Tin Mừng, chia sẻ quà bánh yêu thương và thực thi bác ái với bạn nghèo.",
-          culmination: "Lễ Hiển Linh & Chúa Chịu Phép Rửa",
-          musicRule: "Hát Kinh Vinh Danh trọng thể · Hát Alleluia"
-        }
-      ]
-    },
-    {
-      groupId: "cycle-vuot-qua",
-      groupTitle: "Chu Kỳ Vượt Qua",
-      groupSubtitle: "3 Mùa Phụng Vụ · Trái Tim Cứu Độ Của Năm Phụng Vụ",
-      groupDesc: "Đỉnh cao của toàn bộ Năm Thánh: bước theo Đức Kitô qua cuộc Khổ Nạn, Tử Nạn và Phục Sinh vinh hiển cứu chuộc thế trần.",
-      badge: "Vượt Qua",
-      gridType: "grid-3",
-      seasons: [
-        {
-          id: "chay",
-          season: "Mùa Chay",
-          colorKey: "purple",
-          icon: LentenCrossIcon,
-          colorBadge: "Màu Tím · 40 Ngày",
-          ribbonColor: "#7e22ce",
-          theme: "Sám Hối, Canh Tân & Trở Về",
-          desc: "Bốn mươi ngày sám hối, chay tịnh và cầu nguyện thanh tẩy tâm hồn, noi gương Chúa trong hoang địa dọn lòng mừng mầu nhiệm Vượt Qua.",
-          scripture: 'Mc 1, 15: "Thời kỳ đã mãn, hãy ăn năn sám hối và tin vào Tin Mừng cứu độ."',
-          sign: "Thứ Tư Lễ Tro, Đàng Thánh Giá mỗi thứ Sáu, sắc tím sám hối và thinh lặng phụng vụ.",
-          action: "Thực thi 3 việc Mùa Chay: siêng Cầu nguyện, Ăn chay hãm mình và tích cực làm việc Bác ái.",
-          culmination: "Tuần Thánh (Chúa Nhật Lễ Lá)",
-          musicRule: "Bỏ cả Kinh Vinh Danh và Alleluia (hát Câu Xướng)"
-        },
-        {
-          id: "tam-nhat",
-          season: "Tam Nhật Vượt Qua",
-          colorKey: "red",
-          icon: TriduumChaliceCrossIcon,
-          colorBadge: "Trắng & Đỏ · 3 Ngày Thánh",
-          ribbonColor: "#dc2626",
-          theme: "Tình Yêu, Thập Giá & Phục Sinh",
-          desc: "Ba ngày thánh thiêng nhất cử hành trọn vẹn cuộc Khổ Nạn và Phục Sinh của Chúa Kitô, từ chiều Thứ Năm Tuần Thánh đến hết Chúa Nhật.",
-          scripture: 'Ga 13, 1: "Người đã yêu thương những kẻ thuộc về mình, và yêu thương đến cùng."',
-          sign: "Nghi thức Rửa Chân Thứ Năm, Tôn kính Thánh Giá Thứ Sáu, Lửa Mới và Nến Phục Sinh.",
-          action: "Viếng Mình Thánh Chúa đêm Thứ Năm, thinh lặng hiệp thông cùng Chúa trên Thánh Giá Canvê.",
-          culmination: "Đêm Canh Thức Vượt Qua Cực Thánh",
-          musicRule: "Thứ Năm rung chuông · Thứ Sáu, Bảy thinh lặng"
-        },
-        {
-          id: "phuc-sinh",
-          season: "Mùa Phục Sinh",
-          colorKey: "orange",
-          icon: PaschalSunIcon,
-          colorBadge: "Màu Trắng/Vàng · 50 Ngày",
-          ribbonColor: "#ea580c",
-          theme: "Khải Hoàn & Sự Sống Mới",
-          desc: "Năm mươi ngày hoan lạc cử hành Chúa khải hoàn trên tử thần, khai mở sự sống vĩnh cửu từ Phục Sinh đến lễ Chúa Thánh Thần Hiện Xuống.",
-          scripture: 'Lc 24, 34: "Chúa đã trỗi dậy thật rồi và đã hiện ra với ông Simôn, Alleluia!"',
-          sign: "Nến Phục Sinh cháy sáng nơi cung thánh, rảy Nước Thánh tái sinh và sắc trắng vàng.",
-          action: "Sống niềm vui hân hoan của con cái sự sáng, làm chứng cho Chúa phục sinh giữa đời thường.",
-          culmination: "Đại lễ Hiện Xuống (Ngũ Tuần)",
-          musicRule: "Hát trọng thể Kinh Vinh Danh & Alleluia Phục Sinh"
-        }
-      ]
-    },
-    {
-      groupId: "cycle-thuong-nien",
-      groupTitle: "Mùa Thường Niên",
-      groupSubtitle: "2 Giai Đoạn (~34 Tuần) · Bước Theo Thầy Giữa Đời Thường",
-      groupDesc: "Thời gian dài nhất trong năm, dẫn dắt người môn đệ sống mầu nhiệm Nước Trời giữa nhịp sống học tập, gia đình và cộng đoàn xã hội.",
-      badge: "Thường Niên",
-      gridType: "grid-2",
-      seasons: [
-        {
-          id: "thuong-nien-1",
-          season: "Thường Niên Giai Đoạn I",
-          colorKey: "green",
-          icon: OrdinaryWheatIcon,
-          colorBadge: "Màu Xanh Lá · 4–9 Tuần",
-          ribbonColor: "#16a34a",
-          theme: "Sứ Vụ Rao Giảng Của Chúa Giêsu",
-          desc: "Nối mùa Giáng Sinh với mùa Chay, chiêm ngắm các phép lạ và lời mời gọi hoán cải, đón nhận Tin Mừng trong sứ vụ công khai của Thầy Giêsu.",
-          scripture: 'Mt 4, 19: "Hãy theo Ta, Ta sẽ làm cho các anh thành những kẻ lưới người như lưới cá."',
-          sign: "Sắc phục màu xanh lá cây hy vọng, lắng nghe Lời Chúa qua các Chúa Nhật thường niên.",
-          action: "Lắng nghe Lời Chúa, vâng lời cha mẹ thầy cô và chu toàn bổn phận học đường mỗi ngày.",
-          culmination: "Chúa Nhật VIII hoặc IX Thường Niên",
-          musicRule: "Hát đầy đủ cả Kinh Vinh Danh & Alleluia"
-        },
-        {
-          id: "thuong-nien-2",
-          season: "Thường Niên Giai Đoạn II",
-          colorKey: "green",
-          icon: ChristKingCrownIcon,
-          colorBadge: "Màu Xanh Lá · ~24–29 Tuần",
-          ribbonColor: "#16a34a",
-          theme: "Tăng Trưởng Đức Tin & Cánh Chung",
-          desc: "Từ sau Lễ Hiện Xuống đến hết Năm Thánh, người Kitô hữu dấn thân làm chứng giữa đời, khép lại bằng Đại lễ Chúa Kitô Vua Vũ Trụ khải hoàn.",
-          scripture: 'Mt 25, 40: "Mỗi lần các ngươi làm như thế cho người bé mọn nhất, là làm cho chính Ta."',
-          sign: "Sắc phục xanh lá biểu trưng sức sống đức tin lớn lên từng ngày trong lòng Hội Thánh.",
-          action: "Sống chứng tá bác ái, siêng làm việc lành và mở lòng giúp đỡ những bạn bè xung quanh.",
-          culmination: "Đại lễ Chúa Kitô Vua Vũ Trụ (Tuần 34)",
-          musicRule: "Hát đầy đủ cả Kinh Vinh Danh & Alleluia"
-        }
-      ]
-    }
-  ];
-
-  // 3 Nhóm Bảy Bí Tích Cứu Độ (Theo Giáo Lý Hội Thánh Công Giáo)
-  const sacramentGroups = [
-    {
-      groupId: "sacraments-initiation",
-      groupTitle: "1. Các Bí Tích Khai Tâm Kitô Giáo",
-      groupSubtitle: "3 Bí Tích Nền Tảng · Đặt Định Nền Móng Đời Sống Đức Tin",
-      groupDesc: "Đặt nền móng cho toàn bộ đời sống Kitô hữu: được sinh ra trong sự sống mới, được củng cố bằng Thần Khí và được nuôi dưỡng bằng Lương Thực Trường Sinh.",
-      badge: "Khai Tâm",
-      gridType: "grid-3",
-      sacraments: [
-        {
-          name: "Bí Tích Rửa Tội",
-          type: "Khai Tâm Nền Tảng",
-          statusBadge: "Đã lãnh nhận",
-          colorKey: "sky",
-          ribbonColor: "#0284c7",
-          icon: BaptismalWaterIcon,
-          scripture: 'Mt 28, 19: "Hãy đi rửa tội cho muôn dân nhân danh Cha và Con và Thánh Thần."',
-          short: "Cửa ngõ đời sống thiêng liêng, tái sinh làm con Thiên Chúa và tháp nhập vào Thân Thể Hội Thánh.",
-          sign: "Nước tự nhiên đổ trên đầu 3 lần cùng lời tuyên phong nhân danh Ba Ngôi cực thánh.",
-          grace: "Tẩy sạch tội nguyên tổ, tái sinh làm con Chúa và ghi ấn tín thiêng liêng vĩnh viễn.",
-          minister: "Giám mục / Linh mục (nguy tử: mọi người)",
-          seal: "Ấn tín vĩnh viễn (1 lần)"
-        },
-        {
-          name: "Bí Tích Thêm Sức",
-          type: "Khai Tâm Trưởng Thành",
-          statusBadge: "Đã lãnh nhận",
-          colorKey: "orange",
-          ribbonColor: "#ea580c",
-          icon: HolySpiritFlameIcon,
-          scripture: 'Cv 1, 8: "Anh em sẽ nhận được sức mạnh của Thánh Thần để làm chứng cho Thầy."',
-          short: "Hoàn tất ân sủng Phép Rửa, đón nhận dồi dào Chúa Thánh Thần để trưởng thành làm chứng cho Tin Mừng.",
-          sign: "Đức Giám mục đặt tay thinh lặng và xức Dầu Thánh (Chrisma) hình Thánh Giá trên trán.",
-          grace: "Ban 7 ơn Thánh Thần, gia tăng sức mạnh đức tin để can đảm sống đạo và làm chứng tá.",
-          minister: "Đức Giám mục (hoặc Linh mục ủy quyền)",
-          seal: "Ấn tín vĩnh viễn (1 lần)"
-        },
-        {
-          name: "Bí Tích Thánh Thể",
-          type: "Nguồn Mạch & Đỉnh Cao",
-          statusBadge: "Hiệp lễ mỗi Chúa Nhật",
-          colorKey: "amber",
-          ribbonColor: "#d97706",
-          icon: EucharistHostChaliceIcon,
-          scripture: 'Ga 6, 54: "Ai ăn Thịt và uống Máu Ta, thì có sự sống đời đời trong chính mình."',
-          short: "Nguồn mạch và đỉnh cao đời sống Kitô hữu; Mình và Máu Thánh Chúa Kitô hiện diện thực sự nuôi hồn.",
-          sign: "Bánh miến không men và Rượu nho tự nhiên cùng Lời Truyền Phép thánh hiến của Chủ tế.",
-          grace: "Kết hiệp mật thiết với Chúa Giêsu, nuôi dưỡng sự sống linh hồn và hiệp nhất Dân Chúa.",
-          minister: "Giám mục / Linh mục (Thừa tác viên: GLV)",
-          seal: "Lãnh nhận thường xuyên"
-        }
-      ]
-    },
-    {
-      groupId: "sacraments-healing",
-      groupTitle: "2. Các Bí Tích Chữa Lành",
-      groupSubtitle: "2 Bí Tích · Phục Hồi & Nâng Đỡ Tinh Thần Lẫn Thể Xác",
-      groupDesc: "Chúa Giêsu – Thầy Thuốc linh hồn và thể xác – tiếp tục sứ vụ tha thứ tội lỗi, xoa dịu đau thương và ban sức mạnh cho tín hữu.",
-      badge: "Chữa Lành",
-      gridType: "grid-2",
-      sacraments: [
-        {
-          name: "Bí Tích Hoà Giải (Giải Tội)",
-          type: "Chữa Lành Linh Hồn",
-          statusBadge: "Lãnh nhận thường xuyên",
-          colorKey: "indigo",
-          ribbonColor: "#6366f1",
-          icon: KingdomKeysIcon,
-          scripture: 'Ga 20, 23: "Các con tha tội cho ai, thì tội người ấy được tha; cầm giữ ai, thì bị cầm giữ."',
-          short: "Tha thứ mọi tội lỗi sau Phép Rửa, hòa giải người hối nhân với Thiên Chúa và cộng đoàn Hội Thánh.",
-          sign: "Lòng ăn năn sám hối thật lòng, xưng thú tội lỗi và đón nhận Lời Tha Tội từ Linh mục.",
-          grace: "Phục hồi ơn nghĩa tử làm con Chúa, tẩy sạch vết nhơ tội lỗi và ban bình an tâm hồn.",
-          minister: "Giám mục / Linh mục có quyền giải tội",
-          seal: "Lãnh nhận thường xuyên"
-        },
-        {
-          name: "Bí Tích Xức Dầu Bệnh Nhân",
-          type: "Chữa Lành & Nâng Đỡ",
-          statusBadge: "Khi bệnh nặng / nguy tử",
-          colorKey: "teal",
-          ribbonColor: "#0d9488",
-          icon: AnointingOilIcon,
-          scripture: 'Gc 5, 14: "Ai trong anh em đau yếu, hãy mời các kỳ mục Hội Thánh đến để cầu nguyện và xức dầu."',
-          short: "Ban ân sủng nâng đỡ, can đảm và bình an cho người tín hữu đang đau bệnh nặng hay tuổi già yếu.",
-          sign: "Linh mục đặt tay thinh lặng và xức Dầu Bệnh Nhân (OI) trên trán, tay kèm lời nguyện.",
-          grace: "Ban sức mạnh kiên nhẫn, kết hiệp với Cuộc Khổ Nạn của Chúa và tha thứ mọi tội lỗi.",
-          minister: "Giám mục / Linh mục cử hành thánh lễ",
-          seal: "Lãnh nhận khi cần thiết"
-        }
-      ]
-    },
-    {
-      groupId: "sacraments-vocation",
-      groupTitle: "3. Các Bí Tích Phục Vụ Cộng Đoàn & Ơn Gọi",
-      groupSubtitle: "2 Bí Tích · Thánh Hiến Vì Ơn Cứu Độ Của Tha Nhân",
-      groupDesc: "Được thánh hiến để phụng sự cộng đoàn Dân Chúa qua tác vụ thánh tông truyền hoặc qua đời sống gia đình Kitô giáo thánh thiện.",
-      badge: "Phục Vụ & Ơn Gọi",
-      gridType: "grid-2",
-      sacraments: [
-        {
-          name: "Bí Tích Truyền Chức Thánh",
-          type: "Tác Vụ Thánh Tông Truyền",
-          statusBadge: "Ơn gọi Tông đồ",
-          colorKey: "bronze",
-          ribbonColor: "#b45309",
-          icon: HolyOrdersStoleIcon,
-          scripture: '1 Tm 4, 14: "Đừng thờ ơ với đặc sủng Chúa ban qua lời ngôn sứ và việc đặt tay của các kỳ mục."',
-          short: "Thánh hiến người phục vụ Dân Chúa qua 3 cấp bậc: Giám mục, Linh mục và Phó tế theo truyền thống Tông đồ.",
-          sign: "Đức Giám mục đặt tay thinh lặng và đọc lời nguyện thánh hiến trọng thể trước Dân Chúa.",
-          grace: "In ấn tín vĩnh viễn, ban năng quyền nhân danh Đức Kitô Đầu hướng dẫn Dân Thiên Chúa.",
-          minister: "Chỉ Đức Giám mục hiệp thông Hội Thánh",
-          seal: "Ấn tín vĩnh viễn (1 lần)"
-        },
-        {
-          name: "Bí Tích Hôn Phối",
-          type: "Giao Ước Gia Đình",
-          statusBadge: "Đời sống Hôn nhân",
-          colorKey: "rose",
-          ribbonColor: "#e11d48",
-          icon: IntertwinedWeddingRingsIcon,
-          scripture: 'Mt 19, 6: "Sự gì Thiên Chúa đã phối hợp kết hiệp, loài người không bao giờ được phép phân ly."',
-          short: "Giao ước tình yêu thánh thiện, chung thủy và bất khả phân ly giữa người nam và người nữ trước mặt Chúa.",
-          sign: "Đôi bạn tự do bày tỏ sự ưng thuận nhận nhau làm vợ chồng và trao nhẫn cưới thánh hiến.",
-          grace: "Thánh hóa tình yêu lứa đôi, ban ơn sống trung tín trọn đời và cùng nuôi dạy con cái.",
-          minister: "Đôi tân hôn (Linh mục chứng hôn)",
-          seal: "Giao ước trọn đời"
-        }
-      ]
-    }
-  ];
-
-  // 4 Mốc thời gian Ca 1 Chúa Nhật
-  const timelineSteps = [
-    {
-      time: "06:50",
-      label: "Tập trung & Điểm danh",
-      sub: "GLV đón tiếp tại dãy phòng P1, P2 & Nhà hầm",
-      highlight: false,
-      tag: null
-    },
-    {
-      time: "07:00 – 07:45",
-      label: "Huấn Giáo Ý Thức Phụng Vụ",
-      sub: "Học ý nghĩa các cử hành Phụng vụ, nghi thức Thánh Lễ và thăng tiến ngành",
-      highlight: true,
-      tag: "Huấn Giáo Đức Tin"
-    },
-    {
-      time: "07:45",
-      label: "Tiến vào Thánh Đường",
-      sub: "Chuẩn bị phẩm phục Lễ sinh, sách lễ & chỉnh đốn hàng ngũ trang nghiêm",
-      highlight: false,
-      tag: null
-    },
-    {
-      time: "08:00 – 09:00",
-      label: "Thánh Lễ Thiếu Nhi Toàn Đoàn",
-      sub: "Trực tiếp phục vụ Bàn Thờ · Ban Lễ sinh, đọc Sách Thánh và giữ trật tự chung",
-      highlight: true,
-      tag: "Tâm Điểm Phụng Vụ"
-    }
-  ];
-
-  // 3 Trụ cột Hội Thánh Tại Gia (Bento Family Hub)
+  // 3 Trụ cột Hội Thánh Tại Gia
   const familyPillars = [
     {
       key: "green",
@@ -480,15 +198,15 @@ export default function KhoiPhungVu() {
     }
   ];
 
-  // Khối Sanctuary Box (Lời Huấn Quyền & Checklist Mục Vụ)
+  // Sanctuary Box
   const sanctuaryData = {
     eyebrow: "Hội Thánh Tại Gia · Tâm Tình Mục Vụ",
     quote: "Phụng vụ của Giáo hội không kết thúc nơi cửa nhà thờ, nhưng được nối dài bằng đời sống yêu thương và lời kinh tạ ơn trong từng mái ấm gia đình.",
     author: "Tông Huấn Familiaris Consortio",
     checklistTitle: "3 Việc Nhỏ Cha Mẹ Đồng Hành Chúa Nhật",
     checklist: [
-      { label: "Đúng giờ", text: "Đưa con đến trước 06:50 để kịp điểm danh hàng ngũ Ca 1." },
-      { label: "Trang phục", text: "Áo đồng phục trắng sơ-vin, đeo khăn quàng Da Cam ngay ngắn." },
+      { label: "Đúng giờ", text: "Đưa con đến trước 06:45 để kịp điểm danh hàng ngũ Ca 1." },
+      { label: "Trang phục", text: "Áo đồng phục trắng sơ-vin, đeo khăn quàng Da Cam có viền ngay ngắn." },
       { label: "Lắng nghe", text: "Hỏi con về bài học Tin Mừng hôm nay trong bữa cơm trưa." }
     ],
     supportTitle: "Cần trao đổi riêng với GLV?",
@@ -497,7 +215,7 @@ export default function KhoiPhungVu() {
     supportBtnLink: "/liên-hệ"
   };
 
-  // 5 Câu hỏi thường gặp
+  // FAQ Phụ Huynh
   const faqs = [
     {
       q: "Tại sao các em đã lãnh nhận Bí tích Thêm Sức vẫn cần tiếp tục học Khối Phụng Vụ?",
@@ -509,11 +227,11 @@ export default function KhoiPhungVu() {
     },
     {
       q: "Thời gian học Ca 1 Chúa Nhật có gì khác biệt so với các khối nhỏ?",
-      a: "Khối Phụng Vụ thuộc Ca 1 (Ca Sáng 1 dành cho các khối lớn). Các em học giáo lý từ 07:00 đến 07:45 trước khi tham dự Thánh Lễ Toàn Xứ Đoàn lúc 08:00 đến 09:00. Xin quý phụ huynh đưa các em đến nhà thờ trước 06:50 để kịp giờ tập hợp."
+      a: "Khối Phụng Vụ thuộc Ca 1 (Ca Sáng 1 dành cho các khối lớn). Các em học giáo lý từ 07:00 đến 07:45 trước khi tham dự Thánh Lễ Toàn Xứ Đoàn lúc 08:00 đến 09:00. Xin quý phụ huynh đưa các em đến nhà thờ trước 06:45 để kịp giờ tập hợp."
     },
     {
-      q: "Ý nghĩa của Khăn Quàng Da Cam Ngành Nhiệt Quang là gì?",
-      a: "Khăn Da Cam là màu khăn chính thức của Ngành Nhiệt Quang trong Phong trào Hùng Tâm Dũng Chí. Màu da cam tượng trưng cho ngọn lửa 'Nhiệt tâm' (sốt sắng trong phụng vụ) và ánh sáng 'Quang dũng' (sáng suốt và can đảm làm chứng đức tin giữa đời sống)."
+      q: "Ý nghĩa của Khăn Quàng Da Cam Có Viền là gì?",
+      a: "Khăn Da Cam có viền là màu khăn chính thức của Cơ Nhiệt Quang trong Phong trào Hùng Tâm Dũng Chí. Màu da cam tượng trưng cho ngọn lửa 'Nhiệt tâm' (sốt sắng trong phụng vụ) và ánh sáng 'Quang dũng' (sáng suốt và can đảm làm chứng đức tin giữa đời sống)."
     },
     {
       q: "Giáo trình học của Khối Phụng Vụ gồm những nội dung chính nào?",
@@ -521,177 +239,291 @@ export default function KhoiPhungVu() {
     }
   ];
 
-  const filteredClasses = selectedGroup === "all"
-    ? classes
-    : classes.filter((c) => c.id === selectedGroup);
-
   return (
-    <div className="pv-page">
+    <div className={`khoi-page ${config?.themeClass || "theme-phung-vu"}`}>
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 1: HERO VISUAL-FIRST & DẢI CHỈ SỐ BENTO
+          SECTION 1: HERO VISUAL-FIRST & STATS
       ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-hero">
-        <div className="pv-shell">
-          <div className="pv-hero-grid">
+      <section className="khoi-hero">
+        <div className="khoi-shell">
+          <Motion.div
+            className="khoi-hero-grid"
+            variants={heroContainerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {/* Cột trái: Văn bản & CTA */}
-            <div className="pv-hero-left">
-              <div className="pv-hero-pill-badge">
-                <Flame size={14} className="pv-hero-pill-icon" />
-                <span>Ngành Nhiệt Quang HTDC · Khối Phụng Vụ</span>
-              </div>
+            <div className="khoi-hero-left">
+              <Motion.div variants={heroItemVariants}>
+                <div className="khoi-hero-pill-badge">
+                  <span aria-hidden="true">{config?.hero?.pillIcon || "⛪"}</span>
+                  <span>{config?.hero?.pillText || "Ngành Nhiệt Quang HTDC · Khối Phụng Vụ"}</span>
+                </div>
+              </Motion.div>
 
-              <h1 className="pv-hero-title">
-                Cử hành đức tin <em>trong Phụng vụ</em>
-              </h1>
+              <Motion.h1 variants={heroItemVariants} className="khoi-hero-title">
+                {config?.hero?.titleLine1 || "Sống Đời Phụng Vụ"} <br />
+                <em>{config?.hero?.titleLine2 || "Hiệp Dâng Thánh Lễ"}</em>
+              </Motion.h1>
 
-              <p className="pv-hero-desc">
-                Phụng vụ là đỉnh cao mà mọi hoạt động Giáo Hội hướng tới, đồng thời là nguồn mạch tuôn trào mọi sức mạnh (SC 10) — Khối Phụng Vụ giúp các em 12 tuổi hiểu sâu, yêu mến và tích cực tham dự các cử hành thánh thiêng.
-              </p>
+              <Motion.p variants={heroItemVariants} className="khoi-hero-desc">
+                {config?.hero?.desc || "Phụng vụ là đỉnh cao và nguồn mạch đời sống Hội Thánh — Khối Phụng Vụ giúp các em 12 tuổi hiểu sâu, yêu mến và tích cực tham dự các cử hành thánh thiêng."}
+              </Motion.p>
 
-              {/* 2 Nút bấm chuẩn 52px đồng bộ KhoiRuocLe - Phương án 2: Chữ Than Củi Tương Phản AAA */}
-              <div className="pv-hero-actions">
-                <a href="#danh-sach-lop" className="pv-btn-primary">
-                  <span>Xem 3 Lớp Học</span>
-                  <ArrowRight size={18} aria-hidden="true" className="pv-btn-icon" />
-                </a>
-                <Link to="/tuyển-sinh#dang-ky" className="pv-btn-secondary">
-                  <Sparkles size={17} aria-hidden="true" className="pv-btn-icon" />
-                  <span>Đăng Ký Khóa Mới</span>
+              <Motion.div variants={heroItemVariants} className="khoi-hero-actions">
+                <Link to={enrollmentCTA.heroLink} className="khoi-btn-primary">
+                  <span>{enrollmentCTA.heroText}</span>
+                  <ArrowRight size={18} aria-hidden="true" />
                 </Link>
-              </div>
+                <a
+                  href="#danh-sach-lop"
+                  onClick={handleScrollToClasses}
+                  className="khoi-btn-secondary"
+                >
+                  <Clock size={17} aria-hidden="true" />
+                  <span>Xem {totalClasses} Lớp Học</span>
+                </a>
+              </Motion.div>
             </div>
 
-            {/* Cột phải: Khung ảnh 4:3 & Floating Badge uy tín */}
-            <div className="pv-hero-right">
-              <div className="pv-hero-image-card">
+            {/* Cột phải: Khung ảnh Hero & Floating Badge */}
+            <Motion.div variants={heroItemVariants}>
+              <div className="khoi-hero-image-card">
                 <img
-                  src="/images/khoiphungvu-anngai.jpg"
-                  alt="Thiếu nhi Khối Phụng Vụ Ngành Nhiệt Quang - Xứ đoàn Mẹ Mân Côi Giáo xứ An Ngãi"
-                  className="pv-hero-img"
+                  src={config?.hero?.image || asset("/images/khoiphungvu-anngai.jpg")}
+                  alt={config?.hero?.imageAlt || "Thiếu nhi Khối Phụng Vụ Giáo xứ An Ngãi"}
+                  className="khoi-hero-img"
                   loading="eager"
                   fetchPriority="high"
                 />
-                <div className="pv-floating-badge">
-                  <div className="pv-floating-badge-icon">
-                    <Church size={20} />
+                <div className="khoi-floating-badge">
+                  <div className="khoi-floating-badge-icon">
+                    <FloatingIcon size={20} aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="pv-floating-badge-title">
-                      100 Thiếu Nhi Ngành Nhiệt Quang
+                    <div className="khoi-floating-badge-title">
+                      {config?.hero?.floatingBadge?.title || "Phụng Sự Bàn Thờ & Đời Sống Phụng Vụ"}
                     </div>
-                    <div className="pv-floating-badge-sub">
-                      Xứ đoàn Mẹ Mân Côi · Giáo xứ An Ngãi
+                    <div className="khoi-floating-badge-sub">
+                      {config?.hero?.floatingBadge?.sub || "Xứ đoàn Mẹ Mân Côi · Giáo xứ An Ngãi"}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </Motion.div>
+          </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) Bento Chips */}
-          <div className="pv-overview-bar">
-            <div className="pv-overview-chip">
-              <span className="pv-chip-cat">Độ tuổi</span>
-              <span className="pv-chip-value">12 Tuổi</span>
-              <span className="pv-chip-label">Lớp 7 · Sinh năm {phungVuBirthYear}</span>
+          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
+          <Motion.div
+            className="khoi-overview-bar"
+            {...sectionRevealProps}
+          >
+            <div className="khoi-overview-chip">
+              <span className="khoi-chip-cat">Độ tuổi</span>
+              <span className="khoi-chip-value">12 Tuổi</span>
+              <span className="khoi-chip-label">Lớp 7 · Sinh năm {phungVuBirthYear}</span>
             </div>
-            <div className="pv-overview-chip">
-              <span className="pv-chip-cat">Quy mô</span>
-              <span className="pv-chip-value">3 Lớp Học</span>
-              <span className="pv-chip-label">100 Thiếu Nhi Niên Khóa</span>
+
+            <div className="khoi-overview-chip">
+              <span className="khoi-chip-cat">Quy mô</span>
+              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
+              <span className="khoi-chip-label">Phụng Vụ 1/1, 1/2, 1/3</span>
             </div>
-            <div className="pv-overview-chip">
-              <span className="pv-chip-cat">Lịch học</span>
-              <span className="pv-chip-value">Ca 1 Chúa Nhật</span>
-              <span className="pv-chip-label">Học 07:00 · Lễ 08:00</span>
+
+            <div className="khoi-overview-chip">
+              <span className="khoi-chip-cat">Đội ngũ</span>
+              <span className="khoi-chip-value">{totalTeachers} GLV</span>
+              <span className="khoi-chip-label">Đồng hành &amp; Huấn giáo</span>
             </div>
-            <div className="pv-overview-chip">
-              <span className="pv-chip-cat">Nhân sự</span>
-              <span className="pv-chip-value">8 GLV</span>
-              <span className="pv-chip-label">Huynh Trưởng &amp; Giáo Lý Viên</span>
+
+            <div className="khoi-overview-chip">
+              <span className="khoi-chip-cat">Lịch học</span>
+              <span className="khoi-chip-value">Chúa Nhật (Ca 1)</span>
+              <span className="khoi-chip-label">Học 07:00 · Lễ 08:00</span>
             </div>
+          </Motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 2: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="pv-journey-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>SƯ PHẠM ĐỨC TIN NGÀNH NHIỆT QUANG</span>
+            </div>
+            <h2 className="khoi-section-title">
+              6 Bước Trưởng Thành <em>Trong Phụng Vụ</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Hành trình sư phạm đức tin giúp các em 12 tuổi chuyển từ người tham dự thụ động thành người yêu mến và tích cực phụng sự bàn thờ thánh thiêng.
+            </p>
+          </Motion.div>
+
+          <div className="pv-journey-grid">
+            {faithJourneySteps.map((step) => {
+              const StepIcon = step.icon;
+              const PracticeIcon = step.practiceIcon;
+              return (
+                <Motion.div
+                  key={step.step}
+                  className={`pv-journey-card stage-step-${step.step}`}
+                  {...sectionRevealProps}
+                >
+                  <div>
+                    <div className="pv-journey-card-top">
+                      <div className="pv-journey-left-header">
+                        <div className="pv-journey-icon-wrap" aria-hidden="true">
+                          <StepIcon size={20} />
+                        </div>
+                        <span className="pv-journey-step-badge">CHẶNG {step.step}</span>
+                      </div>
+                      <span className="pv-journey-category-pill">{step.badge}</span>
+                    </div>
+
+                    <div className="pv-journey-sub">{step.sub}</div>
+                    <h3 className="pv-journey-title">{step.title}</h3>
+                    <p className="pv-journey-meaning">{step.meaning}</p>
+                  </div>
+
+                  <div className="pv-journey-practice-box">
+                    <div className="pv-practice-header">
+                      <PracticeIcon size={14} aria-hidden="true" />
+                      <span>{step.practiceLabel}</span>
+                    </div>
+                    <div className="pv-practice-content">{step.highlight}</div>
+                  </div>
+                </Motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 2: DANH SÁCH 3 LỚP HỌC THỰC TẾ (ĐỒNG BỘ 100% KHOIRUOCLE)
+          SECTION 3: KHO TÀNG HỘI THÁNH (TABS PHỤNG VỤ & BÍ TÍCH)
       ══════════════════════════════════════════════════════════════ */}
-      <section id="danh-sach-lop" className="pv-roster-section">
-        <div className="pv-shell">
-          <div className="pv-section-header">
-            <div className="pv-eyebrow">
-              <span className="pv-dot" />
-              <span>DANH SÁCH LỚP THỰC TẾ NIÊN KHÓA {academicYear}</span>
+      <section className="pv-liturgical-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>KHO TÀNG ĐỨC TIN HỘI THÁNH</span>
             </div>
-            <h2 className="pv-section-title">
-              Các Lớp Khối Phụng Vụ <em>Giáo xứ An Ngãi</em>
+            <h2 className="khoi-section-title">
+              Năm Phụng Vụ &amp; <em>Bảy Bí Tích Cứu Độ</em>
             </h2>
-            <p className="pv-section-desc">
-              Phòng học, thời gian và đội ngũ Huynh trưởng phụ trách 3 lớp học thuộc Ngành Nhiệt Quang.
+            <p className="khoi-section-desc">
+              Khám phá nhịp sống thiêng liêng của Giáo Hội qua các mùa phụng vụ sống động và 7 suối nguồn ân sủng nuôi dưỡng linh hồn Kitô hữu.
             </p>
+          </Motion.div>
+
+          {/* Accessible Tabs */}
+          <div className="pv-liturgical-tabs-wrapper">
+            <div
+              className="pv-liturgical-tabs"
+              role="tablist"
+              aria-label="Kho tàng Hội Thánh"
+              onKeyDown={handleTabKeyDown}
+            >
+              {tabList.map((tab) => {
+                const TabIcon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    id={`pv-tab-${tab.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`pv-panel-${tab.id}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    className={`pv-tab-btn ${isSelected ? "active" : ""}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <TabIcon size={16} aria-hidden="true" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Bộ lọc phân tầng khối học */}
-          <div className="pv-stage-filter-bar">
-            <button
-              type="button"
-              className={`pv-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
-              onClick={() => setSelectedGroup("all")}
-            >
-              Tất Cả<span className="hidden sm:inline"> 3 Lớp</span>
-            </button>
-            <button
-              type="button"
-              className={`pv-filter-pill ${selectedGroup === "pv-1-1" ? "active" : ""}`}
-              onClick={() => setSelectedGroup("pv-1-1")}
-            >
-              <span className="hidden sm:inline">Lớp </span>Phụng Vụ 1/1<span className="hidden sm:inline"> (Phòng P2)</span>
-            </button>
-            <button
-              type="button"
-              className={`pv-filter-pill ${selectedGroup === "pv-1-2" ? "active" : ""}`}
-              onClick={() => setSelectedGroup("pv-1-2")}
-            >
-              <span className="hidden sm:inline">Lớp </span>Phụng Vụ 1/2<span className="hidden sm:inline"> (Phòng P1)</span>
-            </button>
-            <button
-              type="button"
-              className={`pv-filter-pill ${selectedGroup === "pv-1-3" ? "active" : ""}`}
-              onClick={() => setSelectedGroup("pv-1-3")}
-            >
-              <span className="hidden sm:inline">Lớp </span>Phụng Vụ 1/3<span className="hidden sm:inline"> (Nhà hầm)</span>
-            </button>
+          {/* Tabpanel 1: Chu Kỳ Năm Phụng Vụ */}
+          <div
+            id="pv-panel-seasons"
+            role="tabpanel"
+            aria-labelledby="pv-tab-seasons"
+            hidden={activeTab !== "seasons"}
+          >
+            {activeTab === "seasons" && <KhoiPhungVuLiturgical />}
           </div>
 
-          {/* NHÓM LỚP: KHỐI PHỤNG VỤ */}
-          <div className="pv-group-block">
-            <div className="pv-stage-header">
-              <div className="pv-stage-title-wrap">
-                <span className="pv-stage-num">01</span>
+          {/* Tabpanel 2: Bảy Bí Tích Cứu Độ */}
+          <div
+            id="pv-panel-sacraments"
+            role="tabpanel"
+            aria-labelledby="pv-tab-sacraments"
+            hidden={activeTab !== "sacraments"}
+          >
+            {activeTab === "sacraments" && <KhoiPhungVuSacraments />}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 4: DANH SÁCH 3 LỚP HỌC & GIÁO LÝ VIÊN
+      ══════════════════════════════════════════════════════════════ */}
+      <section id="danh-sach-lop" tabIndex={-1} className="khoi-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>TỔ CHỨC LỚP HỌC NIÊN KHÓA {academicYear}</span>
+            </div>
+            <h2 className="khoi-section-title">
+              Danh Sách Lớp <em>Khối Phụng Vụ</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Cơ cấu {totalClasses} lớp học với đội ngũ {totalTeachers} Giáo lý viên tâm huyết đồng hành cùng các em trong giờ học giáo lý và phụng sự bàn thờ.
+            </p>
+          </Motion.div>
+
+          {/* KHỐI PHỤNG VỤ DUY NHẤT */}
+          <div className="khoi-group-block">
+            <div className="khoi-stage-header">
+              <div className="khoi-stage-title-wrap">
+                <span className="khoi-stage-num" aria-hidden="true">01</span>
                 <div>
-                  <h3 className="pv-stage-title">Khối Phụng Vụ</h3>
-                  <p className="pv-stage-subtitle">
-                    Lớp 7 · Huấn giáo Phụng vụ &amp; Rèn luyện tác phong người Kitô hữu trưởng thành
+                  <h3 className="khoi-stage-title">Khối Phụng Vụ</h3>
+                  <p className="khoi-stage-subtitle">
+                    Sống đời phụng vụ, Bí tích và tinh thần phụng sự
                   </p>
                 </div>
               </div>
-              <div className="pv-stage-pills">
-                <span className="pv-stage-pill">12 Tuổi</span>
-                <span className="pv-stage-pill">Sinh năm {phungVuBirthYear}</span>
-                <span className="pv-stage-pill">3 Lớp (P1, P2, Nhà hầm)</span>
+              <div className="khoi-stage-pills">
+                <span className="khoi-stage-pill">Lớp 7 · 12 tuổi</span>
+                <span className="khoi-stage-pill">Sinh năm {phungVuBirthYear}</span>
+                <span className="khoi-stage-pill">{totalClasses} lớp</span>
+                <span className="khoi-stage-pill">Ca 1 · 07:00–07:45</span>
               </div>
             </div>
 
-            <div className="pv-class-grid">
-              {filteredClasses.map((item) => (
-                <div key={item.id} className="pv-class-card card-pv">
-                  {/* TẦNG 1: Head - Badge mã lớp & Vị trí phòng */}
-                  <div className="pv-bento-card-head">
-                    <span className="pv-bento-class-code">
+            <div className="khoi-class-grid">
+              {classes.map((item) => (
+                <div
+                  key={item.id}
+                  className="khoi-class-card card-pv"
+                >
+                  {/* TẦNG 1: Head - Mã lớp & Vị trí phòng */}
+                  <div className="khoi-card-head">
+                    <span className="khoi-class-code">
                       {item.name.replace("Lớp Phụng Vụ ", "PV ")}
                     </span>
-                    <span className="pv-bento-room-badge">
+                    <span className="khoi-room-badge">
                       <MapPin size={13} aria-hidden="true" />
                       <span>{getRoomLocation(item.room)}</span>
                     </span>
@@ -699,15 +531,15 @@ export default function KhoiPhungVu() {
 
                   {/* TẦNG 2: Tiêu đề lớp & Dải chỉ số Sĩ số / Độ tuổi */}
                   <div>
-                    <h4 className="pv-bento-class-title">{item.name}</h4>
-                    <div className="pv-bento-stats-strip">
+                    <h4 className="khoi-class-title">{item.name}</h4>
+                    <div className="khoi-stats-strip">
                       {item.studentsCount && (
-                        <span className="pv-bento-stat-chip">
+                        <span className="khoi-stat-chip">
                           <Users size={13} aria-hidden="true" />
                           <span>Sĩ số: <strong>{item.studentsCount} em</strong></span>
                         </span>
                       )}
-                      <span className="pv-bento-stat-chip">
+                      <span className="khoi-stat-chip">
                         <Calendar size={13} aria-hidden="true" />
                         <span>Độ tuổi: <strong>{item.ageText} ({item.birthYear})</strong></span>
                       </span>
@@ -715,33 +547,33 @@ export default function KhoiPhungVu() {
                   </div>
 
                   {/* TẦNG 3: Đội ngũ GLV Phụ trách */}
-                  <div className="pv-bento-teacher-box">
-                    <div className="pv-bento-teacher-label">
+                  <div className="khoi-teacher-box">
+                    <div className="khoi-teacher-label">
                       <ShieldCheck size={13} aria-hidden="true" />
                       <span>GLV Phụ trách ({item.teachers.length})</span>
                     </div>
-                    <div className="pv-bento-teacher-pills">
-                      {item.teachers.map((t, idx) => (
-                        <span key={idx} className="pv-bento-teacher-pill">
+                    <div className="khoi-teacher-pills">
+                      {item.teachers.map((t) => (
+                        <span key={`${item.id}-${t}`} className="khoi-teacher-pill">
                           {formatTeacherName(t)}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  {/* TẦNG 4: Trọng tâm huấn giáo phụng vụ */}
-                  <div className="pv-bento-focus-box">
-                    <div className="pv-bento-focus-badge">{item.levelBadge}</div>
-                    <p className="pv-bento-focus-desc">{item.focus}</p>
+                  {/* TẦNG 4: Trọng tâm huấn giáo */}
+                  <div className="khoi-focus-box">
+                    <div className="khoi-focus-badge">{item.levelBadge}</div>
+                    <p className="khoi-focus-desc">{item.focus}</p>
                   </div>
 
-                  {/* TẦNG 5: Footer - Giờ học & Trạng thái nề nếp */}
-                  <div className="pv-bento-card-foot">
-                    <span className="pv-bento-time">
+                  {/* TẦNG 5: Footer - Giờ học & Trạng thái */}
+                  <div className="khoi-card-foot">
+                    <span className="khoi-card-time">
                       <Clock size={13} aria-hidden="true" />
-                      <span>{item.time} (Ca 1)</span>
+                      <span>{item.time} ({formatShiftName(item.ca)})</span>
                     </span>
-                    <span className="pv-bento-status">
+                    <span className="khoi-card-status">
                       ● {item.status}
                     </span>
                   </div>
@@ -753,318 +585,29 @@ export default function KhoiPhungVu() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 3: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN TRỰC QUAN (ĐỒNG BỘ KHOIRUOCLE)
+          SECTION 5: TIMELINE CHÚA NHẬT (CA 1)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-journey-section">
-        <div className="pv-shell">
-          <div className="pv-section-header">
-            <div className="pv-eyebrow">
-              <span className="pv-dot" />
-              <span>SƯ PHẠM ĐỨC TIN NGÀNH NHIỆT QUANG</span>
+      <section className="khoi-section khoi-timeline-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>THỜI GIAN BIỂU CHÚA NHẬT ({timelineData.shiftName})</span>
             </div>
-            <h2 className="pv-section-title">
-              Hành Trình Khám Phá &amp; <em>Cử Hành Phụng Vụ</em>
-            </h2>
-            <p className="pv-section-desc">
-              Chương trình huấn giáo 6 chặng chuyển hóa từ hiểu biết các cử hành thánh thiêng đến ý thức hiệp lễ và nhiệt thành phụng sự bàn thờ Chúa.
-            </p>
-          </div>
-
-          <div className="pv-journey-grid">
-            {faithJourneySteps.map((card, idx) => {
-              const StepIcon = card.icon;
-              const PracticeIcon = card.practiceIcon;
-              return (
-                <div
-                  key={idx}
-                  className={`pv-journey-card stage-step-${card.step}`}
-                >
-                  <div>
-                    <div className="pv-journey-card-top">
-                      <div className="pv-journey-left-header">
-                        <div className="pv-journey-icon-wrap">
-                          <StepIcon size={22} aria-hidden="true" />
-                        </div>
-                        <div>
-                          <span className="pv-journey-step-badge">CHẶNG {card.step}</span>
-                        </div>
-                      </div>
-                      <span className="pv-journey-category-pill">{card.badge}</span>
-                    </div>
-
-                    <div className="pv-journey-card-body">
-                      <div className="pv-journey-sub">{card.sub}</div>
-                      <h3 className="pv-journey-title">{card.title}</h3>
-                      <p className="pv-journey-meaning">{card.meaning}</p>
-                    </div>
-                  </div>
-
-                  <div className="pv-journey-practice-box">
-                    <div className="pv-practice-header">
-                      <PracticeIcon size={14} aria-hidden="true" />
-                      <span>{card.practiceLabel}</span>
-                    </div>
-                    <div className="pv-practice-content">
-                      {card.highlight}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 3B: KHO TÀNG NĂM PHỤNG VỤ & BẢY BÍ TÍCH (TABS & BENTO)
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-liturgical-section">
-        <div className="pv-shell">
-          <div className="pv-section-header">
-            <div className="pv-eyebrow">
-              <span className="pv-dot"></span>
-              Kho tàng Hội Thánh
-            </div>
-            <h2 className="pv-section-title">
-              Năm Phụng Vụ <em>&amp; Bảy Bí Tích</em>
-            </h2>
-            <p className="pv-section-desc">
-              Khám phá nhịp sống thiêng liêng của Giáo Hội qua các mùa phụng vụ sống động và 7 suối nguồn ân sủng nuôi dưỡng linh hồn Kitô hữu.
-            </p>
-          </div>
-
-          {/* Tabs chuyển đổi trực quan chuẩn Accessibility & Mobile */}
-          <div className="pv-liturgical-tabs-wrapper">
-            <div className="pv-liturgical-tabs" role="tablist" aria-label="Kho tàng Hội Thánh">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === "seasons"}
-                className={`pv-tab-btn ${activeTab === "seasons" ? "active" : ""}`}
-                onClick={() => setActiveTab("seasons")}
-              >
-                <span aria-hidden="true">📅</span>
-                <span>Chu Kỳ Năm Phụng Vụ</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === "sacraments"}
-                className={`pv-tab-btn ${activeTab === "sacraments" ? "active" : ""}`}
-                onClick={() => setActiveTab("sacraments")}
-              >
-                <span aria-hidden="true">🕊️</span>
-                <span>Bảy Bí Tích Cứu Độ</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Tab 1: 3 Chu Kỳ Năm Phụng Vụ (7 Mùa) */}
-          {activeTab === "seasons" && (
-            <div className="pv-liturgical-content" role="tabpanel" aria-label="Chu Kỳ Năm Phụng Vụ">
-              {liturgicalCycles.map((cycle) => (
-                <div key={cycle.groupId} className="pv-group-block">
-                  <div className="pv-group-header">
-                    <div className="pv-group-title-wrap">
-                      <div className="pv-group-badge-line">
-                        <span className="pv-group-pill">{cycle.badge}</span>
-                        <span className="pv-group-subtitle">{cycle.groupSubtitle}</span>
-                      </div>
-                      <h3 className="pv-group-title">{cycle.groupTitle}</h3>
-                    </div>
-                    <p className="pv-group-desc">{cycle.groupDesc}</p>
-                  </div>
-
-                  <div className={cycle.gridType === "grid-3" ? "pv-cycle-grid-3" : "pv-cycle-grid-2"}>
-                    {cycle.seasons.map((season) => {
-                      const SeasonIcon = season.icon;
-                      return (
-                        <div
-                          key={season.id}
-                          className="pv-season-card"
-                          style={{
-                            "--season-ribbon": `var(--pv-lit-${season.colorKey})`,
-                            "--season-color-text": `var(--pv-lit-${season.colorKey}-text)`
-                          }}
-                        >
-                          <div className="pv-season-card-main">
-                            <div className="pv-season-top">
-                              <div className="pv-season-icon-wrap">
-                                <SeasonIcon className="pv-season-vector-icon" />
-                              </div>
-                              <span className="pv-season-color-badge">
-                                {season.colorBadge}
-                              </span>
-                            </div>
-
-                            <h4 className="pv-season-name">{season.season}</h4>
-                            <div className="pv-season-theme-pill">{season.theme}</div>
-
-                            <p className="pv-season-desc">{season.desc}</p>
-
-                            <div className="pv-season-scripture">
-                              <BookOpen className="pv-scripture-icon" size={14} aria-hidden="true" />
-                              <span className="pv-scripture-text">{season.scripture}</span>
-                            </div>
-                          </div>
-
-                          <div className="pv-season-micro-grid">
-                            <div className="pv-micro-card pv-micro-sign">
-                              <div className="pv-micro-header">
-                                <span className="pv-micro-tag">Dấu chỉ &amp; Nghi thức</span>
-                                <span className="pv-micro-subtitle">Biểu trưng Phụng vụ</span>
-                              </div>
-                              <p className="pv-micro-body">{season.sign}</p>
-                            </div>
-
-                            <div className="pv-micro-card pv-micro-action">
-                              <div className="pv-micro-header">
-                                <span className="pv-micro-tag">Thực hành Đức tin</span>
-                                <span className="pv-micro-subtitle">Đời sống Thiếu nhi</span>
-                              </div>
-                              <p className="pv-micro-body">{season.action}</p>
-                            </div>
-                          </div>
-
-                          <div className="pv-season-footer">
-                            <div className="pv-season-footer-item" title="Đỉnh cao cử hành của mùa">
-                              <Sparkles className="pv-footer-icon" size={13} aria-hidden="true" />
-                              <span className="pv-footer-text">
-                                <strong>Đỉnh cao:</strong> {season.culmination}
-                              </span>
-                            </div>
-                            <div className="pv-season-footer-item" title="Quy chuẩn Thánh ca phụng vụ">
-                              <Music className="pv-footer-icon" size={13} aria-hidden="true" />
-                              <span className="pv-footer-text">
-                                <strong>Thánh ca:</strong> {season.musicRule}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tab 2: 3 Nhóm Bảy Bí Tích Cứu Độ */}
-          {activeTab === "sacraments" && (
-            <div className="pv-liturgical-content" role="tabpanel" aria-label="Bảy Bí Tích Cứu Độ">
-              {sacramentGroups.map((group) => (
-                <div key={group.groupId} className="pv-group-block">
-                  <div className="pv-group-header">
-                    <div className="pv-group-title-wrap">
-                      <div className="pv-group-badge-line">
-                        <span className="pv-group-pill">{group.badge}</span>
-                        <span className="pv-group-subtitle">{group.groupSubtitle}</span>
-                      </div>
-                      <h3 className="pv-group-title">{group.groupTitle}</h3>
-                    </div>
-                    <p className="pv-group-desc">{group.groupDesc}</p>
-                  </div>
-
-                  <div className={group.gridType === "grid-3" ? "pv-sacrament-grid-3" : "pv-sacrament-grid-2"}>
-                    {group.sacraments.map((sacrament, sIdx) => {
-                      const SacramentIcon = sacrament.icon;
-                      return (
-                        <div
-                          key={sIdx}
-                          className="pv-sacrament-card"
-                          style={{
-                            "--sacrament-ribbon": `var(--pv-lit-${sacrament.colorKey})`,
-                            "--sacrament-color-text": `var(--pv-lit-${sacrament.colorKey}-text)`
-                          }}
-                        >
-                          <div className="pv-sacrament-card-main">
-                            <div className="pv-sacrament-top">
-                              <div className="pv-sacrament-icon-wrap">
-                                <SacramentIcon className="pv-sacrament-vector-icon" />
-                              </div>
-                              <span className="pv-sacrament-status-badge">
-                                {sacrament.statusBadge}
-                              </span>
-                            </div>
-
-                            <h4 className="pv-sacrament-name">{sacrament.name}</h4>
-                            <div className="pv-sacrament-type-tag">{sacrament.type}</div>
-
-                            <p className="pv-sacrament-short">{sacrament.short}</p>
-
-                            <div className="pv-sacrament-scripture">
-                              <BookOpen className="pv-scripture-icon" size={14} aria-hidden="true" />
-                              <span className="pv-scripture-text">{sacrament.scripture}</span>
-                            </div>
-                          </div>
-
-                          <div className="pv-sacrament-micro-grid">
-                            <div className="pv-micro-card pv-micro-sign">
-                              <div className="pv-micro-header">
-                                <span className="pv-micro-tag">Dấu chỉ hữu hình</span>
-                                <span className="pv-micro-subtitle">Chất thể &amp; Mô thức</span>
-                              </div>
-                              <p className="pv-micro-body">{sacrament.sign}</p>
-                            </div>
-
-                            <div className="pv-micro-card pv-micro-grace">
-                              <div className="pv-micro-header">
-                                <span className="pv-micro-tag">Ân sủng thiêng liêng</span>
-                                <span className="pv-micro-subtitle">Hiệu quả Bí tích</span>
-                              </div>
-                              <p className="pv-micro-body">{sacrament.grace}</p>
-                            </div>
-                          </div>
-
-                          <div className="pv-sacrament-footer">
-                            <div className="pv-sacrament-footer-item" title="Thừa tác viên cử hành">
-                              <User className="pv-footer-icon" size={13} aria-hidden="true" />
-                              <span className="pv-footer-text">
-                                <strong>Thừa tác:</strong> {sacrament.minister}
-                              </span>
-                            </div>
-                            <div className="pv-sacrament-footer-item" title="Hiệu quả ấn tín thiêng liêng">
-                              <ShieldCheck className="pv-footer-icon" size={13} aria-hidden="true" />
-                              <span className="pv-footer-text">
-                                <strong>Ấn tín:</strong> {sacrament.seal}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 4: TIMELINE COMPACT 4 BƯỚC NHỊP SỐNG CHÚA NHẬT
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-timeline-section">
-        <div className="pv-shell">
-          <div className="pv-section-header">
-            <div className="pv-eyebrow">
-              <span className="pv-dot" />
-              <span>THỜI GIAN BIỂU CHÚA NHẬT (CA 1)</span>
-            </div>
-            <h2 className="pv-section-title">
+            <h2 className="khoi-section-title">
               Nhịp Sống <em>Chúa Nhật</em>
             </h2>
-            <p className="pv-section-desc">
-              Lịch trình sinh hoạt sáng Chúa Nhật hàng tuần dành cho toàn bộ đoàn sinh Khối Phụng Vụ Giáo xứ An Ngãi.
+            <p className="khoi-section-desc">
+              Lịch trình sinh hoạt sáng Chúa Nhật hàng tuần dành cho đoàn sinh Khối Phụng Vụ Giáo xứ An Ngãi.
             </p>
-          </div>
+          </Motion.div>
 
-          {/* Thanh ray ngang tiến trình Stepper (Desktop >= 768px) */}
+          {/* Stepper track desktop */}
           <div className="pv-stepper-track" aria-hidden="true">
             <div className="pv-stepper-line" />
             <div className="pv-stepper-nodes">
               {timelineSteps.map((step, idx) => (
-                <div key={idx} className={`pv-stepper-col ${step.highlight ? "highlight" : ""}`}>
+                <div key={step.time} className={`pv-stepper-col ${step.highlight ? "highlight" : ""}`}>
                   <div className="pv-stepper-node">{idx + 1}</div>
                   <span className="pv-stepper-time">{step.time}</span>
                 </div>
@@ -1072,79 +615,70 @@ export default function KhoiPhungVu() {
             </div>
           </div>
 
-          {/* Lưới thẻ thời gian biểu (Mobile: Trục dọc, Desktop: 4 Cards) */}
-          <div className="pv-compact-timeline">
-            {timelineSteps.map((step, idx) => (
-              <React.Fragment key={idx}>
-                <div className={`pv-time-chip ${step.highlight ? "highlight" : ""}`}>
-                  <span className="pv-time-node" aria-hidden="true">{idx + 1}</span>
-                  <div className="pv-time-card">
-                    <div className="pv-time-header">
-                      <span className="pv-time-badge">{step.time}</span>
-                      {step.tag && (
-                        <span className="pv-time-tag">{step.tag}</span>
-                      )}
-                    </div>
-                    <div className="pv-time-content">
-                      <span className="pv-time-label">{step.label}</span>
-                      <span className="pv-time-sub">{step.sub}</span>
-                    </div>
-                  </div>
+          {/* Timeline compact grid */}
+          <div className="khoi-compact-timeline">
+            {timelineSteps.map((step) => (
+              <div key={step.time} className={`khoi-time-card ${step.highlight ? "highlight" : ""}`}>
+                <div className="khoi-time-header">
+                  <span className="khoi-time-badge">{step.time}</span>
+                  {step.tag && (
+                    <span className="khoi-time-tag">{step.tag}</span>
+                  )}
                 </div>
-                {idx < timelineSteps.length - 1 && (
-                  <span className="pv-time-arrow" aria-hidden="true">→</span>
-                )}
-              </React.Fragment>
+                <div>
+                  <div className="khoi-time-label">{step.label}</div>
+                  <p className="khoi-time-sub">{step.sub}</p>
+                </div>
+              </div>
             ))}
           </div>
 
-          <div className="pv-timeline-footer-note">
-            <ShieldCheck size={18} style={{ color: "var(--pv-accent-badge)", flexShrink: 0 }} aria-hidden="true" />
-            <span><strong>Lưu ý nề nếp:</strong> Phụ huynh vui lòng nhắc nhở các em đến đúng giờ tại sảnh Nhà Thờ và phòng học để bảo đảm an toàn nề nếp.</span>
+          <div className="khoi-timeline-note">
+            <ShieldCheck size={18} aria-hidden="true" className="khoi-timeline-note-icon" />
+            <span><strong>Lưu ý nề nếp:</strong> Phụ huynh vui lòng nhắc nhở các em đến đúng giờ (trước 06:45) tại sảnh Nhà Thờ và các phòng học Ca 1 để bảo đảm nề nếp.</span>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 5: HỘI THÁNH TẠI GIA & FAQ CẨM NANG PHỤ HUYNH
+          SECTION 6: GÓC PHỤ HUYNH & HỘI THÁNH TẠI GIA
       ══════════════════════════════════════════════════════════════ */}
-      <section id="dong-hanh" className="pv-family-section">
-        <div className="pv-shell">
-          <div className="pv-section-header">
-            <div className="pv-eyebrow">
-              <span className="pv-dot" />
+      <section id="dong-hanh" tabIndex={-1} className="khoi-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
               <span>GÓC PHỤ HUYNH &amp; HỘI THÁNH TẠI GIA</span>
             </div>
-            <h2 className="pv-section-title">
+            <h2 className="khoi-section-title">
               Đồng Hành Cùng Con <em>Trong Phụng Vụ</em>
             </h2>
-            <p className="pv-section-desc">
+            <p className="khoi-section-desc">
               Tuổi 12 là dấu mốc các em bước vào chiều sâu phụng vụ sau Bí tích Thêm Sức. Mái ấm gia đình chính là nơi nuôi dưỡng ngọn lửa sốt mến để con gắn bó bền chặt với Bàn Thờ Chúa.
             </p>
-          </div>
+          </Motion.div>
 
-          {/* Bento Family Hub (2 Cột: 3 Cột Trụ bên trái + Sanctuary Box bên phải) */}
-          <div className="pv-family-bento-grid">
+          <div className="khoi-family-bento-grid">
             {/* Cột trái: 3 Trụ cột hành động */}
-            <div className="pv-pillars-stack">
-              {familyPillars.map((item, idx) => {
+            <div className="khoi-pillars-stack">
+              {familyPillars.map((item) => {
                 const IconComp = item.icon;
                 return (
                   <div
-                    key={idx}
-                    className={`pv-pillar-card pillar-${item.key || (idx === 0 ? "green" : idx === 1 ? "purple" : "orange")}`}
+                    key={item.key}
+                    className="khoi-pillar-card"
                   >
-                    <div className="pv-pillar-top">
-                      <div className="pv-pillar-header-left">
-                        <div className="pv-pillar-icon-wrap">
+                    <div className="khoi-pillar-top">
+                      <div className="khoi-pillar-header-left">
+                        <div className="khoi-pillar-icon-wrap" aria-hidden="true">
                           <IconComp size={22} />
                         </div>
-                        <h4 className="pv-pillar-title">{item.title}</h4>
+                        <h3 className="khoi-pillar-title">{item.title}</h3>
                       </div>
-                      <span className="pv-pillar-badge">{item.badge}</span>
+                      <span className="khoi-pillar-badge">{item.badge}</span>
                     </div>
-                    <p className="pv-pillar-desc">{item.desc}</p>
-                    <div className="pv-pillar-action-tip">
+                    <p className="khoi-pillar-desc">{item.desc}</p>
+                    <div className="khoi-pillar-action-tip">
                       <strong>Gợi ý cha mẹ:</strong> {item.tip}
                     </div>
                   </div>
@@ -1152,45 +686,43 @@ export default function KhoiPhungVu() {
               })}
             </div>
 
-            {/* Cột phải: Sanctuary Box (Mái Ấm & Checklist) */}
-            <div className="pv-sanctuary-box">
+            {/* Cột phải: Sanctuary Box */}
+            <div className="khoi-sanctuary-box">
               <div>
-                <div className="pv-sanctuary-eyebrow">
+                <div className="khoi-eyebrow khoi-sanctuary-eyebrow">
                   <Sparkles size={14} aria-hidden="true" />
                   <span>{sanctuaryData.eyebrow}</span>
                 </div>
 
-                <div className="pv-sanctuary-quote-card">
-                  <div className="pv-sanctuary-quote-header">
-                    <Quote size={18} className="pv-sanctuary-quote-icon" aria-hidden="true" />
-                    <span className="pv-sanctuary-quote-author">{sanctuaryData.author}</span>
-                  </div>
-                  <blockquote className="pv-sanctuary-quote-text">
-                    {sanctuaryData.quote}
+                <div className="khoi-sanctuary-quote-wrap">
+                  <Quote size={18} className="khoi-sanctuary-quote-icon" aria-hidden="true" />
+                  <blockquote className="khoi-sanctuary-quote">
+                    "{sanctuaryData.quote}"
                   </blockquote>
+                  <span className="khoi-sanctuary-author">{sanctuaryData.author}</span>
                 </div>
 
-                <div className="pv-checklist-section-title">
-                  <CheckCircle2 size={16} aria-hidden="true" />
+                <div className="khoi-sanctuary-checklist-title">
+                  <CheckCircle2 size={16} className="khoi-sanctuary-checklist-icon" aria-hidden="true" />
                   <span>{sanctuaryData.checklistTitle}</span>
                 </div>
 
-                <ul className="pv-checklist-list">
-                  {sanctuaryData.checklist.map((chk, cIdx) => (
-                    <li key={cIdx} className="pv-checklist-item">
-                      <span className="pv-check-icon">✓</span>
+                <ul className="khoi-checklist-list">
+                  {sanctuaryData.checklist.map((chk) => (
+                    <li key={chk.label} className="khoi-checklist-item">
+                      <span className="khoi-check-icon" aria-hidden="true">✓</span>
                       <span><strong>{chk.label}:</strong> {chk.text}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="pv-support-note-box">
-                <div className="pv-support-note-text">
+              <div className="khoi-support-card">
+                <div className="khoi-support-info">
                   <strong>{sanctuaryData.supportTitle}</strong><br />
-                  {sanctuaryData.supportDesc}
+                  <span className="khoi-support-desc">{sanctuaryData.supportDesc}</span>
                 </div>
-                <Link to={sanctuaryData.supportBtnLink} className="pv-support-note-btn">
+                <Link to={sanctuaryData.supportBtnLink} className="khoi-btn-secondary khoi-support-btn">
                   <span>{sanctuaryData.supportBtnText}</span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
@@ -1198,43 +730,43 @@ export default function KhoiPhungVu() {
             </div>
           </div>
 
-          {/* FAQ Accordion Phụ Huynh */}
-          <div className="pv-faq-wrapper">
-            <div className="pv-faq-header">
-              <h3 className="pv-faq-title">
+          {/* FAQ Accordion */}
+          <Motion.div className="khoi-faq-wrapper" {...sectionRevealProps}>
+            <div className="khoi-faq-header">
+              <h3 className="khoi-faq-title">
                 Giải Đáp Thắc Mắc Phụ Huynh (FAQ)
               </h3>
-              <p className="pv-faq-desc">
+              <p className="khoi-faq-desc">
                 Các thông tin cần thiết về chương trình giáo lý sau Thêm Sức, sinh hoạt Ngành Nhiệt Quang và tác vụ lễ sinh.
               </p>
             </div>
 
-            <div className="pv-faq-list">
+            <div className="khoi-faq-list">
               {faqs.map((item, idx) => {
                 const isOpen = openFaq === idx;
                 const faqAnsId = `pv-faq-ans-${idx}`;
                 const padIdx = String(idx + 1).padStart(2, "0");
                 return (
-                  <div key={idx} className={`pv-faq-item ${isOpen ? "active" : ""}`}>
+                  <div key={item.q} className={`khoi-faq-item ${isOpen ? "active" : ""}`}>
                     <button
                       type="button"
-                      className="pv-faq-btn"
+                      className="khoi-faq-btn"
                       aria-expanded={isOpen}
                       aria-controls={faqAnsId}
                       onClick={() => setOpenFaq(isOpen ? null : idx)}
                     >
-                      <div className="pv-faq-question-wrap">
-                        <span className="pv-faq-q-badge">{padIdx}</span>
+                      <div className="khoi-faq-question-wrap">
+                        <span className="khoi-faq-q-badge">{padIdx}</span>
                         <span>{item.q}</span>
                       </div>
                       <ChevronDown
                         size={18}
                         aria-hidden="true"
-                        className="pv-faq-chevron"
+                        className="khoi-faq-chevron"
                       />
                     </button>
                     {isOpen && (
-                      <div id={faqAnsId} className="pv-faq-answer">
+                      <div id={faqAnsId} className="khoi-faq-answer">
                         <p>{item.a}</p>
                       </div>
                     )}
@@ -1242,52 +774,46 @@ export default function KhoiPhungVu() {
                 );
               })}
             </div>
-          </div>
+          </Motion.div>
 
-          {/* ══════════════════════════════════════════════════════════════
-              SECTION 6: CTA BANNER ĐĂNG KÝ TUYỂN SINH & LIÊN HỆ
-          ══════════════════════════════════════════════════════════════ */}
-          <div className="pv-cta-banner">
-            <div className="pv-cta-glow" aria-hidden="true" />
-
-            <div className="pv-cta-badge">
-              <span className="pv-cta-badge-icon" aria-hidden="true">🔥</span>
+          {/* CTA BANNER */}
+          <Motion.div className="khoi-cta-banner" {...sectionRevealProps}>
+            <div className="khoi-cta-badge">
+              <span aria-hidden="true">🔥</span>
               <span>NIÊN KHÓA {academicYear} · GIÁO XỨ AN NGÃI</span>
             </div>
 
-            <h3 className="pv-cta-title">
+            <h3 className="khoi-cta-title">
               Cùng Con Hiểu Sâu &amp; Yêu Mến Thánh Lễ
             </h3>
 
-            <p className="pv-cta-desc">
+            <p className="khoi-cta-desc">
               Tuổi 12 là dấu mốc các em bước vào chiều sâu phụng vụ sau Bí tích Thêm Sức. Xứ đoàn Mẹ Mân Côi kính mời quý phụ huynh đồng hành để các em hiểu sâu ý nghĩa Thánh Lễ, nhiệt tâm phụng sự bàn thờ Chúa và hăng say sống đức tin mỗi ngày.
             </p>
 
-            <div className="pv-cta-actions">
-              {/* Nút chính 52px chiếm vị trí nổi bật nhất */}
-              <Link to="/tuyển-sinh#dang-ky" className="pv-cta-primary-btn">
-                <Sparkles size={18} aria-hidden="true" className="pv-cta-sparkle" />
-                <span>Đăng Ký Khối Phụng Vụ</span>
-                <ArrowRight size={18} aria-hidden="true" className="pv-cta-arrow" />
+            <div className="khoi-cta-actions">
+              <Link to={enrollmentCTA.bannerLink} className="khoi-btn-primary">
+                <Sparkles size={18} aria-hidden="true" />
+                <span>{enrollmentCTA.bannerText}</span>
+                <ArrowRight size={18} aria-hidden="true" />
               </Link>
 
-              {/* 2 nút phụ hỗ trợ thanh lịch, đối xứng */}
-              <div className="pv-cta-secondary-group">
-                <Link to="/lịch-học" className="pv-cta-secondary-btn">
+              <div className="khoi-cta-secondary-group">
+                <Link to="/lịch-học" className="khoi-btn-secondary">
                   <Clock size={15} aria-hidden="true" />
                   <span>Xem Lịch Ca 1</span>
                 </Link>
-                <Link to="/liên-hệ" className="pv-cta-secondary-btn">
+                <Link to="/liên-hệ" className="khoi-btn-secondary">
                   <Church size={15} aria-hidden="true" />
                   <span>Liên Hệ Ban Giáo Lý</span>
                 </Link>
               </div>
             </div>
 
-            <div className="pv-cta-note">
-              <span>✦ Ghi danh trực tuyến thuận tiện · Ban Giáo lý sẽ liên hệ xác nhận và sắp xếp phòng học Ca 1.</span>
+            <div className="khoi-cta-note">
+              <span>{enrollmentCTA.note}</span>
             </div>
-          </div>
+          </Motion.div>
         </div>
       </section>
     </div>

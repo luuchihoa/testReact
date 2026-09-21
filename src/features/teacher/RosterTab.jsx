@@ -72,10 +72,10 @@ export default function RosterTab() {
                 <Users className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-[#293d32] dark:text-[#ecece0]">
-                Chọn học sinh để xem hồ sơ
+                Chọn giáo lý sinh để xem hồ sơ
               </h3>
-              <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] max-w-sm leading-relaxed">
-                Chọn một học sinh từ danh sách bên trái để xem và chỉnh sửa thông tin cá nhân, bảng điểm từng học kỳ và lịch sử điểm danh.
+              <p className="text-xs text-[#575e55] dark:text-[#b8c2b4] max-w-sm leading-relaxed">
+                Chọn một giáo lý sinh từ danh sách bên trái để xem và chỉnh sửa thông tin cá nhân, bảng điểm từng học kỳ và lịch sử điểm danh.
               </p>
             </Motion.div>
           )}

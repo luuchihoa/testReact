@@ -1,4 +1,5 @@
 import React from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
 
@@ -6,7 +7,7 @@ export default function OverviewCards({
   items, 
   className = "",
   accentBgClass = "bg-amber-100/50 dark:bg-stone-800",
-  accentTextClass = "text-amber-900 dark:text-amber-500",
+  accentTextClass = "text-amber-950 dark:text-amber-200",
   accentBorderClass = "border-amber-900/5 dark:border-amber-700/40"
 }) {
   const { fadeUp, vp } = usePageMotion();
@@ -24,13 +25,13 @@ export default function OverviewCards({
           {items.map((item, i) => {
             const Icon = item.icon;
             return (
-              <motion.div variants={fadeUp} custom={i * 0.1} key={i} className="flex-shrink-0 w-[240px] md:w-auto snap-center flex items-center gap-4 p-1 transition-all group">
+              <motion.div variants={fadeUp} custom={i * 0.1} key={i} className="flex-shrink-0 w-[240px] md:w-auto snap-center flex items-center gap-4 p-1 transition-[transform,opacity] group">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border flex-shrink-0 transition-transform duration-300 md:group-hover:scale-105 ${accentBgClass} ${accentBorderClass}`}>
                   <Icon className={`w-5 h-5 ${accentTextClass}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">{item.label}</p>
-                  <p className="text-[14px] font-bold text-amber-950 dark:text-amber-50 mt-0.5 truncate">{item.value}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#38433a] dark:text-stone-200">{item.label}</p>
+                  <p className="text-sm font-bold text-amber-950 dark:text-amber-50 mt-0.5 truncate">{item.value}</p>
                 </div>
               </motion.div>
             );

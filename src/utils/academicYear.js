@@ -32,7 +32,8 @@ export function getBirthYearByAge(age, academicStartYear = getAcademicYear().sta
 }
 
 /**
- * Hồ sơ niên khóa của Khối Chiên Con (Vườn Trẻ & Khai Tâm)
+ * Hồ sơ niên khóa của Khối Khai Tâm (Vườn Trẻ & Khai Tâm 1 – 2)
+ * Khăn Quàng: Khăn Xanh Lá Trơn (Xanh chuối non không viền - Phong trào HTDC)
  */
 // Hồ sơ lớp hiện có thuộc niên khóa 2026–2027. Chỉ cập nhật mốc này
 // cùng với danh sách giáo lý viên, sĩ số, lịch và trạng thái đã xác nhận.
@@ -155,16 +156,24 @@ export function getKhoiChienConData() {
   };
 }
 
-/**
- * Dữ liệu tự động tính toán thời gian thực cho Khối Rước Lễ (Ngành Ấu: Ấu Hùng – Ấu Dũng)
- * 5 Lớp học thực tế tại Giáo xứ An Ngãi
- */
-export function getKhoiRuocLeData(date = new Date()) {
-  const { startYear, endYear, academicYear, academicYearSpaced } = getAcademicYear(date);
+export const getKhoiKhaiTamData = getKhoiChienConData;
 
-  // Tính năm sinh chuẩn xác theo tuổi
-  const ruocLe1BirthYear = startYear - 8;   // 8 tuổi (Rước Lễ 1)
-  const ruocLe2BirthYear = startYear - 9;   // 9 tuổi (Rước Lễ 2)
+/**
+ * Hồ sơ niên khóa của Khối Rước Lễ (RLLĐ 1 & 2)
+ * Khăn Quàng: Khăn Xanh Lá Có Viền (Phong trào HTDC)
+ * Hồ sơ lớp hiện có thuộc niên khóa 2026–2027 đã công bố.
+ * Giữ cố định startYear = 2026 để bảo đảm danh sách 5 lớp, phòng học và Giáo lý viên
+ * không bị tự động đổi tuổi/năm sinh sai lệch khi ngày hệ thống thay đổi.
+ */
+export function getKhoiRuocLeData() {
+  const startYear = 2026;
+  const endYear = startYear + 1;
+  const academicYear = `${startYear}–${endYear}`;
+  const academicYearSpaced = `${startYear} – ${endYear}`;
+
+  // Tính năm sinh chuẩn xác theo tuổi niên khóa 2026–2027
+  const ruocLe1BirthYear = startYear - 8;   // 8 tuổi (Rước Lễ 1 -> Sinh 2018)
+  const ruocLe2BirthYear = startYear - 9;   // 9 tuổi (Rước Lễ 2 -> Sinh 2017)
 
   return {
     academicYear,
@@ -266,7 +275,7 @@ export function getKhoiRuocLeData(date = new Date()) {
         birthYear: ruocLe2BirthYear,
         teachers: ["C.Linh", "C.B.Hân"],
         room: "Phòng P5",
-        roomNote: "Phòng học lầu 1, trang bị đầy đủ bàn ghế chuẩn lứa tuổi",
+        roomNote: "Dãy tầng trệt, trang bị đầy đủ bàn ghế chuẩn lứa tuổi",
         studentsCount: 31,
         status: "Chuẩn bị Bí tích",
         time: "09:15 – 10:00",
@@ -278,11 +287,16 @@ export function getKhoiRuocLeData(date = new Date()) {
 }
 
 /**
- * Dữ liệu tự động tính toán thời gian thực cho Khối Thêm Sức (Ngành Kim Hoan: Kim Hùng – Hoan Dũng)
- * 6 Lớp học thực tế tại Giáo xứ An Ngãi
+ * Hồ sơ niên khóa của Khối Thêm Sức (Thêm Sức 1 & 2)
+ * Khăn Quàng: Khăn Vàng Có Viền (Cơ Kim Hoan - Phong trào HTDC)
+ * Hồ sơ lớp hiện có thuộc niên khóa 2026–2027. Chỉ cập nhật mốc này
+ * cùng với danh sách giáo lý viên, sĩ số, lịch và trạng thái đã xác nhận.
  */
-export function getKhoiThemSucData(date = new Date()) {
-  const { startYear, endYear, academicYear, academicYearSpaced } = getAcademicYear(date);
+export function getKhoiThemSucData() {
+  const startYear = 2026;
+  const endYear = startYear + 1;
+  const academicYear = `${startYear}–${endYear}`;
+  const academicYearSpaced = `${startYear} – ${endYear}`;
 
   // Tính năm sinh chuẩn xác theo tuổi
   const themSuc1BirthYear = startYear - 10;  // 10 tuổi (Thêm Sức 1)
@@ -419,11 +433,16 @@ export function getKhoiThemSucData(date = new Date()) {
 }
 
 /**
- * Dữ liệu tự động tính toán thời gian thực cho Khối Phụng Vụ (Ngành Nhiệt Quang: Nhiệt Hùng – Quang Dũng)
+ * Dữ liệu tự động tính toán thời gian thực cho Khối Phụng Vụ (Lớp 7)
+ * Khăn Quàng: Khăn Da Cam Có Viền (Cơ Nhiệt Quang - Phong trào HTDC)
  * 3 Lớp học thực tế tại Giáo xứ An Ngãi
+ * Hồ sơ lớp hiện có thuộc niên khóa 2026–2027. Chỉ cập nhật mốc này cùng danh sách lớp đã xác nhận.
  */
-export function getKhoiPhungVuData(date = new Date()) {
-  const { startYear, endYear, academicYear, academicYearSpaced } = getAcademicYear(date);
+export function getKhoiPhungVuData() {
+  const startYear = 2026;
+  const endYear = startYear + 1;
+  const academicYear = `${startYear}–${endYear}`;
+  const academicYearSpaced = `${startYear} – ${endYear}`;
 
   // Tính năm sinh chuẩn xác theo tuổi (Lớp 7 - 12 tuổi)
   const phungVuBirthYear = startYear - 12;
@@ -500,11 +519,16 @@ export function getKhoiPhungVuData(date = new Date()) {
 }
 
 /**
- * Dữ liệu tự động tính toán thời gian thực cho Khối Kinh Thánh (Ngành Nhiệt Quang: Nhiệt Hùng – Quang Dũng)
+ * Dữ liệu tự động tính toán thời gian thực cho Khối Kinh Thánh (Lớp 8 & 9)
+ * Khăn Quàng: Khăn Đỏ Có Viền (Cơ Chiến Chinh - Phong trào HTDC)
  * 6 Lớp học thực tế tại Giáo xứ An Ngãi (Kinh Thánh 1: Lớp 8; Kinh Thánh 2: Lớp 9)
+ * Hồ sơ lớp hiện có thuộc niên khóa 2026–2027. Chỉ cập nhật mốc này cùng danh sách lớp đã xác nhận.
  */
-export function getKhoiKinhThanhData(date = new Date()) {
-  const { startYear, endYear, academicYear, academicYearSpaced } = getAcademicYear(date);
+export function getKhoiKinhThanhData() {
+  const startYear = 2026;
+  const endYear = startYear + 1;
+  const academicYear = `${startYear}–${endYear}`;
+  const academicYearSpaced = `${startYear} – ${endYear}`;
 
   // Tính năm sinh chuẩn xác theo tuổi (KT 1: 13 tuổi, KT 2: 14 tuổi)
   const kinhThanh1BirthYear = startYear - 13;
@@ -641,11 +665,16 @@ export function getKhoiKinhThanhData(date = new Date()) {
 }
 
 /**
- * Dữ liệu tự động tính toán thời gian thực cho Khối Vào Đời (Ngành Chinh Chiến HTDC: Chiến Tâm – Chinh Dũng)
+ * Dữ liệu tự động tính toán thời gian thực cho Khối Vào Đời (Lớp 10 & 11)
+ * Khăn Quàng: Khăn Đỏ Có Viền (Cơ Chiến Chinh - Phong trào HTDC)
  * 5 Lớp học thực tế tại Giáo xứ An Ngãi (Vào Đời 1: 15 tuổi · Lớp 10; Vào Đời 2: 16 tuổi · Lớp 11)
+ * Hồ sơ lớp hiện có thuộc niên khóa 2026–2027. Chỉ cập nhật mốc này cùng danh sách lớp đã xác nhận.
  */
-export function getKhoiVaoDoiData(date = new Date()) {
-  const { startYear, endYear, academicYear, academicYearSpaced } = getAcademicYear(date);
+export function getKhoiVaoDoiData() {
+  const startYear = 2026;
+  const endYear = startYear + 1;
+  const academicYear = `${startYear}–${endYear}`;
+  const academicYearSpaced = `${startYear} – ${endYear}`;
 
   // Tính năm sinh chuẩn xác theo tuổi (Vào Đời 1: 15 tuổi, Vào Đời 2: 16 tuổi)
   const vaoDoi1BirthYear = startYear - 15;

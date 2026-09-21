@@ -244,7 +244,7 @@ export default function SummaryTab() {
   const handleExportPDF = async () => {
     if (exportingPdf) return;
     if (rows.length === 0) {
-      showToast("Lớp chưa có học sinh để xuất bảng tổng kết", "warning");
+      showToast("Lớp chưa có giáo lý sinh để xuất bảng tổng kết", "warning");
       return;
     }
     setExportingPdf(true);
@@ -315,7 +315,7 @@ export default function SummaryTab() {
             </h1>
             
             {/* Meta row: Niên khóa + Sĩ số (Desktop: đầy đủ | Mobile: siêu gọn 1 hàng) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium whitespace-nowrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium whitespace-nowrap">
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Niên khóa</span>
@@ -326,8 +326,8 @@ export default function SummaryTab() {
                 <Users className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Sĩ số:</span>
                 <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{rows.length}</strong>
-                <span className="hidden sm:inline">học sinh</span>
-                <span className="sm:hidden">HS</span>
+                <span className="hidden sm:inline">Giáo lý sinh</span>
+                <span className="sm:hidden">GLS</span>
               </span>
             </div>
           </div>
@@ -444,7 +444,7 @@ export default function SummaryTab() {
                 }`}
               >
                 <span>👥 Tất cả</span>
-                <span className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] ${
+                <span className={`px-1.5 py-0.5 rounded-md font-mono text-xs ${
                   filterHocLuc === "all" ? "bg-white/20 dark:bg-black/20" : "bg-stone-500/10"
                 }`}>{rows.length}</span>
               </button>
@@ -475,7 +475,7 @@ export default function SummaryTab() {
                 }`}
               >
                 <span>🟢 Giỏi</span>
-                <span className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] font-bold ${filterHocLuc === "gioi" ? "bg-white text-emerald-800" : "bg-emerald-500/10"}`}>{classStats.gioi}</span>
+                <span className={`px-1.5 py-0.5 rounded-md font-mono text-xs font-bold ${filterHocLuc === "gioi" ? "bg-white text-emerald-800" : "bg-emerald-500/10"}`}>{classStats.gioi}</span>
               </button>
 
               {/* Khá */}
@@ -489,7 +489,7 @@ export default function SummaryTab() {
                 }`}
               >
                 <span>🔵 Khá</span>
-                <span className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] font-bold ${filterHocLuc === "kha" ? "bg-white text-blue-800" : "bg-blue-500/10"}`}>{classStats.kha}</span>
+                <span className={`px-1.5 py-0.5 rounded-md font-mono text-xs font-bold ${filterHocLuc === "kha" ? "bg-white text-blue-800" : "bg-blue-500/10"}`}>{classStats.kha}</span>
               </button>
 
               {/* Trung bình */}
@@ -503,7 +503,7 @@ export default function SummaryTab() {
                 }`}
               >
                 <span>🟡 TB</span>
-                <span className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] font-bold ${filterHocLuc === "tb" ? "bg-white text-amber-800" : "bg-amber-500/10"}`}>{classStats.tb}</span>
+                <span className={`px-1.5 py-0.5 rounded-md font-mono text-xs font-bold ${filterHocLuc === "tb" ? "bg-white text-amber-800" : "bg-amber-500/10"}`}>{classStats.tb}</span>
               </button>
 
               {/* Cần lưu ý */}
@@ -517,8 +517,11 @@ export default function SummaryTab() {
                       : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30"
                   }`}
                 >
-                  <span>⚠️ Cần lưu ý</span>
-                  <span className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] font-bold ${filterHocLuc === "warning" ? "bg-white text-red-800" : "bg-red-500/20"}`}>{classStats.warningCount}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Cần lưu ý</span>
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded-md font-mono text-xs font-bold ${filterHocLuc === "warning" ? "bg-white text-red-800" : "bg-red-500/20"}`}>{classStats.warningCount}</span>
                 </button>
               )}
             </div>
@@ -538,13 +541,13 @@ export default function SummaryTab() {
                   ? "bg-[#314e3e]/10 dark:bg-[#d6b883]/15 border-[#314e3e] dark:border-[#d6b883] ring-2 ring-[#314e3e]/20 dark:ring-[#d6b883]/20 shadow-xs"
                   : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] hover:border-[#314e3e]/40 dark:hover:border-[#d6b883]/40 shadow-xs hover:scale-[1.01]"
               }`}
-              title="Xem tất cả học sinh trong lớp"
+              title="Xem tất cả giáo lý sinh trong lớp"
             >
               <div className="w-8 h-8 rounded-lg bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] flex items-center justify-center shrink-0">
                 <Users className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac] truncate">Tất cả (Sĩ số)</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] truncate">Tất cả (Sĩ số)</p>
                 <p className="text-base font-bold text-[#293d32] dark:text-[#ecece0] font-mono">{rows.length}</p>
               </div>
             </div>
@@ -566,7 +569,7 @@ export default function SummaryTab() {
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac] truncate">ĐTB Lớp</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] truncate">ĐTB Lớp</p>
                 <p className="text-base font-bold text-emerald-700 dark:text-emerald-400 font-mono">{classStats.average}</p>
               </div>
             </div>
@@ -583,13 +586,13 @@ export default function SummaryTab() {
                   ? "bg-emerald-500/15 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
                   : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] hover:border-emerald-500/40 shadow-xs hover:scale-[1.01]"
               }`}
-              title="Lọc danh sách học sinh Giỏi"
+              title="Lọc danh sách giáo lý sinh Giỏi"
             >
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs">
                 G
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">Giỏi</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">Giỏi</p>
                 <p className="text-base font-bold text-emerald-700 dark:text-emerald-400 font-mono">{classStats.gioi}</p>
               </div>
             </div>
@@ -606,13 +609,13 @@ export default function SummaryTab() {
                   ? "bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/20 shadow-xs"
                   : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] hover:border-blue-500/40 shadow-xs hover:scale-[1.01]"
               }`}
-              title="Lọc danh sách học sinh Khá"
+              title="Lọc danh sách giáo lý sinh Khá"
             >
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 font-bold text-xs">
                 K
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">Khá</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">Khá</p>
                 <p className="text-base font-bold text-blue-700 dark:text-blue-400 font-mono">{classStats.kha}</p>
               </div>
             </div>
@@ -629,13 +632,13 @@ export default function SummaryTab() {
                   ? "bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/20 shadow-xs"
                   : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] hover:border-amber-500/40 shadow-xs hover:scale-[1.01]"
               }`}
-              title="Lọc danh sách học sinh Trung bình"
+              title="Lọc danh sách giáo lý sinh Trung bình"
             >
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-xs">
                 TB
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">Trung bình</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">Trung bình</p>
                 <p className="text-base font-bold text-amber-700 dark:text-amber-400 font-mono">{classStats.tb}</p>
               </div>
             </div>
@@ -652,13 +655,13 @@ export default function SummaryTab() {
                   ? "bg-red-500/15 border-red-500 ring-2 ring-red-500/20 shadow-xs"
                   : "bg-[#fffefa] dark:bg-[#1e2821] border-[#dedfd4] dark:border-[#354237] hover:border-red-500/40 shadow-xs hover:scale-[1.01]"
               }`}
-              title="Lọc học sinh cần lưu ý (ĐTB < 5 hoặc vắng > 3 buổi)"
+              title="Lọc giáo lý sinh cần lưu ý (ĐTB < 5 hoặc vắng > 3 buổi)"
             >
               <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-700 dark:text-red-400 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">Cần lưu ý</p>
+                <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">Cần lưu ý</p>
                 <p className={`text-base font-bold font-mono ${classStats.warningCount > 0 ? "text-red-700 dark:text-red-400" : "text-[#293d32] dark:text-[#ecece0]"}`}>
                   {classStats.warningCount}
                 </p>
@@ -671,7 +674,7 @@ export default function SummaryTab() {
       {/* 3. VISUAL DISTRIBUTION BAR */}
       {!loading && rows.length > 0 && distribution && (
         <div className="px-3.5 sm:px-6 py-2 bg-[#faf8f3]/90 dark:bg-[#151c18]/90 border-b border-[#dedfd4] dark:border-[#354237] tk-no-print">
-          <div className="flex items-center justify-between gap-1.5 mb-1 text-[11px] sm:text-xs">
+          <div className="flex items-center justify-between gap-1.5 mb-1 text-xs">
             <div className="flex items-center gap-1.5 text-[#454f46] dark:text-[#b8c2b4] truncate">
               <span className="font-semibold">📊 Cơ cấu:</span>
               <span className="text-[#293d32] dark:text-[#ecece0] font-medium truncate">
@@ -684,8 +687,9 @@ export default function SummaryTab() {
               </span>
             </div>
             {classStats.warningCount > 0 && (
-              <span className="text-[10px] sm:text-[11px] font-bold text-red-700 dark:text-red-400 bg-red-500/10 px-1.5 sm:px-2 py-0.5 rounded-full border border-red-500/20 shrink-0">
-                ⚠️ {classStats.warningCount} em
+              <span className="text-xs font-bold text-red-700 dark:text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 shrink-0 inline-flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                <span>{classStats.warningCount} GLS</span>
               </span>
             )}
           </div>
@@ -696,28 +700,28 @@ export default function SummaryTab() {
               <div 
                 style={{ width: `${distribution.pGioi}%` }} 
                 className="bg-emerald-500 h-full transition-all duration-300"
-                title={`Giỏi: ${classStats.gioi} em (${distribution.pGioi}%)`}
+                title={`Giỏi: ${classStats.gioi} GLS (${distribution.pGioi}%)`}
               />
             )}
             {distribution.pKha > 0 && (
               <div 
                 style={{ width: `${distribution.pKha}%` }} 
                 className="bg-blue-500 h-full transition-all duration-300"
-                title={`Khá: ${classStats.kha} em (${distribution.pKha}%)`}
+                title={`Khá: ${classStats.kha} GLS (${distribution.pKha}%)`}
               />
             )}
             {distribution.pTb > 0 && (
               <div 
                 style={{ width: `${distribution.pTb}%` }} 
                 className="bg-amber-500 h-full transition-all duration-300"
-                title={`Trung bình: ${classStats.tb} em (${distribution.pTb}%)`}
+                title={`Trung bình: ${classStats.tb} GLS (${distribution.pTb}%)`}
               />
             )}
             {distribution.pYeuKem > 0 && (
               <div 
                 style={{ width: `${distribution.pYeuKem}%` }} 
                 className="bg-red-500 h-full transition-all duration-300"
-                title={`Yếu/Kém: ${classStats.yeuKem} em (${distribution.pYeuKem}%)`}
+                title={`Yếu/Kém: ${classStats.yeuKem} GLS (${distribution.pYeuKem}%)`}
               />
             )}
           </div>
@@ -790,11 +794,11 @@ export default function SummaryTab() {
 
       {/* Thông tin số lượng hiển thị khi lọc */}
       {(filterHocLuc !== "all" || searchQuery) && !loading && (
-        <div className="px-3.5 sm:px-6 py-1.5 bg-stone-100/70 dark:bg-stone-800/40 text-[11px] sm:text-xs text-[#575e55] dark:text-[#b0b9ac] flex items-center justify-between border-b border-[#dedfd4] dark:border-[#354237] tk-no-print">
+        <div className="px-3.5 sm:px-6 py-1.5 bg-stone-100/70 dark:bg-stone-800/40 text-xs text-[#575e55] dark:text-[#b0b9ac] flex items-center justify-between border-b border-[#dedfd4] dark:border-[#354237] tk-no-print">
           <span className="flex items-center gap-1.5 flex-wrap">
             <Filter className="w-3 h-3 text-[#314e3e] dark:text-[#d6b883]" />
             <span>
-              Hiển thị <strong>{filteredAndSortedRows.length}</strong> / {rows.length} HS
+              Hiển thị <strong>{filteredAndSortedRows.length}</strong> / {rows.length} GLS
             </span>
             {filterHocLuc !== "all" && (
               <span className="font-semibold text-[#314e3e] dark:text-[#d6b883]">
@@ -805,7 +809,7 @@ export default function SummaryTab() {
         </div>
       )}
 
-      {/* 5. BODY CONTENT (KHU VỰC 4: THẺ HỌC SINH MOBILE THÔNG MINH & BẢNG DESKTOP) */}
+      {/* 5. BODY CONTENT (KHU VỰC 4: THẺ GIÁO LÝ SINH MOBILE THÔNG MINH & BẢNG DESKTOP) */}
       <AnimatePresence mode="wait">
         {loading ? (
           <Motion.div 
@@ -865,7 +869,7 @@ export default function SummaryTab() {
                           }`}>
                             <img src={r.student.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <span className="absolute -bottom-1 -right-1 w-4 h-4 flex items-center justify-center bg-[#293d32] dark:bg-[#ecece0] text-white dark:text-[#19251d] text-[9px] font-bold rounded-full font-mono">
+                          <span className="absolute -bottom-1 -right-1 min-w-[18px] min-h-[18px] px-1 flex items-center justify-center bg-[#293d32] dark:bg-[#ecece0] text-white dark:text-[#19251d] text-xs font-bold rounded-full font-mono">
                             {idx + 1}
                           </span>
                         </div>
@@ -875,18 +879,18 @@ export default function SummaryTab() {
                             {r.student.tenThanh && <span className="font-semibold text-[#927140] dark:text-[#d4b47d] font-serif mr-1">{r.student.tenThanh}</span>}
                             {r.student.hoTen || r.student.username}
                           </div>
-                          <div className="mt-0.5 flex items-center gap-1.5">
+                          <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                             {isCaNam && kq ? (
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.2 rounded-full border ${kq.bg} ${kq.color} text-[10px] font-bold uppercase tracking-wider`}>
-                                <kq.Icon className="w-2.5 h-2.5" /> {kq.label}
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${kq.bg} ${kq.color} text-xs font-bold uppercase tracking-wider`}>
+                                <kq.Icon className="w-3 h-3" /> {kq.label}
                               </span>
                             ) : r.warning ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
-                                <AlertTriangle className="w-2.5 h-2.5" /> Cần theo dõi
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
+                                <AlertTriangle className="w-3 h-3" /> Cần theo dõi
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-                                <CheckCircle2 className="w-2.5 h-2.5" /> Ổn định
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                                <CheckCircle2 className="w-3 h-3" /> Ổn định
                               </span>
                             )}
                           </div>
@@ -895,7 +899,7 @@ export default function SummaryTab() {
 
                       {/* Vị thứ cho Cả năm */}
                       {isCaNam && r.viThu != null && (
-                        <div className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold font-mono border ${
+                        <div className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold font-mono border ${
                           r.viThu === 1
                             ? "bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 shadow-2xs"
                             : r.viThu === 2
@@ -913,20 +917,20 @@ export default function SummaryTab() {
                     </div>
                     
                     {/* Bảng Điểm & Thanh tiến độ Mini */}
-                    <div className="bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-2 border border-[#dedfd4] dark:border-[#354237]">
+                    <div className="bg-[#faf8f3] dark:bg-[#151c18] rounded-xl p-2.5 border border-[#dedfd4] dark:border-[#354237]">
                       <div className={`grid ${isCaNam ? "grid-cols-2" : "grid-cols-3"} gap-1.5 text-center`}>
                         {!isCaNam && (
                           <div>
-                            <p className="text-[9.5px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">ĐIỂM THI</p>
+                            <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">ĐIỂM THI</p>
                             <p className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] font-mono">{r.diemThi ?? "—"}</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-[9.5px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">ĐIỂM TB</p>
+                          <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">ĐIỂM TB</p>
                           <p className={`text-xs font-bold font-mono ${tbColorClass(r.diemTB)}`}>{r.diemTB ?? "—"}</p>
                         </div>
                         <div>
-                          <p className="text-[9.5px] font-semibold text-[#575e55] dark:text-[#b0b9ac]">HỌC LỰC</p>
+                          <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">HỌC LỰC</p>
                           <p className="text-xs font-semibold text-[#293d32] dark:text-[#ecece0]">{r.hocLuc || "—"}</p>
                         </div>
                       </div>
@@ -949,15 +953,15 @@ export default function SummaryTab() {
                     {/* Hạnh kiểm & Chuyên cần */}
                     <div className="grid grid-cols-3 gap-2 text-center mt-2 text-xs text-[#575e55] dark:text-[#b0b9ac]">
                       <div>
-                        <span className="block text-[9.5px] font-medium">Hạnh kiểm</span>
+                        <span className="block text-xs font-medium">Hạnh kiểm</span>
                         <span className="font-semibold text-[#293d32] dark:text-[#ecece0]">{r.hanhKiem || "—"}</span>
                       </div>
                       <div>
-                        <span className="block text-[9.5px] font-medium">Vắng CP</span>
+                        <span className="block text-xs font-medium">Vắng CP</span>
                         <span className="font-semibold text-[#293d32] dark:text-[#ecece0] font-mono">{r.vangCoPhep || 0}</span>
                       </div>
                       <div>
-                        <span className="block text-[9.5px] font-medium">Vắng KP</span>
+                        <span className="block text-xs font-medium">Vắng KP</span>
                         <span className={`font-semibold font-mono ${r.vangKhongPhep > 0 ? "text-red-600 dark:text-red-400 font-bold" : "text-[#293d32] dark:text-[#ecece0]"}`}>
                           {r.vangKhongPhep || 0}
                         </span>
@@ -969,7 +973,7 @@ export default function SummaryTab() {
 
               {filteredAndSortedRows.length === 0 && (
                 <div className="text-center py-12 px-4 bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237]">
-                  <p className="text-sm font-semibold text-[#293d32] dark:text-[#ecece0]">Không tìm thấy học sinh phù hợp</p>
+                  <p className="text-sm font-semibold text-[#293d32] dark:text-[#ecece0]">Không tìm thấy giáo lý sinh phù hợp</p>
                   <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1">Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác.</p>
                   <button
                     type="button"
@@ -978,9 +982,9 @@ export default function SummaryTab() {
                       setSearchQuery("");
                       setSortBy("default");
                     }}
-                    className="mt-3 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] cursor-pointer"
+                    className="mt-3 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] cursor-pointer"
                   >
-                    Xem tất cả học sinh
+                    Xem tất cả giáo lý sinh
                   </button>
                 </div>
               )}
@@ -989,10 +993,10 @@ export default function SummaryTab() {
             {/* DESKTOP TABLE VIEW */}
             <div className="hidden md:block print:block overflow-auto max-h-[72vh] print:max-h-none" data-lenis-prevent>
               <table className="w-full text-sm border-collapse min-w-[800px] bg-[#fffefa] dark:bg-[#1e2821]">
-                <thead className="sticky top-0 z-30 bg-[#faf8f3] dark:bg-[#151c18] border-b border-[#dedfd4] dark:border-[#354237] text-[11px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+                <thead className="sticky top-0 z-30 bg-[#faf8f3] dark:bg-[#151c18] border-b border-[#dedfd4] dark:border-[#354237] text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
                   <tr>
                     <th className="text-center px-3 py-3.5 sticky left-0 bg-[#faf8f3] dark:bg-[#151c18] z-40 w-12 border-r border-[#dedfd4] dark:border-[#354237]">STT</th>
-                    <th className="text-left px-4 py-3.5 sticky left-12 bg-[#faf8f3] dark:bg-[#151c18] z-40 border-r border-[#dedfd4] dark:border-[#354237] normal-case tracking-normal shadow-xs">Họ &amp; Tên Học Sinh</th>
+                    <th className="text-left px-4 py-3.5 sticky left-12 bg-[#faf8f3] dark:bg-[#151c18] z-40 border-r border-[#dedfd4] dark:border-[#354237] normal-case tracking-normal shadow-xs">Họ &amp; Tên Giáo Lý Sinh</th>
                     {!isCaNam && <th className="text-center px-3 py-3.5 border-r border-[#dedfd4] dark:border-[#354237]">Điểm Thi</th>}
                     <th 
                       onClick={() => setSortBy(prev => prev === "dtb_desc" ? "dtb_asc" : "dtb_desc")} 
@@ -1112,15 +1116,15 @@ export default function SummaryTab() {
                         )}
                         <td className="px-3 py-3 text-center print:hidden">
                           {isCaNam && kq ? (
-                            <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full border ${kq.bg} ${kq.color} text-[11px] font-bold uppercase tracking-wider whitespace-nowrap`}>
+                            <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full border ${kq.bg} ${kq.color} text-xs font-bold uppercase tracking-wider whitespace-nowrap`}>
                               <kq.Icon className="w-3 h-3" /> {kq.label}
                             </span>
                           ) : isWarn ? (
-                            <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
                               <AlertTriangle className="w-3 h-3" /> Cần theo dõi
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
                               <CheckCircle2 className="w-3 h-3" /> Ổn định
                             </span>
                           )}
@@ -1131,7 +1135,7 @@ export default function SummaryTab() {
                   {filteredAndSortedRows.length === 0 && (
                     <tr>
                       <td colSpan={isCaNam ? 10 : 9} className="text-center text-sm text-[#575e55] dark:text-[#b0b9ac] py-12">
-                        Không tìm thấy học sinh phù hợp với bộ lọc.
+                        Không tìm thấy giáo lý sinh phù hợp với bộ lọc.
                       </td>
                     </tr>
                   )}
@@ -1224,10 +1228,10 @@ function ExportSummaryModal({
                   <Download className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 id="export-modal-title" className="text-[15px] sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
+                  <h3 id="export-modal-title" className="text-base font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
                     Xuất bảng tổng kết
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-[#575e55] dark:text-[#b0b9ac] mt-0.5 truncate">
+                  <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-0.5 truncate">
                     Lớp {lop} • {termLabel} • {namHoc}
                   </p>
                 </div>
@@ -1267,7 +1271,7 @@ function ExportSummaryModal({
                     <h4 className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] truncate">
                       File Excel (.xlsx)
                     </h4>
-                    <p className="text-[11px] text-[#575e55] dark:text-[#b0b9ac] truncate">
+                    <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] truncate">
                       Bảng điểm chi tiết &amp; chuyên cần
                     </p>
                   </div>
@@ -1304,7 +1308,7 @@ function ExportSummaryModal({
                     <h4 className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] truncate">
                       Bản in PDF (.pdf)
                     </h4>
-                    <p className="text-[11px] text-[#575e55] dark:text-[#b0b9ac] truncate">
+                    <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] truncate">
                       Trang in A4 kèm khung chữ ký
                     </p>
                   </div>
@@ -1324,8 +1328,8 @@ function ExportSummaryModal({
 
             {/* Footer */}
             <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#dedfd4] dark:border-[#354237]">
-              <span className="text-[11px] text-[#575e55] dark:text-[#b0b9ac]">
-                Sĩ số: <strong>{totalStudents}</strong> học sinh
+              <span className="text-xs text-[#575e55] dark:text-[#b0b9ac]">
+                Sĩ số: <strong>{totalStudents}</strong> Giáo lý sinh
               </span>
               <button
                 type="button"

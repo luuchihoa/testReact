@@ -68,11 +68,11 @@ export function ProfileTab({ handleLogout, user, setUser, setIsAnyChange, isAnyC
   const handleSave = async () => {
     if (!user.username) return;
     if (isLocked) {
-      showToast("Hồ sơ học sinh đã bị khóa chỉnh sửa", "warning");
+      showToast("Hồ sơ Giáo lý sinh đã bị khóa chỉnh sửa", "warning");
       return;
     }
 
-    // Nếu là học sinh: mở modal xác nhận gửi yêu cầu phê duyệt
+    // Nếu là Giáo lý sinh: mở modal xác nhận gửi yêu cầu phê duyệt
     if (isStudent) {
       const diffs = getProfileChangesDiff(safeParse("user", {}) || {}, user);
       if (diffs.length === 0) {
@@ -102,7 +102,7 @@ export function ProfileTab({ handleLogout, user, setUser, setIsAnyChange, isAnyC
 
   const handleConfirmSubmitRequest = async () => {
     if (isLocked) {
-      showToast("Hồ sơ học sinh đã bị khóa chỉnh sửa", "warning");
+      showToast("Hồ sơ Giáo lý sinh đã bị khóa chỉnh sửa", "warning");
       return;
     }
     setIsSaving(true);
@@ -227,7 +227,7 @@ export function ProfileTab({ handleLogout, user, setUser, setIsAnyChange, isAnyC
 
   return (
     <div>
-      {/* BANNER YÊU CẦU CHỜ DUYỆT (Dành cho Học sinh) */}
+      {/* BANNER YÊU CẦU CHỜ DUYỆT (Dành cho Giáo lý sinh) */}
       <AnimatePresence>
         {!loadingPending && pendingRequest && isStudent && (
           <Motion.div
@@ -428,7 +428,7 @@ export function ProfileTab({ handleLogout, user, setUser, setIsAnyChange, isAnyC
         document.body
       )}
 
-      {/* MODAL XÁC NHẬN GỬI YÊU CẦU DUYỆT (Dành cho Học sinh) */}
+      {/* MODAL XÁC NHẬN GỬI YÊU CẦU DUYỆT (Dành cho Giáo lý sinh) */}
       <AnimatePresence>
         {isOpenConfirmModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">

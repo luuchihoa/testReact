@@ -253,8 +253,8 @@ function YearSelector({ namHoc, availableYears, changeYear, collapsed }) {
         aria-expanded={openYear}
         className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border font-bold transition-all duration-150 active:scale-[0.97] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e]/40 ${
           collapsed 
-            ? "h-8 px-2.5 sm:px-3 text-xs" 
-            : "h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs sm:text-[13px]"
+            ? "min-h-[32px] px-2.5 sm:px-3 text-xs" 
+            : "min-h-[32px] sm:min-h-[36px] px-2.5 sm:px-3.5 text-xs sm:text-sm"
         } ${
           openYear
             ? "border-transparent bg-[#314e3e] dark:bg-[#d6b883] text-white dark:text-[#19251d] shadow-sm"
@@ -278,7 +278,7 @@ function YearSelector({ namHoc, availableYears, changeYear, collapsed }) {
             role="listbox"
             className="absolute right-0 z-[100] mt-1.5 min-w-[200px] sm:min-w-[220px] rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] backdrop-blur-xl p-1.5 shadow-xl overflow-hidden flex flex-col"
           >
-            <div className="px-3 py-2 border-b border-[#dedfd4]/60 dark:border-[#354237]/60 flex items-center justify-between text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
+            <div className="px-3 py-2 border-b border-[#dedfd4]/60 dark:border-[#354237]/60 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac]">
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d]" />
                 <span>Chọn Niên Khóa</span>
@@ -296,7 +296,7 @@ function YearSelector({ namHoc, availableYears, changeYear, collapsed }) {
                     role="option"
                     aria-selected={active}
                     onClick={() => { changeYear(nh); setOpenYear(false); }}
-                    className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs sm:text-[13px] font-bold text-left transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-left transition-colors cursor-pointer ${
                       active 
                         ? "bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 text-[#314e3e] dark:text-[#d4b47d]" 
                         : "text-[#293d32] dark:text-[#ecece0] hover:bg-[#faf8f3] dark:hover:bg-[#151c18]"
@@ -305,7 +305,7 @@ function YearSelector({ namHoc, availableYears, changeYear, collapsed }) {
                     <span className="flex items-center gap-2 font-mono">
                       <span>{nh}</span>
                       {isCurr && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] sm:text-[9.5px] font-extrabold uppercase tracking-wide bg-emerald-600 text-white font-sans">
+                        <span className="px-1.5 py-0.2 rounded text-xs font-extrabold uppercase tracking-wide bg-emerald-600 text-white font-sans">
                           Hiện tại
                         </span>
                       )}
@@ -354,7 +354,7 @@ const TeacherHeader = React.memo(
               
               <div className="min-w-0">
                 <p
-                  className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#314e3e] dark:text-[#d4b47d] overflow-hidden transition-all duration-300 ease-out ${
+                  className={`text-xs font-bold uppercase tracking-wider text-[#314e3e] dark:text-[#d4b47d] overflow-hidden transition-all duration-300 ease-out ${
                     collapsed ? "max-h-0 opacity-0 hidden sm:block" : "max-h-4 opacity-100"
                   }`}
                 >
@@ -395,7 +395,7 @@ const TeacherHeader = React.memo(
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `tk-tab relative flex-1 sm:flex-initial inline-flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 min-h-[46px] sm:min-h-[40px] rounded-xl text-[11px] sm:text-[13px] font-semibold transition-all duration-200 ${
+                    `tk-tab relative flex-1 sm:flex-initial inline-flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 min-h-[46px] sm:min-h-[40px] rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                       isActive
                         ? "text-[#314e3e] dark:text-[#d6b883] font-bold bg-[#fffefa] dark:bg-[#1e2821] shadow-xs border border-[#dedfd4] dark:border-[#354237] sm:border-transparent sm:bg-transparent sm:shadow-none"
                         : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] bg-[#faf8f3]/60 dark:bg-[#151c18]/60 border border-[#dedfd4]/40 dark:border-[#354237]/40 sm:border-transparent sm:bg-transparent hover:bg-stone-500/5"
@@ -422,7 +422,7 @@ const TeacherHeader = React.memo(
                         <span className="sm:hidden leading-tight whitespace-nowrap font-bold">{shortLabel}</span>
                         <span className="hidden sm:inline whitespace-nowrap">{label}</span>
                         {to === "học-sinh" && pendingRequestsCount > 0 && (
-                          <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-amber-950 font-black text-[10px] animate-pulse shrink-0">
+                          <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-amber-950 font-black text-xs animate-pulse shrink-0">
                             {pendingRequestsCount}
                           </span>
                         )}

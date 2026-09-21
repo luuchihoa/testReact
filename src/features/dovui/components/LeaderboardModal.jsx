@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { APPLE_EASE } from "../utils/dovuiUtils.js";
 
@@ -138,6 +138,24 @@ const LeaderboardModal = memo(({
   const top10List = leaderboard.slice(0, 10);
   const isMyRankOutsideTop10 = myRank && myRank > 10;
 
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -145,6 +163,9 @@ const LeaderboardModal = memo(({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xl"
       data-lenis-prevent
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="leaderboard-modal-title"
     >
       <motion.div
         initial={{ scale: 0.92, y: 24, opacity: 0 }}
@@ -163,7 +184,7 @@ const LeaderboardModal = memo(({
               🏆
             </div>
             <div>
-              <h3 className="text-[17px] font-black font-serif tracking-tight text-amber-950 dark:text-amber-50 m-0 uppercase leading-none">
+              <h3 id="leaderboard-modal-title" className="text-[17px] font-black font-serif tracking-tight text-amber-950 dark:text-amber-50 m-0 uppercase leading-none">
                 BẢNG XẾP HẠNG
               </h3>
             </div>

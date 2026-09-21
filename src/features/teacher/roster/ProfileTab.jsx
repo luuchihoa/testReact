@@ -83,7 +83,7 @@ function ProfileTab({ student, onSaved, showToast }) {
       const payload = denormalizeStudent(form);
       await updateStudentProfile(student.username, payload);
 
-      showToast("Đã lưu thông tin hồ sơ học sinh!", "success");
+      showToast("Đã lưu thông tin hồ sơ giáo lý sinh!", "success");
       setDirty(false);
       onSaved({ ...form });
     } catch (err) {
@@ -147,7 +147,7 @@ function ProfileTab({ student, onSaved, showToast }) {
               const Icon = f.icon;
               return (
                 <div key={f.field} className="flex flex-col gap-1.5 bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-2xl p-3.5 shadow-xs">
-                  <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5">
+                  <label htmlFor={inputId} className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5">
                     {typeof Icon === "function" || (typeof Icon === "object" && Icon !== null) ? (
                       <Icon className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883]" strokeWidth={2} />
                     ) : (
@@ -160,7 +160,7 @@ function ProfileTab({ student, onSaved, showToast }) {
                       id={inputId}
                       value={form[f.field] || ""}
                       onChange={(e) => handleFieldChange(f.field, e.target.value)}
-                      className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] px-3 py-2 text-[13.5px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-all cursor-pointer shadow-2xs"
+                      className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-all cursor-pointer shadow-2xs"
                     >
                       <option value="">— Chưa chọn —</option>
                       {f.options.map((o) => (
@@ -175,7 +175,7 @@ function ProfileTab({ student, onSaved, showToast }) {
                       max={f.type === "date" ? new Date().toISOString().slice(0, 10) : undefined}
                       onChange={(e) => handleFieldChange(f.field, e.target.value)}
                       placeholder={`Nhập ${f.label.toLowerCase()}…`}
-                      className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] px-3 py-2 text-[13.5px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-all shadow-2xs placeholder:text-[#454f46]/40 dark:placeholder:text-[#b8c2b4]/40"
+                      className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-all shadow-2xs placeholder:text-[#454f46]/40 dark:placeholder:text-[#b8c2b4]/40"
                     />
                   )}
                 </div>
@@ -211,13 +211,13 @@ function ProfileTab({ student, onSaved, showToast }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="text-xs sm:text-sm font-bold text-[#293d32] dark:text-[#ecece0]">
-                Hồ sơ học sinh đã khóa chỉnh sửa
+                Hồ sơ giáo lý sinh đã khóa chỉnh sửa
               </h4>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] border border-[#927140]/30 dark:border-[#d4b47d]/30">
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] border border-[#927140]/30 dark:border-[#d4b47d]/30">
                 Chỉ xem
               </span>
             </div>
-            <p className="text-[12px] text-[#454f46] dark:text-[#b8c2b4] mt-1 leading-relaxed">
+            <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] mt-1 leading-relaxed">
               Dữ liệu hộ tịch và bí tích đã được chốt lưu trữ chính thức
               {student?.profileLockedBy ? ` bởi ${student.profileLockedBy}` : ""}
               {student?.profileLockedAt ? ` (${transferDateForView(student.profileLockedAt)})` : ""}. 
@@ -282,13 +282,13 @@ function ProfileTab({ student, onSaved, showToast }) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-[100] flex justify-center pointer-events-none px-3 sm:px-4"
+              className="fixed bottom-3 sm:bottom-6 pb-[max(0.5rem,env(safe-area-inset-bottom))] left-0 right-0 z-[100] flex justify-center pointer-events-none px-3 sm:px-4"
             >
               <div className="pointer-events-auto bg-[#fffefa]/95 dark:bg-[#1e2821]/95 backdrop-blur-md rounded-2xl sm:rounded-full shadow-xl border border-[#dedfd4] dark:border-[#354237] px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 max-w-md w-auto">
                 <span className="text-xs font-semibold text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-[#d6b883] animate-pulse shrink-0" />
                   <span className="hidden sm:inline">Có thay đổi chưa lưu</span>
-                  <span className="sm:hidden text-[11px] font-bold">Chưa lưu</span>
+                  <span className="sm:hidden text-xs font-bold">Chưa lưu</span>
                 </span>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">

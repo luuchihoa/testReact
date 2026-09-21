@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
 
 // Hằng số Easing chuyển động chuẩn hệ thống Apple HIG
 const APPLE_EASE = [0.16, 1, 0.3, 1];
 
-export default function QuoteSlider({ quotes, accentTextClass = "text-amber-800/60 dark:text-amber-400/60" }) {
+export default function QuoteSlider({ quotes, accentTextClass = "text-[#61461f] dark:text-[#f3dfba]" }) {
   const { fadeUp, vp } = usePageMotion();
   const [cur, setCur] = useState(0);
   const [dir, setDir] = useState(1);
@@ -66,12 +67,12 @@ export default function QuoteSlider({ quotes, accentTextClass = "text-amber-800/
             className="w-full bg-white/90 dark:bg-[#1C1917]/90 border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] sm:rounded-[32px] shadow-sm p-6 sm:p-10 flex flex-col justify-center text-center backdrop-blur-xl touch-pan-y"
           >
             {/* Sử dụng font Serif uy nghi, đồng bộ tone màu Amber/Stone */}
-            <p className="text-amber-950 dark:text-amber-50 text-[17px] sm:text-[20px] md:text-[22px] font-medium font-serif leading-relaxed italic select-none">
+            <p className="text-amber-950 dark:text-amber-50 text-base sm:text-lg md:text-xl font-medium font-serif leading-relaxed italic select-none">
               "{quotes[cur].text}"
             </p>
             
             {/* Nhãn nguồn trích dẫn dạng in hoa cách điệu */}
-            <p className={`text-[10px] sm:text-[11px] font-bold tracking-widest uppercase mt-6 sm:mt-8 select-none ${accentTextClass}`}>
+            <p className={`text-xs font-bold tracking-widest uppercase mt-6 sm:mt-8 select-none ${accentTextClass}`}>
               — {quotes[cur].src} —
             </p>
           </motion.div>

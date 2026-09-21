@@ -1,285 +1,418 @@
-import React, { useState, useEffect } from "react";
-import { Flame, ExternalLink, BookOpen } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
-import { usePageMotion } from "../../hooks/usePageMotion.js";
-import BibleQuickNavigatorModal from "../../components/bible/BibleQuickNavigatorModal.jsx";
-import { ALL_BIBLE_BOOKS } from "../../data/bibleBooksData.js";
+import React from "react";
+import {
+  BookOpen,
+  Scroll,
+  Cross,
+  Clock,
+  Globe,
+  Sparkles,
+  Church,
+  Bookmark,
+  Compass,
+  Sun,
+  ExternalLink,
+  Eye,
+  HelpCircle,
+  Check,
+  Heart,
+  Flame
+} from "lucide-react";
 
-const APPLE_EASE = [0.16, 1, 0.3, 1];
-const MOBILE_BREAKPOINT = 768;
-
-export default function KhoiKinhThanhTestament({ items }) {
-  const [selectedTestament, setSelectedTestament] = useState(null);
-  const [navModalBookId, setNavModalBookId] = useState(null);
-  const [isNavModalOpen, setIsNavModalOpen] = useState(false);
-  const { fadeUp, vp, lenis } = usePageMotion();
-  const sheetY = useMotionValue(0);
-
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
-  );
-
-  const findMatchedBook = (name, abbr) => {
-    const cleanAbbr = (abbr || "").toLowerCase().replace(/\s+/g, "");
-    const cleanName = (name || "").toLowerCase().trim();
-    return ALL_BIBLE_BOOKS.find(b => 
-      b.short.toLowerCase().replace(/\s+/g, "") === cleanAbbr ||
-      b.name.toLowerCase() === cleanName ||
-      cleanName.includes(b.name.toLowerCase())
-    );
-  };
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleDragEnd = (event, info) => {
-    if (info.offset.y > 100 || info.velocity.y > 500) {
-      setSelectedTestament(null);
-    } else {
-      sheetY.set(0);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedTestament) {
-      sheetY.set(0);
-      document.body.style.overflow = "hidden";
-      lenis?.stop();
-    } else {
-      document.body.style.overflow = "";
-      lenis?.start();
-    }
-    return () => {
-      document.body.style.overflow = "";
-      lenis?.start();
-    };
-  }, [selectedTestament, sheetY, lenis]);
-
-  useEffect(() => {
-    if (!selectedTestament) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") setSelectedTestament(null);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedTestament]);
-
+export default function KhoiKinhThanhTestament({
+  activeTab = "bible",
+  onOpenBookModal
+}) {
   return (
-    <>
-      <section id="noi-dung" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
-      <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-        <p className="text-[11px] font-bold tracking-widest uppercase text-red-600 dark:text-red-400 ml-1">Chương trình</p>
-        <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Hành trình qua 73 quyển sách</h2>
-        <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
-          Từ "Khởi đầu Thiên Chúa sáng tạo" đến lời kết "Amen" của sách Khải Huyền — một dòng chảy cứu độ trải dài hàng ngàn năm lịch sử, được các em khám phá theo từng quyển sách.
-        </p>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-        {items.map((t, i) => (
-          <motion.div
-            key={t.id}
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={vp}
-            custom={i * 0.05}
-            whileHover={{ y: -6, scale: 1.01 }}
-            onClick={() => setSelectedTestament(t)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedTestament(t); }}
-            className={`group text-left rounded-[24px] sm:rounded-[32px] border p-6 sm:p-8 flex flex-col justify-between min-h-[220px] cursor-pointer transition-all duration-300 hover:shadow-xl active:scale-[0.98] ${t.color}`}
-          >
+    <div className="kt-tabpanel-container">
+      {/* ── TAB 1: 73 SÁCH KINH THÁNH ── */}
+      {activeTab === "bible" && (
+        <div id="panel-bible" className="kt-bible-two-col" role="tabpanel" aria-labelledby="kt-tab-bible">
+          {/* Cựu Ước */}
+          <div className="kt-testament-box kt-testament-old">
             <div>
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[28px] select-none filter drop-shadow-sm">{t.icon}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${t.badge}`}>
-                  {t.count}
+              <div className="kt-testament-top">
+                <div className="kt-testament-icon-wrap" aria-hidden="true">
+                  <Scroll size={24} />
+                </div>
+                <span className="kt-testament-badge">46 QUYỂN SÁCH · CỰU ƯỚC</span>
+              </div>
+
+              <h3 className="kt-testament-title">Cựu Ước (Vetus Testamentum)</h3>
+
+              <div className="kt-testament-meta-bar">
+                <span className="kt-meta-chip">
+                  <Clock size={14} aria-hidden="true" />
+                  <span>Thời gian: <strong>Thế kỷ X – I TCN</strong></span>
+                </span>
+                <span className="kt-meta-chip">
+                  <Globe size={14} aria-hidden="true" />
+                  <span>Ngôn ngữ: <strong>Hípri &amp; A-ram</strong></span>
                 </span>
               </div>
-              <h3 className="text-[20px] sm:text-[22px] font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors mb-2.5">{t.name}</h3>
-              <p className="text-[14px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium line-clamp-3">{t.desc}</p>
-            </div>
-            
-            <div className="mt-6 space-y-4">
-              <div className="w-full bg-stone-100 dark:bg-stone-800/50 rounded-full h-1.5 overflow-hidden flex-shrink-0">
-                <div 
-                  className={`h-full rounded-full ${t.id === 'cuu-uoc' ? 'bg-red-500 w-[63%]' : 'bg-rose-500 w-[37%]'}`} 
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[11px] font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full ${t.badge}`}>
-                  Xem danh mục
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={vp}
-          custom={0.3}
-          className="relative overflow-hidden rounded-[24px] sm:rounded-[32px] border border-red-900/10 dark:border-red-100/10 p-6 sm:p-8 flex flex-col justify-between bg-gradient-to-br from-red-50/80 to-white dark:from-red-900/20 dark:to-[#1C1917] text-left sm:col-span-2 shadow-sm"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-red-400/10 dark:bg-red-500/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="flex items-start gap-4 relative z-10">
-            <div className="w-10 h-10 rounded-full bg-red-100/80 dark:bg-red-900/40 border border-red-200/50 dark:border-red-800/30 flex items-center justify-center flex-shrink-0 shadow-sm mt-1">
-              <Flame className="w-5 h-5 text-red-600 dark:text-red-400 fill-current drop-shadow-sm" />
-            </div>
-            <p className="text-[17px] sm:text-[19px] font-semibold font-serif leading-relaxed italic text-amber-950 dark:text-amber-50 mt-1">
-              "Lời Thiên Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường con đi."
-            </p>
-          </div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-red-700/80 dark:text-red-400/80 mt-6 text-right relative z-10">
-            — Thánh Vịnh 119,105
-          </p>
-        </motion.div>
-      </div>
-    </section>
+              <p className="kt-testament-desc">
+                Giao ước tình yêu giữa Thiên Chúa và dân tuyển chọn Israel, chuẩn bị con đường cứu độ muôn dân và tiên báo về ngày Đấng Mêsia giáng trần.
+              </p>
 
-      <AnimatePresence>
-        {selectedTestament && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: APPLE_EASE }}
-              onClick={() => setSelectedTestament(null)}
-              className="fixed inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm z-50 pointer-events-auto"
-            />
-
-            <div data-lenis-prevent className="fixed inset-0 z-[60] flex flex-col justify-end md:items-center md:justify-center p-0 md:p-4 pointer-events-none">
-              <motion.div
-                role="dialog"
-                aria-modal="true"
-                drag={isMobile ? "y" : false}
-                dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={{ top: 0.1, bottom: 0.6 }}
-                onDragEnd={handleDragEnd}
-                style={{ y: sheetY }}
-                initial={{ opacity: 0, y: isMobile ? "100%" : 30, scale: isMobile ? 1 : 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: isMobile ? "100%" : 20, scale: isMobile ? 1 : 0.95 }}
-                transition={{ duration: 0.4, ease: APPLE_EASE }}
-                className="relative w-full md:max-w-xl pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-center pt-4 pb-2 md:hidden touch-none active:cursor-grabbing">
-                  <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
-                </div>
-
-                <div className="flex items-center gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl select-none ${selectedTestament.iconBg}`}>
-                    {selectedTestament.icon}
+              <div className="kt-testament-groups">
+                {/* Ngũ Thư */}
+                <div className="kt-bento-group-item kt-bento-ngu-thu">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <BookOpen size={14} aria-hidden="true" />
+                      <span>Ngũ Thư (Torah)</span>
+                    </span>
+                    <span className="kt-group-count">5 Quyển</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-extrabold font-serif text-[22px] tracking-tight leading-tight truncate">{selectedTestament.name}</h3>
-                    <p className="text-[12px] text-red-600 dark:text-red-400 font-bold uppercase tracking-widest mt-1.5">{selectedTestament.count}</p>
-                  </div>
-                </div>
-
-                <div className="p-6 sm:p-8 pt-4 space-y-6 overflow-y-auto overscroll-contain flex-1 text-left">
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
-                      Ý nghĩa cốt lõi
-                    </h4>
-                    <p className="text-[14.5px] leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
-                      {selectedTestament.desc}
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {selectedTestament.books.map((group, j) => (
-                      <div key={j} className="bg-stone-50/50 dark:bg-stone-900/30 p-4 sm:p-5 rounded-2xl border border-amber-900/5 dark:border-amber-100/5">
-                        <h4 className="text-[12px] font-bold uppercase tracking-widest text-amber-900 dark:text-amber-500 mb-3.5">
-                          {group.group}
-                        </h4>
-                        <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-3">
-                          {group.items.map((item, k) => {
-                            const match = item.match(/^(.*?)\s*\((.*?)\)$/);
-                            const name = match ? match[1] : item;
-                            const abbr = match ? match[2] : "";
-                            const matchedBook = findMatchedBook(name, abbr);
-                            
-                            return (
-                              <button
-                                key={k}
-                                type="button"
-                                onClick={() => {
-                                  if (matchedBook) {
-                                    setNavModalBookId(matchedBook.id);
-                                  } else {
-                                    setNavModalBookId(null);
-                                  }
-                                  setIsNavModalOpen(true);
-                                }}
-                                className="group/book flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-[#1C1917] border border-stone-200/60 dark:border-stone-700/60 hover:border-amber-600/50 dark:hover:border-amber-400/50 hover:bg-amber-50/60 dark:hover:bg-amber-950/30 shadow-sm text-[13px] font-medium text-stone-700 dark:text-stone-300 transition-all active:scale-95 text-left cursor-pointer"
-                                title={matchedBook ? `Xem ${matchedBook.chapters} chương sách ${name}` : name}
-                              >
-                                <span className="truncate group-hover/book:text-amber-900 dark:group-hover/book:text-amber-200 font-medium">{name}</span>
-                                {abbr && (
-                                  <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded group-hover/book:bg-amber-100 dark:group-hover/book:bg-amber-900/50 group-hover/book:text-amber-800 dark:group-hover/book:text-amber-300 transition-colors">
-                                    {abbr}
-                                  </span>
-                                )}
-                                <ExternalLink className="w-3 h-3 text-stone-400 dark:text-stone-500 group-hover/book:text-amber-600 dark:group-hover/book:text-amber-400 transition-colors ml-0.5 opacity-70 group-hover/book:opacity-100" />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Banner CTA ở cuối Modal */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 dark:bg-stone-900/60 border border-amber-900/10 dark:border-amber-100/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h5 className="text-[13.5px] font-bold text-amber-950 dark:text-amber-50">
-                          Đọc Kinh Thánh trọn bộ trực tuyến
-                        </h5>
-                        <p className="text-[12px] text-stone-500 dark:text-stone-400 font-medium">
-                          Bản dịch CGKPV với tính năng nghe audio từng chương và ghi chú.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNavModalBookId(null);
-                        setIsNavModalOpen(true);
-                      }}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-900 dark:bg-amber-100 text-amber-50 dark:text-amber-950 text-[12px] font-bold hover:bg-amber-800 dark:hover:bg-white shadow-sm transition-all flex-shrink-0 active:scale-95"
-                    >
-                      <span>Tra cứu 73 cuốn</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("st")} className="kt-book-pill">
+                      <strong>St</strong> Sáng Thế
+                    </button>
+                    <button type="button" onClick={() => onOpenBookModal?.("xh")} className="kt-book-pill">
+                      <strong>Xh</strong> Xuất Hành
+                    </button>
+                    <button type="button" onClick={() => onOpenBookModal?.("lv")} className="kt-book-pill">
+                      <strong>Lv</strong> Lê-vi
+                    </button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ds")} className="kt-book-pill">
+                      <strong>Ds</strong> Dân Số
+                    </button>
+                    <button type="button" onClick={() => onOpenBookModal?.("dnl")} className="kt-book-pill">
+                      <strong>Đnl</strong> Đệ Nhị Luật
                     </button>
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
 
-      {/* Modal Tra Cứu & Đọc Kinh Thánh */}
-      <BibleQuickNavigatorModal
-        isOpen={isNavModalOpen}
-        onClose={() => setIsNavModalOpen(false)}
-        initialBookId={navModalBookId}
-        initialTestament={selectedTestament?.id === "cuu-uoc" ? "old" : "new"}
-      />
-    </>
+                {/* Lịch Sử */}
+                <div className="kt-bento-group-item kt-bento-lich-su">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Clock size={14} aria-hidden="true" />
+                      <span>Các Sách Lịch Sử</span>
+                    </span>
+                    <span className="kt-group-count">16 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("gs")} className="kt-book-pill"><strong>Gs</strong> Giô-suê</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("tl")} className="kt-book-pill"><strong>Tl</strong> Thủ Lãnh</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("rt")} className="kt-book-pill"><strong>Rt</strong> Rút</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1sm")} className="kt-book-pill"><strong>1-2Sm</strong> Sa-mu-en</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1v")} className="kt-book-pill"><strong>1-2V</strong> Các Vua</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1sb")} className="kt-book-pill"><strong>1-2Sb</strong> Sử Biên Niên</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("er")} className="kt-book-pill"><strong>Er</strong> Ét-ra</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ne")} className="kt-book-pill"><strong>Ne</strong> Nơ-khe-mi-a</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("tb")} className="kt-book-pill"><strong>Tb</strong> Tô-bi-a</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("gdt")} className="kt-book-pill"><strong>Gđt</strong> Giu-đi-tha</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("et")} className="kt-book-pill"><strong>Et</strong> Ét-te</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1mcb")} className="kt-book-pill"><strong>1-2Mcb</strong> Ma-ca-bê</button>
+                  </div>
+                </div>
+
+                {/* Giáo Huấn & Thánh Vịnh */}
+                <div className="kt-bento-group-item kt-bento-giao-huan">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Bookmark size={14} aria-hidden="true" />
+                      <span>Giáo Huấn &amp; Thánh Vịnh</span>
+                    </span>
+                    <span className="kt-group-count">7 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("g")} className="kt-book-pill"><strong>G</strong> Gióp</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("tv")} className="kt-book-pill"><strong>Tv</strong> 150 Thánh Vịnh</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("cn")} className="kt-book-pill"><strong>Cn</strong> Châm Ngôn</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("gv")} className="kt-book-pill"><strong>Gv</strong> Giảng Viên</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("dc")} className="kt-book-pill"><strong>Dc</strong> Diễm Ca</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("kn")} className="kt-book-pill"><strong>Kn</strong> Khôn Ngoan</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("hc")} className="kt-book-pill"><strong>Hc</strong> Huấn Ca</button>
+                  </div>
+                </div>
+
+                {/* Các Ngôn Sứ */}
+                <div className="kt-bento-group-item kt-bento-ngon-su">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Compass size={14} aria-hidden="true" />
+                      <span>Các Ngôn Sứ (Tiên Tri)</span>
+                    </span>
+                    <span className="kt-group-count">18 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("is")} className="kt-book-pill"><strong>Is</strong> I-sai-a</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("gr")} className="kt-book-pill"><strong>Gr</strong> Giê-rê-mi-a</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ac")} className="kt-book-pill"><strong>Ac</strong> Ai Ca</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("br")} className="kt-book-pill"><strong>Br</strong> Ba-rúc</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ez")} className="kt-book-pill"><strong>Ez</strong> Ê-dê-ki-en</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("dn")} className="kt-book-pill"><strong>Đn</strong> Đa-ni-en</button>
+                    <button type="button" onClick={() => onOpenBookModal?.(null, "old")} className="kt-book-pill" title="Hô-sê, Gô-en, A-mốt, Ô-va-đia, Giô-na, Mi-kha, Na-khum, Kha-ba-cúc, Xô-phô-ni-a, Khai-gai, Da-ca-ri-a, Mơ-la-khi">
+                      <strong>12</strong> Ngôn Sứ Nhỏ
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="kt-bible-lookup-btn"
+              onClick={() => onOpenBookModal?.(null, "old")}
+            >
+              <BookOpen size={16} aria-hidden="true" />
+              <span>Tra Cứu 46 Cuốn Cựu Ước Trực Tuyến</span>
+              <ExternalLink size={14} aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Tân Ước */}
+          <div className="kt-testament-box kt-testament-new">
+            <div>
+              <div className="kt-testament-top">
+                <div className="kt-testament-icon-wrap" aria-hidden="true">
+                  <Cross size={24} />
+                </div>
+                <span className="kt-testament-badge">27 QUYỂN SÁCH · TÂN ƯỚC</span>
+              </div>
+
+              <h3 className="kt-testament-title">Tân Ước (Novum Testamentum)</h3>
+
+              <div className="kt-testament-meta-bar">
+                <span className="kt-meta-chip">
+                  <Clock size={14} aria-hidden="true" />
+                  <span>Thời gian: <strong>Khoảng 50 – 100 CN</strong></span>
+                </span>
+                <span className="kt-meta-chip">
+                  <Globe size={14} aria-hidden="true" />
+                  <span>Ngôn ngữ: <strong>Hy Lạp (Koiné)</strong></span>
+                </span>
+              </div>
+
+              <p className="kt-testament-desc">
+                Tin Mừng Đức Giêsu Kitô — Ngôi Lời Nhập Thể, Đấng đã chết và sống lại vinh hiển, hiện diện sống động trong Hội Thánh qua mọi thời đại.
+              </p>
+
+              <div className="kt-testament-groups">
+                {/* Bốn Sách Tin Mừng */}
+                <div className="kt-bento-group-item kt-bento-tin-mung">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Sparkles size={14} aria-hidden="true" />
+                      <span>Bốn Tin Mừng (Trái Tim Kinh Thánh)</span>
+                    </span>
+                    <span className="kt-group-count">4 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("mt")} className="kt-book-pill"><strong>Mt</strong> Mát-thêu</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("mc")} className="kt-book-pill"><strong>Mc</strong> Mác-cô</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("lc")} className="kt-book-pill"><strong>Lc</strong> Lu-ca</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ga")} className="kt-book-pill"><strong>Ga</strong> Gio-an</button>
+                  </div>
+                </div>
+
+                {/* Lịch Sử Giáo Hội Tiên Khởi */}
+                <div className="kt-bento-group-item kt-bento-cv">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Church size={14} aria-hidden="true" />
+                      <span>Lịch Sử Hội Thánh Tiên Khởi</span>
+                    </span>
+                    <span className="kt-group-count">1 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("cv")} className="kt-book-pill"><strong>Cv</strong> Tông Đồ Công Vụ</button>
+                  </div>
+                </div>
+
+                {/* Thư Thánh Phaolô */}
+                <div className="kt-bento-group-item kt-bento-phaolo">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Bookmark size={14} aria-hidden="true" />
+                      <span>Các Thư Thánh Phaolô</span>
+                    </span>
+                    <span className="kt-group-count">14 Thư</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("rm")} className="kt-book-pill"><strong>Rm</strong> Rô-ma</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1cr")} className="kt-book-pill"><strong>1-2Cr</strong> Cô-rin-tô</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("gl")} className="kt-book-pill"><strong>Gl</strong> Ga-lát</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("ep")} className="kt-book-pill"><strong>Ep</strong> Ê-phê-sô</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("pl")} className="kt-book-pill"><strong>Pl</strong> Phi-líp-phê</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("cl")} className="kt-book-pill"><strong>Cl</strong> Cô-lô-sê</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1tx")} className="kt-book-pill"><strong>1-2Tx</strong> Thê-xa-lô-ni-ca</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1tm")} className="kt-book-pill"><strong>1-2Tm</strong> Ti-mô-thê</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("tt")} className="kt-book-pill"><strong>Tt</strong> Ti-tô</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("pm")} className="kt-book-pill"><strong>Pm</strong> Phi-lê-môn</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("dt")} className="kt-book-pill"><strong>Dt</strong> Do Thái</button>
+                  </div>
+                </div>
+
+                {/* Thư Chung & Khải Huyền */}
+                <div className="kt-bento-group-item kt-bento-khai-huyen">
+                  <div className="kt-group-item-head">
+                    <span className="kt-group-name">
+                      <Sun size={14} aria-hidden="true" />
+                      <span>Thư Tông Đồ Chung &amp; Khải Huyền</span>
+                    </span>
+                    <span className="kt-group-count">8 Quyển</span>
+                  </div>
+                  <div className="kt-group-chips-wrap">
+                    <button type="button" onClick={() => onOpenBookModal?.("gc")} className="kt-book-pill"><strong>Gc</strong> Gia-cô-bê</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1pr")} className="kt-book-pill"><strong>1-2Pr</strong> Phê-rô</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("1ga")} className="kt-book-pill"><strong>1-2-3Ga</strong> Gio-an</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("gd")} className="kt-book-pill"><strong>Gđ</strong> Giu-đa</button>
+                    <button type="button" onClick={() => onOpenBookModal?.("kh")} className="kt-book-pill"><strong>Kh</strong> Khải Huyền</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="kt-bible-lookup-btn"
+              onClick={() => onOpenBookModal?.(null, "new")}
+            >
+              <BookOpen size={16} aria-hidden="true" />
+              <span>Tra Cứu 27 Cuốn Tân Ước Trực Tuyến</span>
+              <ExternalLink size={14} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 2: 4 BƯỚC CẦU NGUYỆN LECTIO DIVINA ── */}
+      {activeTab === "lectio" && (
+        <div id="panel-lectio" role="tabpanel" aria-labelledby="kt-tab-lectio">
+          <div className="kt-lectio-grid">
+            {/* Bước 1: Lectio */}
+            <div className="kt-lectio-card kt-lectio-step-1">
+              <div>
+                <div className="kt-lectio-card-top">
+                  <div className="kt-lectio-icon-wrap" aria-hidden="true">
+                    <Eye size={22} />
+                  </div>
+                  <span className="kt-lectio-step-num">BƯỚC 01</span>
+                </div>
+                <div className="kt-lectio-latin">Lectio · Lắng Nghe Tiếng Chúa</div>
+                <h4 className="kt-lectio-title">Đọc Lời Chúa</h4>
+                <p className="kt-lectio-desc">
+                  Đọc chậm rãi đoạn Kinh Thánh từ 2–3 lần. Lắng đọng tâm hồn, gác lại âu lo để đón nhận từng lời như chính Chúa đang nói riêng với chính bạn.
+                </p>
+              </div>
+              <div>
+                <div className="kt-lectio-question-box">
+                  <div className="kt-question-tag">
+                    <HelpCircle size={12} aria-hidden="true" />
+                    <span>Câu Hỏi Soi Sáng</span>
+                  </div>
+                  <div className="kt-question-text">
+                    "Đoạn Lời Chúa này đang nói điều gì với tôi?"
+                  </div>
+                </div>
+                <div className="kt-action-tip">
+                  <Check size={14} aria-hidden="true" />
+                  <span>Thực hành: Gạch chân 1 câu đánh động tâm hồn nhất.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bước 2: Meditatio */}
+            <div className="kt-lectio-card kt-lectio-step-2">
+              <div>
+                <div className="kt-lectio-card-top">
+                  <div className="kt-lectio-icon-wrap" aria-hidden="true">
+                    <Compass size={22} />
+                  </div>
+                  <span className="kt-lectio-step-num">BƯỚC 02</span>
+                </div>
+                <div className="kt-lectio-latin">Meditatio · Ghi Khắc Vào Tim</div>
+                <h4 className="kt-lectio-title">Suy Niệm</h4>
+                <p className="kt-lectio-desc">
+                  Nhai đi nhai lại câu Lời Chúa trong tâm trí. Đặt cuộc sống, áp lực học tập và các mối quan hệ bạn bè của mình vào ánh sáng của Lời Chúa soi chiếu.
+                </p>
+              </div>
+              <div>
+                <div className="kt-lectio-question-box">
+                  <div className="kt-question-tag">
+                    <HelpCircle size={12} aria-hidden="true" />
+                    <span>Câu Hỏi Soi Sáng</span>
+                  </div>
+                  <div className="kt-question-text">
+                    "Chúa đang mời gọi tôi thay đổi hay từ bỏ thói xấu nào?"
+                  </div>
+                </div>
+                <div className="kt-action-tip">
+                  <Check size={14} aria-hidden="true" />
+                  <span>Thực hành: Thinh lặng 3 phút để Lời Chúa thấm vào lòng.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bước 3: Oratio */}
+            <div className="kt-lectio-card kt-lectio-step-3">
+              <div>
+                <div className="kt-lectio-card-top">
+                  <div className="kt-lectio-icon-wrap" aria-hidden="true">
+                    <Heart size={22} />
+                  </div>
+                  <span className="kt-lectio-step-num">BƯỚC 03</span>
+                </div>
+                <div className="kt-lectio-latin">Oratio · Tâm Tình Với Cha</div>
+                <h4 className="kt-lectio-title">Cầu Nguyện</h4>
+                <p className="kt-lectio-desc">
+                  Thưa chuyện chân thành với Chúa như một người con nói với Cha. Dâng lên Chúa những niềm vui, nỗi buồn, sự yếu đuối và xin ơn trợ giúp.
+                </p>
+              </div>
+              <div>
+                <div className="kt-lectio-question-box">
+                  <div className="kt-question-tag">
+                    <HelpCircle size={12} aria-hidden="true" />
+                    <span>Câu Hỏi Soi Sáng</span>
+                  </div>
+                  <div className="kt-question-text">
+                    "Tôi muốn thưa gì với Chúa sau khi nghe Lời Người?"
+                  </div>
+                </div>
+                <div className="kt-action-tip">
+                  <Check size={14} aria-hidden="true" />
+                  <span>Thực hành: Viết 1 lời nguyện tự phát ngắn vào sổ tay.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bước 4: Contemplatio & Actio */}
+            <div className="kt-lectio-card kt-lectio-step-4">
+              <div>
+                <div className="kt-lectio-card-top">
+                  <div className="kt-lectio-icon-wrap" aria-hidden="true">
+                    <Flame size={22} />
+                  </div>
+                  <span className="kt-lectio-step-num">BƯỚC 04</span>
+                </div>
+                <div className="kt-lectio-latin">Contemplatio · Chiêm Ngắm &amp; Sống</div>
+                <h4 className="kt-lectio-title">Chiêm Ngắm &amp; Hành Động</h4>
+                <p className="kt-lectio-desc">
+                  Nghỉ yên trong tình yêu Chúa và biến ơn soi sáng thành hành động cụ thể: làm hòa với bạn bè, giúp đỡ cha mẹ hay sống thật thà hơn mỗi ngày.
+                </p>
+              </div>
+              <div>
+                <div className="kt-lectio-question-box">
+                  <div className="kt-question-tag">
+                    <HelpCircle size={12} aria-hidden="true" />
+                    <span>Câu Hỏi Soi Sáng</span>
+                  </div>
+                  <div className="kt-question-text">
+                    "Tôi sẽ làm việc lành cụ thể nào trong hôm nay?"
+                  </div>
+                </div>
+                <div className="kt-action-tip">
+                  <Check size={14} aria-hidden="true" />
+                  <span>Thực hành: Chọn 1 việc hy sinh nhỏ để thực hiện ngay.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

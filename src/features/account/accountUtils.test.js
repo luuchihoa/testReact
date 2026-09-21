@@ -72,6 +72,24 @@ test('normalizeNotificationLink rewrites legacy and query params to standard acc
     normalizeNotificationLink('/tai-khoan/hồ-sơ'),
     '/tài-khoản/hồ-sơ'
   );
+
+  // Admin routes & legacy English paths
+  assert.equal(
+    normalizeNotificationLink('/admin/articles'),
+    '/quản-trị/bài-viết'
+  );
+  assert.equal(
+    normalizeNotificationLink('/admin/articles?tab=pending&article=12'),
+    '/quản-trị/bài-viết?tab=pending&article=12'
+  );
+  assert.equal(
+    normalizeNotificationLink('/quan-tri/bai-viet'),
+    '/quản-trị/bài-viết'
+  );
+  assert.equal(
+    normalizeNotificationLink('/admin/dashboard'),
+    '/quản-trị/tổng-quan'
+  );
 });
 
 test('normalizeNotificationLink infers target from notification object when link is empty', () => {

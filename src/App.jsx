@@ -21,6 +21,7 @@ import Home from "./pages/Home.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import ScrollToTop from "./components/ui/ScrollToTop.jsx";
 import { PageContentSkeleton } from "./components/ui/Skeleton.jsx";
+import LichHocSkeleton from "./pages/LichHocSkeleton.jsx";
 import TeacherLayout , { RequireTeacherRoute } from "./features/teacher/TeacherLayout.jsx";
 import AdminLayout , { RequireAdminRoute } from "./features/admin/AdminLayout.jsx";
 
@@ -208,6 +209,7 @@ export default function App() {
           <Route path="tuyển-sinh" element={<TuyenSinh />} />
           <Route path="giới-thiệu" element={<GioiThieu />} />
           <Route path="khối-chiên-con" element={<KhoiChienCon />} />
+          <Route path="khối-khai-tâm" element={<KhoiChienCon />} />
           <Route path="khối-rước-lễ" element={<KhoiRuocLe />} />
           <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
           <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />
@@ -216,7 +218,7 @@ export default function App() {
           <Route path="giới-trẻ-công-giáo" element={<GioiTre />} />
           <Route path="giới-trẻ" element={<Navigate to="/giới-trẻ-công-giáo" replace />} />
           <Route path="tài-liệu" element={<TaiLieu />} />
-          <Route path="lịch-học" element={<LichHoc />} />
+          <Route path="lịch-học" element={<Suspense fallback={<LichHocSkeleton />}><LichHoc /></Suspense>} />
           <Route path="lịch-sinh-hoạt" element={<LichSinhHoat />} />
           <Route path="liên-hệ" element={<Contact />} />
           <Route path="cài-đặt" element={<Setting fontSize={fontSize} setFontSize={handleFontSizeChange} />} />
@@ -228,6 +230,12 @@ export default function App() {
           <Route path="thanh-tich" element={<RedirectToAchievement />} />
           <Route path="thành-tích" element={<RedirectToAchievement />} />
           <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="admin/articles/*" element={<Navigate to="/quản-trị/bài-viết" replace />} />
+          <Route path="admin/articles" element={<Navigate to="/quản-trị/bài-viết" replace />} />
+          <Route path="admin/*" element={<Navigate to="/quản-trị" replace />} />
+          <Route path="admin" element={<Navigate to="/quản-trị" replace />} />
+          <Route path="quan-tri/*" element={<Navigate to="/quản-trị" replace />} />
+          <Route path="quan-tri" element={<Navigate to="/quản-trị" replace />} />
 
           {/* ── Bài viết ── */}
           <Route path="bài-viết" element={<ArticleList />} />

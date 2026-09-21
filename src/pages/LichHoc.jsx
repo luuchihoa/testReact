@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
-  CalendarDays, Clock, MapPin, Users, Search, X,
+  Clock, MapPin, Search, X,
   LayoutGrid, ListFilter, GraduationCap, Sparkles,
   ArrowUpRight, ChevronRight, Info, Church, DoorOpen,
-  ChevronDown, ArrowRight, Calendar, ShieldCheck, MoveHorizontal
+  ChevronDown, ArrowRight, Calendar, ShieldCheck, MoveHorizontal,
+  Star, ArrowUp
 } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   SCHEDULE_CLASSES,
   CA_HOC,
@@ -21,29 +21,108 @@ import {
 } from "../data/lichHocData.js";
 import "./LichHoc.css";
 
-// Helper thông tin Ngành và Màu khăn HTDC
+// Helper thông tin Khối và Màu khăn HTDC
 const NGANH_MAP = {
-  "chinh-chien": { name: "Ngành Chinh Chiến", short: "Chinh Chiến", scarf: "Khăn Đỏ" },
-  "nhiet-quang": { name: "Ngành Nhiệt Quang", short: "Nhiệt Quang", scarf: "Khăn Da Cam" },
-  "kim-hoan": { name: "Ngành Kim Hoan", short: "Kim Hoan", scarf: "Khăn Vàng" },
-  "au-dung": { name: "Ngành Ấu", short: "Ngành Ấu", scarf: "Khăn Xanh Lá" },
+  "chinh-chien": { name: "Khối Vào Đời", short: "Vào Đời", scarf: "Khăn Đỏ Có Viền" },
+  "nhiet-quang": { name: "Khối Kinh Thánh & Phụng Vụ", short: "KT & PV", scarf: "Khăn Có Viền" },
+  "kim-hoan": { name: "Khối Thêm Sức", short: "Thêm Sức", scarf: "Khăn Vàng Có Viền" },
+  "au-dung": { name: "Khối Khai Tâm & RLLĐ", short: "KT & RLLĐ", scarf: "Khăn Xanh Lá" },
 };
+
+function getScarfByClass(item) {
+  if (item.id === "vuon-tre" || (item.name && item.name.includes("Khai Tâm"))) {
+    return "Khăn Xanh Lá Trơn";
+  }
+  if (item.name && (item.name.includes("RLLĐ") || item.name.includes("Rước Lễ"))) {
+    return "Khăn Xanh Có Viền";
+  }
+  if (item.name && item.name.includes("Thêm Sức")) {
+    return "Khăn Vàng Có Viền";
+  }
+  if (item.name && item.name.includes("Phụng Vụ")) {
+    return "Khăn Da Cam Có Viền";
+  }
+  if (item.name && item.name.includes("Kinh Thánh")) {
+    return "Khăn Đỏ Có Viền";
+  }
+  if (item.name && item.name.includes("Vào Đời")) {
+    return "Khăn Đỏ Có Viền";
+  }
+  return NGANH_MAP[item.nganhId]?.scarf || "Khăn HTDC";
+}
+
+const PINNED_STORAGE_KEY = "anNgai_pinnedClasses";
 
 export default function LichHoc() {
   const prefersReduced = useReducedMotion();
+  const heroSentinelRef = useRef(null);
   const [selectedCa, setSelectedCa] = useState("all");
   const [selectedNganh, setSelectedNganh] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [viewMode, setViewMode] = useState("cards"); // 'cards' | 'table'
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [showThumbBar, setShowThumbBar] = useState(false);
 
+  // State tiện ích: Ghim lớp của con em (lưu vào localStorage an toàn)
+  const [pinnedClassIds, setPinnedClassIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PINNED_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const togglePinClass = useCallback((id) => {
+    setPinnedClassIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Safe fallback cho Safari private mode
+      }
+      return next;
+    });
+  }, []);
+
+  const clearAllPinned = useCallback(() => {
+    setPinnedClassIds([]);
+    try {
+      localStorage.removeItem(PINNED_STORAGE_KEY);
+    } catch {
+      // Safe fallback cho Safari private mode
+    }
+  }, []);
 
   useEffect(() => {
     const prevTitle = document.title;
     document.title = `Thời Gian Biểu & Phân Công Lớp Học ${ACADEMIC_YEAR} | Giáo xứ An Ngãi`;
     return () => {
       document.title = prevTitle;
+    };
+  }, []);
+
+  // Lắng nghe vị trí quan sát Sentinel ngay trước danh sách lớp bằng IntersectionObserver
+  useEffect(() => {
+    const target = heroSentinelRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Chỉ kích hoạt Thumb bar khi Sentinel đã thực sự trượt lên trên đỉnh màn hình
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          setShowThumbBar(true);
+        } else {
+          setShowThumbBar(false);
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
     };
   }, []);
 
@@ -78,6 +157,11 @@ export default function LichHoc() {
     });
   }, [selectedCa, selectedNganh, selectedRoom, searchQuery]);
 
+  // Danh sách các lớp đã được ghim
+  const pinnedClasses = useMemo(() => {
+    return SCHEDULE_CLASSES.filter((c) => pinnedClassIds.includes(c.id));
+  }, [pinnedClassIds]);
+
   // Đếm số lớp theo từng ca
   const countCa1 = useMemo(() => SCHEDULE_CLASSES.filter((c) => c.ca === 1).length, []);
   const countCa2 = useMemo(() => SCHEDULE_CLASSES.filter((c) => c.ca === 2).length, []);
@@ -91,28 +175,54 @@ export default function LichHoc() {
 
   const hasActiveFilters = selectedCa !== "all" || selectedNganh !== "all" || selectedRoom !== null || searchQuery !== "";
 
+  // Cấu hình chuyển động Phụng vụ trang nghiêm (Liturgical Motion)
+  const heroContainerVariants = {
+    hidden: { opacity: prefersReduced ? 1 : 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: prefersReduced ? 0 : 0.05,
+        delayChildren: prefersReduced ? 0 : 0.05
+      }
+    }
+  };
+
+  const heroItemVariants = {
+    hidden: { opacity: prefersReduced ? 1 : 0, y: prefersReduced ? 0 : 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: prefersReduced ? 0 : 0.38, ease: [0.16, 1, 0.3, 1] }
+    }
+  };
+
   return (
     <div className="sched-page">
-      {/* ════ HERO SECTION ════ */}
+      {/* ════ HERO SECTION (LITURGICAL MOTION REVEAL) ════ */}
       <section className="sched-hero" aria-labelledby="sched-hero-title">
         <div className="sched-shell">
-          <div className="sched-hero-grid">
+          <Motion.div
+            className="sched-hero-grid"
+            variants={heroContainerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {/* Cột trái: Copy + CTA */}
             <div className="sched-hero-left">
-              <div className="sched-hero-eyebrow">
+              <Motion.div className="sched-hero-eyebrow" variants={heroItemVariants}>
                 <span className="sched-dot" aria-hidden="true" />
                 <span className="sched-eyebrow">NIÊN KHÓA {ACADEMIC_YEAR} · XỨ ĐOÀN MẸ MÂN CÔI</span>
-              </div>
+              </Motion.div>
 
-              <h1 id="sched-hero-title" className="sched-hero-title">
+              <Motion.h1 id="sched-hero-title" className="sched-hero-title" variants={heroItemVariants}>
                 Thời Gian Biểu <em>Phân Công Lớp Học</em>
-              </h1>
+              </Motion.h1>
 
-              <p className="sched-hero-desc">
-                Bảng phân bố thời gian, phòng học và danh sách Giáo lý viên &amp; Huynh trưởng phụ trách {TOTAL_CLASSES} lớp giáo lý Giáo xứ An Ngãi niên khóa {ACADEMIC_YEAR}.
-              </p>
+              <Motion.p className="sched-hero-desc" variants={heroItemVariants}>
+                Bảng phân bố thời gian, phòng học và danh sách Ban Giáo lý &amp; Huynh trưởng phụ trách {TOTAL_CLASSES} lớp giáo lý Giáo xứ An Ngãi niên khóa {ACADEMIC_YEAR}.
+              </Motion.p>
 
-              <div className="sched-hero-actions">
+              <Motion.div className="sched-hero-actions" variants={heroItemVariants}>
                 <a href="#danh-sach-lop" className="sched-btn-primary">
                   <span>Xem {TOTAL_CLASSES} Lớp Học</span>
                   <ArrowRight size={17} aria-hidden="true" className="sched-btn-icon" />
@@ -121,35 +231,35 @@ export default function LichHoc() {
                   <Sparkles size={16} aria-hidden="true" />
                   <span>Đăng Ký Niên Khóa Mới</span>
                 </Link>
-              </div>
+              </Motion.div>
             </div>
 
             {/* Cột phải: Overview chips 2×2 */}
             <div className="sched-hero-right">
               <div className="sched-overview-chips">
-                <div className="sched-overview-chip">
+                <Motion.div className="sched-overview-chip" variants={heroItemVariants}>
                   <span className="sched-chip-cat">Quy mô</span>
                   <span className="sched-chip-value">{TOTAL_CLASSES} Lớp</span>
                   <span className="sched-chip-label">Các khối giáo lý</span>
-                </div>
-                <div className="sched-overview-chip">
-                  <span className="sched-chip-cat">Nhân sự</span>
+                </Motion.div>
+                <Motion.div className="sched-overview-chip" variants={heroItemVariants}>
+                  <span className="sched-chip-cat">Giáo lý viên</span>
                   <span className="sched-chip-value">{TOTAL_TEACHERS} GLV</span>
-                  <span className="sched-chip-label">Giáo lý viên &amp; Huynh trưởng</span>
-                </div>
-                <div className="sched-overview-chip">
-                  <span className="sched-chip-cat">Đoàn sinh</span>
+                  <span className="sched-chip-label">GLV &amp; Huynh trưởng</span>
+                </Motion.div>
+                <Motion.div className="sched-overview-chip" variants={heroItemVariants}>
+                  <span className="sched-chip-cat">Thiếu nhi</span>
                   <span className="sched-chip-value">{TOTAL_STUDENTS}</span>
                   <span className="sched-chip-label">Thiếu nhi theo học</span>
-                </div>
-                <div className="sched-overview-chip">
+                </Motion.div>
+                <Motion.div className="sched-overview-chip" variants={heroItemVariants}>
                   <span className="sched-chip-cat">Lịch học</span>
                   <span className="sched-chip-value">2 Ca học</span>
                   <span className="sched-chip-label">Sáng Chúa Nhật</span>
-                </div>
+                </Motion.div>
               </div>
             </div>
-          </div>
+          </Motion.div>
         </div>
       </section>
 
@@ -178,61 +288,70 @@ export default function LichHoc() {
             />
           </button>
 
-          {timelineOpen && (
-            <div id="sched-timeline-body" className="sched-timeline-body">
-              <div className="sched-timeline-container">
-                <div className="sched-timeline-grid">
-                  {/* Ca 1 */}
-                  <div className="sched-timeline-card">
-                    <div>
-                      <div className="time-tag">
-                        <Clock size={16} /> 07:00 – 07:45
+          <AnimatePresence>
+            {timelineOpen && (
+              <Motion.div
+                id="sched-timeline-body"
+                className="sched-timeline-body"
+                initial={prefersReduced ? false : { opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={prefersReduced ? false : { opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="sched-timeline-container">
+                  <div className="sched-timeline-grid">
+                    {/* Ca 1 */}
+                    <div className="sched-timeline-card">
+                      <div>
+                        <div className="time-tag">
+                          <Clock size={16} aria-hidden="true" /> 07:00 – 07:45
+                        </div>
+                        <h3 className="card-title">Ca 1: Khối Lớn</h3>
+                        <p className="card-desc">
+                          Học trước Thánh Lễ gồm các lớp <strong>Vào Đời</strong>, <strong>Kinh Thánh</strong> và <strong>Phụng Vụ</strong>.
+                        </p>
                       </div>
-                      <h3 className="card-title">Ca 1: Khối Lớn</h3>
-                      <p className="card-desc">
-                        Học trước Thánh Lễ gồm các lớp <strong>Vào Đời</strong>, <strong>Kinh Thánh</strong> và <strong>Phụng Vụ</strong>.
-                      </p>
+                      <span className="card-badge sched-timeline-badge--ca1">
+                        {CA_HOC[0].classesCount} Lớp · Học trước Lễ
+                      </span>
                     </div>
-                    <span className="card-badge bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
-                      {CA_HOC[0].classesCount} Lớp · Học trước Lễ
-                    </span>
-                  </div>
 
-                  {/* Thánh Lễ Trung Tâm */}
-                  <div className="sched-timeline-card central-mass">
-                    <div>
-                      <div className="time-tag">
-                        <Church size={17} /> 08:00 – 09:00
+                    {/* Thánh Lễ Trung Tâm */}
+                    <div className="sched-timeline-card central-mass">
+                      <div>
+                        <div className="time-tag">
+                          <Church size={17} aria-hidden="true" /> 08:00 – 09:00
+                        </div>
+                        <h3 className="card-title">{CENTRAL_MASS.name}</h3>
+                        <p className="card-desc">
+                          Tâm điểm hiệp nhất tại <strong>{CENTRAL_MASS.location}</strong>. Quy tụ <strong>{CENTRAL_MASS.classesCount || 29} lớp chính quy</strong> và {TOTAL_TEACHERS} GLV dâng Lễ chung (Khối Vườn Trẻ sinh hoạt theo giờ riêng).
+                        </p>
                       </div>
-                      <h3 className="card-title">{CENTRAL_MASS.name}</h3>
-                      <p className="card-desc">
-                        Tâm điểm hiệp nhất tại <strong>{CENTRAL_MASS.location}</strong>. Toàn thể {TOTAL_CLASSES - 1} lớp và {TOTAL_TEACHERS} GLV quy tụ dâng Lễ.
-                      </p>
+                      <span className="card-badge sched-timeline-badge--mass">
+                        Trọng tâm đời sống Đức tin
+                      </span>
                     </div>
-                    <span className="card-badge bg-amber-100/80 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
-                      Trọng tâm đời sống Đức tin
-                    </span>
-                  </div>
 
-                  {/* Ca 2 */}
-                  <div className="sched-timeline-card">
-                    <div>
-                      <div className="time-tag">
-                        <Clock size={16} /> 09:15 – 10:00
+                    {/* Ca 2 */}
+                    <div className="sched-timeline-card">
+                      <div>
+                        <div className="time-tag">
+                          <Clock size={16} aria-hidden="true" /> 09:15 – 10:00
+                        </div>
+                        <h3 className="card-title">Ca 2: Khối Nhỏ</h3>
+                        <p className="card-desc">
+                          Học sau Thánh Lễ gồm các lớp <strong>Thêm Sức</strong>, <strong>Rước Lễ</strong>, <strong>Khai Tâm</strong> và <strong>Vườn Trẻ</strong>.
+                        </p>
                       </div>
-                      <h3 className="card-title">Ca 2: Khối Nhỏ</h3>
-                      <p className="card-desc">
-                        Học sau Thánh Lễ gồm các lớp <strong>Thêm Sức</strong>, <strong>Rước Lễ</strong>, <strong>Khai Tâm</strong> và <strong>Vườn Trẻ</strong>.
-                      </p>
+                      <span className="card-badge sched-timeline-badge--ca2">
+                        {CA_HOC[1].classesCount} Lớp · Học sau Lễ
+                      </span>
                     </div>
-                    <span className="card-badge bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
-                      {CA_HOC[1].classesCount} Lớp · Học sau Lễ
-                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </Motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
@@ -352,8 +471,7 @@ export default function LichHoc() {
               {selectedRoom && (
                 <button
                   type="button"
-                  className="sched-chip active"
-                  style={{ background: "var(--sched-accent)", color: "#fff" }}
+                  className="sched-chip active sched-chip-room-active"
                   onClick={() => setSelectedRoom(null)}
                   title="Bấm để huỷ lọc theo phòng"
                 >
@@ -364,9 +482,8 @@ export default function LichHoc() {
               {hasActiveFilters && (
                 <button
                   type="button"
-                  className="sched-chip text-stone-500 hover:text-red-600"
+                  className="sched-chip sched-chip-reset"
                   onClick={resetFilters}
-                  style={{ marginLeft: "auto", borderStyle: "dashed" }}
                 >
                   Đặt lại
                 </button>
@@ -376,11 +493,82 @@ export default function LichHoc() {
         </div>
       </div>
 
-
       {/* ════ MAIN CONTENT: CARDS OR TABLE VIEW ════ */}
-      <main className="sched-shell">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "18px" }}>
-          <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+      {/* Sentinel: thumb bar activates only after class list scrolls past viewport top */}
+      <div ref={heroSentinelRef} className="sched-hero-sentinel" aria-hidden="true" />
+      <div id="danh-sach-lop" className="sched-shell">
+        {/* ── TIỆN ÍCH GIA ĐÌNH: LỚP HỌC CỦA GIA ĐÌNH BẠN (PINNED CLASSES) ── */}
+        <AnimatePresence>
+          {pinnedClasses.length > 0 && (
+            <Motion.section
+              key="sched-pinned-section"
+              initial={prefersReduced ? false : { opacity: 0, height: 0, overflow: "hidden" }}
+              animate={{ opacity: 1, height: "auto", transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] } }}
+              exit={prefersReduced ? false : { opacity: 0, height: 0, overflow: "hidden", transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } }}
+              className="sched-pinned-section"
+              aria-labelledby="sched-pinned-title"
+            >
+              <div className="sched-pinned-header">
+                <h2 id="sched-pinned-title" className="sched-pinned-title">
+                  <Star size={18} fill="currentColor" className="sched-pinned-star-icon" aria-hidden="true" />
+                  <span>Lớp Học Của Gia Đình Bạn</span>
+                  <em>({pinnedClasses.length} lớp đã ghim)</em>
+                </h2>
+                <div className="sched-pinned-actions">
+                  <span className="sched-pinned-badge">
+                    Tra cứu nhanh
+                  </span>
+                  <button
+                    type="button"
+                    className="sched-pinned-clear-btn"
+                    onClick={clearAllPinned}
+                    title="Bỏ ghim tất cả các lớp"
+                    aria-label="Bỏ ghim tất cả các lớp đã chọn"
+                  >
+                    Bỏ ghim tất cả
+                  </button>
+                </div>
+              </div>
+
+              <div className="sched-pinned-grid">
+                {pinnedClasses.map((item) => (
+                  <article key={item.id} className="sched-pinned-card">
+                    <div className="sched-pinned-card-head">
+                      <span className="sched-pinned-card-name">
+                        {item.name.startsWith("Lớp ") ? item.name : `Lớp ${item.name}`}
+                      </span>
+                      <button
+                        type="button"
+                        className="sched-pin-btn pinned"
+                        onClick={() => togglePinClass(item.id)}
+                        title={`Bỏ ghim lớp ${item.name}`}
+                        aria-label={`Bỏ ghim lớp ${item.name}`}
+                        aria-pressed="true"
+                      >
+                        <Star size={18} fill="currentColor" />
+                      </button>
+                    </div>
+                    <div className="sched-pinned-card-meta">
+                      <span className="sched-pinned-card-time">
+                        <Clock size={12} aria-hidden="true" /> {item.time} (Ca {item.ca})
+                      </span>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1 font-semibold">
+                        <MapPin size={12} aria-hidden="true" /> {item.room}
+                      </span>
+                    </div>
+                    <div className="sched-pinned-card-teachers">
+                      GLV: {item.teachers.join(", ")}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </Motion.section>
+          )}
+        </AnimatePresence>
+
+        <div className="sched-results-header">
+          <p className="sched-results-count">
             Hiển thị <strong>{filteredClasses.length}</strong> / {TOTAL_CLASSES} lớp học
             {selectedCa !== "all" && ` · Ca ${selectedCa}`}
             {selectedRoom && ` · Phòng ${selectedRoom}`}
@@ -409,93 +597,109 @@ export default function LichHoc() {
         ) : viewMode === "cards" ? (
           /* ── DẠNG THẺ (CARD VIEW) — Bento 5 tầng chuẩn màu Ngành HTDC ── */
           <div className="sched-cards-grid">
-            <AnimatePresence mode="popLayout">
-              {filteredClasses.map((item) => (
-                <motion.article
-                  key={item.id}
-                  initial={prefersReduced ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={prefersReduced ? false : { opacity: 0, y: -4 }}
-                  transition={{ duration: 0.18 }}
-                  className={`sched-card card-nganh-${item.nganhId}`}
-                >
-                  {/* Tầng 1: Head - Nhãn Khối & Phòng học */}
-                  <div className="sched-bento-head">
-                    <span className="sched-bento-code">
-                      <span className="sched-nganh-dot" aria-hidden="true" />
-                      {item.khoiName}
-                    </span>
-                    <button
-                      type="button"
-                      className="sched-bento-room"
-                      onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
-                      title={`Lọc lớp tại phòng ${item.room}`}
-                      aria-pressed={selectedRoom === item.room}
-                    >
-                      <MapPin size={12} aria-hidden="true" />
-                      <span>{item.room}</span>
-                    </button>
-                  </div>
-
-                  {/* Tầng 2: Tên Lớp & Dải Chỉ Số */}
-                  <div>
-                    <h3 className="sched-bento-title">
-                      {item.name.startsWith("Lớp ") ? item.name : `Lớp ${item.name}`}
-                    </h3>
-                    <div className="sched-bento-stats">
-                      <span className="sched-bento-stat">
-                        <GraduationCap size={12} aria-hidden="true" />
-                        {item.studentsCount
-                          ? <>Sĩ số: <strong>{item.studentsCount} em</strong></>
-                          : <em>Đang tuyển sinh</em>}
+            <AnimatePresence>
+              {filteredClasses.map((item) => {
+                const isPinned = pinnedClassIds.includes(item.id);
+                return (
+                  <Motion.article
+                    key={item.id}
+                    layout="position"
+                    initial={prefersReduced ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReduced ? false : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className={`sched-card card-nganh-${item.nganhId}`}
+                  >
+                    {/* Tầng 1: Head - Nhãn Khối & Phòng học & Nút Ghim */}
+                    <div className="sched-bento-head">
+                      <span className="sched-bento-code">
+                        <span className="sched-nganh-dot" aria-hidden="true" />
+                        {item.khoiName}
                       </span>
-                      <span className="sched-bento-stat">
-                        <Calendar size={12} aria-hidden="true" />
-                        <span>Độ tuổi: <strong>{item.ageText}</strong> ({item.birthYear})</span>
-                      </span>
+                      <div className="sched-bento-head-right">
+                        <button
+                          type="button"
+                          className="sched-bento-room"
+                          onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
+                          title={`Lọc lớp tại phòng ${item.room}`}
+                          aria-pressed={selectedRoom === item.room}
+                        >
+                          <MapPin size={12} aria-hidden="true" />
+                          <span>{item.room}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`sched-pin-btn ${isPinned ? "pinned" : ""}`}
+                          onClick={() => togglePinClass(item.id)}
+                          title={isPinned ? `Bỏ ghim lớp ${item.name}` : `Ghim lớp ${item.name} cho gia đình`}
+                          aria-label={isPinned ? `Bỏ ghim lớp ${item.name}` : `Ghim lớp ${item.name}`}
+                          aria-pressed={isPinned}
+                        >
+                          <Star size={16} fill={isPinned ? "currentColor" : "none"} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Tầng 3: Đội ngũ GLV / Huynh Trưởng */}
-                  <div className="sched-bento-teachers">
-                    <div className="sched-bento-teacher-label">
-                      <ShieldCheck size={12} aria-hidden="true" />
-                      <span>GLV / Huynh Trưởng ({item.teachers.length})</span>
-                    </div>
-                    <div className="sched-bento-teacher-pills">
-                      {item.teachers.slice(0, 3).map((t, idx) => (
-                        <span key={idx} className="sched-bento-teacher-pill">{t}</span>
-                      ))}
-                      {item.teachers.length > 3 && (
-                        <span className="sched-bento-teacher-pill more">
-                          +{item.teachers.length - 3} khác
+                    {/* Tầng 2: Tên Lớp & Dải Chỉ Số */}
+                    <div>
+                      <h3 className="sched-bento-title">
+                        {item.name.startsWith("Lớp ") ? item.name : `Lớp ${item.name}`}
+                      </h3>
+                      <div className="sched-bento-stats">
+                        <span className="sched-bento-stat">
+                          <GraduationCap size={12} aria-hidden="true" />
+                          {item.studentsCount
+                            ? <>Sĩ số: <strong>{item.studentsCount} em</strong></>
+                            : <em>Đang tuyển sinh</em>}
                         </span>
-                      )}
+                        <span className="sched-bento-stat">
+                          <Calendar size={12} aria-hidden="true" />
+                          <span>Độ tuổi: <strong>{item.ageText}</strong> ({item.birthYear})</span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Tầng 4: Trọng tâm & Phân ban Ngành */}
-                  <div className="sched-bento-focus">
-                    <span className="sched-bento-focus-badge">
-                      {NGANH_MAP[item.nganhId]?.name || item.khoiName} · {NGANH_MAP[item.nganhId]?.scarf || "HTDC"}
-                    </span>
-                    <Link to={item.path} className="sched-bento-focus-link">
-                      Chi tiết khối <ChevronRight size={13} aria-hidden="true" />
-                    </Link>
-                  </div>
+                    {/* Tầng 3: Đội ngũ GLV / Huynh Trưởng */}
+                    <div className="sched-bento-teachers">
+                      <div className="sched-bento-teacher-label">
+                        <ShieldCheck size={12} aria-hidden="true" />
+                        <span>GLV / Huynh Trưởng ({item.teachers.length})</span>
+                      </div>
+                      <div className="sched-bento-teacher-pills">
+                        {item.teachers.slice(0, 3).map((t, idx) => (
+                          <span key={idx} className="sched-bento-teacher-pill">{t}</span>
+                        ))}
+                        {item.teachers.length > 3 && (
+                          <span className="sched-bento-teacher-pill more">
+                            +{item.teachers.length - 3} khác
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                  {/* Tầng 5: Footer — Giờ + Ca */}
-                  <div className="sched-bento-foot">
-                    <span className="sched-bento-time">
-                      <Clock size={13} aria-hidden="true" />
-                      {item.time}
-                    </span>
-                    <span className="sched-ca-pill">
-                      Ca {item.ca}
-                    </span>
-                  </div>
-                </motion.article>
-              ))}
+                    {/* Tầng 4: Trọng tâm & Phân ban Khối */}
+                    <div className="sched-bento-focus">
+                      <span className="sched-bento-focus-badge">
+                        {item.khoiName} · {getScarfByClass(item)}
+                      </span>
+                      <Link to={item.path} className="sched-bento-focus-link">
+                        Chi tiết khối <ChevronRight size={13} aria-hidden="true" />
+                      </Link>
+                    </div>
+
+                    {/* Tầng 5: Footer — Giờ + Ca */}
+                    <div className="sched-bento-foot">
+                      <span className="sched-bento-time">
+                        <Clock size={13} aria-hidden="true" />
+                        {item.time}
+                      </span>
+                      <span className="sched-ca-pill">
+                        Ca {item.ca}
+                      </span>
+                    </div>
+                  </Motion.article>
+                );
+              })}
             </AnimatePresence>
           </div>
         ) : (
@@ -515,77 +719,91 @@ export default function LichHoc() {
                     <th scope="col">Lớp Học &amp; Khối</th>
                     <th scope="col">Ca &amp; Giờ</th>
                     <th scope="col">Giáo Lý Viên Phụ Trách</th>
-                    <th scope="col">Đối Tượng</th>
+                    <th scope="col">Độ tuổi &amp; Sĩ số</th>
                     <th scope="col">Phòng Học</th>
-                    <th scope="col" style={{ textAlign: "right" }}>Trang Khối</th>
+                    <th scope="col" className="sched-table-col-action">Ghim / Xem</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredClasses.map((item, idx) => (
-                    <tr key={item.id} className={`card-nganh-${item.nganhId}`}>
-                      <td className="sched-table-col-num" style={{ color: "var(--sched-muted)", fontWeight: 600 }}>
-                        {idx + 1}
-                      </td>
-                      <td>
-                        <strong style={{ display: "block", fontSize: "13.5px" }}>{item.name}</strong>
-                        <span className="sched-table-nganh-tag">
-                          <span className="sched-nganh-dot" style={{ margin: 0, width: 5, height: 5 }} aria-hidden="true" />
-                          {item.khoiName}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="sched-ca-pill" style={{ display: "inline-flex", marginBottom: "3px" }}>
-                          Ca {item.ca}
-                        </span>
-                        <div style={{ fontSize: "11.5px", color: "var(--sched-muted)", whiteSpace: "nowrap" }}>{item.time}</div>
-                      </td>
-                      <td>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "220px" }}>
-                          {item.teachers.map((t, i) => (
-                            <span key={i} className="sched-bento-teacher-pill">{t}</span>
-                          ))}
-                        </div>
-                      </td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        <span style={{ fontWeight: 700 }}>{item.ageText}</span>
-                        <div style={{ fontSize: "11.5px", color: "var(--sched-muted)" }}>
-                          {item.studentsCount ? `${item.studentsCount} em (${item.birthYear})` : <em style={{ color: "var(--sched-accent-text)" }}>Tuyển sinh ({item.birthYear})</em>}
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="sched-bento-room"
-                          onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
-                          title="Bấm để lọc theo phòng này"
-                          aria-pressed={selectedRoom === item.room}
-                        >
-                          <MapPin size={11} aria-hidden="true" />
-                          <span>{item.room}</span>
-                        </button>
-                      </td>
-                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                        <Link to={item.path} className="sched-card-link">
-                          Xem <ArrowUpRight size={13} aria-hidden="true" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredClasses.map((item, idx) => {
+                    const isPinned = pinnedClassIds.includes(item.id);
+                    return (
+                      <tr key={item.id} className={`card-nganh-${item.nganhId}`}>
+                        <td className="sched-table-col-num">
+                          {idx + 1}
+                        </td>
+                        <td>
+                          <strong className="sched-table-class-name">{item.name}</strong>
+                          <span className="sched-table-nganh-tag">
+                            <span className="sched-table-nganh-dot" aria-hidden="true" />
+                            {item.khoiName}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="sched-ca-pill">
+                            Ca {item.ca}
+                          </span>
+                          <div className="sched-table-time-info">{item.time}</div>
+                        </td>
+                        <td>
+                          <div className="sched-table-teachers-wrapper">
+                            {item.teachers.map((t, i) => (
+                              <span key={i} className="sched-bento-teacher-pill">{t}</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="sched-table-col-target">
+                          <strong className="sched-table-age-highlight">{item.ageText}</strong>
+                          <div className="sched-table-age-info">
+                            {item.studentsCount ? `${item.studentsCount} em (${item.birthYear})` : <em className="sched-table-recruiting">Tuyển sinh ({item.birthYear})</em>}
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="sched-bento-room"
+                            onClick={() => setSelectedRoom(selectedRoom === item.room ? null : item.room)}
+                            title="Bấm để lọc theo phòng này"
+                            aria-pressed={selectedRoom === item.room}
+                          >
+                            <MapPin size={11} aria-hidden="true" />
+                            <span>{item.room}</span>
+                          </button>
+                        </td>
+                        <td className="sched-table-col-action">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              className={`sched-pin-btn ${isPinned ? "pinned" : ""}`}
+                              onClick={() => togglePinClass(item.id)}
+                              title={isPinned ? `Bỏ ghim lớp ${item.name}` : `Ghim lớp ${item.name}`}
+                              aria-label={isPinned ? `Bỏ ghim lớp ${item.name}` : `Ghim lớp ${item.name}`}
+                              aria-pressed={isPinned}
+                            >
+                              <Star size={15} fill={isPinned ? "currentColor" : "none"} />
+                            </button>
+                            <Link to={item.path} className="sched-card-link">
+                              Xem <ArrowUpRight size={13} aria-hidden="true" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-
         {/* ════ CAMPUS ROOM DIRECTORY ════ */}
         <section className="sched-rooms-section" aria-labelledby="sched-rooms-title">
           <div className="sched-rooms-header">
             <span className="sched-eyebrow">CHỈ DẪN KHUÔN VIÊN GIÁO XỨ</span>
-            <h2 id="sched-rooms-title" style={{ fontSize: "24px", marginTop: "4px" }}>
+            <h2 id="sched-rooms-title" className="sched-rooms-title">
               Danh Mục &amp; Sơ Đồ <em>Phòng Học</em>
             </h2>
-            <p style={{ fontSize: "13.5px", color: "var(--sched-muted)", marginTop: "4px" }}>
+            <p className="sched-rooms-desc">
               Bấm vào từng phòng dưới đây để lọc nhanh các lớp học diễn ra tại phòng đó trong 2 ca sáng Chúa Nhật.
             </p>
           </div>
@@ -603,7 +821,7 @@ export default function LichHoc() {
                   onClick={() => setSelectedRoom(isActive ? null : room.id)}
                 >
                   <strong>
-                    <DoorOpen size={16} className="text-amber-700 dark:text-amber-400" />
+                    <DoorOpen size={16} className="sched-room-icon" aria-hidden="true" />
                     {room.name}
                   </strong>
                   <span>{room.zone} · {classesInRoom.length} lớp học</span>
@@ -616,18 +834,18 @@ export default function LichHoc() {
         {/* ════ GUIDELINES FOR STUDENTS & PARENTS ════ */}
         <div className="sched-guidelines">
           <div className="sched-guidelines-icon">
-            <Info size={22} />
+            <Info size={22} aria-hidden="true" />
           </div>
           <div>
-            <h3 style={{ fontFamily: "Georgia, serif", fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
+            <h3 className="sched-guidelines-title">
               Lưu Ý Khi Đến Lớp Giáo Lý
             </h3>
-            <ul style={{ fontSize: "13.5px", lineHeight: "1.7", color: "var(--sched-muted)", paddingLeft: "18px", margin: 0 }}>
+            <ul className="sched-guidelines-list">
               <li>
                 Các em vui lòng có mặt trước giờ học <strong>10–15 phút</strong> để ổn định hàng ngũ, điểm danh và chuẩn bị tâm hồn.
               </li>
               <li>
-                Mặc đồng phục Hùng Tâm Dũng Chí chỉnh tề, đeo khăn quàng đúng ngành (Khăn xanh chuối non cho Ngành Ấu, khăn vàng cho Kim Hoan...), mang đầy đủ Kinh Thánh, sách giáo lý và tập vở.
+                Mặc đồng phục Hùng Tâm Dũng Chí chỉnh tề, đeo khăn quàng đúng khối học (Khăn xanh lá trơn cho Vườn Trẻ & Khai Tâm, khăn xanh có viền cho Rước Lễ, khăn vàng cho Thêm Sức, khăn cam cho Phụng Vụ, khăn đỏ cho Kinh Thánh & Vào Đời), mang đầy đủ Kinh Thánh, sách giáo lý và tập vở.
               </li>
               <li>
                 Lịch học có thể điều chỉnh vào các dịp Lễ Trọng hoặc kỳ thi giáo lý. Phụ huynh vui lòng theo dõi thông báo trực tiếp từ Ban Giáo Lý.
@@ -638,27 +856,73 @@ export default function LichHoc() {
 
         {/* ════ CALL TO ACTION ════ */}
         <section className="sched-cta" aria-labelledby="sched-cta-title">
-          <span className="sched-eyebrow">HÀNH TRÌNH ĐỨC TIN</span>
-          <h2 id="sched-cta-title" style={{ fontSize: "28px", marginTop: "8px", marginBottom: "8px" }}>
-            Chưa Tìm Thấy Lớp Hoặc Cần <em>Ghi Danh Mới?</em>
+          <span className="sched-eyebrow">ĐỒNG HÀNH ĐỨC TIN</span>
+          <h2 id="sched-cta-title" className="sched-cta-title">
+            Chào Đón <em>Giáo Lý Sinh Mới</em>
           </h2>
-          <p style={{ fontSize: "15px", color: "var(--sched-muted)", maxWidth: "560px", margin: "0 auto" }}>
-            Ban Tuyển Sinh Giáo Lý Giáo xứ An Ngãi luôn chào đón các em thiếu nhi mới đến độ tuổi đến lớp hoặc mới chuyển về giáo xứ.
+          <p className="sched-cta-desc">
+            Ban Giáo Lý luôn sẵn lòng đón nhận và đồng hành cùng các em thiếu nhi mới đến độ tuổi đến lớp hoặc vừa chuyển về giáo xứ.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap", marginTop: "20px" }}>
+          <div className="sched-cta-actions">
             <Link to="/tuyển-sinh" className="sched-cta-btn">
-              Tìm hiểu tuyển sinh <ArrowUpRight size={17} />
+              Hướng dẫn ghi danh <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
             <Link
               to="/liên-hệ"
-              className="sched-cta-btn"
-              style={{ background: "transparent", border: "1px solid var(--sched-line)", color: "var(--sched-ink)" }}
+              className="sched-cta-btn sched-cta-btn--outline"
             >
               Liên hệ Ban Giáo Lý
             </Link>
           </div>
         </section>
-      </main>
+      </div>
+
+      {/* ════ FLOATING THUMB ZONE QUICK SWITCHER (MOBILE ONLY) ════ */}
+      <div
+        className={`sched-thumb-bar ${showThumbBar ? "visible" : ""}`}
+        role="navigation"
+        aria-label="Điều khiển ca học nhanh"
+      >
+        <div className="sched-thumb-tabs">
+          <button
+            type="button"
+            className={`sched-thumb-tab-btn ${selectedCa === "all" ? "active" : ""}`}
+            onClick={() => setSelectedCa("all")}
+          >
+            <span>Tất cả</span>
+            <span className="opacity-70">({TOTAL_CLASSES})</span>
+          </button>
+          <button
+            type="button"
+            className={`sched-thumb-tab-btn ${selectedCa === "1" ? "active" : ""}`}
+            onClick={() => setSelectedCa("1")}
+          >
+            <span>Ca 1</span>
+            <span className="opacity-70">({countCa1})</span>
+          </button>
+          <button
+            type="button"
+            className={`sched-thumb-tab-btn ${selectedCa === "2" ? "active" : ""}`}
+            onClick={() => setSelectedCa("2")}
+          >
+            <span>Ca 2</span>
+            <span className="opacity-70">({countCa2})</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="sched-thumb-action-btn"
+          onClick={() => {
+            const target = document.querySelector("#danh-sach-lop");
+            if (target) target.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth" });
+          }}
+          title="Cuộn lên đầu danh sách"
+          aria-label="Cuộn lên đầu danh sách lớp"
+        >
+          <ArrowUp size={16} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
-  FileSpreadsheet, Upload, Download, Check, AlertCircle,
-  X, Users, ArrowRight, CheckCircle2, RefreshCw
+  FileSpreadsheet, Upload, Download, AlertCircle,
+  X, ArrowRight, CheckCircle2, Lightbulb
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Spinner } from "../../../components/ui/Skeleton.jsx";
 import { parseStudentRosterExcel, downloadSampleExcel, preloadXLSX } from "../utils/excelRosterHelper.js";
 import { importClassRoster } from "../dataLayer.js";
@@ -18,25 +18,17 @@ export default function ExcelImportModal({
   onSuccess,
   showToast,
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const [step, setStep] = useState("upload"); // 'upload' | 'preview' | 'success'
   const [selectedLop, setSelectedLop] = useState(() => currentLop || (availableClasses[0]?.lop || ""));
   const [file, setFile] = useState(null);
   const [parsing, setParsing] = useState(false);
   const [parsedData, setParsedData] = useState(null);
   const [downloadingSample, setDownloadingSample] = useState(false);
-
-  useEffect(() => {
-    if (open) preloadXLSX();
-  }, [open]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
-
-  // Cập nhật selectedLop nếu currentLop thay đổi
-  React.useEffect(() => {
-    if (currentLop) setSelectedLop(currentLop);
-  }, [currentLop]);
 
   const resetState = useCallback(() => {
     setStep("upload");
@@ -55,6 +47,27 @@ export default function ExcelImportModal({
     onClose();
   }, [importing, resetState, onClose]);
 
+  useEffect(() => {
+    if (!open) return;
+    preloadXLSX();
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && !importing) {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, importing, handleClose]);
+
   // Xử lý đọc file Excel
   const processFile = async (f) => {
     if (!f) return;
@@ -72,7 +85,7 @@ export default function ExcelImportModal({
       setStep("preview");
     } catch (err) {
       console.error("Parse Excel error:", err);
-      showToast(err.message || "Không thể đọc file Excel này", "error");
+      showToast(err.message || "Không thể đọc file Excel này. Vui lòng kiểm tra lại cấu trúc.", "error");
       setFile(null);
     } finally {
       setParsing(false);
@@ -98,13 +111,13 @@ export default function ExcelImportModal({
     try {
       const res = await downloadSampleExcel(selectedLop || "LopMau", namHoc);
       if (res?.cancelled) {
-        showToast("Đã huỷ lưu file", "info");
+        showToast("Đã hủy lưu file", "info");
         return;
       }
       if (res?.method === "picker") {
         showToast("Đã lưu file mẫu thành công", "success");
       } else {
-        showToast("Đang tải file về máy...", "info");
+        showToast("Đang tải file mẫu về thiết bị...", "info");
       }
     } catch (err) {
       console.error("Download sample error:", err);
@@ -117,11 +130,11 @@ export default function ExcelImportModal({
   // Tiến hành import vào Database
   const handleImport = async () => {
     if (!selectedLop) {
-      showToast("Vui lòng chọn lớp học cần xếp", "warning");
+      showToast("Vui lòng chọn Lớp học cần xếp", "warning");
       return;
     }
     if (!parsedData || parsedData.validCount === 0) {
-      showToast("Không có học sinh hợp lệ để nhập", "warning");
+      showToast("Không có Giáo lý sinh hợp lệ để nhập", "warning");
       return;
     }
 
@@ -148,11 +161,11 @@ export default function ExcelImportModal({
       const result = await importClassRoster(selectedLop, namHoc, validStudents);
       setImportResult(result);
       setStep("success");
-      showToast(`Đã nhập thành công ${result?.enrolled || validStudents.length} học sinh!`, "success");
+      showToast(`Đã ghi danh thành công ${result?.enrolled || validStudents.length} Giáo lý sinh vào Lớp ${selectedLop}!`, "success");
       if (onSuccess) onSuccess(result);
     } catch (err) {
       console.error("Import error:", err);
-      showToast(err.message || "Quá trình import thất bại. Kiểm tra quyền Admin.", "error");
+      showToast(err.message || "Quá trình nhập danh sách thất bại. Kiểm tra quyền Quản trị.", "error");
     } finally {
       setImporting(false);
     }
@@ -163,34 +176,37 @@ export default function ExcelImportModal({
   return createPortal(
     <div
       data-lenis-prevent
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 bg-stone-900/50 dark:bg-black/70 backdrop-blur-sm transition-all"
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 bg-stone-900/60 dark:bg-black/75 backdrop-blur-xs transition-all"
       onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="excel-modal-title"
     >
       <motion.div
         data-lenis-prevent
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+        exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
         onClick={(e) => e.stopPropagation()}
         className={`relative w-full ${
           step === "preview" ? "max-w-5xl xl:max-w-6xl" : "max-w-2xl"
-        } max-h-[90vh] bg-white dark:bg-[#1C1917] rounded-[28px] sm:rounded-[32px] shadow-2xl border border-amber-900/10 dark:border-amber-100/10 flex flex-col overflow-hidden text-stone-800 dark:text-stone-200 transition-all duration-300`}
+        } max-h-[90vh] bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl sm:rounded-3xl shadow-2xl border border-[#dedfd4] dark:border-[#354237] flex flex-col overflow-hidden text-[#293d32] dark:text-[#ecece0] transition-all duration-300`}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-50/50 dark:bg-stone-900/50">
+        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] flex items-center justify-center shadow-xs">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-[16px] sm:text-[18px] font-extrabold text-amber-950 dark:text-amber-50 font-serif">
-                Nhập danh sách học sinh (.xlsx)
+              <h3 id="excel-modal-title" className="text-base sm:text-lg font-bold text-[#293d32] dark:text-[#ecece0] font-sans leading-tight">
+                Nhập danh sách Giáo lý sinh (.xlsx)
               </h3>
-              <p className="text-[12px] font-medium text-stone-500 dark:text-stone-400">
-                Năm học: <span className="font-bold text-amber-800 dark:text-amber-400">{namHoc}</span>
+              <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] mt-0.5">
+                Niên khóa: <span className="font-bold text-[#7c5c2d] dark:text-[#d4b47d]">{namHoc}</span>
                 {selectedLop && (
                   <>
-                    {" "}• Lớp: <span className="font-bold text-amber-800 dark:text-amber-400">{selectedLop}</span>
+                    {" "}• Lớp: <span className="font-bold text-[#314e3e] dark:text-[#d6b883]">{selectedLop}</span>
                   </>
                 )}
               </p>
@@ -200,7 +216,8 @@ export default function ExcelImportModal({
             type="button"
             disabled={importing}
             onClick={handleClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
+            aria-label="Đóng"
+            className="min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center text-[#575e55] hover:text-[#293d32] dark:text-[#b0b9ac] dark:hover:text-[#ecece0] hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -211,18 +228,18 @@ export default function ExcelImportModal({
           {/* Lựa chọn Lớp học (nếu mở từ ngoài toolbar) */}
           {!currentLop && step !== "success" && (
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center gap-2">
-              <label className="text-[13px] font-bold text-stone-700 dark:text-stone-300 whitespace-nowrap">
-                Chọn lớp nhận học sinh:
+              <label className="text-xs sm:text-sm font-bold text-[#293d32] dark:text-[#ecece0] whitespace-nowrap">
+                Chọn Lớp học tiếp nhận:
               </label>
               <select
                 value={selectedLop}
                 onChange={(e) => setSelectedLop(e.target.value)}
                 disabled={importing}
-                className="flex-1 rounded-xl border border-amber-900/15 dark:border-amber-100/15 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-[13.5px] font-bold text-amber-950 dark:text-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="flex-1 min-h-[44px] rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-3.5 py-2 text-sm font-bold text-[#293d32] dark:text-[#ecece0] focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30"
               >
                 {availableClasses.map((c) => (
                   <option key={c.lop} value={c.lop}>
-                    Lớp {c.lop} ({c.studentCount || 0} HS)
+                    Lớp {c.lop} ({c.studentCount || 0} Giáo lý sinh)
                   </option>
                 ))}
               </select>
@@ -237,10 +254,10 @@ export default function ExcelImportModal({
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-[24px] p-8 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-2xl sm:rounded-3xl p-8 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
                   dragOver
-                    ? "border-amber-600 bg-amber-500/10 scale-[0.99]"
-                    : "border-amber-900/20 dark:border-amber-100/20 hover:border-amber-600/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20"
+                    ? "border-[#314e3e] dark:border-[#d6b883] bg-[#314e3e]/10 dark:bg-[#d6b883]/10 scale-[0.99]"
+                    : "border-[#dedfd4] dark:border-[#354237] hover:border-[#314e3e]/50 dark:hover:border-[#d6b883]/50 hover:bg-[#faf8f3] dark:hover:bg-[#151c18]"
                 }`}
               >
                 <input
@@ -250,47 +267,47 @@ export default function ExcelImportModal({
                   className="hidden"
                   onChange={handleFileChange}
                 />
-                <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-3 shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] flex items-center justify-center mb-3 shadow-inner">
                   {parsing ? (
                     <Spinner className="w-6 h-6" />
                   ) : (
                     <Upload className="w-6 h-6" />
                   )}
                 </div>
-                <p className="text-[15px] font-bold text-amber-950 dark:text-amber-50 mb-1">
+                <p className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] mb-1">
                   {parsing ? "Đang đọc dữ liệu Excel..." : "Kéo thả file .xlsx vào đây hoặc bấm để chọn file"}
                 </p>
-                <p className="text-[12.5px] text-stone-500 dark:text-stone-400 max-w-sm">
-                  Hỗ trợ định dạng Microsoft Excel (.xlsx, .xls). Hệ thống tự động nhận diện các cột Tên Thánh, Họ và Tên, Ngày Sinh, SĐT...
+                <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] max-w-sm leading-relaxed">
+                  Hỗ trợ định dạng Microsoft Excel (.xlsx, .xls). Hệ thống tự động nhận diện học sinh cũ và tự sinh mã tài khoản thông minh nếu là học sinh mới.
                 </p>
               </div>
 
               {/* Box Hướng Dẫn & Tải File Mẫu */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-amber-50/60 dark:bg-stone-800/40 border border-amber-900/10 dark:border-amber-100/10">
-                <div className="flex items-center gap-2.5 text-stone-600 dark:text-stone-300 text-[13px]">
-                  <span className="text-[16px]">💡</span>
-                  <span>Chưa có file danh sách chuẩn?</span>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237]">
+                <div className="flex items-center gap-2 text-[#575e55] dark:text-[#b0b9ac] text-xs sm:text-sm">
+                  <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span>Chưa có file danh sách chuẩn cấu trúc?</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleDownloadSample}
                   disabled={downloadingSample}
-                  title="Tải file Excel mẫu (.xlsx) chuẩn cấu trúc"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-stone-800 text-amber-900 dark:text-amber-400 border border-amber-900/15 dark:border-amber-100/15 text-[12.5px] font-bold shadow-sm hover:bg-amber-100/50 dark:hover:bg-amber-950/40 active:scale-95 transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  title="Tải file Excel mẫu (.xlsx) chuẩn cấu trúc (không cần cột mã học sinh)"
+                  className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#fffefa] dark:bg-[#1e2821] text-[#314e3e] dark:text-[#d6b883] border border-[#dedfd4] dark:border-[#354237] text-xs font-bold shadow-sm hover:bg-[#314e3e]/5 dark:hover:bg-[#d6b883]/10 active:scale-95 transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {downloadingSample ? (
                     <Spinner className="w-3.5 h-3.5" />
                   ) : (
                     <Download className="w-3.5 h-3.5" />
                   )}
-                  {downloadingSample ? "Đang tải mẫu..." : "Tải file Excel mẫu (.xlsx)"}
+                  <span>{downloadingSample ? "Đang tải mẫu..." : "Tải file Excel mẫu (.xlsx)"}</span>
                 </button>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-stone-100 dark:bg-stone-800/60 text-stone-500 dark:text-stone-400 text-[12px] leading-relaxed">
-                <p className="font-semibold text-stone-700 dark:text-stone-300 mb-0.5">Quy ước phân quyền & bảo mật:</p>
-                • Tài khoản được tự động gán vai trò <span className="font-mono text-amber-800 dark:text-amber-400 font-bold">student</span> (Học sinh) và trạng thái <span className="font-semibold text-stone-700 dark:text-stone-300">Đang học</span>.<br />
-                • Mỗi học sinh được tạo tài khoản Supabase Auth với email <span className="font-mono text-amber-800 dark:text-amber-400 font-bold">[username]@giaoly.local</span> và mật khẩu mặc định là <span className="font-mono text-amber-800 dark:text-amber-400 font-bold">bangiaoly</span>.
+              <div className="p-3.5 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] text-[#575e55] dark:text-[#b0b9ac] text-xs leading-relaxed border border-[#dedfd4] dark:border-[#354237]">
+                <p className="font-bold text-[#293d32] dark:text-[#ecece0] mb-1">Quy ước phân quyền & định danh tự động:</p>
+                • Hệ thống tự động so khớp Họ tên tiếng Việt + Ngày sinh để nhận diện học sinh cũ trong cơ sở dữ liệu và giữ nguyên mã tài khoản.<br />
+                • Học sinh mới được tự động sinh mã dạng <span className="font-mono text-[#314e3e] dark:text-[#d6b883] font-bold">[tên][họ][năm sinh]</span> (ví dụ: <span className="font-mono font-bold">annguyen15</span>, <span className="font-mono font-bold">annguyen15_2</span>...) với mật khẩu mặc định là <span className="font-mono text-[#314e3e] dark:text-[#d6b883] font-bold">bangiaoly</span>.
               </div>
             </div>
           )}
@@ -300,28 +317,28 @@ export default function ExcelImportModal({
             <div className="flex flex-col gap-4">
               {/* Thống kê nhanh */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-                <div className="p-3 rounded-2xl bg-stone-100 dark:bg-stone-800/60 border border-black/5 dark:border-white/5">
-                  <span className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider">Tổng cộng</span>
-                  <span className="text-[18px] sm:text-[20px] font-black text-amber-950 dark:text-amber-50">{parsedData.total}</span>
+                <div className="p-3 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237]">
+                  <span className="block text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-wider">Tổng cộng</span>
+                  <span className="text-lg sm:text-xl font-bold font-sans text-[#293d32] dark:text-[#ecece0]">{parsedData.total}</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20">
-                  <span className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Hợp lệ</span>
-                  <span className="text-[18px] sm:text-[20px] font-black text-emerald-700 dark:text-emerald-400">{parsedData.validCount}</span>
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/60 dark:border-emerald-800/60">
+                  <span className="block text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Hợp lệ</span>
+                  <span className="text-lg sm:text-xl font-bold font-sans text-emerald-800 dark:text-emerald-300">{parsedData.validCount}</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200/50 dark:border-red-500/20">
-                  <span className="block text-[11px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider">Lỗi / Bỏ qua</span>
-                  <span className="text-[18px] sm:text-[20px] font-black text-red-700 dark:text-red-400">{parsedData.invalidCount}</span>
+                <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-300/60 dark:border-red-800/60">
+                  <span className="block text-xs font-bold text-red-800 dark:text-red-300 uppercase tracking-wider">Lỗi / Bỏ qua</span>
+                  <span className="text-lg sm:text-xl font-bold font-sans text-red-800 dark:text-red-300">{parsedData.invalidCount}</span>
                 </div>
               </div>
 
               {/* Cảnh báo nếu có dòng lỗi */}
               {parsedData.invalidCount > 0 && (
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[12px] text-amber-900 dark:text-amber-300">
-                  <p className="font-bold flex items-center gap-1.5 mb-1">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                <div role="alert" className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300/60 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200">
+                  <p className="font-bold flex items-center gap-1.5 mb-1.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                     Có {parsedData.invalidCount} dòng dữ liệu không đạt yêu cầu:
                   </p>
-                  <ul className="list-disc pl-5 space-y-0.5 max-h-20 overflow-y-auto">
+                  <ul className="list-disc pl-5 space-y-1 max-h-28 overflow-y-auto">
                     {parsedData.errors.map((err, i) => (
                       <li key={i}>{err}</li>
                     ))}
@@ -330,11 +347,11 @@ export default function ExcelImportModal({
               )}
 
               {/* Hướng dẫn cuộn */}
-              <div className="flex items-center justify-between text-[12px] text-stone-500 dark:text-stone-400">
-                <span className="font-bold text-stone-700 dark:text-stone-300">
-                  Danh sách học sinh đọc được ({parsedData.validCount} hợp lệ):
+              <div className="flex items-center justify-between text-xs text-[#575e55] dark:text-[#b0b9ac] gap-2 flex-wrap">
+                <span className="font-bold text-[#293d32] dark:text-[#ecece0]">
+                  Danh sách Giáo lý sinh ({parsedData.validCount} hợp lệ):
                 </span>
-                <span className="text-[11.5px] font-medium text-amber-800 dark:text-amber-400">
+                <span className="text-xs font-medium text-[#7c5c2d] dark:text-[#d4b47d]">
                   ↔ Cuộn ngang & dọc để xem toàn bộ các cột
                 </span>
               </div>
@@ -342,13 +359,13 @@ export default function ExcelImportModal({
               {/* Bảng xem trước cuộn ngang & dọc */}
               <div
                 data-lenis-prevent
-                className="border border-amber-900/15 dark:border-amber-100/15 rounded-2xl max-h-[50vh] overflow-x-auto overflow-y-auto shadow-inner bg-white/70 dark:bg-stone-900/50 overscroll-contain"
+                className="border border-[#dedfd4] dark:border-[#354237] rounded-2xl max-h-[50vh] overflow-x-auto overflow-y-auto shadow-inner bg-[#fffefa] dark:bg-[#1e2821] overscroll-contain"
               >
-                <table className="w-full text-left text-[12.5px] border-collapse min-w-[1100px] whitespace-nowrap">
-                  <thead className="bg-amber-100/95 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold sticky top-0 z-10 shadow-sm backdrop-blur-sm">
+                <table className="w-full text-left text-xs border-collapse min-w-[1100px] whitespace-nowrap">
+                  <thead className="bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] font-bold sticky top-0 z-10 shadow-xs border-b border-[#dedfd4] dark:border-[#354237]">
                     <tr>
                       <th className="px-3 py-2.5 w-12 text-center">STT</th>
-                      <th className="px-3.5 py-2.5">Mã HS (Username)</th>
+                      <th className="px-3.5 py-2.5">Mã dự kiến (Username)</th>
                       <th className="px-3.5 py-2.5">Tên Thánh</th>
                       <th className="px-3.5 py-2.5">Họ và tên</th>
                       <th className="px-3.5 py-2.5">Ngày sinh</th>
@@ -362,29 +379,29 @@ export default function ExcelImportModal({
                       <th className="px-3.5 py-2.5">Giáo xóm</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                  <tbody className="divide-y divide-[#dedfd4] dark:divide-[#354237]">
                     {parsedData.students.map((s, idx) => (
                       <tr
                         key={idx}
                         className={
                           s.isValid
-                            ? "hover:bg-amber-50/60 dark:hover:bg-stone-800/60 transition-colors"
-                            : "bg-red-50/70 dark:bg-red-950/40 text-red-600"
+                            ? "hover:bg-[#314e3e]/5 dark:hover:bg-[#d6b883]/5 transition-colors"
+                            : "bg-red-50/70 dark:bg-red-950/40 text-red-700 dark:text-red-300"
                         }
                       >
-                        <td className="px-3 py-2.5 text-center text-stone-400 font-medium">{idx + 1}</td>
-                        <td className="px-3.5 py-2.5 font-mono font-bold text-stone-700 dark:text-stone-300">{s.username}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ten_thanh || "—"}</td>
-                        <td className="px-3.5 py-2.5 font-bold text-amber-950 dark:text-amber-50">{s.ho_va_ten}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ngay_sinh || "—"}</td>
+                        <td className="px-3 py-2.5 text-center text-[#575e55] dark:text-[#b0b9ac] font-medium">{idx + 1}</td>
+                        <td className="px-3.5 py-2.5 font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{s.username}</td>
+                        <td className="px-3.5 py-2.5 text-[#7c5c2d] dark:text-[#d4b47d] font-semibold">{s.ten_thanh || "—"}</td>
+                        <td className="px-3.5 py-2.5 font-bold text-[#293d32] dark:text-[#ecece0]">{s.ho_va_ten}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ngay_sinh || "—"}</td>
                         <td className="px-3.5 py-2.5 text-center font-medium">{s.gioi_tinh || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ngay_rua_toi || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ngay_ruoc_le || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ngay_them_suc || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ten_cha || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.ten_me || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.sdt || "—"}</td>
-                        <td className="px-3.5 py-2.5 text-stone-600 dark:text-stone-300">{s.giao_xom || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ngay_rua_toi || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ngay_ruoc_le || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ngay_them_suc || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ten_cha || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.ten_me || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.sdt || "—"}</td>
+                        <td className="px-3.5 py-2.5 text-[#575e55] dark:text-[#b0b9ac]">{s.giao_xom || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -395,37 +412,37 @@ export default function ExcelImportModal({
 
           {/* BƯỚC 3: KẾT QUẢ THÀNH CÔNG */}
           {step === "success" && (
-            <div className="py-6 flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-md">
+            <div role="status" aria-live="polite" className="py-6 flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shadow-xs">
                 <CheckCircle2 className="w-9 h-9" />
               </div>
-              <h4 className="text-[20px] font-extrabold text-amber-950 dark:text-amber-50 font-serif">
+              <h4 className="text-xl font-bold font-sans text-[#293d32] dark:text-[#ecece0]">
                 Nhập danh sách thành công!
               </h4>
-              <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-stone-800/50 border border-amber-900/10 dark:border-amber-100/10 max-w-md text-[13.5px] leading-relaxed text-stone-600 dark:text-stone-300">
+              <div className="p-4 rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] max-w-md text-sm leading-relaxed text-[#575e55] dark:text-[#b0b9ac]">
                 <p>
-                  Đã ghi danh <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{importResult?.enrolled || parsedData?.validCount} học sinh</strong> vào <strong className="text-amber-950 dark:text-amber-50">Lớp {selectedLop}</strong> (Niên khóa {namHoc}).
+                  Đã ghi danh <strong className="text-emerald-700 dark:text-emerald-300 font-bold">{importResult?.enrolled || parsedData?.validCount} Giáo lý sinh</strong> vào <strong className="text-[#293d32] dark:text-[#ecece0]">Lớp {selectedLop}</strong> (Niên khóa {namHoc}).
                 </p>
-                <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/5 flex justify-center gap-4 text-[12px] text-stone-500">
-                  <span>Tài khoản mới: <strong>{importResult?.newUsers ?? "—"}</strong></span>
-                  <span>Cập nhật: <strong>{importResult?.updatedUsers ?? "—"}</strong></span>
+                <div className="mt-2 pt-2 border-t border-[#dedfd4] dark:border-[#354237] flex justify-center gap-4 text-xs text-[#575e55] dark:text-[#b0b9ac]">
+                  <span>Tài khoản mới: <strong className="text-[#293d32] dark:text-[#ecece0]">{importResult?.newUsers ?? "—"}</strong></span>
+                  <span>Cập nhật: <strong className="text-[#293d32] dark:text-[#ecece0]">{importResult?.updatedUsers ?? "—"}</strong></span>
                 </div>
               </div>
-              <p className="text-[12.5px] text-stone-400 max-w-sm">
-                Mật khẩu mặc định của tất cả học sinh là <span className="font-mono font-bold text-amber-700 dark:text-amber-400">bangiaoly</span>.
+              <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] max-w-sm">
+                Mật khẩu mặc định của tất cả Giáo lý sinh là <span className="font-mono font-bold text-[#314e3e] dark:text-[#d6b883]">bangiaoly</span>.
               </p>
             </div>
           )}
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="px-5 sm:px-7 py-4 border-t border-amber-900/10 dark:border-amber-100/10 bg-stone-50 dark:bg-stone-900/60 flex items-center justify-between gap-3">
+        <div className="px-5 sm:px-7 py-4 border-t border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] flex items-center justify-between gap-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === "upload" && (
             <div className="w-full flex justify-end">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-5 py-2.5 rounded-xl text-[13.5px] font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
+                className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e]"
               >
                 Đóng
               </button>
@@ -433,12 +450,12 @@ export default function ExcelImportModal({
           )}
 
           {step === "preview" && (
-            <>
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 w-full">
               <button
                 type="button"
                 disabled={importing}
                 onClick={() => setStep("upload")}
-                className="px-4 py-2.5 rounded-xl text-[13px] font-bold text-stone-600 dark:text-stone-300 bg-stone-200/60 dark:bg-stone-800 hover:bg-stone-200 transition-colors disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#575e55] dark:text-[#b0b9ac] bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50 cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e]"
               >
                 Chọn file khác
               </button>
@@ -447,20 +464,20 @@ export default function ExcelImportModal({
                 type="button"
                 disabled={importing || !parsedData || parsedData.validCount === 0}
                 onClick={handleImport}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-900 dark:bg-amber-600 text-white text-[13.5px] font-bold shadow-md hover:bg-amber-800 active:scale-[0.98] transition-all disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#314e3e] hover:bg-[#263e32] dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] text-white dark:text-[#19251d] text-xs sm:text-sm font-bold shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e]"
               >
                 {importing ? (
                   <>
-                    <Spinner className="w-4 h-4" /> Đang tạo tài khoản & ghi danh...
+                    <Spinner className="w-4 h-4 text-white dark:text-[#19251d]" /> Đang tạo tài khoản & ghi danh...
                   </>
                 ) : (
                   <>
-                    Xác nhận nhập ({parsedData?.validCount} học sinh)
+                    <span>Xác nhận nhập ({parsedData?.validCount} Giáo lý sinh)</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
-            </>
+            </div>
           )}
 
           {step === "success" && (
@@ -468,7 +485,7 @@ export default function ExcelImportModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[13.5px] font-bold shadow-md transition-all active:scale-95"
+                className="min-h-[44px] w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 Hoàn tất & Đóng
               </button>

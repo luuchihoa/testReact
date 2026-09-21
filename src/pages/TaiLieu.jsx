@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   GraduationCap, FileText, Play, Search, ChevronRight, ChevronLeft,
   Download, Clock, BookOpen, Sparkles, Flame, Heart, Church, Globe, X, Eye, Compass,
-  ArrowRight, Zap, Trophy, AlertCircle, RefreshCw
+  ArrowRight, Zap, Trophy, AlertCircle, RefreshCw, Baby, Wheat
 } from "lucide-react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +20,7 @@ import "./TaiLieu.css";
 
 const KHOI_LIST = [
   { id: "all",        label: "Tất cả" },
-  { id: "chien-con",  label: "Chiên Con" },
+  { id: "chien-con",  label: "Khai Tâm" },
   { id: "ruoc-le",    label: "Rước Lễ" },
   { id: "them-suc",   label: "Thêm Sức" },
   { id: "phung-vu",   label: "Phụng Vụ" },
@@ -31,12 +31,12 @@ const KHOI_LIST = [
 // Dữ liệu bộ đề thi ôn luyện được tải trực tiếp từ bảng quizzes trên Supabase qua fetchActiveQuizzes()
 
 const DOCS = [
-  // Khối Chiên Con
+  // Khối Khai Tâm (Vườn Trẻ & Khai Tâm)
   {
     id: "cam-nang-khai-tam-chien-con",
     title: "Cẩm Nang Khai Tâm — Em Học Làm Dấu & Cầu Nguyện",
     khoi: "chien-con",
-    khoiLabel: "Chiên Con",
+    khoiLabel: "Khai Tâm",
     type: "PDF",
     icon: Heart,
     desc: "Hướng dẫn ấu nhi cách bước vào nhà thờ, làm dấu Thánh Giá, chào Chúa Giêsu Thánh Thể.",
@@ -186,22 +186,22 @@ const DOCS = [
 ];
 
 const KHOI_BADGE_MAP = {
-  "chien-con":  { label: "Chiên Con",  badgeClass: "tl-badge-chien-con", icon: Heart },
-  "ruoc-le":    { label: "Rước Lễ",    badgeClass: "tl-badge-ruoc-le",    icon: Sparkles },
+  "chien-con":  { label: "Khai Tâm",   badgeClass: "tl-badge-chien-con", icon: Baby },
+  "ruoc-le":    { label: "Rước Lễ",    badgeClass: "tl-badge-ruoc-le",    icon: Wheat },
   "them-suc":   { label: "Thêm Sức",   badgeClass: "tl-badge-them-suc",   icon: Flame },
   "phung-vu":   { label: "Phụng Vụ",   badgeClass: "tl-badge-phung-vu",   icon: Church },
   "kinh-thanh": { label: "Kinh Thánh", badgeClass: "tl-badge-kinh-thanh", icon: BookOpen },
-  "vao-doi":    { label: "Vào Đời",    badgeClass: "tl-badge-vao-doi",    icon: Globe },
+  "vao-doi":    { label: "Vào Đời",    badgeClass: "tl-badge-vao-doi",    icon: Compass },
   "all":        { label: "Tất cả",     badgeClass: "tl-badge-all",        icon: GraduationCap },
 };
 
 const KHOI_LINKS = [
-  { path: "/khối-chiên-con",  label: "Chiên Con",  sub: "Ấu nhi (6 – 9 tuổi)",     icon: Heart },
-  { path: "/khối-rước-lễ",    label: "Rước Lễ",    sub: "Thiếu nhi (10 – 12 tuổi)", icon: Sparkles },
-  { path: "/khối-thêm-sức",   label: "Thêm Sức",   sub: "Nghĩa sĩ (13 – 15 tuổi)",  icon: Flame },
-  { path: "/khối-phụng-vụ",   label: "Phụng Vụ",   sub: "Lễ sinh & Ca đoàn",       icon: Church },
-  { path: "/khối-kinh-thanh", label: "Kinh Thánh", sub: "Hiệp sĩ (16 – 18 tuổi)",  icon: BookOpen },
-  { path: "/khối-vào-đời",    label: "Vào Đời",    sub: "Dự trưởng & Giới trẻ",     icon: Globe },
+  { path: "/khối-chiên-con",  label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2 (5 – 7 tuổi)", icon: Baby },
+  { path: "/khối-rước-lễ",    label: "Rước Lễ",    sub: "RLLĐ 1 & 2 (8 – 9 tuổi)",         icon: Wheat },
+  { path: "/khối-thêm-sức",   label: "Thêm Sức",   sub: "Thêm Sức 1 & 2 (10 – 11 tuổi)",   icon: Flame },
+  { path: "/khối-phụng-vụ",   label: "Phụng Vụ",   sub: "Phụng Vụ (12 tuổi)",              icon: Church },
+  { path: "/khối-kinh-thanh", label: "Kinh Thánh", sub: "Kinh Thánh 1 & 2 (13 – 14 tuổi)", icon: BookOpen },
+  { path: "/khối-vào-đời",    label: "Vào Đời",    sub: "Vào Đời 1 & 2 (15 – 16 tuổi)",    icon: Compass },
 ];
 
 // Helper sinh dãy số phân trang thông minh kèm ellipsis
@@ -241,6 +241,14 @@ export default function TaiLieu() {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
   const [isBibleModalOpen, setIsBibleModalOpen] = useState(false);
+
+  const handleCloseReader = useCallback(() => {
+    setIsReaderOpen(false);
+  }, []);
+
+  const handleCloseBibleModal = useCallback(() => {
+    setIsBibleModalOpen(false);
+  }, []);
 
   // Tải danh sách bộ đề từ Supabase (hỗ trợ nút thử lại khi có lỗi)
   const loadQuizzes = useCallback(async () => {
@@ -1234,14 +1242,14 @@ export default function TaiLieu() {
       <DocumentReaderModal
         doc={selectedDoc}
         isOpen={isReaderOpen}
-        onClose={() => setIsReaderOpen(false)}
+        onClose={handleCloseReader}
         onDownload={handleDownloadDoc}
       />
 
       {/* BIBLE QUICK NAVIGATOR MODAL */}
       <BibleQuickNavigatorModal
         isOpen={isBibleModalOpen}
-        onClose={() => setIsBibleModalOpen(false)}
+        onClose={handleCloseBibleModal}
         initialTestament="all"
       />
     </div>

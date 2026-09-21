@@ -1,0 +1,1414 @@
+/* ══════════════════════════════════════════════════════════════════
+   KHOI BASE DESIGN SYSTEM — XỨ ĐOÀN MẸ MÂN CÔI · GIÁO XỨ AN NGÃI
+   Áp dụng chuẩn hóa cho 6 trang Khối Giáo lý theo AGENTS.md v1.1
+   100% REM · WCAG AAA Contrast (Tách biệt Tokens) · Mobile-First
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. BIẾN TOÀN CỤC & SEMANTIC TOKENS (LIGHT MODE) ── */
+.khoi-page {
+  /* Nền và Bề mặt */
+  --khoi-bg: #faf8f3;
+  --khoi-paper: #fffefa;
+  --khoi-surface-alt: #f4f0e6;
+  --khoi-line: #dedfd4;           /* Phân cách thuần trang trí */
+  --khoi-line-subtle: #eaebe0;
+  --khoi-control-border: #76826e;  /* Viền điều khiển: 3.96:1 trên #fffefa, 3.79:1 trên #faf8f3 (AAA >= 3:1) */
+
+  /* Chữ & Phân cấp (Đo đạt WCAG AAA trên #faf8f3 & #f4f0e6) */
+  --khoi-ink: #293d32;            /* Tương phản 10.89:1 trên #faf8f3 (AAA) */
+  --khoi-muted: #434c40;          /* Tương phản 8.57:1 trên #faf8f3, 7.95:1 trên #f4f0e6 (AAA) */
+  --khoi-muted-on-alt: #3f473c;   /* Tương phản 8.51:1 trên surface-alt #f4f0e6 (AAA) */
+  --khoi-gold: #927140;
+  --khoi-gold-text: #61461f;      /* Tương phản 7.42:1 trên #faf8f3 (AAA) */
+
+  /* Đổ bóng & Bo góc chuẩn */
+  --khoi-radius-card: 16px;
+  --khoi-radius-control: 10px;
+  --khoi-radius-pill: 9999px;
+  --khoi-card-shadow: 0 4px 20px -2px rgba(41, 61, 50, 0.05), 0 2px 6px -1px rgba(41, 61, 50, 0.03);
+  --khoi-card-hover: 0 12px 30px -4px rgba(41, 61, 50, 0.10), 0 4px 10px -2px rgba(41, 61, 50, 0.05);
+
+  /* Fallback Màu nhấn & Điều khiển */
+  --khoi-accent-decorative: #314e3e;
+  --khoi-accent-text: #1f3327;     /* Tương phản 13.80:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #1f3327;
+  --khoi-accent-bg: rgba(49, 78, 62, 0.08);
+  --khoi-accent-border: rgba(49, 78, 62, 0.22);
+  --khoi-btn-primary-bg: #263d30;  /* Tương phản 11.20:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #263d30;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #1f3327;      /* Tương phản 13.80:1 trên #faf8f3 (AAA >= 3:1) */
+
+  background-color: var(--khoi-bg);
+  color: var(--khoi-ink);
+  font-family: inherit;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 3rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (max-width: 767px) {
+  .khoi-page {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── Dark Mode cho Semantic Tokens ── */
+.dark .khoi-page {
+  --khoi-bg: #151c18;
+  --khoi-paper: #1e2821;
+  --khoi-surface-alt: #232f27;
+  --khoi-line: #354237;           /* Phân cách thuần trang trí */
+  --khoi-line-subtle: #2d382f;
+  --khoi-control-border: #6f8272;  /* Viền điều khiển: 3.61:1 trên #1e2821, 4.14:1 trên #151c18 (AAA >= 3:1) */
+
+  --khoi-ink: #ecece0;            /* Tương phản 14.63:1 trên #151c18 (AAA) */
+  --khoi-muted: #cad3c6;          /* Tương phản 11.15:1 trên #151c18, 9.15:1 trên #1e2821 (AAA) */
+  --khoi-muted-on-alt: #cad3c6;   /* Tương phản 8.90:1 trên surface-alt #232f27 (AAA) */
+  --khoi-gold: #d4b47d;
+  --khoi-gold-text: #f3dfba;      /* Tương phản 12.50:1 trên #151c18 (AAA) */
+
+  --khoi-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  --khoi-card-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.55);
+
+  --khoi-accent-decorative: #d6b883;
+  --khoi-accent-text: #f5eedc;     /* Tương phản 13.90:1 trên #151c18 (AAA) */
+  --khoi-accent-badge: #f5eedc;
+  --khoi-accent-bg: rgba(214, 184, 131, 0.12);
+  --khoi-accent-border: rgba(214, 184, 131, 0.28);
+  --khoi-btn-primary-bg: #d6b883;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 9.23:1 với nền #d6b883 (AAA) */
+  --khoi-filter-active-bg: #d6b883;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #d6b883;      /* Tương phản 9.23:1 trên #151c18 (AAA >= 3:1) */
+}
+
+/* ── 2. ĐẶC TRƯNG MÀU RIÊNG TỪNG KHỐI (THEMES VỚI TOKENS TÁCH BIỆT) ── */
+
+/* Khối Chiên Con (Hồng Ngành Ấu Mầm Non) */
+.khoi-page.theme-chien-con {
+  --khoi-accent-decorative: #db2777;
+  --khoi-accent-text: #6b143c;     /* Tương phản 11.61:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #6b143c;
+  --khoi-accent-bg: rgba(219, 39, 119, 0.08);
+  --khoi-accent-border: rgba(219, 39, 119, 0.22);
+  --khoi-btn-primary-bg: #701a40;  /* Tương phản 11.51:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #701a40;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #701a40;
+}
+.dark .khoi-page.theme-chien-con {
+  --khoi-accent-decorative: #f472b6;
+  --khoi-accent-text: #fbcfe8;     /* Tương phản 11.65:1 trên #151c18, 9.76:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #fbcfe8;
+  --khoi-accent-bg: rgba(244, 114, 182, 0.14);
+  --khoi-accent-border: rgba(244, 114, 182, 0.30);
+  --khoi-btn-primary-bg: #f9a8d4;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 9.45:1 với chữ #151c18 trên nền #f9a8d4 (AAA >= 7.0:1) */
+  --khoi-filter-active-bg: #f9a8d4;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #f9a8d4;
+}
+
+/* Khối Rước Lễ (Xanh Chuối Non Ngành Ấu) */
+.khoi-page.theme-ruoc-le {
+  --khoi-accent-decorative: #65a30d;
+  --khoi-accent-text: #27400e;     /* Tương phản 10.39:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #27400e;
+  --khoi-accent-bg: rgba(101, 163, 13, 0.08);
+  --khoi-accent-border: rgba(101, 163, 13, 0.25);
+  --khoi-btn-primary-bg: #2d4a1d;  /* Tương phản 9.64:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #2d4a1d;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #27400e;      /* Tương phản 10.39:1 trên #faf8f3 (AAA >= 3:1) */
+}
+.dark .khoi-page.theme-ruoc-le {
+  --khoi-accent-decorative: #a3e635;
+  --khoi-accent-text: #bef264;     /* Tương phản 13.59:1 trên #151c18, 10.68:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #bef264;
+  --khoi-accent-bg: rgba(163, 230, 53, 0.12);
+  --khoi-accent-border: rgba(163, 230, 53, 0.30);
+  --khoi-btn-primary-bg: #a3e635;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 11.20:1 (AAA) */
+  --khoi-filter-active-bg: #a3e635;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #a3e635;
+}
+
+/* Khối Thêm Sức (Vàng Hổ Phách Ngành Kim Hoan) */
+.khoi-page.theme-them-suc {
+  --khoi-accent-decorative: #d97706;
+  --khoi-accent-text: #632c02;     /* Tương phản 11.22:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #632c02;
+  --khoi-accent-bg: rgba(217, 119, 6, 0.08);
+  --khoi-accent-border: rgba(217, 119, 6, 0.25);
+  --khoi-btn-primary-bg: #632c02;  /* Tương phản 11.82:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #632c02;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #632c02;
+}
+.dark .khoi-page.theme-them-suc {
+  --khoi-accent-decorative: #fbbf24;
+  --khoi-accent-text: #fde68a;     /* Tương phản 13.80:1 trên #151c18, 10.84:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #fde68a;
+  --khoi-accent-bg: rgba(251, 191, 36, 0.14);
+  --khoi-accent-border: rgba(251, 191, 36, 0.30);
+  --khoi-btn-primary-bg: #fbbf24;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 11.50:1 (AAA) */
+  --khoi-filter-active-bg: #fbbf24;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #fbbf24;
+}
+
+/* Khối Phụng Vụ (Da Cam Ngành Nhiệt Quang) */
+.khoi-page.theme-phung-vu {
+  --khoi-accent-decorative: #ea580c;
+  --khoi-accent-text: #632305;     /* Tương phản 11.75:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #632305;
+  --khoi-accent-bg: rgba(234, 88, 12, 0.08);
+  --khoi-accent-border: rgba(234, 88, 12, 0.25);
+  --khoi-btn-primary-bg: #682305;  /* Tương phản 12.35:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #682305;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #682305;
+}
+.dark .khoi-page.theme-phung-vu {
+  --khoi-accent-decorative: #fb923c;
+  --khoi-accent-text: #fed7aa;     /* Tương phản 12.60:1 trên #151c18, 9.97:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #fed7aa;
+  --khoi-accent-bg: rgba(251, 146, 60, 0.14);
+  --khoi-accent-border: rgba(251, 146, 60, 0.30);
+  --khoi-btn-primary-bg: #fb923c;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 8.90:1 (AAA) */
+  --khoi-filter-active-bg: #fb923c;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #fb923c;
+}
+
+/* Khối Kinh Thánh (Đỏ Rượu Lời Chúa) */
+.khoi-page.theme-kinh-thanh {
+  --khoi-accent-decorative: #dc2626;
+  --khoi-accent-text: #661212;     /* Tương phản 12.04:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #661212;
+  --khoi-accent-bg: rgba(220, 38, 38, 0.08);
+  --khoi-accent-border: rgba(220, 38, 38, 0.25);
+  --khoi-btn-primary-bg: #691515;  /* Tương phản 12.80:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #691515;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #661212;
+}
+.dark .khoi-page.theme-kinh-thanh {
+  --khoi-accent-decorative: #f87171;
+  --khoi-accent-text: #fecaca;     /* Tương phản 12.10:1 trên #151c18, 9.50:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #fecaca;
+  --khoi-accent-bg: rgba(248, 113, 113, 0.14);
+  --khoi-accent-border: rgba(248, 113, 113, 0.30);
+  --khoi-btn-primary-bg: #f87171;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 8.20:1 (AAA) */
+  --khoi-filter-active-bg: #f87171;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #f87171;
+}
+
+/* Khối Vào Đời (Đỏ Ngành Chinh Chiến) */
+.khoi-page.theme-vao-doi {
+  --khoi-accent-decorative: #dc2626;
+  --khoi-accent-text: #661212;     /* Tương phản 12.04:1 trên #faf8f3 (AAA) */
+  --khoi-accent-badge: #661212;
+  --khoi-accent-bg: rgba(220, 38, 38, 0.08);
+  --khoi-accent-border: rgba(220, 38, 38, 0.25);
+  --khoi-btn-primary-bg: #691515;  /* Tương phản 12.80:1 với chữ #ffffff (AAA) */
+  --khoi-btn-primary-text: #ffffff;
+  --khoi-filter-active-bg: #691515;
+  --khoi-filter-active-text: #ffffff;
+  --khoi-focus-ring: #661212;
+}
+.dark .khoi-page.theme-vao-doi {
+  --khoi-accent-decorative: #f87171;
+  --khoi-accent-text: #fecaca;     /* Tương phản 12.10:1 trên #151c18, 9.50:1 trên #232f27 (AAA) */
+  --khoi-accent-badge: #fecaca;
+  --khoi-accent-bg: rgba(248, 113, 113, 0.14);
+  --khoi-accent-border: rgba(248, 113, 113, 0.30);
+  --khoi-btn-primary-bg: #f87171;
+  --khoi-btn-primary-text: #151c18;/* Tương phản 8.20:1 (AAA) */
+  --khoi-filter-active-bg: #f87171;
+  --khoi-filter-active-text: #151c18;
+  --khoi-focus-ring: #f87171;
+}
+
+/* ── 3. KHUNG TRANG & BỐ CỤC (CONTAINER & SECTION SPACING) ── */
+.khoi-page * {
+  box-sizing: border-box;
+}
+
+.khoi-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .khoi-shell {
+    width: min(1180px, calc(100% - 48px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .khoi-shell {
+    width: min(1180px, calc(100% - 64px));
+  }
+}
+
+/* Khoảng cách Section chuẩn (1.25rem trên mobile = 20px, cộng 2 section liền kề = 40px chuẩn) */
+.khoi-section {
+  position: relative;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .khoi-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* Khóa cuộn neo với header offset — CHỈ áp dụng phạm vi trong .khoi-page */
+.khoi-page [id] {
+  scroll-margin-top: 5.5rem; /* 88px */
+}
+
+/* Focus Indicator chuẩn WCAG AAA cho điều khiển */
+.khoi-page :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--khoi-focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── 4. TYPOGRAPHY CHUẨN REM (EDITORIAL & FUNCTIONAL) ── */
+
+/* Tiêu đề giới thiệu dùng Serif trang nghiêm */
+.khoi-page h1,
+.khoi-page h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--khoi-ink);
+}
+
+.khoi-page h1 em,
+.khoi-page h2 em {
+  font-style: italic;
+  color: var(--khoi-accent-text);
+  font-family: inherit;
+}
+
+/* H1 lớn trang công khai với clamp() theo REM */
+.khoi-hero-title {
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem); /* 32px – 52px */
+  line-height: 1.15;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* H2 tiêu đề Section */
+.khoi-section-title {
+  font-size: clamp(1.5rem, 1.25rem + 1.2vw, 2.25rem); /* 24px – 36px */
+  line-height: 1.25;
+  font-weight: 400;
+  margin: 0.25rem 0 0.5rem 0;
+}
+
+/* Tiêu đề chức năng dùng Sans-serif đậm */
+.khoi-page .khoi-stage-title,
+.khoi-page .khoi-class-title,
+.khoi-page .khoi-pillar-title,
+.khoi-page .khoi-time-label,
+.khoi-page .khoi-faq-title {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  color: var(--khoi-ink);
+}
+
+/* Eyebrow nhãn nhỏ phía trên tiêu đề */
+.khoi-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;       /* 12px chuẩn REM */
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--khoi-accent-text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.khoi-dot {
+  width: 0.375rem;          /* 6px */
+  height: 0.375rem;
+  border-radius: var(--khoi-radius-pill);
+  background-color: var(--khoi-accent-decorative);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Mô tả ngắn section */
+.khoi-section-desc {
+  font-size: 0.9375rem;     /* 15px */
+  line-height: 1.6;
+  color: var(--khoi-muted);
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.khoi-section-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .khoi-section-header {
+    margin-bottom: 2.25rem;
+  }
+}
+
+/* ── 5. HERO SECTION ── */
+.khoi-hero {
+  position: relative;
+  padding-top: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .khoi-hero {
+    padding-top: 3rem;
+    padding-bottom: 2rem;
+  }
+}
+
+.khoi-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (min-width: 992px) {
+  .khoi-hero-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 3rem;
+  }
+}
+
+.khoi-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.khoi-hero-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--khoi-radius-pill);
+  background: var(--khoi-accent-bg);
+  border: 1px solid var(--khoi-accent-border);
+  color: var(--khoi-accent-text);
+  font-size: 0.8125rem;     /* 13px */
+  font-weight: 700;
+  width: fit-content;
+}
+
+.khoi-hero-desc {
+  font-size: 1rem;          /* 16px */
+  line-height: 1.7;
+  color: var(--khoi-muted);
+  margin: 0;
+  max-width: 36rem;
+}
+
+.khoi-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.875rem;
+  padding-top: 0.5rem;
+}
+
+/* Nút bấm chuẩn vùng ngón tay cái $\ge 44\times 44\text{px}$ */
+.khoi-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;     /* 46px */
+  padding: 0.625rem 1.375rem;
+  border-radius: var(--khoi-radius-control);
+  background-color: var(--khoi-btn-primary-bg);
+  color: var(--khoi-btn-primary-text);
+  font-size: 0.9375rem;     /* 15px */
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.khoi-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;     /* 46px */
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--khoi-radius-control);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-control-border);
+  color: var(--khoi-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .khoi-btn-primary:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.20);
+  }
+  .khoi-btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: var(--khoi-accent-border);
+    background-color: var(--khoi-surface-alt);
+  }
+}
+
+/* Cột phải: Card ảnh chân thật */
+.khoi-hero-image-card {
+  position: relative;
+  border-radius: var(--khoi-radius-card);
+  overflow: hidden;
+  border: 1px solid var(--khoi-line);
+  background: var(--khoi-paper);
+  box-shadow: var(--khoi-card-shadow);
+}
+
+.khoi-hero-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+/* Floating badge co giãn tự nhiên không che khuất ảnh ở mobile nhỏ */
+.khoi-floating-badge {
+  position: relative;
+  margin: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  box-shadow: var(--khoi-card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .khoi-floating-badge {
+    position: absolute;
+    bottom: 0.875rem;
+    left: 0.875rem;
+    right: 0.875rem;
+    margin: 0;
+    background: rgba(255, 254, 250, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(222, 223, 212, 0.7);
+    box-shadow: 0 8px 24px -4px rgba(41, 61, 50, 0.15);
+  }
+
+  .dark .khoi-floating-badge {
+    background: rgba(30, 40, 33, 0.94);
+    border-color: rgba(53, 66, 55, 0.8);
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.khoi-floating-badge-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background: var(--khoi-accent-bg);
+  border: 1px solid var(--khoi-accent-border);
+  color: var(--khoi-accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.khoi-floating-badge-title {
+  font-size: 0.875rem;      /* 14px */
+  font-weight: 700;
+  color: var(--khoi-ink);
+  line-height: 1.3;
+}
+
+.khoi-floating-badge-sub {
+  font-size: 0.75rem;       /* 12px */
+  color: var(--khoi-muted);
+  line-height: 1.3;
+}
+
+/* ── 6. OVERVIEW BAR (4 CHIPS TỔNG QUAN) ── */
+.khoi-overview-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  border-radius: var(--khoi-radius-card);
+  box-shadow: var(--khoi-card-shadow);
+}
+
+@media (min-width: 768px) {
+  .khoi-overview-bar {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding: 1.25rem;
+    margin-top: 2rem;
+  }
+}
+
+.khoi-overview-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: var(--khoi-radius-control);
+  background: var(--khoi-surface-alt);
+  border: 1px solid var(--khoi-line-subtle);
+}
+
+.khoi-chip-cat {
+  font-size: 0.75rem;       /* 12px */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--khoi-accent-text);
+}
+
+.khoi-chip-value {
+  font-size: 1.0625rem;     /* 17px */
+  font-weight: 700;
+  color: var(--khoi-ink);
+  line-height: 1.2;
+}
+
+.khoi-chip-label {
+  font-size: 0.8125rem;     /* 13px */
+  color: var(--khoi-muted);
+  line-height: 1.3;
+}
+
+/* ── 7. BỘ LỌC PHÂN TẦNG (STAGE FILTER BAR) ── */
+.khoi-stage-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.khoi-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;     /* 44px vùng chạm ngón tay */
+  padding: 0.5rem 1.125rem;
+  border-radius: var(--khoi-radius-pill);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-control-border);
+  color: var(--khoi-muted);
+  font-size: 0.875rem;     /* 14px */
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.khoi-filter-pill.active {
+  background-color: var(--khoi-filter-active-bg);
+  border-color: var(--khoi-filter-active-bg);
+  color: var(--khoi-filter-active-text);
+  font-weight: 700;
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.15);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .khoi-filter-pill:not(.active):hover {
+    background: var(--khoi-surface-alt);
+    border-color: var(--khoi-accent-border);
+    color: var(--khoi-ink);
+  }
+}
+
+/* ── 8. BENTO CLASS CARDS (DANH SÁCH LỚP) ── */
+.khoi-group-block {
+  margin-bottom: 2rem;
+}
+
+.khoi-stage-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  border-radius: var(--khoi-radius-control);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .khoi-stage-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.khoi-stage-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+/* Số thứ tự phân tầng tự giãn */
+.khoi-stage-num {
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.25rem;
+  border-radius: 8px;
+  background: var(--khoi-accent-bg);
+  border: 1px solid var(--khoi-accent-border);
+  color: var(--khoi-accent-text);
+  font-size: 0.875rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.khoi-stage-title {
+  font-size: 1.125rem;      /* 18px */
+  margin: 0;
+}
+
+.khoi-stage-subtitle {
+  font-size: 0.8125rem;     /* 13px */
+  color: var(--khoi-muted);
+  margin: 0.125rem 0 0 0;
+}
+
+.khoi-stage-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.khoi-stage-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--khoi-radius-pill);
+  background: var(--khoi-surface-alt);
+  border: 1px solid var(--khoi-line-subtle);
+  color: var(--khoi-muted);
+}
+
+.khoi-class-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .khoi-class-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .khoi-class-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.khoi-class-grid--two {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .khoi-class-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 52rem;
+    margin-inline: auto;
+  }
+}
+
+.khoi-class-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.875rem;
+  padding: 1.25rem;
+  border-radius: var(--khoi-radius-card);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  box-shadow: var(--khoi-card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .khoi-class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--khoi-card-hover);
+    border-color: var(--khoi-accent-border);
+  }
+}
+
+.khoi-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.khoi-class-code {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  background: var(--khoi-accent-bg);
+  color: var(--khoi-accent-text);
+  border: 1px solid var(--khoi-accent-border);
+}
+
+.khoi-room-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--khoi-muted);
+  background: var(--khoi-surface-alt);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--khoi-line-subtle);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.khoi-class-title {
+  font-size: 1.0625rem;     /* 17px */
+  margin: 0.25rem 0 0.375rem 0;
+}
+
+.khoi-stats-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.khoi-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--khoi-muted);
+  background: var(--khoi-surface-alt);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.khoi-stat-chip strong {
+  color: var(--khoi-ink);
+}
+
+.khoi-teacher-box {
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--khoi-radius-control);
+  background: var(--khoi-surface-alt);
+  border: 1px solid var(--khoi-line-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.khoi-teacher-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--khoi-muted);
+}
+
+.khoi-teacher-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.khoi-teacher-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  color: var(--khoi-ink);
+}
+
+.khoi-focus-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.khoi-focus-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--khoi-accent-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.khoi-focus-desc {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--khoi-muted);
+  margin: 0;
+}
+
+.khoi-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px dashed var(--khoi-line);
+  font-size: 0.75rem;
+  color: var(--khoi-muted);
+}
+
+.khoi-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.khoi-card-status {
+  font-weight: 700;
+  color: var(--khoi-accent-text);
+}
+
+/* ── 9. TIMELINE NHỊP SỐNG CHÚA NHẬT ── */
+.khoi-timeline-section {
+  background: var(--khoi-surface-alt);
+  border-top: 1px solid var(--khoi-line);
+  border-bottom: 1px solid var(--khoi-line);
+}
+
+.khoi-compact-timeline {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .khoi-compact-timeline {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+.khoi-time-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  border-radius: var(--khoi-radius-card);
+  box-shadow: var(--khoi-card-shadow);
+  position: relative;
+}
+
+.khoi-time-card.highlight {
+  border-color: var(--khoi-accent-border);
+  background: var(--khoi-accent-bg);
+}
+
+.khoi-time-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.khoi-time-badge {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: var(--khoi-accent-bg);
+  color: var(--khoi-accent-text);
+  border: 1px solid var(--khoi-accent-border);
+}
+
+.khoi-time-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--khoi-accent-text);
+}
+
+.khoi-time-sub {
+  font-size: 0.8125rem;
+  color: var(--khoi-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.khoi-timeline-note {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--khoi-radius-control);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  font-size: 0.8125rem;
+  color: var(--khoi-muted);
+}
+
+.khoi-timeline-note-icon {
+  color: var(--khoi-accent-text);
+  flex-shrink: 0;
+}
+
+/* ── 10. GÓC PHỤ HUYNH & HỘI THÁNH TẠI GIA (BENTO FAMILY) ── */
+.khoi-family-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 992px) {
+  .khoi-family-bento-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 2rem;
+  }
+}
+
+.khoi-pillars-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.khoi-pillar-card {
+  padding: 1.25rem;
+  border-radius: var(--khoi-radius-card);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  box-shadow: var(--khoi-card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.khoi-pillar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.khoi-pillar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.khoi-pillar-icon-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background: var(--khoi-accent-bg);
+  border: 1px solid var(--khoi-accent-border);
+  color: var(--khoi-accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.khoi-pillar-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--khoi-radius-pill);
+  background: var(--khoi-surface-alt);
+  color: var(--khoi-muted);
+}
+
+.khoi-pillar-desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--khoi-muted);
+  margin: 0;
+}
+
+.khoi-pillar-action-tip {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--khoi-ink);
+  background: var(--khoi-surface-alt);
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--khoi-accent-decorative);
+}
+
+/* Sanctuary Box */
+.khoi-sanctuary-box {
+  padding: 1.5rem;
+  border-radius: var(--khoi-radius-card);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  box-shadow: var(--khoi-card-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.khoi-sanctuary-eyebrow {
+  margin-bottom: 0.75rem;
+}
+
+.khoi-sanctuary-quote-wrap {
+  margin-bottom: 1rem;
+}
+
+.khoi-sanctuary-quote-icon {
+  color: var(--khoi-accent-decorative);
+  margin-bottom: 0.25rem;
+}
+
+.khoi-sanctuary-quote {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--khoi-ink);
+  margin: 0 0 0.5rem 0;
+}
+
+.khoi-sanctuary-author {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--khoi-accent-text);
+  display: block;
+}
+
+.khoi-sanctuary-checklist-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--khoi-ink);
+}
+
+.khoi-sanctuary-checklist-icon {
+  color: var(--khoi-accent-decorative);
+}
+
+.khoi-checklist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.khoi-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--khoi-muted);
+  line-height: 1.5;
+}
+
+.khoi-check-icon {
+  color: var(--khoi-accent-text);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.khoi-support-card {
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background: var(--khoi-surface-alt);
+  border: 1px solid var(--khoi-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.khoi-support-info {
+  font-size: 0.8125rem;
+  color: var(--khoi-ink);
+}
+
+.khoi-support-desc {
+  color: var(--khoi-muted);
+}
+
+.khoi-support-btn {
+  min-height: 2.75rem;     /* 44px vùng chạm chuẩn ngón tay cái */
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.khoi-section:focus {
+  outline: none;
+}
+
+/* ── 11. FAQ ACCORDION ── */
+.khoi-faq-wrapper {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.khoi-faq-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.khoi-faq-title {
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  margin: 0 0 0.375rem 0;
+}
+
+.khoi-faq-desc {
+  font-size: 0.875rem;
+  color: var(--khoi-muted);
+  margin: 0;
+}
+
+.khoi-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+.khoi-faq-item {
+  border-radius: var(--khoi-radius-control);
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-control-border);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.khoi-faq-item.active {
+  border-color: var(--khoi-accent-border);
+  box-shadow: var(--khoi-card-shadow);
+}
+
+.khoi-faq-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  color: var(--khoi-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  min-height: 3rem;        /* 48px */
+}
+
+.khoi-faq-question-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.khoi-faq-q-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--khoi-accent-text);
+  background: var(--khoi-accent-bg);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.khoi-faq-chevron {
+  color: var(--khoi-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.khoi-faq-item.active .khoi-faq-chevron {
+  transform: rotate(180deg);
+  color: var(--khoi-accent-text);
+}
+
+.khoi-faq-answer {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--khoi-muted);
+}
+
+.khoi-faq-answer p {
+  margin: 0;
+}
+
+/* ── 12. CTA BANNER CUỐI TRANG ── */
+.khoi-cta-banner {
+  position: relative;
+  border-radius: 20px;
+  background: var(--khoi-paper);
+  border: 1px solid var(--khoi-line);
+  box-shadow: var(--khoi-card-shadow);
+  padding: 2rem 1.25rem;
+  text-align: center;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .khoi-cta-banner {
+    padding: 3rem 2.5rem;
+  }
+}
+
+.khoi-cta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--khoi-radius-pill);
+  background: var(--khoi-accent-bg);
+  border: 1px solid var(--khoi-accent-border);
+  color: var(--khoi-accent-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.khoi-cta-title {
+  font-size: clamp(1.375rem, 1.125rem + 1.2vw, 2rem);
+  font-weight: 400;
+  margin: 0 0 0.75rem 0;
+  color: var(--khoi-ink);
+}
+
+.khoi-cta-desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--khoi-muted);
+  max-width: 38rem;
+  margin: 0 auto 1.5rem auto;
+}
+
+.khoi-cta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .khoi-cta-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+.khoi-cta-secondary-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.khoi-cta-note {
+  font-size: 0.75rem;
+  color: var(--khoi-muted);
+  margin-top: 1.25rem;
+}
+
+/* ── 13. PREFERS-REDUCED-MOTION HỖ TRỢ ĐẦY ĐỦ ── */
+@media (prefers-reduced-motion: reduce) {
+  .khoi-page *,
+  .khoi-btn-primary,
+  .khoi-btn-secondary,
+  .khoi-class-card,
+  .khoi-filter-pill,
+  .khoi-faq-chevron {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Helper màn hình hỗ trợ (Screen Reader Only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

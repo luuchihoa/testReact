@@ -1,18 +1,19 @@
-# Icon PWA — Ban Giáo Lý An Ngãi
+# Icon PWA & Nhận diện Đa Kích Thước — Ban Giáo Lý An Ngãi
 
-Bộ v2 ngày 15/09/2026 dùng ảnh gốc `logo-ban-giao-ly.jpg` người dùng cung cấp. Chỉ thu nhỏ và thêm khoảng đệm trắng; không vẽ lại chữ, khuôn mặt hay huy hiệu. Bản thử AI không được dùng trong ứng dụng. Ảnh gốc và bộ icon cũ được giữ nguyên.
+Bộ v3 ngày 20/09/2026 chuẩn hóa nhận diện thương hiệu số:
+- **Nền nhận diện thương hiệu:** Sử dụng nền xanh rêu Công giáo `#314e3e` kết hợp viền vàng kim `#d4b47d` và huy hiệu Mẹ Mân Côi `logo_htdc.png`.
+- **Favicon Vector:** Bổ sung `public/favicon.svg` sắc nét 100% trên màn hình Retina / High-DPI và bộ favicon PNG độ tương phản cao.
 
 ## Tài nguyên
 
-Tất cả nằm trong `public/images/pwa-v2/`, PNG RGB đục, hình vuông, không bo góc sẵn:
+Tất cả nằm trong `public/images/pwa-v2/` và `public/`:
 
-- `apple-touch-152.png`, `apple-touch-167.png`, `apple-touch-180.png`: iPad/iPhone; ảnh nguồn chiếm 92% cạnh.
-- `icon-192.png`, `icon-512.png`: manifest purpose `any`, ảnh nguồn chiếm 92% cạnh.
-- `maskable-192.png`, `maskable-512.png`: manifest purpose `maskable`, ảnh nguồn chiếm 78% cạnh. Huy hiệu tròn nằm trong vùng an toàn bán kính 40% cạnh.
-- `favicon-32.png`, `favicon-48.png`: tab trình duyệt.
-- `master-1024.png`: bản xuất lớn để bàn giao, không phải nguồn để xuất lại các cỡ nhỏ.
-
-Không kết hợp `any maskable` trên cùng icon: hai mục đích có khoảng đệm khác nhau. Logo có chữ rất nhỏ nên không thể kỳ vọng đọc hết khi hiển thị 48–60px. Hình Đức Mẹ và huy hiệu là dấu hiệu nhận diện chính ở kích thước này.
+- `public/favicon.svg`: Favicon vector SVG độ tương phản cao (nền `#314e3e`, viền & biểu tượng vương miện/Thánh giá vàng kim `#d4b47d`).
+- `apple-touch-152.png`, `apple-touch-167.png`, `apple-touch-180.png`: iPad/iPhone; nền `#314e3e`, viền vàng kim, ảnh nguồn chiếm 88% cạnh.
+- `icon-192.png`, `icon-512.png`: manifest purpose `any`, nền `#314e3e`, viền vàng kim, ảnh nguồn chiếm 88% cạnh.
+- `maskable-192.png`, `maskable-512.png`: manifest purpose `maskable`, nền xanh `#314e3e` tràn 100% canvas, huy hiệu tròn nằm trọn trong vùng an toàn bán kính 40% cạnh (78% đường kính).
+- `favicon-32.png`, `favicon-48.png`: tab trình duyệt dạng raster độ tương phản cao.
+- `master-1024.png`: bản xuất lớn 1024×1024.
 
 ## Tích hợp
 

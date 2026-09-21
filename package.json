@@ -14,7 +14,9 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "create-auth": "tsx --env-file=.env scripts/create-student-account.ts",
-    "scrape": "node scripts/scrapeLiturgy.js"
+    "scrape": "node scripts/scrapeLiturgy.js",
+    "test": "node --test \"src/**/*.test.js\" \"src/**/**/*.test.js\" \"src/**/**/**/*.test.js\"",
+    "test:compliance": "node --test src/tests/acceptanceContract.test.js"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getLiturgyInfo } from '../../utils/liturgyCalendar.js';
 import { resolveLiturgyContentForDate } from '../../utils/liturgyContentResolver.js';
 import { liturgySupabase } from '../../lib/liturgySupabase.js';
@@ -17,35 +17,61 @@ export function cleanAndTruncateMainContent(rawText, maxLength = 180) {
   return text;
 }
 
+function getCachedLiturgyContent(today) {
+  if (typeof window === "undefined") return null;
+  const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const cacheKey = `liturgy_daily_card_${dayKey}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && (parsed.quote || parsed.gospel_content || parsed.r1_content)) {
+        return parsed;
+      }
+    }
+  } catch (_err) {
+    void _err;
+  }
+  return null;
+}
+
 export function useDailyLiturgy(inputDate = null) {
-  const [liturgyInfo, setLiturgyInfo] = useState(() => getLiturgyInfo(inputDate || new Date()));
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const liturgyInfo = useMemo(() => getLiturgyInfo(inputDate || new Date()), [inputDate]);
+  const [content, setContent] = useState(() => getCachedLiturgyContent(inputDate || new Date()));
+  const [loading, setLoading] = useState(() => !getCachedLiturgyContent(inputDate || new Date()));
+  const [error, setError] = useState(null);
+  const [refreshIndex, setRefreshIndex] = useState(0);
+
+  const refetch = () => {
+    const today = inputDate || new Date();
+    const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const cacheKey = `liturgy_daily_card_${dayKey}`;
+    try {
+      localStorage.removeItem(cacheKey);
+    } catch (_err) {
+      void _err;
+    }
+    setRefreshIndex((prev) => prev + 1);
+  };
 
   useEffect(() => {
     let isMounted = true;
     const today = inputDate || new Date();
     const info = getLiturgyInfo(today);
-    setLiturgyInfo(info);
-
-    // Kiểm tra cache trong ngày
     const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const cacheKey = `liturgy_daily_card_${dayKey}`;
-    const cached = localStorage.getItem(cacheKey);
 
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed && (parsed.quote || parsed.gospel_content || parsed.r1_content)) {
-          setContent(parsed);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {}
+    // Nếu đã có cache và không phải refetch thủ công thì không cần request mạng
+    if (refreshIndex === 0) {
+      const cachedData = getCachedLiturgyContent(today);
+      if (cachedData) {
+        return;
+      }
     }
 
     async function fetchReading() {
       setLoading(true);
+      setError(null);
       try {
         const dayStr = String(today.getDate()).padStart(2, '0');
         const monthStr = String(today.getMonth() + 1).padStart(2, '0');
@@ -70,20 +96,29 @@ export function useDailyLiturgy(inputDate = null) {
           info.seasonKey
         ].filter(Boolean)));
 
-        const { data, error } = await liturgySupabase
+        const { data, error: sbError } = await liturgySupabase
           .from('liturgy_contents')
           .select('liturgy_key, cycle, title, mass_title, quote, gospel_ref, gospel_content, r1_ref, r1_quote, r1_content, reflection')
           .in('liturgy_key', keysToFetch);
 
-        if (!error && data && data.length > 0 && isMounted) {
+        if (sbError) {
+          throw sbError;
+        }
+
+        if (data && data.length > 0 && isMounted) {
           const { content: resolved } = resolveLiturgyContentForDate(today, data);
           if (resolved) {
             setContent(resolved);
-            localStorage.setItem(cacheKey, JSON.stringify(resolved));
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify(resolved));
+            } catch (_err) {
+              void _err;
+            }
           }
         }
       } catch (err) {
         console.error('[useDailyLiturgy] Fetch error:', err);
+        if (isMounted) setError(err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -94,7 +129,7 @@ export function useDailyLiturgy(inputDate = null) {
     return () => {
       isMounted = false;
     };
-  }, [inputDate]);
+  }, [inputDate, refreshIndex]);
 
   // Trích xuất câu nổi bật và tham chiếu theo thời gian thực
   const getFeaturedQuote = () => {
@@ -131,13 +166,17 @@ export function useDailyLiturgy(inputDate = null) {
   };
 
   const featured = getFeaturedQuote();
-  const displayTitle = content?.title || liturgyInfo?.displayName || "Lời Chúa Hằng Ngày";
+  const isFallback = !content;
+  const displayTitle = content?.title || (isFallback ? "Lời Chúa Suy Niệm" : (liturgyInfo?.displayName || "Lời Chúa Hằng Ngày"));
 
   return {
     loading,
     liturgyInfo,
     content,
     featured,
-    displayTitle
+    displayTitle,
+    isFallback,
+    error,
+    refetch
   };
 }

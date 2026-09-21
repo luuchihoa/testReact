@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -12,25 +12,64 @@ import { supabase } from "../../lib/supabase.js";
 import { useToast } from "../../components/ui/ToastContext.jsx";
 import { slugify } from "../../lib/slugify.js";
 import { 
-  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft, AlertCircle, Image as ImageIcon
+  Loader2, Eye, Pencil, Send, Bold, Italic, Heading, Quote, Link2, List, Code as CodeIcon, ArrowLeft, AlertCircle, Image as ImageIcon, CheckCircle2, Save
 } from "lucide-react";
 
 const MAX_TITLE = 200;
 const MAX_SUMMARY = 300;
+const LOCAL_DRAFT_KEY = "article_editor_draft_v1";
 
-// CSS tối thiểu bắt buộc phải có cho placeholder của TipTap — trình duyệt
-// không có cách nào thuần Tailwind để tham chiếu attr(data-placeholder) một
-// cách gọn gàng, nên giữ 1 khối <style> nhỏ, gói gọn trong class riêng
-// (.article-editor-content) để không ảnh hưởng phần nào khác của trang.
 const EDITOR_PLACEHOLDER_CSS = `
   .article-editor-content p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;
     height: 0;
     pointer-events: none;
-    color: rgb(168 162 158 / 0.8);
+    color: rgb(87 94 85 / 0.6);
+  }
+  .dark .article-editor-content p.is-editor-empty:first-child::before {
+    color: rgb(176 185 172 / 0.5);
   }
 `;
+
+function ArticleEditorSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] px-4 sm:px-6 py-6 sm:py-10 animate-pulse">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="w-36 h-11 bg-[#dedfd4]/60 dark:bg-[#354237]/60 rounded-xl" />
+        <div className="space-y-2">
+          <div className="w-24 h-4 bg-[#dedfd4]/50 dark:bg-[#354237]/50 rounded" />
+          <div className="w-3/4 h-8 bg-[#dedfd4]/60 dark:bg-[#354237]/60 rounded-lg" />
+          <div className="w-1/2 h-4 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded" />
+        </div>
+        <div className="bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="h-12 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded-xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="h-12 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded-xl" />
+            <div className="h-12 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded-xl" />
+          </div>
+          <div className="h-24 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded-xl" />
+          <div className="h-64 bg-[#dedfd4]/40 dark:bg-[#354237]/40 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getInitialDraft() {
+  try {
+    const savedDraft = localStorage.getItem(LOCAL_DRAFT_KEY);
+    if (savedDraft) {
+      const parsed = JSON.parse(savedDraft);
+      if (parsed && (parsed.title || parsed.content || parsed.summary)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to read draft from localStorage:", e);
+  }
+  return null;
+}
 
 export default function ArticleEditor() {
   const { id } = useParams();
@@ -38,49 +77,49 @@ export default function ArticleEditor() {
   const { showToast } = useToast();
   const username = localStorage.getItem("username") || "";
 
+  const [initialDraft] = useState(() => (!id ? getInitialDraft() : null) || {});
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("edit");
 
-  const [title, setTitle] = useState("");
-  const [summary, setSummary] = useState("");
-  const [category, setCategory] = useState("");
-  const [coverImage, setCoverImage] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState(() => initialDraft.title || "");
+  const [summary, setSummary] = useState(() => initialDraft.summary || "");
+  const [category, setCategory] = useState(() => initialDraft.category || "");
+  const [coverImage, setCoverImage] = useState(() => initialDraft.coverImage || "");
+  const [content, setContent] = useState(() => initialDraft.content || "");
   const [status, setStatus] = useState("draft");
   const [rejectionReason, setRejectionReason] = useState(null);
+  const [lastAutoSaved, setLastAutoSaved] = useState(() => initialDraft.savedAt ? new Date(initialDraft.savedAt) : null);
 
-  // Trình soạn thảo WYSIWYG — người dùng gõ/định dạng trực quan như Word,
-  // TipTap tự chuyển đổi 2 chiều sang Markdown ở phía dưới để lưu trữ và
-  // hiển thị (ArticleDetail/ArticleCard không cần đổi gì, vẫn render
-  // Markdown qua ReactMarkdown với skipHtml như cũ — an toàn không đổi).
+  const autoSaveTimerRef = useRef(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Không cho click vào link để điều hướng ngay trong lúc soạn thảo —
-        // tránh việc gõ bài đang dở lại bị nhảy trang do lỡ tay bấm vào link.
         link: { openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } },
       }),
       Markdown,
       TiptapImage.configure({
-        HTMLAttributes: { class: "rounded-2xl" },
+        HTMLAttributes: { class: "rounded-2xl max-w-full my-4 shadow-sm" },
       }),
       Placeholder.configure({
-        placeholder: "Bắt đầu soạn thảo ở đây… gõ tự nhiên như Word, không cần nhớ cú pháp.",
+        placeholder: "Bắt đầu soạn thảo bài viết ở đây… gõ tự nhiên như Word, không cần nhớ cú pháp.",
       }),
     ],
-    content: "",
+    content: initialDraft.content || "",
     shouldRerenderOnTransaction: true,
     editorProps: {
       attributes: {
-        class: "article-editor-content prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-img:rounded-2xl focus:outline-none min-h-[360px]",
+        class: "article-editor-content prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert prose-img:rounded-2xl focus:outline-none min-h-[320px] text-[#293d32] dark:text-[#ecece0] leading-relaxed",
       },
     },
-    onUpdate: ({ editor }) => {
-      setContent(editor.getMarkdown());
+    onUpdate: ({ editor: ed }) => {
+      const md = ed.getMarkdown();
+      setContent(md);
     },
   });
 
+  // Tải dữ liệu bài viết từ Supabase nếu có id
   useEffect(() => {
     if (!id || !editor) return;
     let cancelled = false;
@@ -98,11 +137,11 @@ export default function ArticleEditor() {
         navigate("/bài-viết-của-tôi");
         return;
       }
-      setTitle(data.title);
+      setTitle(data.title || "");
       setSummary(data.summary || "");
       setCategory(data.category || "");
       setCoverImage(data.cover_image || "");
-      setContent(data.content);
+      setContent(data.content || "");
       editor.commands.setContent(data.content || "", { contentType: "markdown" });
       setStatus(data.status);
       setRejectionReason(data.rejection_reason);
@@ -112,19 +151,58 @@ export default function ArticleEditor() {
     return () => { cancelled = true; };
   }, [id, editor, navigate, showToast]);
 
-  const validate = () => {
-    if (title.trim().length < 3) { showToast("Tiêu đề cần ít nhất 3 ký tự", "error"); return false; }
-    if (content.trim().length < 10) { showToast("Nội dung bài viết quá ngắn", "error"); return false; }
-    return true;
-  };
+  // Tự động lưu nháp cục bộ (Local Auto-save) khi người dùng đang nhập
+  useEffect(() => {
+    if (id || loading) return; // Chỉ tự lưu nháp cục bộ cho bài mới tạo
+    if (!title && !content && !summary) return;
 
-  const buildPayload = () => ({
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          LOCAL_DRAFT_KEY,
+          JSON.stringify({
+            title,
+            summary,
+            category,
+            coverImage,
+            content,
+            savedAt: Date.now(),
+          })
+        );
+        setLastAutoSaved(new Date());
+      } catch (err) {
+        console.warn("Auto-save draft warning:", err);
+      }
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [id, loading, title, summary, category, coverImage, content]);
+
+  const validate = useCallback(() => {
+    if (title.trim().length < 3) {
+      showToast("Tiêu đề bài viết cần ít nhất 3 ký tự", "error");
+      return false;
+    }
+    if (content.trim().length < 10) {
+      showToast("Nội dung bài viết quá ngắn (tối thiểu 10 ký tự)", "error");
+      return false;
+    }
+    return true;
+  }, [title, content, showToast]);
+
+  const buildPayload = useCallback(() => ({
     title: title.trim(),
     summary: summary.trim() || null,
     category: category.trim() || null,
     cover_image: coverImage.trim() || null,
     content,
-  });
+  }), [title, summary, category, coverImage, content]);
 
   const handleSaveDraft = async () => {
     if (!validate()) return;
@@ -133,7 +211,7 @@ export default function ArticleEditor() {
       if (id) {
         const { error } = await supabase.from("articles").update(buildPayload()).eq("id", id);
         if (error) throw error;
-        showToast("Đã lưu bản thay đổi", "success");
+        showToast("Đã lưu bản thay đổi thành công", "success");
       } else {
         const { data, error } = await supabase
           .from("articles")
@@ -141,6 +219,7 @@ export default function ArticleEditor() {
           .select("id")
           .single();
         if (error) throw error;
+        localStorage.removeItem(LOCAL_DRAFT_KEY);
         showToast("Đã lưu bản nháp thành công", "success");
         navigate(`/bài-viết-của-tôi/soạn/${data.id}`, { replace: true });
         return;
@@ -174,6 +253,7 @@ export default function ArticleEditor() {
       const { error: submitError } = await supabase.rpc("submit_article", { p_id: articleId });
       if (submitError) throw submitError;
 
+      localStorage.removeItem(LOCAL_DRAFT_KEY);
       showToast("Đã gửi bài viết thành công, vui lòng chờ duyệt", "success");
       navigate("/bài-viết-của-tôi");
     } catch (err) {
@@ -184,8 +264,6 @@ export default function ArticleEditor() {
     }
   };
 
-  // Chèn liên kết cần hỏi URL qua prompt (giữ tối giản, không thêm modal
-  // riêng) — Cancel sẽ không làm gì, còn để trống sẽ gỡ liên kết đang chọn.
   const insertLink = () => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href;
@@ -198,13 +276,11 @@ export default function ArticleEditor() {
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   };
 
-  // Chèn ảnh trực tiếp vào vị trí con trỏ — dùng URL (giống cách ảnh bìa
-  // đang nhập ở trên), không cần build tính năng tải file lên riêng.
   const insertImage = () => {
     if (!editor) return;
     const url = window.prompt("Nhập liên kết ảnh (URL)");
     if (!url) return;
-    const alt = window.prompt("Mô tả ảnh (không bắt buộc, giúp SEO)", "") || "";
+    const alt = window.prompt("Mô tả ngắn cho hình ảnh", "") || "";
     editor.chain().focus().setImage({ src: url, alt }).run();
   };
 
@@ -214,282 +290,346 @@ export default function ArticleEditor() {
   const toolbarButtons = editor ? [
     { key: "bold",    title: "In đậm",        Icon: Bold,     isActive: editor.isActive("bold"),               action: () => editor.chain().focus().toggleBold().run() },
     { key: "italic",  title: "In nghiêng",    Icon: Italic,   isActive: editor.isActive("italic"),             action: () => editor.chain().focus().toggleItalic().run() },
-    { key: "heading", title: "Tiêu đề",       Icon: Heading,  isActive: editor.isActive("heading", { level: 3 }), action: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
+    { key: "heading", title: "Tiêu đề phụ",   Icon: Heading,  isActive: editor.isActive("heading", { level: 3 }), action: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
     { key: "quote",   title: "Trích dẫn",     Icon: Quote,    isActive: editor.isActive("blockquote"),         action: () => editor.chain().focus().toggleBlockquote().run() },
     { key: "link",    title: "Chèn liên kết", Icon: Link2,    isActive: editor.isActive("link"),               action: insertLink },
     { key: "list",    title: "Danh sách",     Icon: List,     isActive: editor.isActive("bulletList"),         action: () => editor.chain().focus().toggleBulletList().run() },
-    { key: "code",    title: "Mã nguồn",      Icon: CodeIcon, isActive: editor.isActive("code"),               action: () => editor.chain().focus().toggleCode().run() },
+    { key: "code",    title: "Khối mã",       Icon: CodeIcon, isActive: editor.isActive("code"),               action: () => editor.chain().focus().toggleCode().run() },
     { key: "image",   title: "Chèn ảnh",      Icon: ImageIcon, isActive: false,                                action: insertImage },
   ] : [];
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] flex items-center justify-center gap-2.5 py-24 text-stone-500">
-        <Loader2 className="w-6 h-6 animate-spin text-amber-900 dark:text-amber-500" />
-        <span className="text-[14px] font-bold">Đang tải biểu mẫu…</span>
-      </div>
-    );
+    return <ArticleEditorSkeleton />;
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#1C1917] text-stone-800 dark:text-stone-200 px-5 sm:px-6 py-8 sm:py-10 transition-colors duration-500">
+    <div className="min-h-screen bg-[#faf8f3] dark:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] px-4 sm:px-6 py-6 sm:py-10 transition-colors duration-300 pb-[calc(4rem+env(safe-area-inset-bottom))]">
       <style>{EDITOR_PLACEHOLDER_CSS}</style>
       <div className="max-w-3xl mx-auto">
         
         {/* Nút quay lại */}
-        <motion.button
+        <Motion.button
           type="button"
           onClick={() => navigate("/bài-viết-của-tôi")}
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          whileTap={{ scale: 0.97 }}
+          aria-label="Quay lại trang Bài viết của tôi"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#dedfd4]/50 dark:bg-[#354237]/60 text-[#575e55] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] transition-all hover:bg-[#dedfd4] dark:hover:bg-[#354237] mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
+          <span>Bài viết của tôi</span>
+        </Motion.button>
+
+        {/* Tiêu đề trang & Chỉ báo Auto-save */}
+        <Motion.div
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          whileTap={{ scale: 0.97 }}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13.5px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-colors duration-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 mb-8"
+          className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6"
         >
-          <ArrowLeft className="w-4 h-4" strokeWidth={2.5} /> Bài viết của tôi
-        </motion.button>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#7c5c2d] dark:text-[#d4b47d] mb-1">
+              Trình soạn thảo
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#293d32] dark:text-[#ecece0] font-serif leading-tight">
+              {id ? "Chỉnh sửa bài viết" : "Soạn thảo bài viết mới"}
+            </h1>
+            <p className="text-xs sm:text-sm font-medium text-[#575e55] dark:text-[#b0b9ac] mt-1.5 leading-relaxed">
+              Soạn trực quan như Word — hệ thống tự động lưu nháp và định dạng chuẩn phụng vụ.
+            </p>
+          </div>
 
-        {/* Tiêu đề trang */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6"
-        >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-amber-800/70 dark:text-amber-400/70 mb-2 ml-1">
-            Editor
-          </p>
-          <h1 className="text-2xl sm:text-[28px] font-extrabold text-amber-950 dark:text-amber-50 font-serif leading-tight">
-            {id ? "Chỉnh sửa bài viết" : "Soạn thảo bài viết mới"}
-          </h1>
-          <p className="text-[13.5px] font-medium text-stone-500 dark:text-stone-400 mt-1.5 leading-relaxed">
-            Soạn trực quan như Word — hệ thống tự lưu lại dưới định dạng chuẩn, không cần biết cú pháp Markdown.
-          </p>
-        </motion.div>
+          {lastAutoSaved && !id && (
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#314e3e] dark:text-[#8fd1a9] bg-[#314e3e]/10 dark:bg-[#314e3e]/30 px-3 py-1.5 rounded-full self-start sm:self-auto">
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Đã lưu nháp {lastAutoSaved.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+            </div>
+          )}
+        </Motion.div>
 
         {/* Khung cảnh báo (nếu bị từ chối) */}
         <AnimatePresence initial={false}>
           {status === "rejected" && rejectionReason && (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 20 }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl backdrop-blur-sm flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 p-4 rounded-2xl flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-700 dark:text-red-400 mt-0.5 flex-shrink-0" strokeWidth={2.5} aria-hidden="true" />
                 <div className="flex-1">
-                  <p className="text-[12px] font-bold uppercase tracking-wider text-red-700/80 dark:text-red-400/80 mb-1 ml-0.5">
-                    Đã bị từ chối duyệt
+                  <p className="text-xs font-bold uppercase tracking-wider text-red-800 dark:text-red-300 mb-1">
+                    Lý do bài viết bị từ chối duyệt
                   </p>
-                  <div className="text-[13.5px] font-medium text-red-950 dark:text-red-50 leading-relaxed ml-0.5">
+                  <div className="text-xs sm:text-sm font-medium text-red-950 dark:text-red-100 leading-relaxed">
                     {rejectionReason}
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
+        {/* Form Soạn Thảo */}
+        <Motion.div
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col gap-5 sm:gap-6 bg-white/80 dark:bg-[#1C1917]/80 backdrop-blur-xl border border-amber-900/10 dark:border-amber-100/10 rounded-[28px] p-6 sm:p-8 shadow-sm"
+          transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col gap-5 sm:gap-6 bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-3xl p-5 sm:p-8 shadow-sm"
         >
           
           {/* Nhập tiêu đề */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Tiêu đề bài viết</label>
+            <label htmlFor="article-title" className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] mb-1.5 block">
+              Tiêu đề bài viết <span className="text-red-600">*</span>
+            </label>
             <input
+              id="article-title"
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))}
-              placeholder="VD: Cảm nhận sau thánh lễ Giáng Sinh..."
-              className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3.5 text-[14.5px] font-bold text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
+              placeholder="VD: Cảm nhận sau thánh lễ Bổn mạng Xứ đoàn..."
+              className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3 min-h-[44px] text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 focus:border-[#314e3e] dark:focus:border-[#d6b883] transition-all"
             />
           </div>
 
           {/* Chuyên mục & Ảnh bìa */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Chuyên mục</label>
+              <label htmlFor="article-category" className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] mb-1.5 block">
+                Chuyên mục
+              </label>
               <input
+                id="article-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="VD: Chia sẻ, Sự kiện..."
-                className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
+                placeholder="VD: Chia sẻ, Sự kiện, Sinh hoạt..."
+                className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3 min-h-[44px] text-xs sm:text-sm font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 focus:border-[#314e3e] dark:focus:border-[#d6b883] transition-all"
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Ảnh bìa (Liên kết URL)</label>
+              <label htmlFor="article-cover" className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] mb-1.5 block">
+                Ảnh bìa (Liên kết URL)
+              </label>
               <input
+                id="article-cover"
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://imgur.com/your-image.jpg"
-                className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm"
+                placeholder="https://imgur.com/anh-bia.jpg"
+                className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3 min-h-[44px] text-xs sm:text-sm font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 focus:border-[#314e3e] dark:focus:border-[#d6b883] transition-all"
               />
             </div>
           </div>
 
           {/* Tóm tắt bài viết */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Tóm tắt ngắn</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="article-summary" className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] block">
+                Tóm tắt ngắn (Xem trước tại danh sách)
+              </label>
+              <span className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac]">
+                {summary.length}/{MAX_SUMMARY} ký tự
+              </span>
+            </div>
             <textarea
+              id="article-summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value.slice(0, MAX_SUMMARY))}
               rows={2}
-              placeholder="Hiển thị tại trang danh sách chính thay cho nội dung..."
-              className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 py-3 text-[14px] font-medium text-amber-950 dark:text-amber-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-900/30 dark:focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-inner backdrop-blur-sm resize-none"
+              placeholder="Đoạn văn ngắn giới thiệu nội dung bài viết..."
+              className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 py-3 text-xs sm:text-sm font-medium text-[#293d32] dark:text-[#ecece0] placeholder-[#575e55]/60 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 focus:border-[#314e3e] dark:focus:border-[#d6b883] transition-all resize-none"
             />
-            <div className="flex justify-end text-[11px] font-bold text-stone-400 dark:text-stone-500 mt-1.5 mr-1">
-              {summary.length}/{MAX_SUMMARY} ký tự
-            </div>
           </div>
 
-          {/* Nội dung soạn thảo */}
+          {/* Nội dung soạn thảo & Toolbar */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 ml-1 mb-1.5 block">Nội dung bài viết</label>
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-amber-900/10 dark:border-amber-100/10 pb-3 mb-4">
-              {/* Tab điều hướng */}
-              <div className="flex w-full items-center gap-1.5 bg-stone-100/80 dark:bg-stone-900/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
-                {/* Nút Soạn thảo */}
+            <label className="text-xs font-bold uppercase tracking-wider text-[#575e55] dark:text-[#b0b9ac] mb-2 block">
+              Nội dung bài viết <span className="text-red-600">*</span>
+            </label>
+
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-[#dedfd4] dark:border-[#354237] pb-3 mb-4">
+              {/* Tab Soạn thảo / Xem trước */}
+              <div className="flex items-center gap-1.5 bg-[#faf8f3] dark:bg-[#151c18] p-1 rounded-xl border border-[#dedfd4] dark:border-[#354237]">
                 <button 
                   type="button" 
                   onClick={() => setTab("edit")}
-                  className={`relative flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-bold transition-colors duration-300 active:scale-[0.97] ${
+                  aria-label="Chuyển sang chế độ soạn thảo"
+                  className={`min-h-[44px] flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                     tab === "edit" 
-                      ? "text-amber-50 dark:text-white" 
-                      : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
+                      ? "bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-sm" 
+                      : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
                   }`}
                 >
-                  {tab === "edit" && (
-                    <motion.div
-                      layoutId="active-tab-bg"
-                      className="absolute inset-0 bg-amber-900 dark:bg-amber-600 rounded-lg shadow-sm -z-10"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <Pencil className="w-3.5 h-3.5 relative z-10" /> 
-                  <span className="relative z-10">Soạn thảo</span>
+                  <Pencil className="w-4 h-4" aria-hidden="true" /> 
+                  <span>Soạn thảo</span>
                 </button>
                 
-                {/* Nút Xem trước */}
                 <button 
                   type="button" 
                   onClick={() => setTab("preview")}
-                  className={`relative flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-bold transition-colors duration-300 active:scale-[0.97] ${
+                  aria-label="Chuyển sang chế độ xem trước"
+                  className={`min-h-[44px] flex-1 inline-flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                     tab === "preview" 
-                      ? "text-white dark:text-stone-900" 
-                      : "text-stone-500 dark:text-stone-400 md:hover:text-stone-800 dark:md:hover:text-stone-200"
+                      ? "bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-sm" 
+                      : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0]"
                   }`}
                 >
-                  {tab === "preview" && (
-                    <motion.div
-                      layoutId="active-tab-bg"
-                      className="absolute inset-0 bg-stone-900 dark:bg-white rounded-lg shadow-sm -z-10"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <Eye className="w-3.5 h-3.5 relative z-10" /> 
-                  <span className="relative z-10">Xem trước</span>
+                  <Eye className="w-4 h-4" aria-hidden="true" /> 
+                  <span>Xem trước</span>
                 </button>
               </div>
 
-              {/* Thanh định dạng trực quan */}
+              {/* Thanh định dạng trực quan (Touch target >= 44px, cuộn ngang) */}
               {tab === "edit" && editor && (
-                <div className="flex flex-wrap items-center gap-1 bg-stone-100/80 dark:bg-stone-900/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
-                  {toolbarButtons.map(({ key, title, Icon, isActive, action }) => (
-                    <motion.button
-                      key={key}
-                      type="button"
-                      onClick={action}
-                      whileTap={{ scale: 0.85 }}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isActive
-                          ? "bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm"
-                          : "text-stone-600 dark:text-stone-300 md:hover:bg-white dark:md:hover:bg-stone-700 hover:shadow-sm"
-                      }`}
-                      title={title}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </motion.button>
-                  ))}
+                <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+                  <div className="flex items-center gap-1 bg-[#faf8f3] dark:bg-[#151c18] p-1 rounded-xl border border-[#dedfd4] dark:border-[#354237] min-w-max">
+                    {toolbarButtons.map((btn) => {
+                      const IconComponent = btn.Icon;
+                      return (
+                        <button
+                          key={btn.key}
+                          type="button"
+                          onClick={btn.action}
+                          aria-label={btn.title}
+                          title={btn.title}
+                          className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all active:scale-[0.92] ${
+                            btn.isActive
+                              ? "bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-sm"
+                              : "text-[#575e55] dark:text-[#b0b9ac] hover:bg-[#dedfd4]/60 dark:hover:bg-[#354237]/60 hover:text-[#293d32] dark:hover:text-[#ecece0]"
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
 
             <AnimatePresence mode="wait">
               {tab === "edit" ? (
-                <motion.div
+                <Motion.div
                   key="edit"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.2 }}
                 >
                   <div
                     onClick={() => editor?.chain().focus().run()}
-                    className="w-full rounded-xl border border-amber-900/20 dark:border-amber-100/10 bg-white/60 dark:bg-stone-900/40 px-4 sm:px-6 py-4 shadow-inner backdrop-blur-sm cursor-text focus-within:ring-2 focus-within:ring-amber-900/30 dark:focus-within:ring-amber-500/30 focus-within:border-amber-500 transition-all"
+                    className="w-full rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#faf8f3] dark:bg-[#151c18] px-4 sm:px-6 py-4 shadow-inner cursor-text focus-within:ring-2 focus-within:ring-[#314e3e]/30 dark:focus-within:ring-[#d6b883]/30 focus-within:border-[#314e3e] dark:focus-within:border-[#d6b883] transition-all min-h-[340px]"
                   >
                     <EditorContent editor={editor} />
                   </div>
-                  <div className="flex justify-end text-[11px] font-bold text-stone-400 dark:text-stone-500 mt-2 mr-1">
-                    TỔNG CỘNG: {wordCount} TỪ · {charCount} KÝ TỰ
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] mt-2 px-1">
+                    <span>Hỗ trợ định dạng Lời Chúa, đoạn văn, trích dẫn</span>
+                    <span>{wordCount} từ · {charCount} ký tự</span>
                   </div>
-                </motion.div>
+                </Motion.div>
               ) : (
-                <motion.div
+                <Motion.div
                   key="preview"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert rounded-[20px] bg-white/60 dark:bg-stone-900/40 border border-amber-900/10 dark:border-amber-100/10 shadow-inner px-6 py-6 min-h-[380px] overflow-y-auto font-medium"
+                  transition={{ duration: 0.2 }}
+                  className="prose prose-stone prose-sm sm:prose-base max-w-none dark:prose-invert rounded-2xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] shadow-inner px-5 sm:px-6 py-6 min-h-[340px] overflow-y-auto leading-relaxed text-[#293d32] dark:text-[#ecece0] w-full min-w-0 max-w-full [overflow-wrap:anywhere] break-words"
                 >
                   {content.trim() ? (
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       skipHtml
-                      components={{ a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" /> }}
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        ),
+                        pre: ({ children, ...props }) => (
+                          <div
+                            role="region"
+                            aria-label="Khối mã nguồn trong bài viết"
+                            tabIndex={0}
+                            className="w-full min-w-0 max-w-full overflow-x-auto my-4 rounded-2xl bg-[#1e2821] dark:bg-[#151c18] text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] p-4 text-xs sm:text-sm font-mono shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883]"
+                          >
+                            <pre className="overflow-x-auto max-w-full whitespace-pre font-mono leading-relaxed bg-transparent p-0 m-0 border-0" {...props}>
+                              {children}
+                            </pre>
+                          </div>
+                        ),
+                        code: ({ inline, className, children, ...props }) => {
+                          const isInline = inline || (!className && !String(children).includes("\n"));
+                          if (isInline) {
+                            return (
+                              <code
+                                className="px-1.5 py-0.5 rounded-md bg-[#314e3e]/10 dark:bg-[#d6b883]/20 text-[#314e3e] dark:text-[#d6b883] font-mono text-[0.875em] font-semibold [overflow-wrap:anywhere] break-all border border-[#314e3e]/20 dark:border-[#d6b883]/30 before:content-none after:content-none"
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            );
+                          }
+                          return (
+                            <code className="font-mono text-xs sm:text-sm [overflow-wrap:anywhere] text-[#ecece0]" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        table: ({ children, ...props }) => (
+                          <div
+                            role="region"
+                            aria-label="Bảng dữ liệu trong bài viết"
+                            tabIndex={0}
+                            className="overflow-x-auto my-6 w-full min-w-0 max-w-full rounded-2xl border border-[#dedfd4] dark:border-[#354237] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d6b883]"
+                          >
+                            <table className="w-full text-left border-collapse" {...props}>
+                              {children}
+                            </table>
+                          </div>
+                        ),
+                      }}
                     >
                       {content}
                     </ReactMarkdown>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-stone-400 py-24">
-                      <Eye className="w-8 h-8 mb-3 opacity-50" />
-                      <p className="text-[13px] font-bold">Trống! Chưa có nội dung nào.</p>
+                    <div className="h-full flex flex-col items-center justify-center text-[#575e55] dark:text-[#b0b9ac] py-20">
+                      <Eye className="w-8 h-8 mb-2 opacity-50" aria-hidden="true" />
+                      <p className="text-sm font-semibold">Chưa có nội dung để xem trước.</p>
                     </div>
                   )}
-                </motion.div>
+                </Motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-amber-900/10 dark:border-amber-100/10 mt-3">
-            <motion.button 
+          {/* Action buttons (Lưu nháp / Gửi kiểm duyệt) */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-[#dedfd4] dark:border-[#354237] mt-2">
+            <button 
               type="button" 
               onClick={handleSaveDraft} 
               disabled={saving}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-black/5 dark:border-white/5 transition-colors duration-300 md:hover:bg-stone-200 dark:md:hover:bg-stone-700 disabled:opacity-50"
+              aria-label="Lưu bản nháp bài viết"
+              className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-xl text-sm font-bold bg-[#dedfd4]/60 dark:bg-[#354237]/60 text-[#293d32] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] transition-all hover:bg-[#dedfd4] dark:hover:bg-[#354237] active:scale-[0.98] disabled:opacity-50"
             >
-              {saving ? "Đang xử lý..." : "Lưu bản nháp"}
-            </motion.button>
-            <motion.button 
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
+              <span>{saving ? "Đang lưu..." : "Lưu bản nháp"}</span>
+            </button>
+            <button 
               type="button" 
               onClick={handleSubmitForReview} 
               disabled={saving}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold bg-amber-900 text-amber-50 dark:bg-amber-600 dark:text-white shadow-sm transition-shadow duration-300 disabled:opacity-50"
+              aria-label="Gửi bài viết để ban quản trị kiểm duyệt"
+              className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-xl text-sm font-bold bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-sm hover:opacity-95 transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" strokeWidth={2.5} />}
-              Gửi kiểm duyệt
-            </motion.button>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />}
+              <span>{saving ? "Đang gửi..." : "Gửi kiểm duyệt"}</span>
+            </button>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
     </div>
   );

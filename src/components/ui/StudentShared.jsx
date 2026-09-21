@@ -13,8 +13,8 @@ const APPLE_EASE = [0.16, 1, 0.3, 1];
 export function StatCard({ label, value, colorClass = "text-[#293d32] dark:text-[#ecece0]" }) {
   return (
     <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs p-4 sm:p-5 transition-all">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1.5">{label}</p>
-      <p className={`text-[22px] sm:text-[24px] font-extrabold font-mono ${colorClass}`}>{value ?? "—"}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1.5">{label}</p>
+      <p className={`text-xl sm:text-2xl font-extrabold font-mono ${colorClass}`}>{value ?? "—"}</p>
     </div>
   );
 }
@@ -22,8 +22,8 @@ export function StatCard({ label, value, colorClass = "text-[#293d32] dark:text-
 export function ScoreCell({ label, value }) {
   return (
     <div className="bg-[#faf8f3] dark:bg-[#151c18] rounded-xl px-3 py-3 text-center flex-1 min-w-[64px] border border-[#dedfd4] dark:border-[#354237] shadow-xs">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1">{label}</p>
-      <p className="text-[15px] font-bold font-mono text-[#293d32] dark:text-[#ecece0]">{value ?? "—"}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] mb-1">{label}</p>
+      <p className="text-sm sm:text-base font-bold font-mono text-[#293d32] dark:text-[#ecece0]">{value ?? "—"}</p>
     </div>
   );
 }
@@ -41,7 +41,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
   return (
     <div className="flex items-center justify-between bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] rounded-2xl px-3.5 sm:px-4 py-3 shadow-xs hover:border-[#314e3e]/30 dark:hover:border-[#d6b883]/30 transition-colors relative min-w-0">
       <div className="flex items-center gap-3.5 min-w-0 w-full z-10">
-        <div className="w-9 h-9 rounded-xl bg-[#314e3e]/5 dark:bg-[#d6b883]/10 flex items-center justify-center text-[#314e3e] dark:text-[#d6b883] flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-[#314e3e]/5 dark:bg-[#d6b883]/10 flex items-center justify-center text-[#314e3e] dark:text-[#d6b883] shrink-0">
           {typeof Icon === "function" || (typeof Icon === "object" && Icon !== null) ? (
             <Icon className="w-4.5 h-4.5" strokeWidth={2} />
           ) : (
@@ -50,7 +50,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
         </div>
 
         <div className="min-w-0 flex-1">
-          <label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] block mb-0.5">
+          <label htmlFor={inputId} className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] block mb-0.5">
             {label}
           </label>
           
@@ -63,7 +63,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.15 }}
-                  className="text-[14px] md:text-[15px] font-bold text-[#293d32] dark:text-[#ecece0] truncate w-full"
+                  className="text-xs sm:text-sm font-bold text-[#293d32] dark:text-[#ecece0] truncate w-full"
                 >
                   {displayValue ?? value ?? "—"}
                 </Motion.div>
@@ -84,7 +84,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
                       onBlur={onBlur}
                       onKeyDown={handleKeyDown}
                       autoFocus
-                      className="px-2.5 py-1 rounded-lg border border-[#314e3e] dark:border-[#d6b883] text-[14px] font-bold bg-[#fffefa] dark:bg-[#1e2821] focus:outline-none focus:ring-2 focus:ring-[#314e3e]/20 dark:focus:ring-[#d6b883]/20 text-[#293d32] dark:text-[#ecece0] w-full"
+                      className="px-2.5 py-1 rounded-lg border border-[#314e3e] dark:border-[#d6b883] text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] focus:outline-none focus:ring-2 focus:ring-[#314e3e]/20 dark:focus:ring-[#d6b883]/20 text-[#293d32] dark:text-[#ecece0] w-full"
                     >
                       {options.map((o) => <option key={o} value={o}>{o}</option>)}
                     </select>
@@ -98,7 +98,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
                       onKeyDown={handleKeyDown}
                       autoFocus
                       max={type === "date" ? new Date().toISOString().slice(0, 10) : undefined}
-                      className="px-2.5 py-1 rounded-lg border border-[#314e3e] dark:border-[#d6b883] text-[14px] font-bold bg-[#fffefa] dark:bg-[#1e2821] focus:outline-none focus:ring-2 focus:ring-[#314e3e]/20 dark:focus:ring-[#d6b883]/20 w-full text-[#293d32] dark:text-[#ecece0]"
+                      className="px-2.5 py-1 rounded-lg border border-[#314e3e] dark:border-[#d6b883] text-xs sm:text-sm font-bold bg-[#fffefa] dark:bg-[#1e2821] focus:outline-none focus:ring-2 focus:ring-[#314e3e]/20 dark:focus:ring-[#d6b883]/20 w-full text-[#293d32] dark:text-[#ecece0]"
                     />
                   )}
                 </Motion.div>
@@ -118,7 +118,7 @@ export function FieldRow({ icon: Icon, label, field, value, displayValue, type =
             {...pressable(1.1)}
             onClick={onEdit}
             aria-label={`Chỉnh sửa ${label}`}
-            className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-stone-500/10 hover:bg-[#314e3e]/10 dark:bg-stone-400/10 dark:hover:bg-[#d6b883]/20 flex items-center justify-center transition-colors text-[#454f46] hover:text-[#314e3e] dark:text-[#b8c2b4] dark:hover:text-[#d6b883] ml-2 cursor-pointer"
+            className="relative z-10 shrink-0 w-8 h-8 rounded-full bg-stone-500/10 hover:bg-[#314e3e]/10 dark:bg-stone-400/10 dark:hover:bg-[#d6b883]/20 flex items-center justify-center transition-colors text-[#454f46] hover:text-[#314e3e] dark:text-[#b8c2b4] dark:hover:text-[#d6b883] ml-2 cursor-pointer"
           >
             <Pencil className="w-3.5 h-3.5" strokeWidth={2} />
           </Motion.button>
@@ -184,11 +184,11 @@ export function ConfirmDialog({
               </div>
               
               <div className="flex-1 min-w-0">
-                <h4 className="text-[15px] sm:text-[16px] font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
+                <h4 className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] leading-tight truncate">
                   {title}
                 </h4>
                 {message && (
-                  <p className="text-[12px] sm:text-[12.5px] font-medium text-[#454f46] dark:text-[#b8c2b4] mt-0.5 leading-snug truncate sm:whitespace-normal">
+                  <p className="text-xs sm:text-sm font-medium text-[#454f46] dark:text-[#b8c2b4] mt-0.5 leading-snug truncate sm:whitespace-normal">
                     {message}
                   </p>
                 )}
@@ -206,7 +206,7 @@ export function ConfirmDialog({
                 type="button" 
                 disabled={loading}
                 onClick={onCancel}
-                className="flex-1 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-bold text-[#454f46] dark:text-[#b8c2b4] bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] hover:bg-stone-500/10 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
+                className="flex-1 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#454f46] dark:text-[#b8c2b4] bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] hover:bg-stone-500/10 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
               >
                 {cancelLabel}
               </button>
@@ -214,7 +214,7 @@ export function ConfirmDialog({
                 type="button" 
                 disabled={loading}
                 onClick={onConfirm}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-bold text-white transition-all shadow-xs active:scale-98 cursor-pointer disabled:opacity-50 ${
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition-all shadow-xs active:scale-98 cursor-pointer disabled:opacity-50 ${
                   danger ? "bg-red-600 hover:bg-red-700" 
                          : "bg-[#314e3e] hover:bg-[#263e32] dark:bg-[#d6b883] dark:hover:bg-[#c9a76d] dark:text-[#19251d]"
                 }`}

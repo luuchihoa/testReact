@@ -160,14 +160,18 @@ CREATE TABLE public.term_locks (
 );
 
 CREATE TABLE public.grades_audit (
-  id          BIGSERIAL PRIMARY KEY,
-  username    TEXT NOT NULL,
-  nam_hoc     TEXT NOT NULL,
-  hoc_ky      INT  NOT NULL,
-  old_data    JSONB,
-  new_data    JSONB,
-  changed_by  TEXT,
-  changed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  username        TEXT NOT NULL REFERENCES public.users(username) ON DELETE CASCADE,
+  nam_hoc         TEXT NOT NULL,
+  hoc_ky          INT  NOT NULL CHECK (hoc_ky IN (1, 2)),
+  field_name      TEXT NOT NULL CHECK (field_name IN ('diem_mieng', 'diem_vo', 'diem_15_phut', 'diem_1_tiet', 'diem_thi', 'ghi_chu')),
+  operation       TEXT NOT NULL DEFAULT 'update' CHECK (operation IN ('insert', 'update')),
+  old_value       TEXT,
+  new_value       TEXT,
+  changed_by      TEXT REFERENCES public.users(username) ON DELETE SET NULL,
+  changed_by_name TEXT,
+  changed_by_role TEXT,
+  changed_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (username, nam_hoc, hoc_ky, field_name)
 );
 
 -- ── Bảng thông báo (Đã bao gồm type 'bai_viet') ──
@@ -181,6 +185,7 @@ CREATE TABLE public.notifications (
   message             TEXT NOT NULL,
   link                TEXT,
   recipient_username  TEXT REFERENCES public.users(username) ON DELETE CASCADE,
+  recipient_role      TEXT CHECK (recipient_role IN ('admin', 'teacher', 'student', 'user')),
   nam_hoc             TEXT,
   lop                 TEXT,
   hoc_ky              INT CHECK (hoc_ky IN (1, 2)),
@@ -296,14 +301,247 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.log_grades_change()
+CREATE OR REPLACE FUNCTION public.touch_grades_audit_metadata()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_actor TEXT;
+  v_is_changed BOOLEAN := FALSE;
+  v_has_initial_data BOOLEAN := FALSE;
 BEGIN
-  INSERT INTO public.grades_audit (username, nam_hoc, hoc_ky, old_data, new_data, changed_by)
-  VALUES (OLD.username, OLD.nam_hoc, OLD.hoc_ky, to_jsonb(OLD), to_jsonb(NEW), public.my_username());
+  v_actor := public.my_username();
+  IF v_actor IS NULL THEN
+    IF current_user IN ('postgres', 'supabase_admin') THEN
+      v_actor := COALESCE(NEW.updated_by, 'system');
+    ELSE
+      RAISE EXCEPTION 'Không xác định được người thực hiện thao tác điểm số';
+    END IF;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    v_has_initial_data := (
+      NEW.diem_mieng IS NOT NULL OR NEW.diem_vo IS NOT NULL OR NEW.diem_15_phut IS NOT NULL OR
+      NEW.diem_1_tiet IS NOT NULL OR NEW.diem_thi IS NOT NULL OR
+      (NEW.ghi_chu IS NOT NULL AND TRIM(NEW.ghi_chu) <> '')
+    );
+    IF v_has_initial_data THEN
+      NEW.updated_at := NOW();
+      NEW.updated_by := v_actor;
+    END IF;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_is_changed := ROW(
+      OLD.diem_mieng, OLD.diem_vo, OLD.diem_15_phut, OLD.diem_1_tiet, OLD.diem_thi, COALESCE(TRIM(OLD.ghi_chu), '')
+    ) IS DISTINCT FROM ROW(
+      NEW.diem_mieng, NEW.diem_vo, NEW.diem_15_phut, NEW.diem_1_tiet, NEW.diem_thi, COALESCE(TRIM(NEW.ghi_chu), '')
+    );
+
+    IF v_is_changed THEN
+      NEW.updated_at := NOW();
+      NEW.updated_by := v_actor;
+    ELSE
+      NEW.updated_at := OLD.updated_at;
+      NEW.updated_by := OLD.updated_by;
+    END IF;
+  END IF;
+
   RETURN NEW;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION public.log_grades_change()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_actor TEXT;
+  v_actor_name TEXT;
+  v_actor_role TEXT;
+  v_fields TEXT[] := ARRAY['diem_mieng', 'diem_vo', 'diem_15_phut', 'diem_1_tiet', 'diem_thi', 'ghi_chu'];
+  v_f TEXT;
+  v_old_text TEXT;
+  v_new_text TEXT;
+  v_is_diff BOOLEAN;
+BEGIN
+  v_actor := COALESCE(NEW.updated_by, public.my_username());
+  IF v_actor IS NULL THEN
+    v_actor := 'system';
+  END IF;
+  
+  SELECT 
+    TRIM(CONCAT_WS(' ', NULLIF(ten_thanh, ''), NULLIF(ho_va_ten, ''))),
+    role
+  INTO v_actor_name, v_actor_role
+  FROM public.users 
+  WHERE username = v_actor;
+
+  IF v_actor_name IS NULL OR v_actor_name = '' THEN
+    v_actor_name := v_actor;
+  END IF;
+
+  FOREACH v_f IN ARRAY v_fields LOOP
+    v_is_diff := FALSE;
+    v_old_text := NULL;
+    v_new_text := NULL;
+
+    IF v_f = 'diem_mieng' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.diem_mieng IS NOT NULL THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := NEW.diem_mieng::text;
+        END IF;
+      ELSE
+        IF OLD.diem_mieng IS DISTINCT FROM NEW.diem_mieng THEN
+          v_is_diff := TRUE; v_old_text := OLD.diem_mieng::text; v_new_text := NEW.diem_mieng::text;
+        END IF;
+      END IF;
+    ELSIF v_f = 'diem_vo' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.diem_vo IS NOT NULL THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := NEW.diem_vo::text;
+        END IF;
+      ELSE
+        IF OLD.diem_vo IS DISTINCT FROM NEW.diem_vo THEN
+          v_is_diff := TRUE; v_old_text := OLD.diem_vo::text; v_new_text := NEW.diem_vo::text;
+        END IF;
+      END IF;
+    ELSIF v_f = 'diem_15_phut' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.diem_15_phut IS NOT NULL THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := NEW.diem_15_phut::text;
+        END IF;
+      ELSE
+        IF OLD.diem_15_phut IS DISTINCT FROM NEW.diem_15_phut THEN
+          v_is_diff := TRUE; v_old_text := OLD.diem_15_phut::text; v_new_text := NEW.diem_15_phut::text;
+        END IF;
+      END IF;
+    ELSIF v_f = 'diem_1_tiet' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.diem_1_tiet IS NOT NULL THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := NEW.diem_1_tiet::text;
+        END IF;
+      ELSE
+        IF OLD.diem_1_tiet IS DISTINCT FROM NEW.diem_1_tiet THEN
+          v_is_diff := TRUE; v_old_text := OLD.diem_1_tiet::text; v_new_text := NEW.diem_1_tiet::text;
+        END IF;
+      END IF;
+    ELSIF v_f = 'diem_thi' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.diem_thi IS NOT NULL THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := NEW.diem_thi::text;
+        END IF;
+      ELSE
+        IF OLD.diem_thi IS DISTINCT FROM NEW.diem_thi THEN
+          v_is_diff := TRUE; v_old_text := OLD.diem_thi::text; v_new_text := NEW.diem_thi::text;
+        END IF;
+      END IF;
+    ELSIF v_f = 'ghi_chu' THEN
+      IF TG_OP = 'INSERT' THEN
+        IF NEW.ghi_chu IS NOT NULL AND TRIM(NEW.ghi_chu) <> '' THEN
+          v_is_diff := TRUE; v_old_text := NULL; v_new_text := TRIM(NEW.ghi_chu);
+        END IF;
+      ELSE
+        IF COALESCE(TRIM(OLD.ghi_chu), '') IS DISTINCT FROM COALESCE(TRIM(NEW.ghi_chu), '') THEN
+          v_is_diff := TRUE; v_old_text := TRIM(OLD.ghi_chu); v_new_text := TRIM(NEW.ghi_chu);
+        END IF;
+      END IF;
+    END IF;
+
+    IF v_is_diff THEN
+      INSERT INTO public.grades_audit (
+        username,
+        nam_hoc,
+        hoc_ky,
+        field_name,
+        operation,
+        old_value,
+        new_value,
+        changed_by,
+        changed_by_name,
+        changed_by_role,
+        changed_at
+      ) VALUES (
+        NEW.username,
+        NEW.nam_hoc,
+        NEW.hoc_ky,
+        v_f,
+        CASE WHEN TG_OP = 'INSERT' OR v_old_text IS NULL THEN 'insert' ELSE 'update' END,
+        v_old_text,
+        v_new_text,
+        v_actor,
+        v_actor_name,
+        v_actor_role,
+        NOW()
+      )
+      ON CONFLICT (username, nam_hoc, hoc_ky, field_name)
+      DO UPDATE SET
+        operation = 'update',
+        old_value = EXCLUDED.old_value,
+        new_value = EXCLUDED.new_value,
+        changed_by = EXCLUDED.changed_by,
+        changed_by_name = EXCLUDED.changed_by_name,
+        changed_by_role = EXCLUDED.changed_by_role,
+        changed_at = EXCLUDED.changed_at;
+    END IF;
+
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP FUNCTION IF EXISTS public.get_student_grade_audit_logs(TEXT, TEXT, INT, INT, INT);
+DROP FUNCTION IF EXISTS public.get_student_grade_audit_logs(TEXT, TEXT, INT);
+DROP FUNCTION IF EXISTS public.get_student_grade_audit_logs;
+
+CREATE OR REPLACE FUNCTION public.get_student_grade_audit_logs(
+  p_student_username TEXT,
+  p_nam_hoc TEXT,
+  p_hoc_ky INT
+)
+RETURNS TABLE (
+  username TEXT,
+  nam_hoc TEXT,
+  hoc_ky INT,
+  field_name TEXT,
+  operation TEXT,
+  old_value TEXT,
+  new_value TEXT,
+  changed_by TEXT,
+  changed_by_name TEXT,
+  changed_by_role TEXT,
+  changed_at TIMESTAMPTZ
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_caller TEXT;
+BEGIN
+  v_caller := public.my_username();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Vui lòng đăng nhập để truy cập lịch sử sửa điểm';
+  END IF;
+
+  IF NOT (public.is_admin() OR public.is_teacher_of(p_student_username, p_nam_hoc)) THEN
+    RAISE EXCEPTION 'Bạn không có quyền xem nhật ký chỉnh sửa điểm của học sinh này';
+  END IF;
+
+  RETURN QUERY
+  SELECT 
+    ga.username,
+    ga.nam_hoc,
+    ga.hoc_ky,
+    ga.field_name,
+    ga.operation,
+    ga.old_value,
+    ga.new_value,
+    ga.changed_by,
+    ga.changed_by_name,
+    ga.changed_by_role,
+    ga.changed_at
+  FROM public.grades_audit ga
+  WHERE ga.username = p_student_username
+    AND ga.nam_hoc = p_nam_hoc
+    AND ga.hoc_ky = p_hoc_ky
+  ORDER BY ga.changed_at DESC;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.get_student_grade_audit_logs(TEXT, TEXT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_student_grade_audit_logs(TEXT, TEXT, INT) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.notify_grades_change()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -337,15 +575,15 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  SELECT id INTO v_recent_id FROM public.notifications 
-  WHERE type = 'diem' 
-    AND recipient_username = NEW.username 
+  SELECT id INTO v_recent_id FROM public.notifications
+  WHERE type = 'diem'
+    AND recipient_username = NEW.username
     AND hoc_ky = NEW.hoc_ky
     AND created_at > (now() - interval '30 minutes')
   ORDER BY created_at DESC LIMIT 1;
 
   IF v_recent_id IS NOT NULL THEN
-    UPDATE public.notifications 
+    UPDATE public.notifications
     SET message = 'Giáo viên vừa có nhiều cập nhật mới về điểm số của bạn.',
         link = '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky,
         created_at = now()
@@ -383,15 +621,15 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  SELECT id INTO v_recent_id FROM public.notifications 
-  WHERE type = 'tong_ket_ky' 
-    AND recipient_username = NEW.username 
+  SELECT id INTO v_recent_id FROM public.notifications
+  WHERE type = 'tong_ket_ky'
+    AND recipient_username = NEW.username
     AND hoc_ky = NEW.hoc_ky
     AND created_at > (now() - interval '30 minutes')
   ORDER BY created_at DESC LIMIT 1;
 
   IF v_recent_id IS NOT NULL THEN
-    UPDATE public.notifications 
+    UPDATE public.notifications
     SET message = 'Giáo viên vừa cập nhật thông tin tổng kết của bạn.',
         link = '/tài-khoản/thành-tích?ky=HK' || NEW.hoc_ky,
         created_at = now()
@@ -431,15 +669,15 @@ BEGIN
   IF array_length(v_parts, 1) IS NULL THEN RETURN NEW; END IF;
   v_message := array_to_string(v_parts, ' · ');
 
-  SELECT id INTO v_recent_id FROM public.notifications 
-  WHERE type = 'tong_ket_nam' 
-    AND recipient_username = NEW.username 
+  SELECT id INTO v_recent_id FROM public.notifications
+  WHERE type = 'tong_ket_nam'
+    AND recipient_username = NEW.username
     AND nam_hoc = NEW.nam_hoc
     AND created_at > (now() - interval '30 minutes')
   ORDER BY created_at DESC LIMIT 1;
 
   IF v_recent_id IS NOT NULL THEN
-    UPDATE public.notifications 
+    UPDATE public.notifications
     SET message = 'Giáo viên vừa cập nhật thông tin tổng kết cả năm của bạn.',
         created_at = now()
     WHERE id = v_recent_id;
@@ -465,7 +703,7 @@ BEGIN
         'bai_viet',
         'Bài viết mới chờ duyệt',
         'Tác giả ' || NEW.author_username || ' vừa gửi bài viết: "' || NEW.title || '"',
-        '/quản-trị/bài-viết', 
+        '/quản-trị/bài-viết',
         v_admin_record.username,
         NEW.author_username
       );
@@ -475,12 +713,20 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.broadcast_notification(p_title TEXT, p_message TEXT, p_link TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.broadcast_notification(
+  p_title TEXT,
+  p_message TEXT,
+  p_link TEXT DEFAULT NULL,
+  p_recipient_role TEXT DEFAULT NULL
+)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   IF NOT public.is_admin() THEN RAISE EXCEPTION 'Chỉ admin mới được gửi thông báo chung'; END IF;
-  INSERT INTO public.notifications (type, title, message, link, recipient_username, created_by)
-  VALUES ('broadcast', p_title, p_message, p_link, NULL, public.my_username());
+  IF p_recipient_role IS NOT NULL AND p_recipient_role NOT IN ('teacher', 'student', 'user', 'admin') THEN
+    RAISE EXCEPTION 'Vai trò người nhận không hợp lệ';
+  END IF;
+  INSERT INTO public.notifications (type, title, message, link, recipient_username, recipient_role, created_by)
+  VALUES ('broadcast', p_title, p_message, p_link, NULL, p_recipient_role, public.my_username());
 END;
 $$;
 
@@ -488,20 +734,34 @@ CREATE OR REPLACE FUNCTION public.get_my_notifications(p_limit INT DEFAULT 30)
 RETURNS TABLE (id BIGINT, type TEXT, title TEXT, message TEXT, link TEXT, created_at TIMESTAMPTZ, read BOOLEAN)
 LANGUAGE plpgsql STABLE SET search_path = public AS $$
 DECLARE
+  v_username TEXT := public.my_username();
+  v_role TEXT := public.my_role();
+  v_is_adm BOOLEAN := public.is_admin();
   v_notif_system BOOLEAN;
 BEGIN
-  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = public.my_username();
-  
+  IF v_username IS NULL THEN RETURN; END IF;
+  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = v_username;
+
   RETURN QUERY
   SELECT n.id, n.type, n.title, n.message, n.link, n.created_at, (nr.read_at IS NOT NULL) AS read
   FROM public.notifications n
-  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = public.my_username()
-  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL)
-    AND (
-      (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
-      OR
-      (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
+  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = v_username
+  WHERE (
+    n.recipient_username = v_username
+    OR (
+      n.recipient_username IS NULL
+      AND (
+        n.recipient_role IS NULL
+        OR n.recipient_role = v_role
+        OR (n.recipient_role = 'teacher' AND v_is_adm)
+      )
     )
+  )
+  AND n.type != 'email'
+  AND (
+    (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
+    OR (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
+  )
   ORDER BY n.created_at DESC LIMIT p_limit;
 END;
 $$;
@@ -509,45 +769,111 @@ $$;
 CREATE OR REPLACE FUNCTION public.get_unread_notification_count()
 RETURNS INT LANGUAGE plpgsql STABLE SET search_path = public AS $$
 DECLARE
+  v_username TEXT := public.my_username();
+  v_role TEXT := public.my_role();
+  v_is_adm BOOLEAN := public.is_admin();
   v_notif_system BOOLEAN;
   v_count INT;
 BEGIN
-  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = public.my_username();
+  IF v_username IS NULL THEN RETURN 0; END IF;
+  SELECT notif_system INTO v_notif_system FROM public.users WHERE username = v_username;
 
-  SELECT COUNT(*)::INT INTO v_count FROM public.notifications n
-  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = public.my_username()
-  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL)
-    AND nr.read_at IS NULL
-    AND (
-      (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
-      OR
-      (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
-    );
-    
+  SELECT COUNT(*)::INT INTO v_count
+  FROM public.notifications n
+  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = v_username
+  WHERE (
+    n.recipient_username = v_username
+    OR (
+      n.recipient_username IS NULL
+      AND (
+        n.recipient_role IS NULL
+        OR n.recipient_role = v_role
+        OR (n.recipient_role = 'teacher' AND v_is_adm)
+      )
+    )
+  )
+  AND n.type != 'email'
+  AND nr.read_at IS NULL
+  AND (
+    (n.type IN ('broadcast', 'system', 'bai_viet') AND COALESCE(v_notif_system, TRUE) = TRUE)
+    OR (n.type NOT IN ('broadcast', 'system', 'bai_viet'))
+  );
+
   RETURN v_count;
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.my_role()
+RETURNS TEXT LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT role FROM public.users WHERE username = public.my_username();
+$$;
+
 CREATE OR REPLACE FUNCTION public.mark_all_notifications_read()
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_username TEXT := public.my_username();
+  v_role TEXT := public.my_role();
+  v_is_adm BOOLEAN := public.is_admin();
 BEGIN
-  INSERT INTO public.notification_reads (notification_id, username)
-  SELECT n.id, public.my_username() FROM public.notifications n
-  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = public.my_username()
-  WHERE (n.recipient_username = public.my_username() OR n.recipient_username IS NULL) AND nr.read_at IS NULL
-  ON CONFLICT DO NOTHING;
+  IF v_username IS NULL THEN RETURN; END IF;
+
+  INSERT INTO public.notification_reads (notification_id, username, read_at)
+  SELECT n.id, v_username, NOW()
+  FROM public.notifications n
+  LEFT JOIN public.notification_reads nr ON nr.notification_id = n.id AND nr.username = v_username
+  WHERE (
+    n.recipient_username = v_username
+    OR (
+      n.recipient_username IS NULL
+      AND (
+        n.recipient_role IS NULL
+        OR n.recipient_role = v_role
+        OR (n.recipient_role = 'teacher' AND v_is_adm)
+      )
+    )
+  )
+  AND n.type != 'email'
+  AND nr.read_at IS NULL
+  ON CONFLICT (notification_id, username) DO NOTHING;
 END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.mark_notification_read(p_notification_id BIGINT)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_username TEXT := public.my_username();
+DECLARE
+  v_username TEXT := public.my_username();
+  v_role TEXT := public.my_role();
+  v_is_adm BOOLEAN := public.is_admin();
+  v_eligible BOOLEAN;
 BEGIN
-  IF v_username IS NULL THEN RAISE EXCEPTION 'Không xác định được người dùng hiện tại'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.notifications WHERE id = p_notification_id AND (recipient_username = v_username OR recipient_username IS NULL)) THEN
-    RAISE EXCEPTION 'Không tìm thấy thông báo hoặc không có quyền';
+  IF v_username IS NULL THEN
+    RAISE EXCEPTION 'Không xác định được người dùng hiện tại';
   END IF;
-  INSERT INTO public.notification_reads (notification_id, username) VALUES (p_notification_id, v_username) ON CONFLICT DO NOTHING;
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.notifications n
+    WHERE n.id = p_notification_id
+      AND (
+        n.recipient_username = v_username
+        OR (
+          n.recipient_username IS NULL
+          AND (
+            n.recipient_role IS NULL
+            OR n.recipient_role = v_role
+            OR (n.recipient_role = 'teacher' AND v_is_adm)
+          )
+        )
+      )
+      AND n.type != 'email'
+  ) INTO v_eligible;
+
+  IF NOT v_eligible THEN
+    RAISE EXCEPTION 'Không tìm thấy thông báo hoặc không có quyền truy cập';
+  END IF;
+
+  INSERT INTO public.notification_reads (notification_id, username, read_at)
+  VALUES (p_notification_id, v_username, NOW())
+  ON CONFLICT (notification_id, username) DO NOTHING;
 END;
 $$;
 
@@ -684,7 +1010,17 @@ CREATE POLICY "grades_audit: teacher select own students" ON public.grades_audit
 CREATE POLICY "grades_audit: admin select all" ON public.grades_audit FOR SELECT USING (public.is_admin());
 
 -- ── notifications & notification_reads ──
-CREATE POLICY "notifications: select mine or broadcast" ON public.notifications FOR SELECT USING (recipient_username = public.my_username() OR recipient_username IS NULL);
+CREATE POLICY "notifications: select mine or broadcast" ON public.notifications FOR SELECT USING (
+  recipient_username = public.my_username()
+  OR (
+    recipient_username IS NULL
+    AND (
+      recipient_role IS NULL
+      OR recipient_role = public.my_role()
+      OR (recipient_role = 'teacher' AND public.is_admin())
+    )
+  )
+);
 CREATE POLICY "notification_reads: select own" ON public.notification_reads FOR SELECT USING (username = public.my_username());
 CREATE POLICY "notification_reads: insert own" ON public.notification_reads FOR INSERT WITH CHECK (username = public.my_username());
 CREATE POLICY "notification_reads: update own" ON public.notification_reads FOR UPDATE USING (username = public.my_username()) WITH CHECK (username = public.my_username());
@@ -707,8 +1043,12 @@ CREATE POLICY "articles: admin all" ON public.articles FOR ALL USING (public.is_
 --  BLOCK 5: Trigger
 -- ============================================================
 
+CREATE TRIGGER trg_grades_touch_metadata
+  BEFORE INSERT OR UPDATE ON public.grades
+  FOR EACH ROW EXECUTE FUNCTION public.touch_grades_audit_metadata();
+
 CREATE TRIGGER trg_grades_audit
-  AFTER UPDATE ON public.grades
+  AFTER INSERT OR UPDATE ON public.grades
   FOR EACH ROW EXECUTE FUNCTION public.log_grades_change();
 
 CREATE TRIGGER trg_notify_grades_change
@@ -747,7 +1087,7 @@ CREATE INDEX idx_enrollments_username          ON public.enrollments(username);
 CREATE INDEX idx_grades_lookup                 ON public.grades(username, nam_hoc, hoc_ky);
 CREATE INDEX idx_attendance_lookup             ON public.attendance(username, nam_hoc, hoc_ky);
 CREATE INDEX idx_term_locks_lop_namhoc         ON public.term_locks(lop, nam_hoc);
-CREATE INDEX idx_grades_audit_lookup           ON public.grades_audit(username, nam_hoc, hoc_ky);
+CREATE INDEX idx_grades_audit_lookup           ON public.grades_audit(username, nam_hoc, hoc_ky, changed_at DESC, id DESC);
 CREATE INDEX idx_grades_audit_changed_at       ON public.grades_audit(changed_at DESC);
 CREATE INDEX idx_notifications_recipient       ON public.notifications(recipient_username);
 CREATE INDEX idx_notifications_broadcast       ON public.notifications(created_at DESC) WHERE recipient_username IS NULL;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
 
@@ -57,9 +58,9 @@ export default function KhoiThemSucGifts({ items }) {
     <>
       <section id="bay-on" className="py-20 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 scroll-mt-12 relative z-20">
       <div className="max-w-2xl text-left space-y-3 mb-12 sm:mb-16">
-        <p className="text-[11px] font-bold tracking-widest uppercase text-yellow-600 dark:text-yellow-400 ml-1">Trọng tâm Đào tạo</p>
-        <h2 className="text-[28px] sm:text-[36px] md:text-[40px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Bảy Ơn Chúa Thánh Thần</h2>
-        <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl">
+        <p className="text-xs font-bold tracking-widest uppercase text-[#632c02] dark:text-yellow-200 ml-1">Trọng tâm Đào tạo</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">Bảy Ơn Chúa Thánh Thần</h2>
+        <p className="text-sm sm:text-base font-medium text-[#38433a] dark:text-stone-200 leading-relaxed max-w-xl">
           Mỗi ơn ban thiêng liêng được chuyển hóa qua các dụ ngôn Kinh Thánh, liên hệ trực quan giúp các em vững vàng áp dụng vào môi trường học đường và cuộc sống.
         </p>
       </div>
@@ -77,18 +78,19 @@ export default function KhoiThemSucGifts({ items }) {
             onClick={() => setSelectedGift(gift)}
             role="button"
             tabIndex={0}
+            aria-label={`Ơn ${gift.name} - Chạm để xem chi tiết`}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedGift(gift); }}
-            className={`group text-left rounded-[24px] sm:rounded-[32px] border p-5 sm:p-6 flex flex-col justify-between min-h-[220px] cursor-pointer transition-all duration-300 hover:shadow-xl active:scale-[0.98] ${gift.color}`}
+            className={`group text-left rounded-[24px] sm:rounded-[32px] border p-5 sm:p-6 flex flex-col justify-between min-h-[220px] cursor-pointer transition-[transform,box-shadow,border-color] duration-300 hover:shadow-xl active:scale-[0.98] ${gift.color}`}
           >
             <div>
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[28px] select-none filter drop-shadow-sm">{gift.icon}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm ${gift.badge}`}>
+                <span className="text-2xl select-none filter drop-shadow-sm">{gift.icon}</span>
+                <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm ${gift.badge}`}>
                   Chi tiết
                 </span>
               </div>
-              <h3 className="text-[17px] sm:text-[19px] font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors mb-2.5">{gift.name}</h3>
-              <p className="text-[13px] text-stone-500 dark:text-stone-400 leading-relaxed font-medium line-clamp-3">{gift.desc}</p>
+              <h3 className="text-base sm:text-lg font-extrabold font-serif text-amber-950 dark:text-amber-50 md:group-hover:text-[#632c02] dark:group-hover:text-yellow-200 transition-colors mb-2.5">{gift.name}</h3>
+              <p className="text-sm text-[#38433a] dark:text-stone-200 leading-relaxed font-medium line-clamp-3">{gift.desc}</p>
             </div>
           </motion.div>
         ))}
@@ -104,14 +106,14 @@ export default function KhoiThemSucGifts({ items }) {
           <div>
             <div className="relative w-10 h-10 rounded-full bg-yellow-100/80 dark:bg-yellow-900/40 border border-yellow-200/50 dark:border-yellow-800/30 flex items-center justify-center flex-shrink-0 shadow-sm mb-4">
               {/* Glow effect */}
-              <div className="absolute inset-0 rounded-full bg-yellow-400/30 dark:bg-yellow-500/30 blur-md animate-pulse" />
-              <Flame className="w-5 h-5 text-yellow-600 dark:text-yellow-400 fill-current relative z-10" />
+              <div className="absolute inset-0 rounded-full bg-yellow-400/30 dark:bg-yellow-500/30 blur-md" />
+              <Flame className="w-5 h-5 text-[#632c02] dark:text-yellow-200 fill-current relative z-10" />
             </div>
-            <p className="text-[16px] sm:text-[18px] font-medium font-serif leading-relaxed italic text-amber-950 dark:text-amber-50">
+            <p className="text-base sm:text-lg font-medium font-serif leading-relaxed italic text-amber-950 dark:text-amber-50">
               "Tất cả họ đều được tràn đầy ơn Chúa Thánh Thần."
             </p>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-yellow-700/80 dark:text-yellow-400/80 mt-6 text-right">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#632c02] dark:text-yellow-200 mt-6 text-right">
             — Công vụ 2,4
           </p>
         </motion.div>
@@ -134,6 +136,7 @@ export default function KhoiThemSucGifts({ items }) {
               <motion.div
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="ts-gift-title"
                 drag={isMobile ? "y" : false}
                 dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={{ top: 0.1, bottom: 0.6 }}
@@ -143,39 +146,49 @@ export default function KhoiThemSucGifts({ items }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: isMobile ? "100%" : 20, scale: isMobile ? 1 : 0.95 }}
                 transition={{ duration: 0.4, ease: APPLE_EASE }}
-                className="relative w-full md:max-w-xl pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
+                className="relative w-full md:max-w-xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pb-0 rounded-t-[32px] md:rounded-[32px] border border-amber-900/10 dark:border-amber-100/10 shadow-2xl pointer-events-auto max-h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1917]/95 backdrop-blur-xl text-amber-950 dark:text-amber-50"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex justify-center pt-4 pb-2 md:hidden touch-none active:cursor-grabbing">
                   <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full" />
                 </div>
 
-                <div className="flex items-center gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
-                  <div className="w-14 h-14 rounded-2xl bg-yellow-100/50 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 text-2xl select-none shadow-sm border border-yellow-900/5 dark:border-stone-700/30">
-                    {selectedGift.icon}
+                <div className="flex items-center justify-between gap-4 p-6 sm:p-8 pb-4 touch-none border-b border-amber-900/5 dark:border-amber-100/5">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-14 h-14 rounded-2xl bg-yellow-100/50 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 text-2xl select-none shadow-sm border border-yellow-900/5 dark:border-stone-700/30">
+                      {selectedGift.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 id="ts-gift-title" className="font-extrabold font-serif text-xl tracking-tight leading-tight truncate">Ơn {selectedGift.name}</h3>
+                      <p className="text-xs text-[#632c02] dark:text-yellow-200 font-bold uppercase tracking-widest mt-1.5 truncate">Món quà từ Thiên Chúa</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-extrabold font-serif text-[22px] tracking-tight leading-tight truncate">Ơn {selectedGift.name}</h3>
-                    <p className="text-[12px] text-yellow-600 dark:text-yellow-400 font-bold uppercase tracking-widest mt-1.5 truncate">Món quà từ Thiên Chúa</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGift(null)}
+                    aria-label="Đóng chi tiết ơn Chúa Thánh Thần"
+                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full p-2 text-stone-700 hover:text-stone-900 dark:text-stone-200 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <div className="p-6 sm:p-8 pt-5 space-y-6 overflow-y-auto overscroll-contain flex-1 text-left">
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-stone-700 dark:text-stone-200 mb-2.5">
                         Ý nghĩa cốt lõi
                       </h4>
-                      <p className="text-[14.5px] leading-relaxed text-stone-600 dark:text-stone-300 font-medium">
+                      <p className="text-sm sm:text-base leading-relaxed text-stone-700 dark:text-stone-200 font-medium">
                         {selectedGift.desc}
                       </p>
                     </div>
 
                     <div className="bg-stone-50/50 dark:bg-stone-900/30 p-4 sm:p-5 rounded-2xl border border-amber-900/5 dark:border-amber-100/5">
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-yellow-700 dark:text-yellow-500 mb-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-[#632c02] dark:text-yellow-200 mb-2.5">
                         Ví dụ thực tế trong đời sống
                       </h4>
-                      <p className="text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 font-medium italic">
+                      <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-200 font-medium italic">
                         "{selectedGift.example}"
                       </p>
                     </div>

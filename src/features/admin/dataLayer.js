@@ -15,13 +15,13 @@ export async function fetchAllTeachers() {
     .from("users")
     .select("username, ho_va_ten, ten_thanh, avatar, sdt")
     .in("role", ["teacher", "admin"]);
-    
+
   if (error) throw error;
   return data ?? [];
 }
 
 // 2. Lấy người dùng theo trang và hỗ trợ tìm kiếm/lọc trực tiếp từ DB
-export async function fetchUsersPaginated(page = 1, pageSize = 50, searchQuery = "", roleFilter = "all") {
+export async function fetchUsersPaginated(page = 1, pageSize = 50, searchQuery = "", roleFilter = "all", namHoc = "") {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -29,12 +29,13 @@ export async function fetchUsersPaginated(page = 1, pageSize = 50, searchQuery =
     .from("users")
     .select("username, ho_va_ten, ten_thanh, avatar, role, trang_thai", { count: "exact" })
     .order("ho_va_ten", { ascending: true })
+    .order("username", { ascending: true })
     .range(from, to);
 
   if (searchQuery) {
-    query = query.or(`ho_va_ten.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`);
+    query = query.or(`ho_va_ten.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%,ten_thanh.ilike.%${searchQuery}%`);
   }
-  
+
   if (roleFilter && roleFilter !== "all") {
     query = query.eq("role", roleFilter);
   }
@@ -42,17 +43,102 @@ export async function fetchUsersPaginated(page = 1, pageSize = 50, searchQuery =
   const { data, count, error } = await query;
   if (error) throw error;
 
+  // Truy vấn lớp học của học sinh trong niên khóa hiện tại
+  const usernames = (data ?? []).map((u) => u.username);
+  let enrollMap = new Map();
+  if (usernames.length > 0 && namHoc) {
+    const { data: enrollData } = await supabase
+      .from("enrollments")
+      .select("username, lop")
+      .eq("nam_hoc", namHoc)
+      .in("username", usernames);
+    if (enrollData) {
+      enrollData.forEach((e) => enrollMap.set(e.username, e.lop));
+    }
+  }
+
   const users = (data ?? []).map((u) => ({
     username:  u.username,
     hoTen:     u.ho_va_ten || "",
     tenThanh:  u.ten_thanh || "",
     avatar:    u.avatar || "",
     role:      u.role || "user",
-    trangThai: u.trang_thai || "Đang học",
+    trangThai: u.trang_thai || (u.role === "student" ? "Đang học" : "Hoạt động"),
+    lopHoc:    enrollMap.get(u.username) || null,
   }));
 
   return { users, totalCount: count };
 }
+
+// Lấy thống kê số lượng người dùng theo từng vai trò cho Mini-KPIs
+export async function fetchUserRoleCounts() {
+  const [totalRes, adminRes, teacherRes, studentRes, userRes] = await Promise.all([
+    supabase.from("users").select("username", { count: "exact", head: true }),
+    supabase.from("users").select("username", { count: "exact", head: true }).eq("role", "admin"),
+    supabase.from("users").select("username", { count: "exact", head: true }).eq("role", "teacher"),
+    supabase.from("users").select("username", { count: "exact", head: true }).eq("role", "student"),
+    supabase.from("users").select("username", { count: "exact", head: true }).eq("role", "user"),
+  ]);
+
+  if (totalRes.error) throw totalRes.error;
+  if (adminRes.error) throw adminRes.error;
+  if (teacherRes.error) throw teacherRes.error;
+  if (studentRes.error) throw studentRes.error;
+  if (userRes.error) throw userRes.error;
+
+  return {
+    total: totalRes.count || 0,
+    admin: adminRes.count || 0,
+    teacher: teacherRes.count || 0,
+    student: studentRes.count || 0,
+    user: userRes.count || 0,
+  };
+}
+
+// Lấy toàn bộ người dùng theo bộ lọc phục vụ Xuất file Excel
+export async function fetchAllUsersForExport(searchQuery = "", roleFilter = "all", namHoc = "") {
+  let query = supabase
+    .from("users")
+    .select("username, ho_va_ten, ten_thanh, avatar, role, trang_thai")
+    .order("ho_va_ten", { ascending: true })
+    .order("username", { ascending: true })
+    .limit(5000);
+
+  if (searchQuery) {
+    query = query.or(`ho_va_ten.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%,ten_thanh.ilike.%${searchQuery}%`);
+  }
+
+  if (roleFilter && roleFilter !== "all") {
+    query = query.eq("role", roleFilter);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const usernames = (data ?? []).map((u) => u.username);
+  let enrollMap = new Map();
+  if (usernames.length > 0 && namHoc) {
+    const { data: enrollData } = await supabase
+      .from("enrollments")
+      .select("username, lop")
+      .eq("nam_hoc", namHoc)
+      .in("username", usernames);
+    if (enrollData) {
+      enrollData.forEach((e) => enrollMap.set(e.username, e.lop));
+    }
+  }
+
+  return (data ?? []).map((u) => ({
+    username:  u.username,
+    hoTen:     u.ho_va_ten || "",
+    tenThanh:  u.ten_thanh || "",
+    avatar:    u.avatar || "",
+    role:      u.role || "user",
+    trangThai: u.trang_thai || (u.role === "student" ? "Đang học" : "Hoạt động"),
+    lopHoc:    enrollMap.get(u.username) || null,
+  }));
+}
+
 
 // Chỉ lấy học sinh, filter ngay trong query thay vì kéo hết bảng users
 // rồi lọc phía client (dùng cho panel xếp lớp — không cần role/trang_thai).
@@ -72,9 +158,22 @@ export async function fetchStudents() {
   return sortStudentsByTen(list);
 }
 
+// Cập nhật vai trò người dùng (gọi RPC admin_update_user_role bảo vệ admin cuối cùng và GLV đứng lớp)
 export async function updateUserRole(username, role) {
-  const { error } = await supabase.from("users").update({ role }).eq("username", username);
-  if (error) throw error;
+  const { data, error } = await supabase.rpc("admin_update_user_role", {
+    p_username: username,
+    p_new_role: role,
+  });
+
+  if (error) {
+    throw new Error(error.message || "Cập nhật vai trò người dùng thất bại qua hệ thống quản trị");
+  }
+
+  if (data && data.success === false) {
+    throw new Error(data.error || data.message || "Cập nhật vai trò không thành công");
+  }
+
+  return data;
 }
 
 // Xoá người dùng (gọi RPC admin_delete_user để dọn sạch public.users và auth.users)
@@ -84,15 +183,11 @@ export async function deleteUser(username) {
   });
 
   if (error) {
-    console.warn("RPC admin_delete_user error, trying direct delete fallback:", error);
-    const { error: directErr } = await supabase
-      .from("users")
-      .delete()
-      .eq("username", username);
+    throw new Error(error.message || "Xóa người dùng thất bại qua hệ thống quản trị");
+  }
 
-    if (directErr) {
-      throw new Error(error.message || directErr.message || "Xoá người dùng thất bại");
-    }
+  if (data && data.success === false) {
+    throw new Error(data.error || data.message || "Xóa người dùng không thành công");
   }
 
   return data;
@@ -250,16 +345,38 @@ export async function fetchClassRoster(lop, namHoc) {
 }
 
 // Giả định enrollments có unique (username, nam_hoc) -> 1 học sinh chỉ thuộc 1 lớp / năm học.
-// Gán lại lớp mới sẽ tự động "chuyển lớp" (ghi đè lop cũ).
+// Gán lại lớp mới sẽ tự động "chuyển lớp" (ghi đè lop cũ) và đồng bộ sang các bảng tổng kết/sổ điểm.
 export async function assignStudentToClass(username, lop, namHoc) {
   const { error } = await supabase.from("enrollments")
     .upsert({ username, lop, nam_hoc: namHoc }, { onConflict: "username,nam_hoc" });
   if (error) throw error;
+
+  // Tự động đồng bộ lớp sang các bảng tổng kết và sổ điểm nếu đã có dữ liệu
+  try {
+    await Promise.all([
+      supabase.from("term_summary").update({ lop }).eq("username", username).eq("nam_hoc", namHoc),
+      supabase.from("year_summary").update({ lop }).eq("username", username).eq("nam_hoc", namHoc),
+      supabase.from("grades").update({ lop }).eq("username", username).eq("nam_hoc", namHoc),
+    ]);
+  } catch (syncErr) {
+    console.warn("sync student class changes warning:", syncErr);
+  }
 }
 
 export async function removeStudentFromClass(username, namHoc) {
   const { error } = await supabase.from("enrollments").delete().eq("username", username).eq("nam_hoc", namHoc);
   if (error) throw error;
+
+  // Tự động dọn dẹp các bản ghi mồ côi trong năm học đó khi học sinh bị gỡ khỏi lớp
+  try {
+    await Promise.all([
+      supabase.from("term_summary").delete().eq("username", username).eq("nam_hoc", namHoc),
+      supabase.from("year_summary").delete().eq("username", username).eq("nam_hoc", namHoc),
+      supabase.from("grades").delete().eq("username", username).eq("nam_hoc", namHoc),
+    ]);
+  } catch (cleanErr) {
+    console.warn("clean orphan records warning:", cleanErr);
+  }
 }
 
 // Import danh sách học sinh vào lớp và tự động tạo tài khoản Auth qua RPC admin_import_class_roster
@@ -272,6 +389,16 @@ export async function importClassRoster(lop, namHoc, students) {
   if (error) throw error;
   return data;
 }
+
+// Import danh sách người dùng và tự động tạo/cập nhật tài khoản qua RPC admin_import_users
+export async function importUsersList(users) {
+  const { data, error } = await supabase.rpc("admin_import_users", {
+    p_users: users,
+  });
+  if (error) throw error;
+  return data;
+}
+
 
 
 /* ============================================================
@@ -307,7 +434,9 @@ export async function saveGradesBulk(rows) {
 // fetchClassSummary trong TeacherClassView.jsx, tách bản riêng cho phía
 // admin để không phải export thêm hàm từ file của giáo viên.
 export async function fetchClassAcademicSummary(usernames, namHoc, hocKyInt) {
-  if (!usernames.length) return {};
+  if (!usernames.length) {
+    return { data: {}, attendanceError: false, termError: false, gradesError: false };
+  }
 
   const [gradesRes, termRes, attendanceRes] = await Promise.all([
     supabase.from("grades").select("username, diem_thi, diem_tb")
@@ -318,52 +447,75 @@ export async function fetchClassAcademicSummary(usernames, namHoc, hocKyInt) {
       .eq("nam_hoc", namHoc).eq("hoc_ky", hocKyInt).in("username", usernames),
   ]);
 
-  [gradesRes, termRes, attendanceRes].forEach((r, i) => {
-    if (r.error) console.error(`fetchClassAcademicSummary[${i}] error:`, r.error);
-  });
+  if (gradesRes.error) console.error("fetchClassAcademicSummary grades error:", gradesRes.error);
+  if (termRes.error) console.error("fetchClassAcademicSummary term error:", termRes.error);
+  if (attendanceRes.error) console.error("fetchClassAcademicSummary attendance error:", attendanceRes.error);
+
+  const hasAttendanceError = !!attendanceRes.error;
+  const hasTermError = !!termRes.error;
+  const hasGradesError = !!gradesRes.error;
 
   const byUser = {};
   usernames.forEach((u) => {
-    byUser[u] = { diemThi: null, diemTB: null, hocLuc: null, hanhKiem: null, vangCoPhep: 0, vangKhongPhep: 0 };
+    byUser[u] = {
+      diemThi: null,
+      diemTB: null,
+      hocLuc: null,
+      hanhKiem: null,
+      vangCoPhep: hasAttendanceError ? null : 0,
+      vangKhongPhep: hasAttendanceError ? null : 0,
+    };
   });
 
-  (gradesRes.data ?? []).forEach((g) => {
-    if (byUser[g.username]) {
-      byUser[g.username].diemThi = g.diem_thi;
-      byUser[g.username].diemTB  = g.diem_tb;
-    }
-  });
+  if (!hasGradesError) {
+    (gradesRes.data ?? []).forEach((g) => {
+      if (byUser[g.username]) {
+        byUser[g.username].diemThi = g.diem_thi;
+        byUser[g.username].diemTB  = g.diem_tb;
+      }
+    });
+  }
 
-  (termRes.data ?? []).forEach((t) => {
-    if (byUser[t.username]) {
-      byUser[t.username].hocLuc   = t.hoc_luc;
-      byUser[t.username].hanhKiem = t.hanh_kiem;
-    }
-  });
+  if (!hasTermError) {
+    (termRes.data ?? []).forEach((t) => {
+      if (byUser[t.username]) {
+        byUser[t.username].hocLuc   = t.hoc_luc;
+        byUser[t.username].hanhKiem = t.hanh_kiem;
+      }
+    });
+  }
 
-  (attendanceRes.data ?? []).forEach((a) => {
-    const u = byUser[a.username];
-    if (!u) return;
-    if (a.trang_thai === "nghi_phep")       u.vangCoPhep    += 1;
-    if (a.trang_thai === "nghi_khong_phep") u.vangKhongPhep += 1;
-  });
+  if (!hasAttendanceError) {
+    (attendanceRes.data ?? []).forEach((a) => {
+      const u = byUser[a.username];
+      if (!u) return;
+      if (a.trang_thai === "nghi_phep")       u.vangCoPhep    += 1;
+      if (a.trang_thai === "nghi_khong_phep") u.vangKhongPhep += 1;
+    });
+  }
 
-  return byUser;
+  return {
+    data: byUser,
+    attendanceError: hasAttendanceError,
+    termError: hasTermError,
+    gradesError: hasGradesError,
+  };
 }
 
 /* ============================================================
    ĐĂNG KÝ HỌC (form TuyenSinh.jsx) — cần chạy migration_dang_ky_hoc.sql
    ============================================================ */
 
-// Danh sách hồ sơ đăng ký, lọc theo trạng thái (truyền null để lấy tất cả).
+// Danh sách hồ sơ đăng ký, lọc theo trạng thái và niên khóa (truyền null/"all" để lấy tất cả).
 // "moi" sắp xếp cũ -> mới (FIFO, xử lý hồ sơ chờ lâu nhất trước); các trạng
 // thái đã xử lý thì mới -> cũ (xem lại việc vừa làm trước tiên).
-export async function fetchDangKyHoc(trangThai) {
+export async function fetchDangKyHoc(trangThai, namHoc) {
   let query = supabase
     .from("dang_ky_hoc")
     .select("*")
     .order("created_at", { ascending: trangThai === "moi" });
-  if (trangThai) query = query.eq("trang_thai", trangThai);
+  if (trangThai && trangThai !== "all") query = query.eq("trang_thai", trangThai);
+  if (namHoc && namHoc !== "all") query = query.eq("nam_hoc", namHoc);
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
@@ -380,6 +532,16 @@ export async function processDangKyHoc(id, trangThai, ghiChuAdmin) {
   if (error) throw error;
 }
 
+// Cập nhật ghi chú nội bộ của BQT cho 1 hồ sơ độc lập (qua RPC để gán xu_ly_boi & xu_ly_luc tự động)
+export async function updateDangKyNote(id, trangThai, ghiChuAdmin) {
+  const { error } = await supabase.rpc("process_dang_ky_hoc", {
+    p_id: id,
+    p_trang_thai: trangThai,
+    p_ghi_chu_admin: ghiChuAdmin?.trim() || null,
+  });
+  if (error) throw error;
+}
+
 // Số hồ sơ đang ở trạng thái "moi" — dùng cho badge trên tab nav.
 export async function fetchPendingDangKyCount() {
   const { data, error } = await supabase.rpc("get_pending_dang_ky_count");
@@ -388,50 +550,47 @@ export async function fetchPendingDangKyCount() {
 }
 
 // Gửi thông báo chung (broadcast) — chạy qua RPC "broadcast_notification"
-// (SECURITY DEFINER, tự kiểm tra is_admin() ở tầng DB). recipient_username
-// sẽ là NULL trong bảng notifications -> mọi tài khoản đều nhìn thấy.
-export async function sendBroadcastNotification(title, message, link) {
+// Hỗ trợ gửi cho toàn bộ tài khoản (targetRole = null) hoặc phân quyền (targetRole = 'teacher')
+export async function sendBroadcastNotification(title, message, link, targetRole = null) {
   const { error } = await supabase.rpc("broadcast_notification", {
     p_title: title,
     p_message: message,
     p_link: link || null,
+    p_recipient_role: targetRole || null,
   });
   if (error) throw error;
 }
 
-// Gửi Email hàng loạt (Newsletter) bằng cách gọi Edge Function
-export async function sendNewsletter(title, message, link) {
+// Gửi Email hàng loạt (Newsletter) bằng cách gọi Edge Function có theo dõi batch & idempotency
+export async function sendNewsletter(title, message, link, idempotencyKey = null) {
   const { data, error } = await supabase.functions.invoke('send-newsletter', {
-    body: { title, message, link }
+    body: { title, message, link, idempotencyKey }
   });
-  
+
   if (error) {
     console.error("Lỗi mạng khi gọi Edge Function:", error);
-    throw new Error(error.message || "Lỗi gọi Edge Function");
+    throw new Error(error.message || "Lỗi kết nối tới máy chủ gửi email");
   }
-  
-  if (data && data.success === false) {
-    console.error("Lỗi logic từ Edge Function:", data.error);
-    throw new Error(data.error);
+
+  if (!data || data.success === false || data.status === "failed") {
+    console.error("Lỗi từ Edge Function:", data?.error || data?.message);
+    throw new Error(data?.error || data?.message || "Gửi email thất bại hoàn toàn");
   }
-  
-  // Lưu lịch sử gửi email vào database
-  await supabase.rpc("log_email_broadcast", {
-    p_title: title,
-    p_message: message,
-    p_link: link || null,
-  });
-  
+
+  if (data.status === "empty" || data.requested === 0) {
+    throw new Error(data.error || "Danh sách người đăng ký nhận email đang trống. Không thể phát bản tin.");
+  }
+
   return data;
 }
 
-// Lịch sử các thông báo chung đã gửi — dùng để hiển thị lại trong tab,
-// tránh gửi trùng và để admin xem lại đã thông báo gì.
-export async function fetchRecentBroadcasts(limit = 20) {
+// Lịch sử các thông báo phát tin đã gửi — CHỈ lấy type IN ('broadcast', 'email')
+// Bảo đảm không xóa hay đọc nhầm sang thông báo hệ thống, điểm số hoặc bài viết
+export async function fetchRecentBroadcasts(limit = 40) {
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, type, title, message, link, created_at, created_by")
-    .is("recipient_username", null)
+    .select("id, type, title, message, link, recipient_role, created_at, created_by")
+    .in("type", ["broadcast", "email"])
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -452,13 +611,41 @@ export async function fetchSubscriberCount() {
   return count ?? 0;
 }
 
+// Lấy số lượng người nhận dự kiến cho từng kênh phát tin và trạng thái lỗi chi tiết
+export async function fetchBroadcastAudienceCounts() {
+  const [subRes, teacherRes, userRes] = await Promise.allSettled([
+    supabase.from("subscribers").select("*", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("users").select("*", { count: "exact", head: true }).in("role", ["teacher", "admin"]),
+    supabase.from("users").select("*", { count: "exact", head: true })
+  ]);
+
+  const subError = subRes.status === "rejected" || Boolean(subRes.value?.error);
+  const teacherError = teacherRes.status === "rejected" || Boolean(teacherRes.value?.error);
+  const userError = userRes.status === "rejected" || Boolean(userRes.value?.error);
+  const hasError = subError || teacherError || userError;
+
+  const subscribers = !subError ? (subRes.value.count ?? 0) : null;
+  const teachers = !teacherError ? (teacherRes.value.count ?? 0) : null;
+  const allUsers = !userError ? (userRes.value.count ?? 0) : null;
+
+  return {
+    subscribers,
+    teachers,
+    allUsers,
+    subscribersError: subError,
+    teachersError: teacherError,
+    allUsersError: userError,
+    hasError: Boolean(hasError)
+  };
+}
+
 export async function submitContactForm(hoTen, sdt, noiDung) {
   const { data, error } = await supabase.rpc("submit_lien_he", {
     p_ho_ten: hoTen,
     p_sdt: sdt,
     p_noi_dung: noiDung,
   });
-  
+
   if (error) throw error;
   return data;
 }
@@ -468,8 +655,8 @@ export async function fetchLienHe(trangThai) {
     .from("lien_he")
     .select("*")
     .order("created_at", { ascending: trangThai === "moi" }); // Mới thì xếp cũ lên trước (FIFO)
-    
-  if (trangThai) query = query.eq("trang_thai", trangThai);
+
+  if (trangThai && trangThai !== "all") query = query.eq("trang_thai", trangThai);
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
@@ -521,7 +708,7 @@ export async function fetchRoleCounts() {
   (data ?? []).forEach(u => {
     counts[u.role] = (counts[u.role] || 0) + 1;
   });
-  
+
   return counts;
 }
 
@@ -529,15 +716,241 @@ export async function fetchRoleCounts() {
 export async function fetchExactRoleCounts() {
   const roles = ['admin', 'teacher', 'student', 'user'];
   const counts = { admin: 0, teacher: 0, student: 0, user: 0 };
-  
+
   await Promise.all(roles.map(async (role) => {
     const { count, error } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('role', role);
-      
+
     if (!error) counts[role] = count || 0;
   }));
-  
+
   return counts;
+}
+
+/* ============================================================
+   MODULE E — QUẢN TRỊ LỊCH NIÊN KHÓA & NGÀY NGHỈ LỄ PHỤNG VỤ
+   ============================================================ */
+
+// Lấy cấu hình lịch niên khóa tập trung
+export async function fetchAcademicCalendar(namHoc) {
+  try {
+    const { data, error } = await supabase
+      .from("academic_calendars")
+      .select("*")
+      .eq("nam_hoc", namHoc)
+      .maybeSingle();
+
+    if (!error && data) {
+      return data;
+    }
+  } catch (err) {
+    console.warn("fetchAcademicCalendar Supabase fallback to local:", err);
+  }
+
+  // Fallback sang localStorage
+  try {
+    const cached = localStorage.getItem(`academic_calendar_${namHoc}`);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.warn("read local calendar error:", e);
+  }
+  return null;
+}
+
+// Lưu/Cập nhật cấu hình lịch niên khóa
+export async function saveAcademicCalendar(calendarData) {
+  const { nam_hoc, hk1_start_date, hk1_total_weeks, hk2_start_date, hk2_total_weeks, ghi_chu } = calendarData;
+  const payload = {
+    nam_hoc,
+    hk1_start_date,
+    hk1_total_weeks: Number(hk1_total_weeks) || 16,
+    hk2_start_date,
+    hk2_total_weeks: Number(hk2_total_weeks) || 16,
+    ghi_chu: ghi_chu || "",
+    updated_at: new Date().toISOString()
+  };
+
+  // Luôn lưu bản sao vào localStorage làm cache/fallback
+  try {
+    localStorage.setItem(`academic_calendar_${nam_hoc}`, JSON.stringify(payload));
+  } catch (e) {
+    console.warn("localStorage save calendar error:", e);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("academic_calendars")
+      .upsert(payload, { onConflict: "nam_hoc" })
+      .select()
+      .maybeSingle();
+
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn("saveAcademicCalendar Supabase error, stored locally:", err);
+  }
+  return payload;
+}
+
+// Lấy danh sách các ngày nghỉ lễ phụng vụ / nghỉ Tết của niên khóa
+export async function fetchAcademicHolidays(namHoc) {
+  try {
+    const { data, error } = await supabase
+      .from("academic_holidays")
+      .select("*")
+      .eq("nam_hoc", namHoc)
+      .order("ngay", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return data;
+    }
+  } catch (err) {
+    console.warn("fetchAcademicHolidays Supabase fallback:", err);
+  }
+
+  // Fallback sang localStorage
+  try {
+    const cached = localStorage.getItem(`academic_holidays_${namHoc}`);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.warn("read local holidays error:", e);
+  }
+  return [];
+}
+
+// Thêm ngày nghỉ lễ mới
+export async function addAcademicHoliday(holiday) {
+  const { nam_hoc, hoc_ky, ngay, ten_ngay_le, loai_nghi, ghi_chu } = holiday;
+  const item = {
+    id: holiday.id || `hol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    nam_hoc,
+    hoc_ky: Number(hoc_ky) || 1,
+    ngay,
+    ten_ngay_le,
+    loai_nghi: loai_nghi || "nghi_le",
+    ghi_chu: ghi_chu || "",
+  };
+
+  // Cập nhật localStorage
+  try {
+    const raw = localStorage.getItem(`academic_holidays_${nam_hoc}`);
+    let list = raw ? JSON.parse(raw) : [];
+    list = [...list.filter(h => h.ngay !== ngay), item].sort((a, b) => a.ngay.localeCompare(b.ngay));
+    localStorage.setItem(`academic_holidays_${nam_hoc}`, JSON.stringify(list));
+  } catch (e) {
+    console.warn("save local holiday error:", e);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("academic_holidays")
+      .upsert({
+        nam_hoc,
+        hoc_ky: Number(hoc_ky) || 1,
+        ngay,
+        ten_ngay_le,
+        loai_nghi: loai_nghi || "nghi_le",
+        ghi_chu: ghi_chu || "",
+      }, { onConflict: "nam_hoc,ngay" })
+      .select()
+      .maybeSingle();
+
+    if (!error && data) return data;
+  } catch (err) {
+    console.warn("addAcademicHoliday Supabase error, saved locally:", err);
+  }
+
+  return item;
+}
+
+// Xóa ngày nghỉ lễ
+export async function deleteAcademicHoliday(holidayId, namHoc) {
+  if (namHoc) {
+    try {
+      const raw = localStorage.getItem(`academic_holidays_${namHoc}`);
+      if (raw) {
+        const list = JSON.parse(raw).filter(h => String(h.id) !== String(holidayId));
+        localStorage.setItem(`academic_holidays_${namHoc}`, JSON.stringify(list));
+      }
+    } catch (e) {
+      console.warn("delete local holiday error:", e);
+    }
+  }
+
+  try {
+    await supabase
+      .from("academic_holidays")
+      .delete()
+      .eq("id", holidayId);
+  } catch (err) {
+    console.warn("deleteAcademicHoliday Supabase error:", err);
+  }
+}
+
+// Đồng bộ lịch niên khóa sang tất cả các lớp trong năm học
+export async function syncCalendarToAllClasses(namHoc, hk1StartDate, hk1Weeks, hk2StartDate, hk2Weeks) {
+  // 1. Thử gọi RPC sync_academic_calendar_to_classes
+  try {
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("sync_academic_calendar_to_classes", {
+      p_nam_hoc: namHoc,
+      p_hk1_start: hk1StartDate,
+      p_hk1_weeks: Number(hk1Weeks) || 16,
+      p_hk2_start: hk2StartDate,
+      p_hk2_weeks: Number(hk2Weeks) || 16,
+    });
+
+    if (!rpcErr) {
+      return rpcData;
+    }
+  } catch (e) {
+    console.warn("RPC sync_academic_calendar_to_classes fallback to client sync:", e);
+  }
+
+  // 2. Fallback: Lưu vào academic_calendars (hoặc localStorage) và cập nhật term_summary qua client
+  await saveAcademicCalendar({
+    nam_hoc: namHoc,
+    hk1_start_date: hk1StartDate,
+    hk1_total_weeks: hk1Weeks,
+    hk2_start_date: hk2StartDate,
+    hk2_total_weeks: hk2Weeks,
+  });
+
+  try {
+    // Lấy danh sách enrollments trong năm học đó
+    const { data: enrolls, error: enrollErr } = await supabase
+      .from("enrollments")
+      .select("username, lop")
+      .eq("nam_hoc", namHoc);
+
+    if (!enrollErr && enrolls?.length) {
+      const hk1Rows = enrolls.map(e => ({
+        username: e.username,
+        nam_hoc: namHoc,
+        lop: e.lop,
+        hoc_ky: 1,
+        ngay_bat_dau: hk1StartDate,
+        tong_buoi: Number(hk1Weeks) || 16,
+      }));
+
+      const hk2Rows = enrolls.map(e => ({
+        username: e.username,
+        nam_hoc: namHoc,
+        lop: e.lop,
+        hoc_ky: 2,
+        ngay_bat_dau: hk2StartDate,
+        tong_buoi: Number(hk2Weeks) || 16,
+      }));
+
+      // Cập nhật từng mẻ (batch upsert)
+      await Promise.allSettled([
+        supabase.from("term_summary").upsert(hk1Rows, { onConflict: "username,nam_hoc,hoc_ky" }),
+        supabase.from("term_summary").upsert(hk2Rows, { onConflict: "username,nam_hoc,hoc_ky" }),
+      ]);
+    }
+    return { success: true, count: enrolls?.length || 0, fallback: true };
+  } catch (clientSyncErr) {
+    console.warn("Client sync enrollments warning:", clientSyncErr);
+    return { success: true, fallback: true };
+  }
 }

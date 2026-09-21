@@ -7,9 +7,10 @@ export function getCurrentNamHoc(date = new Date()) {
   return `${startYear}-${startYear + 1}`;
 }
 
-// Tự tính điểm TB dựa trên các điểm thành phần đã có (bỏ qua ô còn trống).
-// Trả về null nếu chưa có điểm thành phần nào để tránh hiện "0" gây hiểu lầm.
+// Tự tính điểm TB: CHỈ tính khi có ĐỦ CẢ 5 CỘT ĐIỂM (Miệng x1, Vở x1, 15' x1, 1 Tiết x2, Thi x3).
+// Nếu thiếu bất kỳ cột nào, trả về null (giao diện hiển thị "—").
 export function computeDiemTB(g) {
+  if (!g) return null;
   const parts = [
     { v: g.diem_mieng,   w: GRADE_WEIGHTS.diem_mieng },
     { v: g.diem_vo,      w: GRADE_WEIGHTS.diem_vo },
@@ -17,11 +18,11 @@ export function computeDiemTB(g) {
     { v: g.diem_1_tiet,  w: GRADE_WEIGHTS.diem_1_tiet },
     { v: g.diem_thi,     w: GRADE_WEIGHTS.diem_thi },
   ];
-  const valid = parts.filter((p) => p.v !== null && p.v !== undefined && p.v !== "");
-  if (valid.length === 0) return null;
-  const totalW = valid.reduce((s, p) => s + p.w, 0);
-  const sum    = valid.reduce((s, p) => s + Number(p.v) * p.w, 0);
-  return Math.round((sum / totalW) * 100) / 100;
+  const hasAll = parts.every((p) => p.v !== null && p.v !== undefined && p.v !== "" && !isNaN(Number(p.v)));
+  if (!hasAll) return null;
+  const totalW = parts.reduce((s, p) => s + p.w, 0); // 8
+  const sum    = parts.reduce((s, p) => s + Number(p.v) * p.w, 0);
+  return Math.round((sum / totalW) * 10) / 10;
 }
 
 // Lấy "Tên" riêng (từ cuối cùng) trong Họ và Tên đầy đủ — dùng để xếp danh
@@ -42,11 +43,39 @@ export function sortStudentsByTen(students) {
   });
 }
 
-// Trả về Chủ Nhật gần nhất KHÔNG ở tương lai: nếu hôm nay đã là Chủ Nhật thì trả
-// về chính hôm nay; nếu chưa tới Chủ Nhật của tuần này thì lùi về Chủ Nhật tuần trước.
+// Phân tích chuỗi ngày YYYY-MM-DD an toàn tuyệt đối múi giờ
+export function parseISODate(isoStr) {
+  if (!isoStr) return new Date();
+  if (isoStr instanceof Date) return isoStr;
+  const parts = String(isoStr).trim().split("-");
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    return new Date(y, m, d, 12, 0, 0, 0);
+  }
+  return new Date(isoStr);
+}
+
+// Chuyển Date hoặc chuỗi sang định dạng chuẩn YYYY-MM-DD theo giờ địa phương
+export function toISODate(d) {
+  if (!d) return "";
+  if (typeof d === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d.trim())) return d.trim();
+    d = parseISODate(d);
+  }
+  if (isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// Trả về Chúa Nhật gần nhất KHÔNG ở tương lai: nếu hôm nay đã là Chúa Nhật thì trả
+// về chính hôm nay; nếu chưa tới Chúa Nhật của tuần này thì lùi về Chúa Nhật tuần trước.
 export function mostRecentSunday(base = new Date()) {
   const d = new Date(base);
-  d.setHours(0, 0, 0, 0);
+  d.setHours(12, 0, 0, 0);
   d.setDate(d.getDate() - d.getDay());
   return d;
 }
@@ -55,22 +84,19 @@ export function mostRecentSunday(base = new Date()) {
 export function buildSundayList(startRaw, tongBuoi) {
   const total = Number(tongBuoi) || 0;
   if (!startRaw || !total) return [];
-  const startDate = new Date(startRaw);
+  const startDate = parseISODate(startRaw);
   const list = [];
   for (let i = 0; i < total; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i * 7);
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i * 7, 12, 0, 0, 0);
     list.push(d);
   }
   return list;
 }
 
-export function toISODate(d) {
-  return d.toISOString().slice(0, 10);
-}
-
 export function formatVNDate(d) {
-  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+  if (!d) return "";
+  const dateObj = typeof d === "string" ? parseISODate(d) : d;
+  return `${String(dateObj.getDate()).padStart(2, "0")}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${dateObj.getFullYear()}`;
 }
 
 // Giới hạn 1 ngày vào trong khoảng lịch điểm danh đã định sẵn (không vượt quá buổi đầu/cuối)
@@ -87,6 +113,41 @@ export function resolveActiveHocKy(ranges, todaySunday) {
   const hk2 = ranges.HK2;
   if (hk2 && hk2.sundays.length && todaySunday >= hk2.sundays[0]) return "HK2";
   return "HK1";
+}
+
+// Lấy Chúa Nhật đầu tiên của tháng (month: 0-indexed, 8 = Tháng 9, 0 = Tháng 1)
+export function getFirstSundayOfMonth(year, month) {
+  const d = new Date(year, month, 1, 12, 0, 0, 0);
+  const day = d.getDay();
+  const diff = day === 0 ? 0 : 7 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+// Sinh khung lịch mặc định thông minh cho Niên khóa (16 tuần HK1 từ đầu tháng 9, 16 tuần HK2 từ đầu tháng 1)
+export function getDefaultTermRanges(namHoc) {
+  let startYear = new Date().getFullYear();
+  if (namHoc && typeof namHoc === "string" && namHoc.includes("-")) {
+    const parsed = parseInt(namHoc.split("-")[0], 10);
+    if (!isNaN(parsed) && parsed >= 2000 && parsed <= 2100) {
+      startYear = parsed;
+    }
+  }
+
+  // HK1: Chúa Nhật đầu tiên tháng 9 của startYear (vd: 06/09/2026), 16 buổi
+  const hk1Sunday = getFirstSundayOfMonth(startYear, 8);
+  const hk1StartIso = toISODate(hk1Sunday);
+  const hk1Sundays = buildSundayList(hk1StartIso, 16);
+
+  // HK2: Chúa Nhật đầu tiên tháng 1 của startYear + 1 (vd: 10/01/2027), 16 buổi
+  const hk2Sunday = getFirstSundayOfMonth(startYear + 1, 0);
+  const hk2StartIso = toISODate(hk2Sunday);
+  const hk2Sundays = buildSundayList(hk2StartIso, 16);
+
+  return {
+    HK1: { start: hk1StartIso, sundays: hk1Sundays, isDefault: true },
+    HK2: { start: hk2StartIso, sundays: hk2Sundays, isDefault: true },
+  };
 }
 
 // Màu chữ cho điểm TB, cùng ngôn ngữ màu với RANK_COLORS (Giỏi/Khá/TB/Yếu/Kém)

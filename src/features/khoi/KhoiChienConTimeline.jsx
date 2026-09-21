@@ -1,4 +1,5 @@
 import React from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { Sun, Users, Music, BookOpen, Brush } from "lucide-react";
 import { usePageMotion } from "../../hooks/usePageMotion.js";
@@ -9,7 +10,7 @@ const TIMELINE = [
     title: "Đón bé & Vòng tròn",
     desc: "Cô giáo đón bé, cùng nhau ngồi thành vòng tròn lớn để chào hỏi và chia sẻ niềm vui đầu tuần.",
     icon: Users,
-    color: "text-rose-500",
+    color: "text-[#6b143c] dark:text-rose-200",
     bg: "bg-rose-100 dark:bg-rose-900/30",
   },
   {
@@ -17,7 +18,7 @@ const TIMELINE = [
     title: "Cầu nguyện & Hát ca",
     desc: "Tập hát những bài hát thiếu nhi vui nhộn kèm cử điệu, dâng ngày mới lên cho Chúa Giêsu.",
     icon: Music,
-    color: "text-amber-500",
+    color: "text-[#632c02] dark:text-amber-200",
     bg: "bg-amber-100 dark:bg-amber-900/30",
   },
   {
@@ -25,7 +26,7 @@ const TIMELINE = [
     title: "Nghe kể chuyện",
     desc: "Lắng nghe những câu chuyện Kinh Thánh qua tranh ảnh lớn, búp bê hoặc các mẩu chuyện cổ tích đạo đức.",
     icon: BookOpen,
-    color: "text-pink-500",
+    color: "text-[#6b143c] dark:text-pink-200",
     bg: "bg-pink-100 dark:bg-pink-900/30",
   },
   {
@@ -33,7 +34,7 @@ const TIMELINE = [
     title: "Góc sáng tạo",
     desc: "Các bé được tô màu, làm thủ công giấy (như làm thiệp, cắt dán con chiên nhỏ) để ôn lại bài học.",
     icon: Brush,
-    color: "text-purple-500",
+    color: "text-[#4a154b] dark:text-purple-200",
     bg: "bg-purple-100 dark:bg-purple-900/30",
   },
 ];
@@ -50,13 +51,13 @@ export default function KhoiChienConTimeline() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative">
         <div className="text-center space-y-3 mb-16 sm:mb-20">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-stone-800 shadow-sm border border-rose-100 dark:border-rose-900/30 mb-2">
-            <Sun className="w-6 h-6 text-amber-500" />
+            <Sun className="w-6 h-6 text-[#632c02] dark:text-amber-200" />
           </div>
-          <h2 className="text-[28px] sm:text-[36px] font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold font-serif tracking-tight text-amber-950 dark:text-amber-50 leading-tight">
             Một buổi sáng của bé
           </h2>
-          <p className="text-[14px] sm:text-[15.5px] font-medium text-stone-500 dark:text-stone-400 max-w-lg mx-auto leading-relaxed">
-            Môi trường an toàn, vui vẻ và tràn ngập tình yêu thương. Phụ huynh hoàn toàn yên tâm khi gửi gắm các thiên thần nhỏ vào sáng Chủ Nhật.
+          <p className="text-sm sm:text-base font-medium text-[#38433a] dark:text-stone-200 max-w-lg mx-auto leading-relaxed">
+            Môi trường an toàn, vui vẻ và tràn ngập tình yêu thương. Phụ huynh hoàn toàn yên tâm khi gửi gắm các thiên thần nhỏ vào sáng Chúa Nhật.
           </p>
         </div>
 
@@ -88,14 +89,14 @@ export default function KhoiChienConTimeline() {
 
                   {/* Content Box */}
                   <div className={`w-full sm:w-1/2 pl-20 sm:pl-0 ${isEven ? "sm:pr-12 text-left sm:text-right" : "sm:pl-12 text-left"}`}>
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[12px] font-bold tracking-widest mb-3 border border-stone-200/50 dark:border-stone-700/50 shadow-sm bg-white dark:bg-stone-800 ${item.color}`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest mb-3 border border-stone-200/50 dark:border-stone-700/50 shadow-sm bg-white dark:bg-stone-800 ${item.color}`}>
                       <Icon className="w-3.5 h-3.5" />
                       {item.time}
                     </div>
-                    <h3 className="text-[18px] sm:text-[20px] font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-2">
+                    <h3 className="text-lg sm:text-xl font-extrabold font-serif text-amber-950 dark:text-amber-50 mb-2">
                       {item.title}
                     </h3>
-                    <p className="text-[14px] leading-relaxed font-medium text-stone-600 dark:text-stone-400">
+                    <p className="text-sm sm:text-base leading-relaxed font-medium text-stone-700 dark:text-stone-200">
                       {item.desc}
                     </p>
                   </div>

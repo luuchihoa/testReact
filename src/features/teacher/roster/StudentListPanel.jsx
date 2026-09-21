@@ -11,7 +11,7 @@ import ProfileRequestsModal from "./ProfileRequestsModal.jsx";
 
 const SORT_OPTIONS = [
   { id: "ten_asc", label: "Tên (A → Z)" },
-  { id: "username_asc", label: "Mã học sinh" },
+  { id: "username_asc", label: "Mã giáo lý sinh" },
   { id: "diem_desc", label: "Điểm TB giảm dần" },
 ];
 
@@ -121,8 +121,8 @@ function StudentListPanel({
       await reloadStudents();
       showToast(
         targetLockState
-          ? `Đã khóa chỉnh sửa hồ sơ cho ${usernames.length} học sinh!`
-          : `Đã mở khóa chỉnh sửa hồ sơ cho ${usernames.length} học sinh!`,
+          ? `Đã khóa chỉnh sửa hồ sơ cho ${usernames.length} giáo lý sinh!`
+          : `Đã mở khóa chỉnh sửa hồ sơ cho ${usernames.length} giáo lý sinh!`,
         "success"
       );
       setShowBatchLockConfirm(false);
@@ -136,7 +136,7 @@ function StudentListPanel({
 
   const handleExport = async () => {
     if (processedStudents.length === 0) {
-      showToast("Không có học sinh trong danh sách để tải", "warning");
+      showToast("Không có giáo lý sinh trong danh sách để tải", "warning");
       return;
     }
     setExporting(true);
@@ -187,22 +187,27 @@ function StudentListPanel({
         <div className="flex items-center justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#293d32] dark:text-[#ecece0] tracking-tight truncate">
-              Danh sách {lop}
+              {pendingRequestsCount > 0 ? "Danh sách" : `Danh sách ${lop || ""}`}
             </h1>
             
-            {/* Meta row: Niên khóa + Sĩ số (Siêu gọn 1 hàng, không rớt dòng) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 text-[11px] sm:text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium whitespace-nowrap">
-              <span className="inline-flex items-center gap-1">
+            {/* Meta row: Niên khóa + Sĩ số (Ẩn Sĩ số khi có đơn chờ duyệt để tránh đè layout) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 text-xs text-[#575e55] dark:text-[#b0b9ac] font-medium whitespace-nowrap overflow-hidden">
+              <span className="inline-flex items-center gap-1 shrink-0">
                 <CalendarDays className="w-3.5 h-3.5 text-[#927140] dark:text-[#d4b47d] shrink-0" aria-hidden="true" />
                 <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{namHoc}</strong>
               </span>
-              <span className="opacity-40">•</span>
-              <span className="inline-flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
-                <span>Sĩ số:</span>
-                <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{(allStudents || students || []).length}</strong>
-                <span>HS</span>
-              </span>
+
+              {pendingRequestsCount === 0 && (
+                <>
+                  <span className="opacity-40 shrink-0">•</span>
+                  <span className="inline-flex items-center gap-1 truncate">
+                    <Users className="w-3.5 h-3.5 text-[#314e3e] dark:text-[#d6b883] shrink-0" aria-hidden="true" />
+                    <span>Sĩ số:</span>
+                    <strong className="text-[#293d32] dark:text-[#ecece0] font-mono font-bold">{(allStudents || students || []).length}</strong>
+                    <span>GLS</span>
+                  </span>
+                </>
+              )}
             </div>
           </div>
           
@@ -218,38 +223,38 @@ function StudentListPanel({
                 >
                   <UserCheck className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                   <span>Duyệt</span>
-                  <span className="px-1.5 py-0.2 rounded-full bg-amber-600 text-white text-[10px] font-black">
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-600 text-white text-xs font-black">
                     {pendingRequestsCount}
                   </span>
                 </button>
-                {/* Instant CSS Tooltip (Nổi xuống dưới để không bị overflow-hidden che) */}
-                <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-[11px] font-semibold shadow-lg z-50">
+                {/* Instant CSS Tooltip */}
+                <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-xs font-semibold shadow-lg z-50">
                   {pendingRequestsCount} yêu cầu chờ duyệt
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-[#1e2821] dark:border-b-[#fffefa]" />
                 </div>
               </div>
             )}
 
-            {/* Nút Tải Excel (Có chữ rõ ràng + Instant Tooltip) */}
+            {/* Nút Tải Excel */}
             <div className="relative group">
               <button
                 type="button"
                 onClick={handleExport}
                 disabled={exporting || processedStudents.length === 0}
                 className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 h-[38px] min-h-[38px] rounded-xl bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] border border-[#dedfd4] dark:border-[#354237] text-xs font-bold shadow-xs active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                aria-label="Xuất file Excel danh sách học sinh"
+                aria-label="Xuất file Excel danh sách giáo lý sinh"
               >
                 {exporting ? <Spinner className="w-4 h-4" /> : <Download className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />}
                 <span>Excel</span>
               </button>
-              {/* Instant CSS Tooltip (Nổi xuống dưới) */}
-              <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-[11px] font-semibold shadow-lg z-50">
+              {/* Instant CSS Tooltip */}
+              <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-xs font-semibold shadow-lg z-50">
                 Xuất file Excel (.xlsx)
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-[#1e2821] dark:border-b-[#fffefa]" />
               </div>
             </div>
 
-            {/* Nút Khóa / Mở khóa toàn bộ học sinh (Instant Tooltip) */}
+            {/* Nút Khóa / Mở khóa toàn bộ giáo lý sinh */}
             <div className="relative group">
               <button
                 type="button"
@@ -260,7 +265,7 @@ function StudentListPanel({
                     ? "bg-[#927140]/15 hover:bg-[#927140]/25 text-[#7c5c2d] dark:text-[#d4b47d] border-[#927140]/30 dark:border-[#d4b47d]/30"
                     : "bg-[#fffefa] dark:bg-[#1e2821] hover:bg-[#faf8f3] dark:hover:bg-[#151c18] text-[#293d32] dark:text-[#ecece0] border-[#dedfd4] dark:border-[#354237]"
                 }`}
-                aria-label={allLocked ? "Mở khóa hồ sơ toàn bộ học sinh" : "Khóa hồ sơ toàn bộ học sinh"}
+                aria-label={allLocked ? "Mở khóa hồ sơ tất cả giáo lý sinh" : "Khóa hồ sơ tất cả giáo lý sinh"}
               >
                 {batchLocking ? (
                   <Spinner className="w-4 h-4" />
@@ -270,8 +275,8 @@ function StudentListPanel({
                   <Unlock className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
                 )}
               </button>
-              {/* Instant CSS Tooltip (Nổi xuống dưới) */}
-              <div className="pointer-events-none absolute top-full right-0 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-[11px] font-semibold shadow-lg z-50">
+              {/* Instant CSS Tooltip */}
+              <div className="pointer-events-none absolute top-full right-0 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap rounded-lg bg-[#1e2821] dark:bg-[#fffefa] text-white dark:text-[#19251d] px-2.5 py-1 text-xs font-semibold shadow-lg z-50">
                 {allLocked ? "Mở khóa tất cả hồ sơ" : "Khóa tất cả hồ sơ"}
                 <div className="absolute bottom-full right-3 border-4 border-transparent border-b-[#1e2821] dark:border-b-[#fffefa]" />
               </div>
@@ -288,7 +293,7 @@ function StudentListPanel({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm tên hoặc mã học sinh…"
+              placeholder="Tìm tên hoặc mã giáo lý sinh…"
               className="w-full rounded-xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] pl-9 pr-8 py-2 min-h-[38px] text-xs font-medium text-[#293d32] dark:text-[#ecece0] placeholder:text-[#454f46]/50 dark:placeholder:text-[#b8c2b4]/50 focus:outline-none focus:ring-2 focus:ring-[#314e3e]/30 dark:focus:ring-[#d6b883]/30 transition-shadow"
             />
             {search && (
@@ -325,7 +330,7 @@ function StudentListPanel({
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 top-full mt-1.5 w-48 rounded-xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-lg p-1.5 z-30"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] px-2 py-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] px-2 py-1">
                     Sắp xếp theo
                   </p>
                   {SORT_OPTIONS.map((opt) => (
@@ -369,7 +374,7 @@ function StudentListPanel({
               >
                 <span>{tab.label}</span>
                 {typeof tab.count === "number" && tab.count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black font-mono transition-colors ${
+                  <span className={`px-1.5 py-0.2 rounded-full text-xs font-black font-mono transition-colors ${
                     isActive
                       ? "bg-white text-[#314e3e] dark:bg-[#19251d] dark:text-[#d6b883]"
                       : "bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883]"
@@ -397,7 +402,7 @@ function StudentListPanel({
               <AlertCircle className="w-5 h-5" />
             </div>
             <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] max-w-xs mx-auto">
-              Không tìm thấy học sinh nào phù hợp với bộ lọc hiện tại.
+              Không tìm thấy giáo lý sinh nào phù hợp với bộ lọc hiện tại.
             </p>
             {(search || filterType !== "all" || sortBy !== "ten_asc") && (
               <button
@@ -449,12 +454,12 @@ function StudentListPanel({
                 }`}>
                   <img src={s.avatar || "/images/avatarDefault.avif"} alt="" className="w-full h-full object-cover" />
                 </div>
-                <span className="absolute -bottom-1 -right-1 min-w-[16px] h-[16px] px-0.5 rounded-full bg-[#293d32] dark:bg-[#ecece0] text-white dark:text-[#19251d] text-[9px] font-bold font-mono flex items-center justify-center shadow-xs border border-white dark:border-[#1e2821]">
+                <span className="absolute -bottom-1 -right-1 min-w-[16px] h-[16px] px-0.5 rounded-full bg-[#293d32] dark:bg-[#ecece0] text-white dark:text-[#19251d] text-xs font-bold font-mono flex items-center justify-center shadow-xs border border-white dark:border-[#1e2821]">
                   {idx + 1}
                 </span>
               </div>
 
-              {/* Thông tin học sinh: Hàng 1 dành trọn bề ngang cho Tên Thánh & Họ Tên không bị cắt */}
+              {/* Thông tin giáo lý sinh: Hàng 1 dành trọn bề ngang cho Tên Thánh & Họ Tên không bị cắt */}
               <div className="min-w-0 flex-1">
                 {/* Hàng 1: Tên Thánh + Họ Tên (Không có badge chèn ép, tự do xuống dòng nếu quá dài) */}
                 <div 
@@ -466,26 +471,26 @@ function StudentListPanel({
                       {s.tenThanh}
                     </span>
                   )}
-                  <span className={`text-xs sm:text-[13.5px] font-bold break-words leading-snug ${
+                  <span className={`text-xs sm:text-sm font-bold break-words leading-snug ${
                     active ? "text-[#314e3e] dark:text-[#d6b883]" : "text-[#293d32] dark:text-[#ecece0]"
                   }`}>
                     {s.hoTen || s.username}
                   </span>
                 </div>
 
-                {/* Hàng 2: Mã HS • Giới tính • Vắng | Cụm ĐTB • Khóa • Chờ duyệt */}
-                <div className="flex items-center justify-between gap-1.5 text-[11px] text-[#575e55] dark:text-[#b0b9ac] mt-1">
+                {/* Hàng 2: Mã GLS • Giới tính • Vắng | Cụm ĐTB • Khóa • Chờ duyệt */}
+                <div className="flex items-center justify-between gap-1.5 text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1">
                   <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                    <span className="font-mono text-[11px] text-[#575e55] dark:text-[#b0b9ac]">
+                    <span className="font-mono text-xs text-[#575e55] dark:text-[#b0b9ac]">
                       {s.username}
                     </span>
                     {s.gioiTinh && (
-                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-stone-500/10 dark:bg-stone-400/10 text-[#575e55] dark:text-[#b0b9ac] shrink-0">
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-xs font-medium bg-stone-500/10 dark:bg-stone-400/10 text-[#575e55] dark:text-[#b0b9ac] shrink-0">
                         {s.gioiTinh}
                       </span>
                     )}
                     {totalVang > 0 && (
-                      <span className={`text-[10px] shrink-0 font-medium ${
+                      <span className={`text-xs shrink-0 font-medium ${
                         totalVang >= 3 
                           ? "text-red-700 dark:text-red-400 font-bold bg-red-500/10 px-1.5 py-0.2 rounded border border-red-500/20" 
                           : "text-[#575e55] dark:text-[#b0b9ac]"
@@ -499,7 +504,7 @@ function StudentListPanel({
                   <div className="flex items-center gap-1 shrink-0">
                     {s.isProfileLocked && (
                       <span 
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] text-[10px] font-bold border border-[#927140]/30 dark:border-[#d4b47d]/30"
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-[#927140]/15 dark:bg-[#d4b47d]/20 text-[#7c5c2d] dark:text-[#d4b47d] text-xs font-bold border border-[#927140]/30 dark:border-[#d4b47d]/30"
                         title={`Hồ sơ đã khóa${s.profileLockedBy ? ` bởi ${s.profileLockedBy}` : ""}`}
                       >
                         <Lock className="w-2.5 h-2.5" />
@@ -508,7 +513,7 @@ function StudentListPanel({
 
                     {hasPending && (
                       <span 
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-900 dark:text-amber-200 text-[10px] font-bold border border-amber-500/30 animate-pulse"
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-bold border border-amber-500/30 animate-pulse"
                         title="Có yêu cầu sửa hồ sơ đang chờ duyệt"
                       >
                         <Clock className="w-2.5 h-2.5" />
@@ -516,7 +521,7 @@ function StudentListPanel({
                     )}
 
                     {diemTB !== null && diemTB !== undefined && (
-                      <span className={`px-1.5 py-0.2 rounded text-[10.5px] font-mono font-bold border ${
+                      <span className={`px-1.5 py-0.2 rounded text-xs font-mono font-bold border ${
                         diemTB >= 8.0 
                           ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
                           : diemTB >= 6.5
@@ -532,7 +537,7 @@ function StudentListPanel({
                 </div>
               </div>
 
-              {/* Chevron chuyển trang: Độc lập ở mép phải ngoài cùng, căn giữa theo chiều dọc toàn thẻ (Chuẩn Mobile HIG) */}
+              {/* Chevron chuyển trang */}
               <ChevronRight className="w-4 h-4 text-[#575e55]/40 dark:text-[#b0b9ac]/40 lg:hidden shrink-0 self-center" />
             </Motion.button>
           );
@@ -556,11 +561,11 @@ function StudentListPanel({
         onCancel={() => setShowBatchLockConfirm(false)}
         onConfirm={handleBatchLockToggle}
         busy={batchLocking}
-        title={allLocked ? "Mở khóa hồ sơ toàn bộ học sinh?" : "Khóa hồ sơ toàn bộ học sinh?"}
+        title={allLocked ? "Mở khóa hồ sơ tất cả giáo lý sinh?" : "Khóa hồ sơ tất cả giáo lý sinh?"}
         message={
           allLocked
-            ? `Bạn có chắc chắn muốn mở khóa chỉnh sửa hồ sơ cho ${processedStudents.length} học sinh trong danh sách?`
-            : `Bạn có chắc chắn muốn khóa chỉnh sửa hồ sơ cho ${processedStudents.length} học sinh trong danh sách? Sau khi khóa, thông tin hộ tịch và bí tích của các em sẽ được bảo vệ và không thể tự ý sửa đổi.`
+            ? `Bạn có chắc chắn muốn mở khóa chỉnh sửa hồ sơ cho ${processedStudents.length} giáo lý sinh trong danh sách?`
+            : `Bạn có chắc chắn muốn khóa chỉnh sửa hồ sơ cho ${processedStudents.length} giáo lý sinh trong danh sách? Sau khi khóa, thông tin hộ tịch và bí tích của các em sẽ được bảo vệ và không thể tự ý sửa đổi.`
         }
         confirmLabel={allLocked ? "Mở khóa toàn bộ" : "Khóa toàn bộ"}
         icon={allLocked ? Unlock : Lock}

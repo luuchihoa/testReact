@@ -1,6 +1,7 @@
 import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../../components/ui/studentSharedUtils.js";
-import { buildSundayList, getCurrentNamHoc, sortStudentsByTen } from "./utils.js";
+import { buildSundayList, getCurrentNamHoc, sortStudentsByTen, getDefaultTermRanges, computeDiemTB } from "./utils.js";
+import { calculateAutoHocLuc } from "../account/utils.js";
 
 export async function fetchTeacherContext(authId, requestedNamHoc) {
   const { data: teacherRow, error: teacherErr } = await supabase
@@ -101,26 +102,81 @@ export async function fetchStudentAcademic(username, namHoc, hocKyInt) {
   };
 }
 
-// Lịch điểm danh (ngày bắt đầu + tổng số buổi) của cả lớp, cho cả HK1 và HK2.
-// term_summary lưu theo từng học sinh nên lấy đại diện 1 dòng có dữ liệu cho mỗi học kỳ.
-export async function fetchClassTermRanges(lop, namHoc) {
-  const { data, error } = await supabase
-    .from("term_summary")
-    .select("hoc_ky, ngay_bat_dau, tong_buoi")
-    .eq("lop", lop)
-    .eq("nam_hoc", namHoc)
-    .not("ngay_bat_dau", "is", null)
-    .order("hoc_ky", { ascending: true });
+// Lịch điểm danh (ngày bắt đầu + tổng số buổi) của Niên khóa (HK1 và HK2).
+// Ưu tiên 1: academic_calendars của Niên khóa (Lịch trung tâm toàn xứ đoàn do Admin cấu hình)
+// Ưu tiên 2: getDefaultTermRanges (Tự động tính toán theo quy chuẩn CN đầu tháng 9 & tháng 1)
+export async function fetchClassTermRanges(_lop, namHoc) {
+  const fallback = getDefaultTermRanges(namHoc);
+  const ranges = { 
+    HK1: { start: null, sundays: [], isDefault: false, source: "central" }, 
+    HK2: { start: null, sundays: [], isDefault: false, source: "central" } 
+  };
 
-  if (error) throw error;
+  try {
+    // 1. Đọc trực tiếp từ bảng academic_calendars (Lịch trung tâm toàn xứ đoàn)
+    const { data: calData, error: calErr } = await supabase
+      .from("academic_calendars")
+      .select("nam_hoc, hk1_start_date, hk1_total_weeks, hk2_start_date, hk2_total_weeks")
+      .eq("nam_hoc", namHoc)
+      .maybeSingle();
 
-  const ranges = { HK1: { start: null, sundays: [] }, HK2: { start: null, sundays: [] } };
-  (data ?? []).forEach((row) => {
-    const key = row.hoc_ky === 2 ? "HK2" : "HK1";
-    if (ranges[key].start) return; // đã có dữ liệu đại diện cho học kỳ này rồi
-    ranges[key] = { start: row.ngay_bat_dau, sundays: buildSundayList(row.ngay_bat_dau, row.tong_buoi) };
-  });
+    if (!calErr && calData) {
+      if (calData.hk1_start_date) {
+        ranges.HK1 = {
+          start: calData.hk1_start_date,
+          sundays: buildSundayList(calData.hk1_start_date, calData.hk1_total_weeks || 16),
+          isDefault: false,
+          source: "central"
+        };
+      }
+      if (calData.hk2_start_date) {
+        ranges.HK2 = {
+          start: calData.hk2_start_date,
+          sundays: buildSundayList(calData.hk2_start_date, calData.hk2_total_weeks || 16),
+          isDefault: false,
+          source: "central"
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("fetchClassTermRanges warning, fallback to default smart schedule:", err);
+  }
+
+  // 2. Nếu thiếu thì áp dụng Smart Default
+  if (!ranges.HK1.start || !ranges.HK1.sundays.length) {
+    ranges.HK1 = { ...fallback.HK1, source: "default" };
+  }
+  if (!ranges.HK2.start || !ranges.HK2.sundays.length) {
+    ranges.HK2 = { ...fallback.HK2, source: "default" };
+  }
+
   return ranges;
+}
+
+// Danh sách các ngày nghỉ lễ Phụng vụ & nghỉ Tết trong năm học
+export async function fetchAcademicHolidays(namHoc) {
+  try {
+    const { data, error } = await supabase
+      .from("academic_holidays")
+      .select("*")
+      .eq("nam_hoc", namHoc)
+      .order("ngay", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return data;
+    }
+  } catch (err) {
+    console.warn("fetchAcademicHolidays catch error:", err);
+  }
+
+  // Fallback sang localStorage nếu bảng chưa được tạo trên Supabase
+  try {
+    const cached = localStorage.getItem(`academic_holidays_${namHoc}`);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.warn("read local holidays error:", e);
+  }
+  return [];
 }
 
 // Trạng thái khóa sổ của lớp trong năm học hiện tại — trả về { 1: true, 2: true }.
@@ -146,7 +202,7 @@ export async function fetchClassSummary(usernames, namHoc, hocKyInt) {
   const [gradesRes, termRes, attendanceRes] = await Promise.all([
     supabase.from("grades").select("username, diem_thi, diem_tb")
       .eq("nam_hoc", namHoc).eq("hoc_ky", hocKyInt).in("username", usernames),
-    supabase.from("term_summary").select("username, hoc_luc, hanh_kiem")
+    supabase.from("term_summary").select("username, hoc_luc, hanh_kiem, vi_thu, ghi_chu")
       .eq("nam_hoc", namHoc).eq("hoc_ky", hocKyInt).in("username", usernames),
     supabase.from("attendance").select("username, trang_thai")
       .eq("nam_hoc", namHoc).eq("hoc_ky", hocKyInt).in("username", usernames),
@@ -158,7 +214,7 @@ export async function fetchClassSummary(usernames, namHoc, hocKyInt) {
 
   const byUser = {};
   usernames.forEach((u) => {
-    byUser[u] = { diemThi: null, diemTB: null, hocLuc: null, hanhKiem: null, vangCoPhep: 0, vangKhongPhep: 0 };
+    byUser[u] = { diemThi: null, diemTB: null, hocLuc: null, hanhKiem: null, viThu: null, ghiChu: "", vangCoPhep: 0, vangKhongPhep: 0 };
   });
 
   (gradesRes.data ?? []).forEach((g) => {
@@ -172,6 +228,8 @@ export async function fetchClassSummary(usernames, namHoc, hocKyInt) {
     if (byUser[t.username]) {
       byUser[t.username].hocLuc   = t.hoc_luc;
       byUser[t.username].hanhKiem = t.hanh_kiem;
+      byUser[t.username].viThu    = t.vi_thu;
+      byUser[t.username].ghiChu   = t.ghi_chu || "";
     }
   });
 
@@ -236,7 +294,17 @@ export async function fetchPendingProfileRequests(namHoc) {
   return data || [];
 }
 
-export async function approveProfileRequest(requestId) {
+export async function approveProfileRequest(requestId, selectedProposedData = null) {
+  if (selectedProposedData && Object.keys(selectedProposedData).length > 0) {
+    const { error: updateErr } = await supabase
+      .from("profile_change_requests")
+      .update({ proposed_data: selectedProposedData })
+      .eq("id", requestId);
+    if (updateErr) {
+      console.warn("Update proposed_data prior to approval error:", updateErr);
+    }
+  }
+
   const { data, error } = await supabase.rpc("approve_profile_change_request", {
     p_request_id: requestId,
   });
@@ -292,13 +360,98 @@ export async function updateStudentProfile(username, payload) {
   return true;
 }
 
-// ── Lưu điểm học kỳ của 1 học sinh ──
+// ── Lưu điểm học kỳ của 1 học sinh (loại bỏ updated_at từ client để server trigger quản lý) ──
 export async function saveStudentGrades(payload) {
+  // eslint-disable-next-line no-unused-vars
+  const { updated_at, updated_by, ...cleanPayload } = payload;
   const { error } = await supabase
     .from("grades")
-    .upsert(payload, { onConflict: "username,nam_hoc,hoc_ky" });
+    .upsert(cleanPayload, { onConflict: "username,nam_hoc,hoc_ky" });
   if (error) throw error;
   return true;
+}
+
+// ── Đồng bộ term_summary từ điểm số (Học lực, Vị thứ dense rank) ──
+export async function syncTermSummariesFromGrades({ allClassRows, rosterUsernames, namHoc, hocKy, lop }) {
+  if (!allClassRows || !rosterUsernames || !rosterUsernames.length) return;
+
+  const scoresByUser = {};
+  const validScores = [];
+
+  rosterUsernames.forEach((u) => {
+    const row = allClassRows[u] || {};
+    const diemTB = computeDiemTB(row);
+    scoresByUser[u] = diemTB;
+    if (diemTB !== null && typeof diemTB === "number" && !isNaN(diemTB)) {
+      validScores.push(diemTB);
+    }
+  });
+
+  const uniqueScoresDesc = Array.from(new Set(validScores)).sort((a, b) => b - a);
+
+  const termSummaryUpserts = rosterUsernames.map((u) => {
+    const diemTB = scoresByUser[u];
+    const viThu = (diemTB !== null && diemTB !== undefined) ? (uniqueScoresDesc.indexOf(diemTB) + 1) : null;
+    const hocLuc = calculateAutoHocLuc(diemTB);
+
+    return {
+      username: u,
+      nam_hoc: namHoc,
+      hoc_ky: Number(hocKy) || 1,
+      lop: lop || null,
+      hoc_luc: hocLuc || null,
+      vi_thu: viThu,
+    };
+  });
+
+  const { error } = await supabase
+    .from("term_summary")
+    .upsert(termSummaryUpserts, { onConflict: "username,nam_hoc,hoc_ky" });
+
+  if (error) {
+    console.error("syncTermSummariesFromGrades error:", error);
+  }
+}
+
+// ── Lưu điểm hàng loạt cho các học sinh ĐÃ THAY ĐỔI trong lớp ──
+export async function saveClassGradesBatch(changedRows, classContext = null) {
+  if (!changedRows || !changedRows.length) return true;
+  const cleanRows = changedRows.map((r) => {
+    // eslint-disable-next-line no-unused-vars
+    const { updated_at, updated_by, ...clean } = r;
+    if (!clean.lop && classContext?.lop) {
+      clean.lop = classContext.lop;
+    }
+    return clean;
+  });
+
+  const { error } = await supabase
+    .from("grades")
+    .upsert(cleanRows, { onConflict: "username,nam_hoc,hoc_ky" });
+  if (error) throw error;
+
+  // Dual-layer sync: Tự động tính vị thứ & học lực cả lớp và lưu vào term_summary
+  if (classContext && classContext.allClassRows && classContext.rosterUsernames) {
+    try {
+      await syncTermSummariesFromGrades(classContext);
+    } catch (syncErr) {
+      console.warn("syncTermSummariesFromGrades non-fatal warning:", syncErr);
+    }
+  }
+
+  return true;
+}
+
+// ── Truy vấn lịch sử chỉnh sửa điểm (Audit Logs) qua RPC bảo mật ──
+export async function fetchStudentGradeAuditLogs(studentUsername, namHoc, hocKy) {
+  const { data, error } = await supabase.rpc("get_student_grade_audit_logs", {
+    p_student_username: studentUsername,
+    p_nam_hoc: namHoc,
+    p_hoc_ky: Number(hocKy) || 1,
+  });
+
+  if (error) throw error;
+  return data || [];
 }
 
 // ── Lưu tổng kết học kỳ của 1 học sinh ──
@@ -325,6 +478,35 @@ export async function saveStudentAttendance(rows) {
     .from("attendance")
     .upsert(rows, { onConflict: "username,nam_hoc,hoc_ky,ngay" });
   if (error) throw error;
+  return true;
+}
+
+// ── Lấy toàn bộ điểm danh trong học kỳ của danh sách học sinh (phục vụ xuất Excel ma trận) ──
+export async function fetchClassSemesterAttendance(usernames, namHoc, hocKyInt) {
+  if (!usernames || !usernames.length) return [];
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("username, ngay, trang_thai")
+    .eq("nam_hoc", namHoc)
+    .eq("hoc_ky", hocKyInt)
+    .in("username", usernames);
+
+  if (error) throw error;
+  return data || [];
+}
+
+// ── Lưu điểm danh hàng loạt (Hỗ trợ nhập Excel 1 ngày hoặc cả học kỳ) ──
+export async function saveBulkAttendanceMatrix(attendanceRows) {
+  if (!attendanceRows || !attendanceRows.length) return true;
+
+  const CHUNK_SIZE = 100;
+  for (let i = 0; i < attendanceRows.length; i += CHUNK_SIZE) {
+    const chunk = attendanceRows.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase
+      .from("attendance")
+      .upsert(chunk, { onConflict: "username,nam_hoc,hoc_ky,ngay" });
+    if (error) throw error;
+  }
   return true;
 }
 
