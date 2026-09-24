@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { 
   CalendarDays, Award, HeartHandshake, 
-  Trophy, GraduationCap, CalendarCheck, Quote, CheckCircle2, AlertCircle, BookOpen, RotateCcw
+  Trophy, GraduationCap, CalendarCheck, Quote, CheckCircle2, AlertCircle, BookOpen, RotateCcw,
+  ChevronDown, Check, X, Clock
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../../lib/supabase.js";
 import { AchievementSkeleton } from "../../../components/ui/Skeleton.jsx";
@@ -15,6 +17,65 @@ import {
 } from "../utils.js";
 import { fetchClassTermRanges, fetchAcademicHolidays } from "../../teacher/api.js";
 import { buildSundayList, getDefaultTermRanges, parseISODate, toISODate } from "../../teacher/utils.js";
+
+function useDismissableDropdown(isOpen, onClose) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    const keyHandler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    document.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+      document.removeEventListener("keydown", keyHandler);
+    };
+  }, [isOpen, onClose]);
+  return ref;
+}
+
+export async function fetchStudentEnrolledYears(username) {
+  if (!username) return [];
+  try {
+    const [enrollRes, yearSummaryRes] = await Promise.all([
+      supabase
+        .from("enrollments")
+        .select("nam_hoc, lop")
+        .eq("username", username)
+        .order("nam_hoc", { ascending: false }),
+      supabase
+        .from("year_summary")
+        .select("nam_hoc, lop")
+        .eq("username", username)
+        .order("nam_hoc", { ascending: false }),
+    ]);
+    const yearMap = new Map();
+    (enrollRes.data || []).forEach((r) => {
+      if (r.nam_hoc) yearMap.set(r.nam_hoc, { namHoc: r.nam_hoc, lop: r.lop || null });
+    });
+    (yearSummaryRes.data || []).forEach((r) => {
+      if (r.nam_hoc) {
+        if (!yearMap.has(r.nam_hoc)) {
+          yearMap.set(r.nam_hoc, { namHoc: r.nam_hoc, lop: r.lop || null });
+        } else if (!yearMap.get(r.nam_hoc).lop && r.lop) {
+          yearMap.get(r.nam_hoc).lop = r.lop;
+        }
+      }
+    });
+    return Array.from(yearMap.values()).sort((a, b) => b.namHoc.localeCompare(a.namHoc));
+  } catch (err) {
+    console.error("fetchStudentEnrolledYears error:", err);
+    return [];
+  }
+}
 
 const getScoreTheme = (tb) => {
   if (tb === null || tb === undefined || tb === "" || tb === "—") {
@@ -92,19 +153,113 @@ export function AchievementTab({ user, cache, setCache }) {
   const defaultNamHoc = getCurrentNamHoc();
   const rawKy = searchParams.get("ky") || searchParams.get("hoc_ky") || searchParams.get("semester") || searchParams.get("hk");
   const semester = normalizeSemester(rawKy) || getCurrentSemester();
-  const [namHoc] = useState(defaultNamHoc);
+  const paramNamHoc = searchParams.get("nam_hoc") || searchParams.get("namHoc") || searchParams.get("year");
+
+  const [namHoc, setNamHoc] = useState(paramNamHoc || defaultNamHoc);
+  const [enrolledYears, setEnrolledYears] = useState([]);
+  const [loadingYears, setLoadingYears] = useState(true);
+  const [isYearPickerOpen, setIsYearPickerOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sync khi URL search params đổi từ bên ngoài (e.g. Back/Forward)
+  useEffect(() => {
+    if (paramNamHoc && paramNamHoc !== namHoc) {
+      setNamHoc(paramNamHoc);
+    }
+  }, [paramNamHoc]);
+
+  // Nạp danh sách các niên khóa học sinh đã học
+  useEffect(() => {
+    let isMounted = true;
+    if (!user?.username) {
+      setLoadingYears(false);
+      return;
+    }
+    setLoadingYears(true);
+    fetchStudentEnrolledYears(user.username)
+      .then((years) => {
+        if (!isMounted) return;
+        setEnrolledYears(years);
+        // Smart fallback: Nếu URL không chỉ định năm học và năm hiện tại học sinh chưa được xếp lớp,
+        // nhưng có năm cũ thì tự động chọn năm gần nhất có dữ liệu.
+        if (!paramNamHoc) {
+          const hasCurrent = years.some((y) => y.namHoc === defaultNamHoc);
+          if (!hasCurrent && years.length > 0) {
+            setNamHoc(years[0].namHoc);
+          }
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingYears(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.username, defaultNamHoc, paramNamHoc]);
+
+  // Khóa cuộn trang khi mở Bottom Sheet trên mobile
+  useEffect(() => {
+    if (isYearPickerOpen && typeof window !== "undefined" && window.innerWidth < 640) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isYearPickerOpen]);
+
+  // Ref dropdown desktop
+  const desktopDropdownRef = useDismissableDropdown(isYearPickerOpen, () => setIsYearPickerOpen(false));
+
+  const handleSelectYear = (year) => {
+    setNamHoc(year);
+    setIsYearPickerOpen(false);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (year === defaultNamHoc) {
+        next.delete("nam_hoc");
+        next.delete("namHoc");
+        next.delete("year");
+      } else {
+        next.set("nam_hoc", year);
+      }
+      return next;
+    }, { replace: true });
+  };
 
   const setSemester = (value) => {
     setSearchParams((prev) => { 
       const next = new URLSearchParams(prev); 
       next.set("ky", value); 
+      if (namHoc && namHoc !== defaultNamHoc) {
+        next.set("nam_hoc", namHoc);
+      }
       next.delete("hoc_ky");
       next.delete("semester");
       next.delete("hk");
       return next; 
     }, { replace: true });
   };
+
+  // Tổng hợp danh sách năm học để lựa chọn (luôn bao gồm năm hiện tại)
+  const combinedYears = useMemo(() => {
+    const map = new Map();
+    // Luôn có năm học hiện tại trong danh sách
+    map.set(defaultNamHoc, {
+      namHoc: defaultNamHoc,
+      lop: null,
+      isCurrent: true,
+    });
+
+    enrolledYears.forEach((y) => {
+      map.set(y.namHoc, {
+        ...y,
+        isCurrent: y.namHoc === defaultNamHoc,
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.namHoc.localeCompare(a.namHoc));
+  }, [defaultNamHoc, enrolledYears]);
 
   const isYearView = semester === "NAM";
   const hocKyInt   = HK_INT_MAP[semester] ?? null;
@@ -306,28 +461,134 @@ export function AchievementTab({ user, cache, setCache }) {
 
   return (
     <div className="flex flex-col gap-5 w-full min-w-0">
-      {/* HEADER: Lớp, Niên khóa + 1-Tap Segmented Control & Nút Làm Mới */}
-      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] border border-[#dedfd4] dark:border-[#354237] shrink-0">
-            <GraduationCap className="w-5 h-5" strokeWidth={2} />
+      {/* HEADER: Phân cấp chuẩn Scope-First (Niên khóa -> Lớp -> Học kỳ) */}
+      <div className="bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237] shadow-xs p-3.5 sm:p-4 flex flex-col gap-3 sm:gap-3.5">
+        
+        {/* TẦNG 1: Tên Lớp Học (To, Rõ, Tuyệt đối Không Bị Truncate) & Nút Làm Mới */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Nhóm thông tin Lớp học */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 flex items-center justify-center text-[#314e3e] dark:text-[#d4b47d] border border-[#dedfd4] dark:border-[#354237] shrink-0">
+              <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-lg font-bold text-[#293d32] dark:text-[#ecece0] leading-snug whitespace-normal">
+                {lop !== "—" ? `Lớp ${lop}` : "Chưa xếp lớp"}
+              </h2>
+              <p className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac] mt-0.5 whitespace-normal">
+                Hồ sơ thành tích & chuyên cần
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] truncate leading-snug">
-              {lop !== "—" ? `Lớp ${lop}` : "Chưa xếp lớp"}
-            </p>
-            <p className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac] truncate">
-              {displayNamHoc ? `Niên khóa ${displayNamHoc}` : ""}
-            </p>
-          </div>
+
+          {/* Nút Làm Mới (Desktop & Mobile đều bấm thuận tiện) */}
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            title="Làm mới dữ liệu"
+            aria-label="Làm mới dữ liệu"
+            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] flex items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] shrink-0 cursor-pointer active:scale-95"
+          >
+            <RotateCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#314e3e] dark:text-[#d4b47d]" : ""}`} />
+          </button>
         </div>
 
-        {/* 1-Tap Thumb-Friendly Segmented Pill Switcher & Refresh Button */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* TẦNG 2: Bộ Điều Khiển Thời Gian Kép (Bộ chọn Niên khóa & Thanh Học kỳ) */}
+        <div className="pt-2.5 border-t border-[#dedfd4]/60 dark:border-[#354237]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+          
+          {/* Bộ chọn Niên khóa độc lập (Trigger + Popover) */}
+          <div className="relative shrink-0 w-full sm:w-auto" ref={desktopDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsYearPickerOpen((prev) => !prev)}
+              aria-expanded={isYearPickerOpen}
+              aria-haspopup="dialog"
+              aria-label={`Chọn niên khóa. Đang chọn niên khóa ${namHoc}`}
+              className="w-full sm:w-auto inline-flex items-center justify-between sm:justify-start gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#314e3e] dark:text-[#d4b47d] bg-[#faf8f3] dark:bg-[#151c18] hover:bg-[#314e3e]/10 dark:hover:bg-[#d4b47d]/15 border border-[#dedfd4] dark:border-[#354237] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] min-h-[44px] cursor-pointer group select-none active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <CalendarDays className="w-4 h-4 text-[#314e3e] dark:text-[#d4b47d] shrink-0" />
+                <span className="font-extrabold whitespace-nowrap">Niên khóa {namHoc}</span>
+                {namHoc === defaultNamHoc ? (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#314e3e] text-white dark:bg-[#d4b47d] dark:text-[#19251d] shrink-0 leading-none">
+                    Hiện tại
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-[#713f12] dark:bg-amber-950/80 dark:text-[#fde047] shrink-0 leading-none">
+                    Lưu trữ
+                  </span>
+                )}
+              </div>
+              <ChevronDown 
+                className={`w-4 h-4 text-[#575e55] dark:text-[#b0b9ac] transition-transform duration-200 group-hover:text-[#293d32] dark:group-hover:text-[#ecece0] shrink-0 ${
+                  isYearPickerOpen ? "rotate-180" : ""
+                }`} 
+              />
+            </button>
+
+            {/* DESKTOP POPOVER DROPDOWN (Ẩn trên mobile, hiện từ sm: trở lên) */}
+            <AnimatePresence>
+              {isYearPickerOpen && (
+                <Motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="hidden sm:block absolute left-0 top-full mt-2 w-72 rounded-2xl bg-[#fffefa] dark:bg-[#1e2821] border border-[#dedfd4] dark:border-[#354237] shadow-xl z-50 p-2 overflow-hidden"
+                >
+                  <div className="px-2.5 py-1.5 text-xs font-bold text-[#575e55] dark:text-[#b0b9ac] uppercase tracking-wider border-b border-[#dedfd4]/60 dark:border-[#354237]/60 mb-1 flex items-center justify-between">
+                    <span>Các niên khóa đã học</span>
+                    <span className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac]">
+                      {combinedYears.length} niên khóa
+                    </span>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-1 pr-0.5 scrollbar-thin">
+                    {combinedYears.map((y) => {
+                      const isSelected = y.namHoc === namHoc;
+                      return (
+                        <button
+                          key={y.namHoc}
+                          type="button"
+                          onClick={() => handleSelectYear(y.namHoc)}
+                          className={`w-full min-h-[44px] px-3 py-2 rounded-xl text-left text-xs font-bold transition-all duration-150 flex items-center justify-between gap-2 cursor-pointer ${
+                            isSelected
+                              ? "bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 text-[#314e3e] dark:text-[#d4b47d] border border-[#314e3e]/30 dark:border-[#d4b47d]/40"
+                              : "text-[#293d32] dark:text-[#ecece0] hover:bg-stone-500/10 dark:hover:bg-stone-400/10 border border-transparent"
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-sm text-[#293d32] dark:text-[#ecece0]">
+                                {y.namHoc}
+                              </span>
+                              {y.isCurrent && (
+                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-[#314e3e] text-white dark:bg-[#d4b47d] dark:text-[#19251d]">
+                                  Hiện tại
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac] truncate">
+                              {y.lop ? `Lớp ${y.lop}` : "Chưa có thông tin lớp"}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-[#314e3e] dark:text-[#d4b47d] shrink-0" strokeWidth={2.5} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Thanh Chọn Học Kỳ (HK1 | HK2 | Cả năm - Thumb Zone) */}
           <div 
             role="tablist" 
             aria-label="Chọn học kỳ"
-            className="inline-flex p-1 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] flex-1 sm:flex-initial justify-between sm:justify-start"
+            className="inline-flex p-1 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] w-full sm:w-auto flex-1 sm:flex-initial justify-between sm:justify-start"
           >
             {SEMESTER_OPTIONS.map((opt) => {
               const active = opt.value === semester;
@@ -338,7 +599,7 @@ export function AchievementTab({ user, cache, setCache }) {
                   aria-selected={active}
                   type="button"
                   onClick={() => setSemester(opt.value)}
-                  className={`flex-1 sm:flex-initial min-h-[44px] min-w-[72px] sm:min-w-[84px] px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-150 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${
+                  className={`flex-1 sm:flex-initial min-h-[44px] min-w-[76px] sm:min-w-[88px] px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-150 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] cursor-pointer ${
                     active
                       ? "bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] shadow-xs"
                       : "text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] hover:bg-stone-500/5 dark:hover:bg-stone-400/5"
@@ -349,19 +610,27 @@ export function AchievementTab({ user, cache, setCache }) {
               );
             })}
           </div>
-
-          <button
-            type="button"
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            title="Làm mới dữ liệu"
-            aria-label="Làm mới dữ liệu"
-            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] flex items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] shrink-0"
-          >
-            <RotateCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#314e3e] dark:text-[#d4b47d]" : ""}`} />
-          </button>
         </div>
       </div>
+
+      {/* Banner thông báo khi xem niên khóa lưu trữ */}
+      {namHoc !== defaultNamHoc && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-600/30 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-[#713f12] dark:text-[#fde047]">
+          <div className="flex items-center gap-2 min-w-0">
+            <Clock className="w-4 h-4 shrink-0 text-amber-700 dark:text-amber-400" />
+            <span className="font-semibold">
+              Đang xem kết quả lưu trữ của <strong>Niên khóa {namHoc}</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleSelectYear(defaultNamHoc)}
+            className="self-start sm:self-auto font-bold underline hover:no-underline text-xs text-amber-900 dark:text-amber-200 min-h-[36px] flex items-center px-2 py-1 rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40 cursor-pointer"
+          >
+            Quay lại năm hiện tại ({defaultNamHoc})
+          </button>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {loading ? (
@@ -639,6 +908,118 @@ export function AchievementTab({ user, cache, setCache }) {
           </Motion.div>
         )}
       </AnimatePresence>
+
+      {/* MOBILE BOTTOM SHEET (Chỉ mở trên màn hình nhỏ sm:hidden qua React Portal) */}
+      {typeof document !== "undefined" && (
+        <AnimatePresence>
+          {isYearPickerOpen && createPortal(
+            <div className="sm:hidden fixed inset-0 z-50 flex items-end justify-center">
+              {/* Backdrop */}
+              <Motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setIsYearPickerOpen(false)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                aria-hidden="true"
+              />
+
+              {/* Sheet Content */}
+              <Motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Chọn niên khóa đã học"
+                className="relative w-full max-h-[85vh] bg-[#fffefa] dark:bg-[#1e2821] border-t border-[#dedfd4] dark:border-[#354237] rounded-t-3xl shadow-2xl flex flex-col z-10 overflow-hidden"
+              >
+                {/* Drag handle */}
+                <div className="pt-3 pb-1 flex justify-center">
+                  <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full" />
+                </div>
+
+                {/* Header */}
+                <div className="px-5 py-3 border-b border-[#dedfd4] dark:border-[#354237] flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-[#293d32] dark:text-[#ecece0] flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5 text-[#314e3e] dark:text-[#d4b47d]" />
+                      Chọn Niên khóa
+                    </h3>
+                    <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-0.5">
+                      Xem lại thành tích và điểm danh các năm đã qua
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsYearPickerOpen(false)}
+                    aria-label="Đóng bảng chọn niên khóa"
+                    className="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 text-[#575e55] dark:text-[#b0b9ac] hover:text-[#293d32] dark:hover:text-[#ecece0] flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Danh sách các niên khóa (cuộn nếu nhiều) */}
+                <div className="p-4 space-y-2.5 overflow-y-auto max-h-[50vh] scrollbar-thin">
+                  {combinedYears.map((y) => {
+                    const isSelected = y.namHoc === namHoc;
+                    return (
+                      <button
+                        key={y.namHoc}
+                        type="button"
+                        onClick={() => handleSelectYear(y.namHoc)}
+                        className={`w-full min-h-[54px] p-3.5 rounded-2xl text-left transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer ${
+                          isSelected
+                            ? "bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 border-2 border-[#314e3e] dark:border-[#d4b47d]"
+                            : "bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] hover:border-stone-400 dark:hover:border-stone-500"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-base text-[#293d32] dark:text-[#ecece0]">
+                              Niên khóa {y.namHoc}
+                            </span>
+                            {y.isCurrent && (
+                              <span className="text-[0.6875rem] font-bold px-2 py-0.5 rounded-full bg-[#314e3e] text-white dark:bg-[#d4b47d] dark:text-[#19251d]">
+                                Hiện tại
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] mt-0.5 truncate">
+                            {y.lop ? `Đã theo học: Lớp ${y.lop}` : "Chưa có thông tin phân lớp"}
+                          </p>
+                        </div>
+                        {isSelected ? (
+                          <div className="w-7 h-7 rounded-full bg-[#314e3e] dark:bg-[#d4b47d] text-white dark:text-[#19251d] flex items-center justify-center shrink-0">
+                            <Check className="w-4 h-4" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full border-2 border-stone-300 dark:border-stone-600 shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Footer thumb-zone: nút đóng an toàn */}
+                <div className="p-4 pt-2 border-t border-[#dedfd4] dark:border-[#354237] pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-[#fffefa] dark:bg-[#1e2821]">
+                  <button
+                    type="button"
+                    onClick={() => setIsYearPickerOpen(false)}
+                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-sm font-bold text-[#293d32] dark:text-[#ecece0] hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors flex items-center justify-center cursor-pointer"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </Motion.div>
+            </div>,
+            document.body
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }

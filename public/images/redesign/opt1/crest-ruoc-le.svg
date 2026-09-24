@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="opt1-parchment-rl" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF5"/>
+      <stop offset="100%" stop-color="#F2EBE0"/>
+    </linearGradient>
+    <linearGradient id="opt1-gold-rl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B76A"/>
+      <stop offset="50%" stop-color="#B88A34"/>
+      <stop offset="100%" stop-color="#8C631B"/>
+    </linearGradient>
+    <filter id="opt1-shadow-rl" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#241E1A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#opt1-shadow-rl)">
+    <path d="M128 20 C190 20 226 28 226 92 C226 172 128 236 128 236 C128 236 30 172 30 92 C30 28 66 20 128 20 Z" fill="url(#opt1-parchment-rl)" stroke="url(#opt1-gold-rl)" stroke-width="3.5"/>
+    <path d="M128 28 C182 28 214 36 214 92 C214 163 128 222 128 222 C128 222 42 163 42 92 C42 36 74 28 128 28 Z" stroke="#D8C8AF" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+  </g>
+
+  <!-- Tia Sáng Vinh Quang Thánh Thể -->
+  <g stroke="#E8C872" stroke-width="1.8" stroke-linecap="round" opacity="0.8">
+    <line x1="128" y1="46" x2="128" y2="58"/>
+    <line x1="156" y1="58" x2="148" y2="66"/>
+    <line x1="100" y1="58" x2="108" y2="66"/>
+    <line x1="168" y1="88" x2="156" y2="88"/>
+    <line x1="88" y1="88" x2="100" y2="88"/>
+  </g>
+
+  <!-- Bánh Thánh (Mình Thánh Chúa) -->
+  <circle cx="128" cy="88" r="28" fill="#FFFFFF" stroke="url(#opt1-gold-rl)" stroke-width="2.5"/>
+  <circle cx="128" cy="88" r="23" fill="none" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+  <!-- Thánh Giá trên Bánh Thánh -->
+  <path d="M128 72 V104 M114 82 H142" stroke="url(#opt1-gold-rl)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="128" cy="88" r="4" fill="#FCFAF5" stroke="url(#opt1-gold-rl)" stroke-width="1.5"/>
+
+  <!-- Chén Thánh Phụng Vụ (Chalice) -->
+  <path d="M96 116 C96 142 114 148 123 150 V166 H110 C106 166 106 172 110 172 H146 C150 172 150 166 146 166 H133 V150 C142 148 160 142 160 116 H96 Z" fill="#FFFDF8" stroke="url(#opt1-gold-rl)" stroke-width="2.8" stroke-linejoin="round"/>
+  <!-- Điểm nhấn Chén Thánh -->
+  <ellipse cx="128" cy="116" rx="32" ry="5" fill="#FFF7E0" stroke="url(#opt1-gold-rl)" stroke-width="2"/>
+  <circle cx="128" cy="158" r="4" fill="url(#opt1-gold-rl)"/>
+
+  <!-- Bông Lúa Mì & Nhành Nho -->
+  <g stroke="#2E7D32" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M80 148 C86 130 96 120 96 120"/>
+    <path d="M176 148 C170 130 160 120 160 120"/>
+  </g>
+  <circle cx="78" cy="150" r="3.5" fill="#C5A059"/>
+  <circle cx="72" cy="144" r="3" fill="#C5A059"/>
+  <circle cx="178" cy="150" r="3.5" fill="#C5A059"/>
+  <circle cx="184" cy="144" r="3" fill="#C5A059"/>
+
+  <!-- Dải Ribbon Khẩu Hiệu TRONG SẠCH -->
+  <path d="M68 198 H188" stroke="url(#opt1-gold-rl)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="64" cy="198" r="2.5" fill="#B88A34"/>
+  <circle cx="192" cy="198" r="2.5" fill="#B88A34"/>
+  <text x="128" y="193" font-family="'Cinzel', Georgia, serif" font-size="11.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="2.5">TRONG SẠCH</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#2E7D32" text-anchor="middle" letter-spacing="1">NGÀNH ẤU NHI</text>
+</svg>

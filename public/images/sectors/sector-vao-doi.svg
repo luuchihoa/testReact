@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-vd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF2F2"/>
+      <stop offset="100%" stop-color="#FFE4E6"/>
+    </linearGradient>
+    <linearGradient id="gold-anchor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#A16207"/>
+    </linearGradient>
+    <filter id="shadow-vd" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#881337" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Modern Squircle (Khăn Đỏ Viền Trắng Tinh) -->
+  <rect x="4" y="4" width="88" height="88" rx="24" fill="url(#bg-vd)" stroke="#DC2626" stroke-width="2"/>
+  <rect x="7.5" y="7.5" width="81" height="81" rx="21" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="3 3"/>
+
+  <!-- Ngôi Sao Biển Soi Đường (Stella Maris Star) -->
+  <g filter="url(#shadow-vd)">
+    <path d="M48 10 L50 14 L54 15 L51 18 L52 22 L48 19 L44 22 L45 18 L42 15 L46 14 Z" fill="url(#gold-anchor)"/>
+  </g>
+
+  <!-- Mỏ Neo Hy Vọng & Thập Tự Giá Kiên Vững (Crux Spes Anchor) -->
+  <g filter="url(#shadow-vd)">
+    <!-- Vòng khuyên đỉnh mỏ neo -->
+    <circle cx="48" cy="25" r="4.5" stroke="url(#gold-anchor)" stroke-width="2" fill="none"/>
+
+    <!-- Thân chính Thập Tự Mỏ Neo -->
+    <g stroke="#1E293B" stroke-width="2.8" stroke-linecap="round">
+      <line x1="48" y1="30" x2="48" y2="68"/>
+      <!-- Xà ngang thập giá cứu độ -->
+      <line x1="34" y1="38" x2="62" y2="38"/>
+      <circle cx="34" cy="38" r="1.8" fill="#1E293B"/>
+      <circle cx="62" cy="38" r="1.8" fill="#1E293B"/>
+    </g>
+
+    <!-- Cánh Mỏ Neo Uốn Cong Cắm Chặt Giữa Sóng Gió -->
+    <path d="M30 54 C32 68 40 76 48 76 C56 76 64 68 66 54" stroke="#1E293B" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Mũi nhọn neo (Flukes) -->
+    <path d="M26 57 L30 52 L34 58 M70 57 L66 52 L62 58" stroke="#1E293B" stroke-width="2.2" stroke-linejoin="round" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Làn Sóng Trần Thế (Rhythmic Ocean Crest Waves) -->
+  <g stroke="#0284C7" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M16 80 C24 76 32 84 40 80 C48 76 56 84 64 80 C72 76 80 84 84 80"/>
+    <path d="M22 85 C30 82 38 88 46 85 C54 82 62 88 70 85" stroke="#38BDF8" stroke-width="1.5" opacity="0.6"/>
+  </g>
+</svg>

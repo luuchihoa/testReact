@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đối Chiếu Giải Pháp Hình Ảnh Các Khối - Ban Giáo Lý An Ngãi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAF8F5;
+      --surface: #FFFFFF;
+      --surface-subtle: #F3EFEA;
+      --text: #201C18;
+      --muted: #655E57;
+      --border: #E5DFD7;
+      --primary: #8C2424;
+      --gold: #B8860B;
+      --gold-light: #F7F2E7;
+      --gold-border: #D4AF37;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 20px 80px;
+    }
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #7A5500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      color: #2A241F;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .lead {
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* Diagnosis Box */
+    .diagnosis-box {
+      background: #FFF9F7;
+      border: 1.5px solid #F5C6BA;
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 48px;
+    }
+    .diagnosis-title {
+      font-weight: 700;
+      color: #9A2C18;
+      font-size: 1.125rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .diagnosis-desc {
+      color: #5C3D34;
+      font-size: 0.9375rem;
+      line-height: 1.65;
+    }
+
+    /* Grid comparison */
+    .comparison-section {
+      margin-bottom: 56px;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #2A241F;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .section-subtitle {
+      font-size: 0.875rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    /* Authentic Bento Card */
+    .bento-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .bento-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+      border-color: #D4AF37;
+    }
+    .bento-media {
+      position: relative;
+      width: 100%;
+      height: 210px;
+      background: #201C18;
+      overflow: hidden;
+    }
+    .bento-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      transition: transform 0.5s ease;
+    }
+    .bento-card:hover .bento-media img {
+      transform: scale(1.04);
+    }
+    .bento-badge-tag {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(30, 24, 20, 0.85);
+      backdrop-filter: blur(8px);
+      color: #FFF;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .scarf-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot-green { background: #22C55E; box-shadow: 0 0 6px #22C55E; }
+    .dot-yellow { background: #EAB308; box-shadow: 0 0 6px #EAB308; }
+    .dot-orange { background: #F97316; box-shadow: 0 0 6px #F97316; }
+    .dot-red { background: #EF4444; box-shadow: 0 0 6px #EF4444; }
+
+    .bento-body {
+      padding: 20px 22px 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .bento-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .bento-title {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      color: #201C18;
+    }
+    .bento-age {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #8C2424;
+      background: #FDF2F2;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      border: 1px solid #F8D7DA;
+    }
+    .bento-motto {
+      font-size: 0.8125rem;
+      color: #7A5500;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .bento-desc {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .bento-footer {
+      border-top: 1px dashed var(--border);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: #4A443E;
+    }
+    .bento-tag-classes {
+      font-weight: 600;
+    }
+    .bento-badge-real {
+      background: #E8F5E9;
+      color: #1B5E20;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Comparison side-by-side banner */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .compare-table th, .compare-table td {
+      padding: 16px 20px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th {
+      background: #F6F3EE;
+      font-weight: 700;
+      color: #332B24;
+    }
+    .bad-tag {
+      display: inline-block;
+      background: #FFEBEE;
+      color: #C62828;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .good-tag {
+      display: inline-block;
+      background: #E8F5E9;
+      color: #2E7D32;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="eyebrow">✨ Đột Phá Thẩm Mỹ · Giáo Xứ An Ngãi</div>
+      <h1>Giải Quyết Triệt Để Cảm Giác « Giả Giả »</h1>
+      <p class="lead">
+        Phân tích chính xác nguyên nhân và đối chiếu giải pháp <strong>100% Chân Thực & Sống Động</strong>: Tôn vinh chính con người thật, nụ cười thật và ngày hồng ân của thiếu nhi Giáo xứ An Ngãi.
+      </p>
+    </header>
+
+    <!-- Diagnosis Box -->
+    <div class="diagnosis-box">
+      <div class="diagnosis-title">
+        <span>🔍</span>
+        <span>Vì sao các bản thiết kế trước đây luôn mang lại cảm giác "cứ thấy giả giả sao ấy"?</span>
+      </div>
+      <div class="diagnosis-desc">
+        <strong>1. Bản 3D Huy hiệu AI:</strong> Sử dụng hiệu ứng giả kim loại/nhựa nổi, bóng bẩy như huân chương trong trò chơi điện tử (game asset), chữ viết bị méo và sai lệch địa danh. Nhìn vào rất xa lạ với không khí phụng vụ trang nghiêm của một giáo xứ Công giáo.<br>
+        <strong>2. Bản Vector phẳng máy tính (Flat SVG):</strong> Các nét vẽ chén thánh, mầm cây, bồ câu bằng hình học máy tính trông sạch sẽ nhưng lại giống icon phần mềm văn phòng, thiếu "linh hồn", thiếu hơi thở con người và sự ấm áp của các em thiếu nhi.<br>
+        <strong>3. Cốt lõi của vấn đề:</strong> Giáo xứ không sống bằng "icon đồ họa vô hồn". Một trang web giáo lý chỉ thực sự <em>chạm đến trái tim người xem</em> khi nó phản ánh <strong>CON NGƯỜI THẬT, ÁO TRẮNG THẬT, KHĂN QUÀNG THẬT</strong> của chính con em xứ đoàn mình!
+      </div>
+    </div>
+
+    <!-- The Solution: Authentic Bento Cards -->
+    <div class="comparison-section">
+      <div class="section-title">
+        <span>Phương Án Đột Phá: Bento Card « Người Thật · Đức Tin Thật »</span>
+        <span class="section-subtitle">Tỉ lệ điện ảnh · Ánh sáng ấm áp · Chuẩn sắc khăn ngành HTDC</span>
+      </div>
+
+      <div class="cards-grid">
+        <!-- 1. Khai Tâm -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoichiencon.avif" alt="Khối Khai Tâm" style="object-position: center 30%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-green"></span>
+              <span>Khăn Xanh Lá Trơn · Mầm Non</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Khai Tâm</h3>
+              <span class="bento-age">5 – 7 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Bay Cao » · Ngành Chiên Con</p>
+            <p class="bento-desc">Tranh nghệ thuật ấm áp: Chúa Giêsu nhân lành bồng ẵm vỗ về các em thơ bên bờ suối trong lành, gieo mầm đức tin đầu đời.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">5 Lớp: Vườn Trẻ, KT 1 – 2</span>
+              <span class="bento-badge-real">ẤM ÁP TUỔI THƠ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Rước Lễ Lần Đầu -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoiruocle-anngai.jpg" alt="Khối Rước Lễ An Ngãi" style="object-position: center 35%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-green"></span>
+              <span>Khăn Xanh Viền Vàng · Rước Lễ</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Rước Lễ Lần Đầu</h3>
+              <span class="bento-age">8 – 9 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Trong Sạch » · Ngành Ấu Nhi</p>
+            <p class="bento-desc">Ảnh thật 100%: 92 em thiếu nhi An Ngãi mặc áo trắng thiên thần, chắp tay cung kính đón Mình Thánh Chúa bên Quý Cha trước thềm Thánh đường.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">5 Lớp: RLLĐ 1/1 đến 2/3</span>
+              <span class="bento-badge-real">ẢNH THẬT AN NGÃI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Thêm Sức -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoithemsuc-anngai.jpg" alt="Khối Thêm Sức An Ngãi" style="object-position: center 40%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-yellow"></span>
+              <span>Khăn Vàng Viền Đỏ · Thêm Sức</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Thêm Sức</h3>
+              <span class="bento-age">10 – 11 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Quảng Đại » · Ngành Thiếu Nhi</p>
+            <p class="bento-desc">Ảnh thật 100%: 101 em thiếu nhi An Ngãi trong ngày hồng ân nhận lãnh Ấn tín 7 Ơn Chúa Thánh Thần cùng Đức Giám mục Giáo phận.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">6 Lớp: Thêm Sức 1 – 2</span>
+              <span class="bento-badge-real">ẢNH THẬT AN NGÃI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Phụng Vụ -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoiphungvu-anngai.jpg" alt="Khối Phụng Vụ An Ngãi" style="object-position: center 30%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-orange"></span>
+              <span>Khăn Da Cam Có Viền · Phụng Vụ</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Phụng Vụ</h3>
+              <span class="bento-age">12 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Tiến » · Phụng Sự Bàn Thờ</p>
+            <p class="bento-desc">Ảnh thật 100%: Nụ cười rạng rỡ của các em đeo Khăn Cam bên Cha Tuyên úy và Soeur đồng hành tại hội trại Têrêsa Đơn Sơ.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">3 Lớp: Phụng Vụ 1/1, 1/2, 1/3</span>
+              <span class="bento-badge-real">ẢNH THẬT AN NGÃI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Kinh Thánh -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoikinhthanh-anngai.jpg" alt="Khối Kinh Thánh An Ngãi" style="object-position: center 30%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-red"></span>
+              <span>Khăn Đỏ Viền Vàng · Kinh Thánh</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Kinh Thánh</h3>
+              <span class="bento-age">13 – 14 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Thắng » · 73 Sách Thánh</p>
+            <p class="bento-desc">Ảnh thật 100%: Các bạn trẻ Khăn Đỏ năng động và tự tin tại trại Mác-cô Trung Thực, đào sâu Lời Chúa và đời sống chứng nhân.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">6 Lớp: Kinh Thánh 1 – 2</span>
+              <span class="bento-badge-real">ẢNH THẬT AN NGÃI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Vào Đời -->
+        <div class="bento-card">
+          <div class="bento-media">
+            <img src="/images/khoivaodoi-anngai.jpg" alt="Khối Vào Đời An Ngãi" style="object-position: center 30%;">
+            <div class="bento-badge-tag">
+              <span class="scarf-dot dot-red"></span>
+              <span>Khăn Đỏ Viền Trắng · Vào Đời</span>
+            </div>
+          </div>
+          <div class="bento-body">
+            <div class="bento-header">
+              <h3 class="bento-title">Khối Vào Đời</h3>
+              <span class="bento-age">15 – 16 tuổi</span>
+            </div>
+            <p class="bento-motto">Khẩu hiệu: « Thắng » · Huynh Trưởng Tương Lai</p>
+            <p class="bento-desc">Ảnh thật 100%: Đoàn sinh Vào Đời đầy bản lĩnh, nhiệt huyết bên Cha Tuyên úy và Ban Quản trị tại trại Phêrô Can Đảm.</p>
+            <div class="bento-footer">
+              <span class="bento-tag-classes">5 Lớp: Vào Đời 1 – 2</span>
+              <span class="bento-badge-real">ẢNH THẬT AN NGÃI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="comparison-section">
+      <div class="section-title">
+        <span>Bảng So Sánh Chi Tiết Các Hướng Tiếp Cận</span>
+      </div>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Tiêu chí</th>
+            <th style="width: 37%;">Huy hiệu 3D / Vector Phẳng</th>
+            <th style="width: 38%;">Phương án Bento Ảnh Thật Thiếu Nhi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cảm giác thị giác</strong></td>
+            <td><span class="bad-tag">Giả & Xa Lạ</span> Giống huân chương game hoặc icon phần mềm máy tính</td>
+            <td><span class="good-tag">100% Chân Thật</span> Ấm áp, xúc động, tràn ngập ánh sáng và nụ cười trẻ thơ</td>
+          </tr>
+          <tr>
+            <td><strong>Ý nghĩa với Giáo xứ</strong></td>
+            <td>Hình vẽ chung chung, không ai nhận ra của An Ngãi hay xứ nào</td>
+            <td>Tôn vinh chính 92 em Rước Lễ, 101 em Thêm Sức, Cha xứ, thềm thánh đường An Ngãi</td>
+          </tr>
+          <tr>
+            <td><strong>Cảm xúc phụ huynh & thiếu nhi</strong></td>
+            <td>Lạnh lùng, khô khan, lướt qua không đọng lại gì</td>
+            <td>Tự hào, phụ huynh thấy con em mình được trân trọng trên trang web giáo xứ</td>
+          </tr>
+          <tr>
+            <td><strong>Khả năng ứng dụng</strong></td>
+            <td>Khó đọc ở cỡ nhỏ (chữ méo mó, chi tiết vụn vặt)</td>
+            <td>Bố cục Bento hiện đại đẳng cấp quốc tế, tự co giãn mượt mà từ mobile đến desktop</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="opt1-parchment-kt" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF5"/>
+      <stop offset="100%" stop-color="#F2EBE0"/>
+    </linearGradient>
+    <linearGradient id="opt1-gold-kt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B76A"/>
+      <stop offset="50%" stop-color="#B88A34"/>
+      <stop offset="100%" stop-color="#8C631B"/>
+    </linearGradient>
+    <filter id="opt1-shadow-kt" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#241E1A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#opt1-shadow-kt)">
+    <path d="M128 20 C190 20 226 28 226 92 C226 172 128 236 128 236 C128 236 30 172 30 92 C30 28 66 20 128 20 Z" fill="url(#opt1-parchment-kt)" stroke="url(#opt1-gold-kt)" stroke-width="3.5"/>
+    <path d="M128 28 C182 28 214 36 214 92 C214 163 128 222 128 222 C128 222 42 163 42 92 C42 36 74 28 128 28 Z" stroke="#D8C8AF" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+  </g>
+
+  <!-- Ánh Hào Quang Lời Chúa Chiếu Tỏa -->
+  <g stroke="#E8C872" stroke-width="1.8" stroke-linecap="round" opacity="0.85">
+    <line x1="128" y1="46" x2="128" y2="58"/>
+    <line x1="102" y1="54" x2="112" y2="64"/>
+    <line x1="154" y1="54" x2="144" y2="64"/>
+  </g>
+
+  <!-- Thánh Giá Chiếc Gậy Mục Tử -->
+  <g stroke="#B71C1C" stroke-width="2.5" stroke-linecap="round">
+    <line x1="128" y1="54" x2="128" y2="76"/>
+    <line x1="118" y1="62" x2="138" y2="62"/>
+    <circle cx="128" cy="62" r="2.5" fill="#B71C1C"/>
+  </g>
+
+  <!-- Cuốn Kinh Thánh Rộng Mở (Sacred Scriptures - 73 Thư Quy) -->
+  <g stroke="#2C3437" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Trang sách mở uốn lượn -->
+    <path d="M128 116 C116 108 96 106 66 110 V156 C94 152 116 154 128 162 C140 154 162 152 190 156 V110 C160 106 140 108 128 116 Z" fill="#FFFFFF"/>
+    <!-- Gáy sách trung tâm -->
+    <line x1="128" y1="116" x2="128" y2="162" stroke-width="2.5"/>
+    <!-- Dải ruy-băng đánh dấu trang Lời Chúa -->
+    <path d="M128 162 C126 172 130 178 124 186 C122 188 124 190 126 189 L132 178 L128 162" fill="#B71C1C" stroke="#B71C1C" stroke-width="1.2"/>
+  </g>
+
+  <!-- Dòng chữ tượng trưng Kinh Thánh Cựu Ước & Tân Ước -->
+  <g stroke="url(#opt1-gold-kt)" stroke-width="1.6" stroke-linecap="round">
+    <line x1="78" y1="124" x2="114" y2="122"/>
+    <line x1="78" y1="133" x2="112" y2="131"/>
+    <line x1="78" y1="142" x2="104" y2="140"/>
+    <line x1="142" y1="122" x2="178" y2="124"/>
+    <line x1="144" y1="131" x2="178" y2="133"/>
+    <line x1="152" y1="140" x2="178" y2="142"/>
+  </g>
+
+  <!-- Alpha & Omega (Khởi nguyên và Tận cùng) -->
+  <text x="88" y="102" font-family="'Cinzel', Georgia, serif" font-size="11" font-weight="700" fill="#B88A34" text-anchor="middle">Α</text>
+  <text x="168" y="102" font-family="'Cinzel', Georgia, serif" font-size="11" font-weight="700" fill="#B88A34" text-anchor="middle">Ω</text>
+
+  <!-- Dải Ribbon Khẩu Hiệu THẮNG -->
+  <path d="M74 198 H182" stroke="url(#opt1-gold-kt)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="70" cy="198" r="2.5" fill="#B88A34"/>
+  <circle cx="186" cy="198" r="2.5" fill="#B88A34"/>
+  <text x="128" y="193" font-family="'Cinzel', Georgia, serif" font-size="12" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="3">THẮNG</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#B71C1C" text-anchor="middle" letter-spacing="1">HIỆP SĨ KINH THÁNH</text>
+</svg>

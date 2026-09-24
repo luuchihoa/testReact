@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { computeDiemTB, getDefaultTermRanges, buildSundayList } from "../teacher/utils.js";
+import { computeDiemTB, getDefaultTermRanges, buildSundayList, compareStudentRank, computeClassRanks } from "../teacher/utils.js";
 import { calculateAutoHocLuc, calculateAutoHanhKiem } from "./utils.js";
 
 describe("Tự động tính Điểm Trung Bình (ĐTB) chuẩn 5 cột điểm", () => {
@@ -100,7 +100,7 @@ describe("Tự động xét Hạnh kiểm theo Chuyên cần (buổi vắng)", (
     assert.equal(calculateAutoHanhKiem({ tong_da_diem_danh: 0 }), "");
   });
 
-  it("xét Hạnh kiểm 'Tốt' khi không nghỉ hoặc chỉ nghỉ 1 buổi có phép", () => {
+  it("xét Hạnh kiểm 'Tốt' khi không nghỉ hoặc có phép <= 2, HOẶC chỉ vắng 1 buổi không phép duy nhất", () => {
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
       nghi_khong_phep: 0,
@@ -111,12 +111,21 @@ describe("Tự động xét Hạnh kiểm theo Chuyên cần (buổi vắng)", (
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
       nghi_khong_phep: 0,
-      nghi_phep: 1,
+      nghi_phep: 2,
+      tong_nghi: 2,
+    }), "Tốt");
+
+    // Điểm mấu chốt của Phương án 1: Vắng đúng 1 buổi không phép (và là buổi vắng duy nhất) ĐẠT LOẠI TỐT!
+    assert.equal(calculateAutoHanhKiem({
+      tong_da_diem_danh: 10,
+      nghi_khong_phep: 1,
+      nghi_phep: 0,
       tong_nghi: 1,
     }), "Tốt");
   });
 
-  it("xét Hạnh kiểm 'Khá' khi nghỉ tối đa 1 không phép hoặc 2 có phép", () => {
+  it("xét Hạnh kiểm 'Khá' khi vắng 1 không phép kèm có phép, hoặc vắng 2 không phép, hoặc tổng vắng 2-3 buổi", () => {
+    // 1 không phép + 1 có phép = 2 buổi -> Khá
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
       nghi_khong_phep: 1,
@@ -124,36 +133,55 @@ describe("Tự động xét Hạnh kiểm theo Chuyên cần (buổi vắng)", (
       tong_nghi: 2,
     }), "Khá");
 
-    assert.equal(calculateAutoHanhKiem({
-      tong_da_diem_danh: 10,
-      nghi_khong_phep: 0,
-      nghi_phep: 2,
-      tong_nghi: 2,
-    }), "Khá");
-  });
-
-  it("xét Hạnh kiểm 'Trung Bình' khi nghỉ 3-4 buổi hoặc 2 không phép", () => {
+    // 2 không phép + 0 có phép = 2 buổi -> Khá
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
       nghi_khong_phep: 2,
-      nghi_phep: 1,
+      nghi_phep: 0,
+      tong_nghi: 2,
+    }), "Khá");
+
+    // 0 không phép + 3 có phép = 3 buổi -> Khá
+    assert.equal(calculateAutoHanhKiem({
+      tong_da_diem_danh: 10,
+      nghi_khong_phep: 0,
+      nghi_phep: 3,
       tong_nghi: 3,
+    }), "Khá");
+  });
+
+  it("xét Hạnh kiểm 'Trung Bình' khi nghỉ 4-5 buổi hoặc 3 không phép", () => {
+    // 3 không phép + 1 có phép = 4 buổi -> Trung Bình
+    assert.equal(calculateAutoHanhKiem({
+      tong_da_diem_danh: 10,
+      nghi_khong_phep: 3,
+      nghi_phep: 1,
+      tong_nghi: 4,
     }), "Trung Bình");
 
+    // 0 không phép + 4 có phép = 4 buổi -> Trung Bình
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
       nghi_khong_phep: 0,
       nghi_phep: 4,
       tong_nghi: 4,
     }), "Trung Bình");
-  });
 
-  it("xét Hạnh kiểm 'Yếu' khi vắng nhiều (>= 3 không phép hoặc tổng nghỉ > 4)", () => {
+    // 0 không phép + 5 có phép = 5 buổi -> Trung Bình
     assert.equal(calculateAutoHanhKiem({
       tong_da_diem_danh: 10,
-      nghi_khong_phep: 3,
+      nghi_khong_phep: 0,
+      nghi_phep: 5,
+      tong_nghi: 5,
+    }), "Trung Bình");
+  });
+
+  it("xét Hạnh kiểm 'Yếu' khi vắng nhiều (>= 4 không phép hoặc tổng nghỉ > 5)", () => {
+    assert.equal(calculateAutoHanhKiem({
+      tong_da_diem_danh: 10,
+      nghi_khong_phep: 4,
       nghi_phep: 0,
-      tong_nghi: 3,
+      tong_nghi: 4,
     }), "Yếu");
 
     assert.equal(calculateAutoHanhKiem({
@@ -237,7 +265,7 @@ describe("Sắp xếp Lịch chuyên cần & Ngày nghỉ lễ theo đúng thứ
   });
 });
 
-describe("Tính toán Vị thứ (Dense Rank) cho cả lớp", () => {
+describe("Tính toán Vị thứ chuẩn Học đường (Standard Competition Rank 1224) cho cả lớp", () => {
   it("xếp hạng chính xác theo điểm TB từ cao xuống thấp và gán đồng hạng đúng chuẩn", () => {
     const classRows = {
       userA: { diem_mieng: 9, diem_vo: 9, diem_15_phut: 9, diem_1_tiet: 9, diem_thi: 9 }, // 9.0
@@ -258,19 +286,102 @@ describe("Tính toán Vị thứ (Dense Rank) cho cả lớp", () => {
       }
     });
 
-    const uniqueScores = Array.from(new Set(validScores)).sort((a, b) => b - a);
-
     const ranks = {};
     roster.forEach(u => {
       const tb = scoresByUser[u];
-      ranks[u] = tb !== null ? uniqueScores.indexOf(tb) + 1 : null;
+      ranks[u] = (tb !== null && typeof tb === "number" && !isNaN(tb))
+        ? validScores.filter(s => s > tb).length + 1
+        : null;
     });
 
     assert.equal(ranks.userA, 1);
     assert.equal(ranks.userB, 2);
     assert.equal(ranks.userC, 2); // Đồng hạng 2
-    assert.equal(ranks.userD, 3); // Dense rank: 3
+    assert.equal(ranks.userD, 4); // Standard Competition Rank: 4 (bỏ qua hạng 3 do 2 bạn trước đồng hạng 2)
     assert.equal(ranks.userE, null); // Chưa đủ điểm -> null
+  });
+
+  it("xếp hạng chuẩn thi đấu 1224: lớp 25 bạn có nhiều bạn đồng hạng thì bạn điểm thấp nhất có hạng 25", () => {
+    // Giả lập 25 học sinh với nhiều em trùng điểm nhau (chỉ có 19 mức điểm khác nhau)
+    // 19 mức điểm duy nhất: [9.5, 9.0, 8.8, 8.5, 8.2, 8.0, 7.8, 7.5, 7.2, 7.0, 6.8, 6.5, 6.2, 6.0, 5.8, 5.5, 5.2, 5.0, 4.0]
+    // Thêm 6 em trùng điểm: +1 em 9.0, +2 em 8.5, +1 em 8.0, +1 em 7.5, +1 em 7.0 = 25 em!
+    const testScores = [
+      9.5, 
+      9.0, 9.0, 
+      8.8, 
+      8.5, 8.5, 8.5, 
+      8.2, 
+      8.0, 8.0,
+      7.8, 
+      7.5, 7.5, 
+      7.2, 
+      7.0, 7.0, 
+      6.8, 6.5, 6.2, 6.0, 5.8, 5.5, 5.2, 5.0,
+      4.0 // Em thứ 25 thấp nhất lớp
+    ];
+    assert.equal(testScores.length, 25);
+    
+    // Đếm số mức điểm duy nhất
+    const uniqueCount = new Set(testScores).size;
+    assert.equal(uniqueCount, 19); // Đúng 19 mức điểm duy nhất giống trường hợp người dùng gặp
+
+    // Với thuật toán Standard Competition Ranking (RANK):
+    const computeStandardRank = (score, allScores) => {
+      return allScores.filter(s => s > score).length + 1;
+    };
+
+    // Em cao nhất: Hạng 1
+    assert.equal(computeStandardRank(9.5, testScores), 1);
+    // 2 em 9.0: Đồng Hạng 2
+    assert.equal(computeStandardRank(9.0, testScores), 2);
+    // Em kế tiếp 8.8: Nhảy qua hạng 3, đạt Hạng 4!
+    assert.equal(computeStandardRank(8.8, testScores), 4);
+    // 3 em 8.5: Đồng Hạng 5
+    assert.equal(computeStandardRank(8.5, testScores), 5);
+    // Em kế tiếp 8.2: Nhảy qua hạng 6, 7 -> đạt Hạng 8!
+    assert.equal(computeStandardRank(8.2, testScores), 8);
+
+    // VÀ QUAN TRỌNG NHẤT: Em thứ 25 có điểm thấp nhất (4.0) PHẢI LÀ HẠNG 25, không còn là Hạng 19!
+    assert.equal(computeStandardRank(4.0, testScores), 25);
+  });
+
+  it("tiêu chí phụ Hạnh kiểm: khi 2 bạn bằng ĐTB, bạn có Hạnh kiểm tốt hơn xếp trên", () => {
+    const studentA = { username: "userA", diemTB: 8.5, hanhKiem: "Tốt" };
+    const studentB = { username: "userB", diemTB: 8.5, hanhKiem: "Khá" };
+
+    // So sánh: A tốt hơn B vì Hạnh kiểm Tốt > Khá
+    assert.ok(compareStudentRank(studentA, studentB) > 0);
+    assert.ok(compareStudentRank(studentB, studentA) < 0);
+
+    const ranks = computeClassRanks([studentA, studentB]);
+    assert.equal(ranks.userA, 1);
+    assert.equal(ranks.userB, 2);
+  });
+
+  it("tiêu chí phụ Chuyên cần: khi bằng ĐTB và bằng Hạnh kiểm, bạn ít vắng hơn xếp trên", () => {
+    // Cùng 8.5 và cùng Hạnh kiểm Tốt, nhưng userA vắng 0, userB vắng 1 không phép
+    const studentA = { username: "userA", diemTB: 8.5, hanhKiem: "Tốt", vangKhongPhep: 0, vangCoPhep: 0 };
+    const studentB = { username: "userB", diemTB: 8.5, hanhKiem: "Tốt", vangKhongPhep: 1, vangCoPhep: 0 };
+
+    assert.ok(compareStudentRank(studentA, studentB) > 0);
+    assert.ok(compareStudentRank(studentB, studentA) < 0);
+
+    const ranks = computeClassRanks([studentA, studentB]);
+    assert.equal(ranks.userA, 1);
+    assert.equal(ranks.userB, 2);
+  });
+
+  it("đồng hạng chuẩn thi đấu: khi bằng ĐTB, Hạnh kiểm và Chuyên cần thì nhận cùng thứ hạng, người sau nhảy bậc", () => {
+    const studentA = { username: "userA", diemTB: 9.0, hanhKiem: "Tốt", vangKhongPhep: 0, vangCoPhep: 0 };
+    const studentB = { username: "userB", diemTB: 8.5, hanhKiem: "Tốt", vangKhongPhep: 0, vangCoPhep: 0 };
+    const studentC = { username: "userC", diemTB: 8.5, hanhKiem: "Tốt", vangKhongPhep: 0, vangCoPhep: 0 }; // Trùng hoàn toàn B
+    const studentD = { username: "userD", diemTB: 8.0, hanhKiem: "Tốt", vangKhongPhep: 0, vangCoPhep: 0 };
+
+    const ranks = computeClassRanks([studentA, studentB, studentC, studentD]);
+    assert.equal(ranks.userA, 1);
+    assert.equal(ranks.userB, 2); // Đồng hạng 2
+    assert.equal(ranks.userC, 2); // Đồng hạng 2
+    assert.equal(ranks.userD, 4); // Nhảy bậc lên Hạng 4 chuẩn thi đấu!
   });
 });
 

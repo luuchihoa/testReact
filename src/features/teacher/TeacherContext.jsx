@@ -33,6 +33,10 @@ export function TeacherProvider({ children }) {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
+  // Trạng thái hiển thị banner thông báo tự động chuyển về năm gần nhất
+  const [showFallbackBanner, setShowFallbackBanner] = useState(true);
+  const dismissFallbackBanner = useCallback(() => setShowFallbackBanner(false), []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -42,7 +46,12 @@ export function TeacherProvider({ children }) {
         const authUser = session?.user;
         if (!authUser) throw new Error("Chưa đăng nhập");
         const ctx = await fetchTeacherContext(authUser.id);
-        if (!cancelled) setContext(ctx);
+        if (!cancelled) {
+          setContext(ctx);
+          if (ctx.isFallbackToPast) {
+            setShowFallbackBanner(true);
+          }
+        }
       } catch (err) {
         console.error("fetchTeacherContext error:", err);
         if (!cancelled) showToast("Không tải được thông tin lớp phụ trách", "error");
@@ -53,8 +62,9 @@ export function TeacherProvider({ children }) {
     return () => { cancelled = true; };
   }, [showToast]);
 
-  const changeYear = useCallback(async (newYear) => {
-    if (!newYear || newYear === context?.namHoc) return;
+  const changeYear = useCallback(async (newYear, newLop) => {
+    if (!newYear) return;
+    if (newYear === context?.namHoc && (!newLop || newLop === context?.lop)) return;
     
     setStudentsInitialized(false);
     setInitialSummary(null);
@@ -66,16 +76,26 @@ export function TeacherProvider({ children }) {
       const authUser = session?.user;
       if (!authUser) throw new Error("Chưa đăng nhập");
       
-      const ctx = await fetchTeacherContext(authUser.id, newYear);
+      const ctx = await fetchTeacherContext(authUser.id, newYear, newLop);
       setContext(ctx);
     } catch (err) {
       console.error("changeYear error:", err);
       showToast("Không chuyển được năm học", "error");
     }
-  }, [context?.namHoc, showToast]);
+  }, [context?.namHoc, context?.lop, showToast]);
+
+  const changeClass = useCallback(async (newLop) => {
+    if (!newLop || newLop === context?.lop) return;
+    await changeYear(context?.namHoc, newLop);
+  }, [changeYear, context?.namHoc, context?.lop]);
 
   const reloadStudents = useCallback(async () => {
-    if (!context?.lop) return;
+    if (!context?.lop) {
+      setStudents([]);
+      setInitialSummary(null);
+      setStudentsInitialized(true);
+      return;
+    }
     setLoadingStudents(true);
     try {
       const list = await fetchClassStudents(context.lop, context.namHoc);
@@ -129,6 +149,7 @@ export function TeacherProvider({ children }) {
   const value = {
     loadingContext,
     context,
+    teacherUsername: context?.teacherUsername,
     students,
     loadingStudents,
     studentsInitialized,
@@ -136,10 +157,13 @@ export function TeacherProvider({ children }) {
     pendingRequests,
     pendingRequestsCount: pendingRequests.length,
     loadingRequests,
+    showFallbackBanner: context?.isFallbackToPast && showFallbackBanner,
+    dismissFallbackBanner,
     refreshPendingRequests,
     reloadStudents,
     handleStudentSaved,
     changeYear,
+    changeClass,
   };
 
   return <TeacherContext.Provider value={value}>{children}</TeacherContext.Provider>;

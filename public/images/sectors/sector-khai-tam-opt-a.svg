@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-kt-a" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0FDF4"/>
+      <stop offset="50%" stop-color="#DCFCE7"/>
+      <stop offset="100%" stop-color="#BBF7D0"/>
+    </linearGradient>
+    <linearGradient id="gold-cross-a" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#CA8A04"/>
+    </linearGradient>
+    <filter id="shadow-kt-a" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#064E3B" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <!-- Modern Squircle (Khăn Xanh Lá Trơn) -->
+  <rect x="4" y="4" width="88" height="88" rx="24" fill="url(#bg-kt-a)" stroke="#10B981" stroke-width="2.2"/>
+  <rect x="7.5" y="7.5" width="81" height="81" rx="21" fill="none" stroke="#059669" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
+
+  <!-- Vầng Thái Dương Tỏa Rạng Hào Quang Tình Yêu Chúa -->
+  <circle cx="48" cy="34" r="22" fill="#FEF9C3" opacity="0.9"/>
+  <circle cx="48" cy="34" r="18" fill="none" stroke="#FDE047" stroke-width="1.2" stroke-dasharray="2 2.5"/>
+
+  <!-- Các Tia Nắng Ấm Áp Của Chúa Giêsu -->
+  <g stroke="#FACC15" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
+    <line x1="48" y1="10" x2="48" y2="15"/>
+    <line x1="32" y1="18" x2="36" y2="22"/>
+    <line x1="64" y1="18" x2="60" y2="22"/>
+    <line x1="24" y1="34" x2="29" y2="34"/>
+    <line x1="72" y1="34" x2="67" y2="34"/>
+  </g>
+
+  <!-- Thánh Giá Vàng Kim Tỏa Sáng Ở Đỉnh Trời -->
+  <g filter="url(#shadow-kt-a)">
+    <!-- Thân dọc thập giá -->
+    <rect x="45.5" y="16" width="5" height="24" rx="2.5" fill="url(#gold-cross-a)" stroke="#854D0E" stroke-width="1"/>
+    <!-- Xà ngang thập giá -->
+    <rect x="38" y="22" width="20" height="5" rx="2.5" fill="url(#gold-cross-a)" stroke="#854D0E" stroke-width="1"/>
+    <circle cx="48" cy="24.5" r="2" fill="#FEF08A"/>
+  </g>
+
+  <!-- Đồi Cỏ Đồng Xanh Mầm Non Phía Dưới -->
+  <path d="M8 82 C28 72 68 72 88 82 V86 H8 Z" fill="#34D399" opacity="0.35"/>
+  <path d="M8 84 C30 76 66 76 88 84" stroke="#059669" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Cánh Chim Non Sải Cánh « BAY CAO » Hướng Về Thánh Giá Chúa -->
+  <g filter="url(#shadow-kt-a)">
+    <!-- Đôi Cánh Trắng Tinh Khiết Tung Bay Vút Lên -->
+    <path d="M48 56 C38 46 22 42 16 46 C24 54 36 58 42 63 C40 68 42 74 48 76 C54 74 56 68 54 63 C60 58 72 54 80 46 C74 42 58 46 48 56 Z" 
+          fill="#FFFFFF" stroke="#064E3B" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <!-- Đầu Chim Non Hướng Về Ánh Sáng -->
+    <circle cx="48" cy="51" r="5" fill="#FFFFFF" stroke="#064E3B" stroke-width="2.2"/>
+    <!-- Mỏ Vàng Tinh Tế -->
+    <polygon points="48,44 46,48 50,48" fill="#F59E0B" stroke="#B45309" stroke-width="0.8"/>
+    <!-- Mắt Sáng Hiền Hòa -->
+    <circle cx="48" cy="51" r="1.3" fill="#0F172A"/>
+
+    <!-- Lông Vũ Cánh Trong Xanh Ngọc Tươi Sáng -->
+    <path d="M26 48 C34 52 40 56 44 60" stroke="#10B981" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M70 48 C62 52 56 56 52 60" stroke="#10B981" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+</svg>

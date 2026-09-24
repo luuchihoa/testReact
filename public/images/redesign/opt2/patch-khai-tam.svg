@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Texture sớ vải dệt chéo (Twill Fabric Weave) -->
+    <pattern id="twill-weave-kt" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 8 L8 0 M0 0 L8 8" stroke="#000000" stroke-width="0.75" opacity="0.06"/>
+    </pattern>
+    <filter id="patch-shadow-kt" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#14261D" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Đĩa vải thêu dệt màu Xanh Lá Trơn (Ngành Chiên Con) -->
+  <g filter="url(#patch-shadow-kt)">
+    <!-- Vòng chỉ vắt sổ ngoài cùng (Overlock Stitch) -->
+    <circle cx="128" cy="128" r="118" fill="#1B5E20" stroke="#0D3B12" stroke-width="3"/>
+    <circle cx="128" cy="128" r="115" fill="none" stroke="#2E7D32" stroke-width="4" stroke-dasharray="4 2"/>
+    <!-- Thân vải canvas kem tự nhiên -->
+    <circle cx="128" cy="128" r="106" fill="#FBF9F4"/>
+    <circle cx="128" cy="128" r="106" fill="url(#twill-weave-kt)"/>
+    <!-- Đường may lùi giữ viền (Lockstitch) -->
+    <circle cx="128" cy="128" r="100" fill="none" stroke="#1B5E20" stroke-width="2" stroke-dasharray="5 3"/>
+  </g>
+
+  <!-- Vòng tròn tâm điểm thêu nổi -->
+  <circle cx="128" cy="122" r="66" fill="#F4EFE6" stroke="#C5A059" stroke-width="1.8" stroke-dasharray="3 3"/>
+
+  <!-- Thánh Giá Chỉ Thêu Vàng Kim -->
+  <g stroke="#C5A059" stroke-width="3" stroke-linecap="round">
+    <line x1="128" y1="68" x2="128" y2="94"/>
+    <line x1="116" y1="78" x2="140" y2="78"/>
+    <circle cx="128" cy="78" r="3" fill="#C5A059"/>
+  </g>
+
+  <!-- Chú Chiên Con Thêu Nổi Mộc Mạc -->
+  <g stroke="#2C3437" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M102 138 C94 133 86 125 90 115 C94 106 105 105 112 110 C118 105 129 103 138 107 C146 103 157 107 160 116 C165 127 158 140 149 144 C144 153 118 155 109 148 Z" fill="#FFFFFF"/>
+    <ellipse cx="98" cy="117" rx="10" ry="8" fill="#FFFFFF"/>
+    <circle cx="96" cy="116" r="1.8" fill="#2C3437"/>
+    <!-- Chân chiên quỳ -->
+    <path d="M107 148 L105 156 M138 147 L140 156" stroke-width="2.2"/>
+  </g>
+
+  <!-- Mầm Cây Xanh Thêu Chỉ Nổi -->
+  <path d="M128 172 V152 C128 146 118 140 112 145 C121 148 126 153 128 153 C130 153 135 148 144 145 C138 140 128 146 128 152" fill="#4CAF50" stroke="#2E7D32" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Vòm Chữ Thêu Chỉ Sắc Nét -->
+  <text x="128" y="196" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="800" fill="#1B5E20" text-anchor="middle" letter-spacing="1.5">CHIÊN CON · BAY CAO</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="700" fill="#6B7280" text-anchor="middle" letter-spacing="1">KHĂN XANH LÁ TRƠN</text>
+</svg>

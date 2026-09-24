@@ -707,7 +707,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 8px;
+  padding: 6px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.home-nganh-card:hover .home-nganh-avatar {
+  border-color: var(--home-accent);
+  transform: scale(1.03);
 }
 
 @media (max-width: 639px) {
@@ -715,7 +721,7 @@
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    padding: 6px;
+    padding: 4px;
   }
   .home-nganh-name {
     font-size: 1.25rem;

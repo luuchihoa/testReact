@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <pattern id="twill-weave-pv" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 8 L8 0 M0 0 L8 8" stroke="#000000" stroke-width="0.75" opacity="0.06"/>
+    </pattern>
+    <filter id="patch-shadow-pv" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#3E2723" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Đĩa vải thêu màu Cam có viền Trắng (Khối Phụng Vụ) -->
+  <g filter="url(#patch-shadow-pv)">
+    <!-- Viền chỉ Trắng vắt sổ nổi bật trên nền Cam -->
+    <circle cx="128" cy="128" r="118" fill="#FFFFFF" stroke="#E65100" stroke-width="3"/>
+    <circle cx="128" cy="128" r="115" fill="none" stroke="#FFA726" stroke-width="4" stroke-dasharray="4 2"/>
+    <!-- Vành đai cam nhiệt thành của khăn Phụng Vụ -->
+    <circle cx="128" cy="128" r="106" fill="#E65100"/>
+    <circle cx="128" cy="128" r="106" fill="none" stroke="#FFE0B2" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <!-- Nền vải canvas kem thêu trung tâm -->
+    <circle cx="128" cy="128" r="94" fill="#FBF9F4"/>
+    <circle cx="128" cy="128" r="94" fill="url(#twill-weave-pv)"/>
+    <circle cx="128" cy="128" r="88" fill="none" stroke="#E65100" stroke-width="2" stroke-dasharray="5 3"/>
+  </g>
+
+  <!-- Cây Nến Sáng & Lư Hương Bàn Thờ Thêu Nổi -->
+  <!-- Ngọn Lửa Nến -->
+  <path d="M128 68 C131 73 133 76 128 81 C123 76 125 73 128 68 Z" fill="#FFA726" stroke="#E65100" stroke-width="1.5"/>
+  <rect x="123" y="81" width="10" height="38" rx="2" fill="#FFFFFF" stroke="#C5A059" stroke-width="2"/>
+  <path d="M123 92 H133 M128 87 V98" stroke="#C5A059" stroke-width="1.5"/>
+
+  <!-- Lư Hương Phụng Vụ Thêu Chỉ Vàng -->
+  <g stroke="#C5A059" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M102 134 C102 152 114 158 128 158 C142 158 154 152 154 134 H102 Z" fill="#FFFDF8"/>
+    <path d="M112 134 L118 122 H138 L144 134" stroke-width="1.8"/>
+    <!-- Dây xích thêu -->
+    <line x1="110" y1="122" x2="122" y2="82" stroke="#8D6E63" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="146" y1="122" x2="134" y2="82" stroke="#8D6E63" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <circle cx="128" cy="82" r="3" fill="#C5A059"/>
+  </g>
+
+  <!-- Vòm Chữ Thêu Sắc Nét -->
+  <text x="128" y="184" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="800" fill="#E65100" text-anchor="middle" letter-spacing="1.5">PHỤNG VỤ · TIẾN BƯỚC</text>
+  <text x="128" y="198" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="700" fill="#C2410C" text-anchor="middle" letter-spacing="1">KHĂN DA CAM VIỀN TRẮNG</text>
+</svg>

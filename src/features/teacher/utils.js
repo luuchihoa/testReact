@@ -160,3 +160,77 @@ export function tbColorClass(tb) {
   if (n >= 3.5) return "text-[#FF9500]";
   return "text-[#FF375F]";
 }
+
+// Trọng số Hạnh kiểm dùng cho Tiêu chí phụ khi xếp hạng
+export const HANH_KIEM_WEIGHT = {
+  "Tốt": 4,
+  "Khá": 3,
+  "Trung Bình": 2,
+  "TB": 2,
+  "Yếu": 1,
+};
+
+/**
+ * So sánh thứ hạng giữa 2 học sinh theo chuẩn:
+ * 1. Tiêu chí chính: Điểm Trung Bình (ĐTB) cao hơn xếp trên
+ * 2. Tiêu chí phụ 1: Hạnh kiểm (Tốt > Khá > Trung Bình > Yếu)
+ * 3. Tiêu chí phụ 2: Chuyên cần (Ít vắng không phép hơn -> Ít tổng vắng hơn)
+ *
+ * Trả về:
+ * > 0 nếu A xếp TRÊN B (A tốt hơn B)
+ * < 0 nếu B xếp TRÊN A (B tốt hơn A)
+ * 0 nếu hoàn toàn bằng nhau (đồng hạng)
+ */
+export function compareStudentRank(a, b) {
+  // 1. Tiêu chí chính: Điểm Trung Bình (ĐTB)
+  const dtbA = Number(a?.diemTB);
+  const dtbB = Number(b?.diemTB);
+  if (dtbA !== dtbB) {
+    return dtbA - dtbB; // Dương nếu A > B
+  }
+
+  // 2. Tiêu chí phụ 1: Hạnh kiểm
+  const hkWeightA = HANH_KIEM_WEIGHT[a?.hanhKiem] || 0;
+  const hkWeightB = HANH_KIEM_WEIGHT[b?.hanhKiem] || 0;
+  if (hkWeightA !== hkWeightB) {
+    return hkWeightA - hkWeightB; // Dương nếu A có hạnh kiểm tốt hơn B
+  }
+
+  // 3. Tiêu chí phụ 2: Chuyên cần (ít vắng hơn xếp trên)
+  const vkpA = Number(a?.vangKhongPhep) || 0;
+  const vkpB = Number(b?.vangKhongPhep) || 0;
+  if (vkpA !== vkpB) {
+    return vkpB - vkpA; // Dương nếu A ít vắng không phép hơn B
+  }
+
+  const tongVangA = (Number(a?.vangCoPhep) || 0) + vkpA;
+  const tongVangB = (Number(b?.vangCoPhep) || 0) + vkpB;
+  if (tongVangA !== tongVangB) {
+    return tongVangB - tongVangA; // Dương nếu A ít tổng vắng hơn B
+  }
+
+  return 0; // Bằng nhau hoàn toàn -> Đồng hạng
+}
+
+/**
+ * Tính thứ hạng chuẩn học đường (Standard Competition Ranking - 1224) kèm tiêu chí phụ
+ * Trả về map: { [username]: viThu }
+ */
+export function computeClassRanks(students) {
+  const validStudents = (students || []).filter(
+    (s) => s?.diemTB !== null && s?.diemTB !== undefined && !isNaN(Number(s?.diemTB))
+  );
+
+  const ranks = {};
+  (students || []).forEach((s) => {
+    if (s?.diemTB === null || s?.diemTB === undefined || isNaN(Number(s?.diemTB))) {
+      ranks[s.username] = null;
+    } else {
+      // Đếm số học sinh xếp TRÊN học sinh này (compareStudentRank > 0)
+      const higherCount = validStudents.filter((other) => compareStudentRank(other, s) > 0).length;
+      ranks[s.username] = higherCount + 1;
+    }
+  });
+
+  return ranks;
+}

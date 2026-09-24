@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-pv" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FFEDD5"/>
+    </linearGradient>
+    <linearGradient id="gold-censer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <filter id="shadow-pv" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#9A3412" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Modern Squircle (Khăn Cam Viền Trắng Tinh) -->
+  <rect x="4" y="4" width="88" height="88" rx="24" fill="url(#bg-pv)" stroke="#EA580C" stroke-width="2"/>
+  <rect x="7.5" y="7.5" width="81" height="81" rx="21" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="3 3"/>
+
+  <!-- Khói Trầm Hương Nghi Ngút Bay Lên Tòa Chúa -->
+  <g stroke="#FB923C" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.85">
+    <path d="M66 42 C60 34 72 26 66 18 C62 12 70 8 64 4" stroke-dasharray="3 3"/>
+    <path d="M32 30 C28 22 36 16 32 10" stroke-dasharray="2 2" opacity="0.6"/>
+  </g>
+
+  <!-- Cây Nến Phục Sinh Cháy Sáng (Paschal Candle) -->
+  <g filter="url(#shadow-pv)">
+    <!-- Ngọn lửa nến ấm áp -->
+    <path d="M32 20 C34 24 36 27 32 32 C28 27 30 24 32 20 Z" fill="#F97316" stroke="#C2410C" stroke-width="1.2"/>
+    <circle cx="32" cy="28" r="1.5" fill="#FEF08A"/>
+    <!-- Thân nến phục sinh sáp trắng -->
+    <rect x="28" y="32" width="8" height="42" rx="1.5" fill="#FFFFFF" stroke="#78716C" stroke-width="1.8"/>
+    <!-- Thánh giá đỏ & Năm Phụng vụ trên nến -->
+    <path d="M28 42 H36 M32 37 V48" stroke="#DC2626" stroke-width="1.5"/>
+    <circle cx="32" cy="35" r="1" fill="#DC2626"/>
+    <!-- Chân đế cắm nến đồng thau -->
+    <path d="M24 74 C24 71 30 71 32 71 C34 71 40 71 40 74 H24 Z" fill="url(#gold-censer)" stroke="#854D0E" stroke-width="1.5"/>
+    <line x1="22" y1="76" x2="42" y2="76" stroke="#854D0E" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Bình Hương Phụng Vụ (Thurible / Censer) -->
+  <g filter="url(#shadow-pv)">
+    <!-- 3 Dây xích vàng treo bình hương -->
+    <line x1="56" y1="52" x2="64" y2="24" stroke="#78716C" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+    <line x1="76" y1="52" x2="68" y2="24" stroke="#78716C" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+    <line x1="66" y1="52" x2="66" y2="24" stroke="#78716C" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+    <circle cx="66" cy="24" r="2.5" fill="url(#gold-censer)"/>
+
+    <!-- Thân bình hương trầm vàng kim -->
+    <path d="M54 60 C54 74 60 78 66 78 C72 78 78 74 78 60 H54 Z" fill="url(#gold-censer)" stroke="#854D0E" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- Nắp vòm bình hương có lỗ thoát khói -->
+    <path d="M58 60 L62 52 H70 L74 60" stroke="#854D0E" stroke-width="1.5" fill="none"/>
+    <circle cx="64" cy="56" r="1.2" fill="#854D0E"/>
+    <circle cx="68" cy="56" r="1.2" fill="#854D0E"/>
+    <!-- Chân đế bình hương -->
+    <path d="M62 78 H70" stroke="#854D0E" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

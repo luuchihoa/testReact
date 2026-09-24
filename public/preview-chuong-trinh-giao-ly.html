@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview Layout Cũ: So Sánh Logo/Biểu Trưng 6 Khối Giáo Lý</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --home-bg: #faf8f3;
+      --home-paper: #fffefa;
+      --home-ink: #293d32;
+      --home-muted: #464d43;
+      --home-line: #dedfd4;
+      --home-accent: #927140;
+      --home-accent-text: #61461c;
+      --home-gold-bg: rgba(146, 113, 64, 0.08);
+      --home-surface: #f4f0e6;
+      --home-card-shadow: 0 4px 20px -2px rgba(41, 61, 50, 0.05), 0 2px 6px -1px rgba(41, 61, 50, 0.03);
+      --home-card-hover: 0 12px 30px -4px rgba(41, 61, 50, 0.10), 0 4px 10px -2px rgba(41, 61, 50, 0.05);
+    }
+
+    .dark {
+      --home-bg: #151c18;
+      --home-paper: #1e2821;
+      --home-ink: #ecece0;
+      --home-muted: #b0b9ac;
+      --home-line: #354237;
+      --home-accent: #d4b47d;
+      --home-accent-text: #d4b47d;
+      --home-gold-bg: rgba(212, 180, 125, 0.12);
+      --home-surface: #222e26;
+      --home-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+      --home-card-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--home-bg);
+      color: var(--home-ink);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      padding-bottom: 80px;
+    }
+
+    /* ── Thanh điều khiển Preview trên cùng ── */
+    .preview-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--home-paper);
+      border-bottom: 1px solid var(--home-line);
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .preview-title {
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-layout-keep {
+      background: #314e3e;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .dark .tag-layout-keep {
+      background: #d4b47d;
+      color: #151c18;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      background: var(--home-surface);
+      color: var(--home-ink);
+      border: 1px solid var(--home-line);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ctrl-btn:hover {
+      border-color: var(--home-accent);
+      background: var(--home-gold-bg);
+      color: var(--home-accent-text);
+    }
+
+    .ctrl-btn.active {
+      background: #314e3e;
+      color: #ffffff;
+      border-color: #314e3e;
+    }
+
+    .dark .ctrl-btn.active {
+      background: #d4b47d;
+      color: #151c18;
+      border-color: #d4b47d;
+    }
+
+    /* ── Khung trang web (Home Shell) ── */
+    .home-shell {
+      margin: 32px auto;
+      transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      padding-inline: 16px;
+    }
+
+    .home-shell.viewport-full { max-width: 1180px; }
+    .home-shell.viewport-tablet { max-width: 768px; }
+    .home-shell.viewport-390 { max-width: 390px; }
+    .home-shell.viewport-375 { max-width: 375px; }
+
+    /* ── Section Header (Y đúc Home.jsx) ── */
+    .home-section-header {
+      text-align: center;
+      max-width: 720px;
+      margin-inline: auto;
+      margin-bottom: 40px;
+    }
+
+    .home-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--home-accent-text);
+      margin-bottom: 12px;
+    }
+
+    .home-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--home-accent);
+    }
+
+    .home-section-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.75rem, 3.8vw, 2.75rem);
+      font-weight: 600;
+      color: var(--home-ink);
+      line-height: 1.2;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .home-section-title em {
+      font-style: italic;
+      color: var(--home-accent-text);
+    }
+
+    .home-section-desc {
+      font-size: 0.9375rem;
+      color: var(--home-muted);
+      line-height: 1.7;
+    }
+
+    /* ── Grid Layout Cũ (Y đúc Home.css) ── */
+    .home-nganh-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .home-nganh-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ── Card Khối Layout Cũ (Y đúc Home.css dòng 642–765) ── */
+    .home-nganh-card {
+      position: relative;
+      background: var(--home-paper);
+      border: 1px solid var(--home-line);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--home-card-shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .home-nganh-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--home-card-hover);
+      border-color: var(--home-accent);
+    }
+
+    @media (max-width: 639px) {
+      .home-nganh-card {
+        padding: 20px 16px;
+        border-radius: 20px;
+      }
+    }
+
+    .home-nganh-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .home-nganh-header-info {
+      flex-grow: 1;
+    }
+
+    .home-nganh-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    /* Màu khăn từng ngành */
+    .badge-emerald {
+      background: #ecfdf5;
+      color: #064e3b;
+      border: 1px solid #a7f3d0;
+    }
+    .dark .badge-emerald {
+      background: rgba(6, 78, 59, 0.6);
+      color: #6ee7b7;
+      border-color: #047857;
+    }
+
+    .badge-amber {
+      background: #fffbeb;
+      color: #78350f;
+      border: 1px solid #fde68a;
+    }
+    .dark .badge-amber {
+      background: rgba(120, 53, 15, 0.6);
+      color: #fcd34d;
+      border-color: #b45309;
+    }
+
+    .badge-orange {
+      background: #fff7ed;
+      color: #7c2d12;
+      border: 1px solid #fed7aa;
+    }
+    .dark .badge-orange {
+      background: rgba(124, 45, 18, 0.6);
+      color: #fdba74;
+      border-color: #c2410c;
+    }
+
+    .badge-red {
+      background: #fef2f2;
+      color: #7f1d1d;
+      border: 1px solid #fecaca;
+    }
+    .dark .badge-red {
+      background: rgba(127, 29, 29, 0.6);
+      color: #fca5a5;
+      border-color: #b91c1c;
+    }
+
+    .home-nganh-name {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--home-ink);
+      margin-bottom: 4px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    @media (max-width: 639px) {
+      .home-nganh-name {
+        font-size: 1.25rem;
+      }
+    }
+
+    .home-nganh-motto {
+      font-size: 0.8125rem;
+      font-style: italic;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--home-muted);
+    }
+
+    /* ── KHỐI AVATAR 48px – 64px CẦN TỐI ƯU ── */
+    .home-nganh-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: var(--home-surface);
+      border: 1px solid var(--home-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    @media (max-width: 639px) {
+      .home-nganh-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        padding: 6px;
+      }
+    }
+
+    .home-nganh-avatar img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+
+    .home-nganh-card:hover .home-nganh-avatar {
+      transform: scale(1.06);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      border-color: var(--home-accent);
+    }
+
+    .home-nganh-desc {
+      font-size: 0.875rem;
+      color: var(--home-muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .home-nganh-khoi-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px dashed var(--home-line);
+    }
+
+    .home-nganh-khoi-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      min-height: 44px;
+      border-radius: 12px;
+      background: var(--home-surface);
+      text-decoration: none;
+      color: var(--home-ink);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+    }
+
+    .home-nganh-khoi-item:hover {
+      background: var(--home-gold-bg);
+      color: var(--home-accent-text);
+      padding-left: 18px;
+    }
+
+    .arrow-icon {
+      color: var(--home-accent);
+      transition: transform 0.2s ease;
+    }
+
+    .home-nganh-khoi-item:hover .arrow-icon {
+      transform: translateX(4px);
+    }
+
+    /* ── Hộp so sánh trực quan phóng to ── */
+    .compare-banner {
+      background: var(--home-paper);
+      border: 1px solid var(--home-line);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .compare-label {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--home-accent-text);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .compare-desc {
+      font-size: 0.8125rem;
+      color: var(--home-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Thanh Điều Khiển Preview -->
+  <header class="preview-bar">
+    <div class="preview-title">
+      <span>GIÁO XỨ AN NGÃI</span>
+      <span style="opacity: 0.3;">/</span>
+      <span class="tag-layout-keep">Giữ Nguyên Layout Card Cũ</span>
+    </div>
+
+    <!-- Chọn Bộ Logo Để Thử Nghiệm -->
+    <div class="ctrl-group">
+      <span style="font-size: 0.75rem; font-weight: 700; color: var(--home-muted); margin-right: 4px;">CHỌN BỘ LOGO:</span>
+      <button id="btnOptA" class="ctrl-btn active" onclick="switchLogoOption('sector', this)">
+        ✦ Phương Án 1: Vector Squircle Mới (Khuyên dùng)
+      </button>
+      <button id="btnOptB" class="ctrl-btn" onclick="switchLogoOption('crest', this)">
+        🛡️ Phương Án 2: Khiên Gothic Phụng Vụ
+      </button>
+      <button id="btnOptOld" class="ctrl-btn" onclick="switchLogoOption('badge', this)">
+        ⚠️ Logo Cũ (Badge tròn nhòe chữ)
+      </button>
+    </div>
+
+    <!-- Chọn Viewport & Theme -->
+    <div class="ctrl-group">
+      <span style="font-size: 0.75rem; font-weight: 700; color: var(--home-muted); margin-right: 4px;">MÀN HÌNH:</span>
+      <button class="ctrl-btn active" onclick="setViewport('full', this)">Desktop</button>
+      <button class="ctrl-btn" onclick="setViewport('tablet', this)">Tablet</button>
+      <button class="ctrl-btn" onclick="setViewport('390', this)">iPhone 14 (390px)</button>
+      <button class="ctrl-btn" onclick="setViewport('375', this)">iPhone SE (375px)</button>
+      <button class="ctrl-btn" onclick="toggleTheme()">🌓 Dark Mode</button>
+    </div>
+  </header>
+
+  <!-- Khung Trang Chủ -->
+  <main id="homeStage" class="home-shell viewport-full">
+
+    <!-- Thông tin phương án đang chọn -->
+    <div class="compare-banner">
+      <div>
+        <p id="optTitle" class="compare-label">✦ PHƯƠNG ÁN 1: VECTOR SQUIRCLE TỐI GIẢN (KHUYÊN DÙNG)</p>
+        <p id="optDesc" class="compare-desc">
+          Loại bỏ toàn bộ chữ vi mô li ti gây nhòe ở 48px/64px. Biểu tượng trọng tâm (Chiên con, Chén thánh, Bồ câu 7 ngọn lửa, Nến & Bình hương, Kinh thánh, Mỏ neo) được vẽ nét đậm 2.5px, màu sắc rực rỡ chuẩn khăn quàng từng ngành, sắc nét 100% trên màn hình Retina.
+        </p>
+      </div>
+    </div>
+
+    <!-- Section Header y đúc Home.jsx -->
+    <section class="home-section-header">
+      <div class="home-eyebrow">
+        <span class="home-dot" aria-hidden="true"></span>
+        <span>CHƯƠNG TRÌNH ĐÀO TẠO ĐỨC TIN</span>
+      </div>
+      <h2 class="home-section-title">
+        Hành Trình 6 Khối <br>
+        <em>Giáo Lý Đức Tin</em>
+      </h2>
+      <p class="home-section-desc">
+        Ban Giáo lý Xứ đoàn Mẹ Mân Côi Giáo xứ An Ngãi đồng hành cùng các em qua 6 Khối học theo đường hướng Phong trào Hùng Tâm Dũng Chí, từng bước từ thuở ấu thơ đến khi trưởng thành vững bước vào đời.
+      </p>
+    </section>
+
+    <!-- Lưới 6 Card Khối với Layout Card Y Đúc Cũ -->
+    <div class="home-nganh-grid">
+
+      <!-- 1. KHỐI KHAI TÂM -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-emerald">Khăn Xanh Lá Trơn</span>
+            <h3 class="home-nganh-name">Khối Khai Tâm (Vườn Trẻ & Khai Tâm)</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Bay Cao »</strong> · Độ tuổi: 5 – 7 tuổi
+            </p>
+          </div>
+          <!-- Vùng Avatar 48px/64px cần tối ưu -->
+          <div class="home-nganh-avatar" title="Biểu trưng Khối Khai Tâm">
+            <img id="img-kt" src="images/sectors/sector-khai-tam.svg" alt="Biểu trưng Khối Khai Tâm" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Gieo mầm đức tin đơn sơ, trong trắng vào tâm hồn tuổi thơ qua lời kinh, khúc hát cử điệu và mẩu chuyện Kinh Thánh sinh động.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-chiên-con" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Lớp Vườn Trẻ & Khai Tâm 1 – 2</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">5 – 7 tuổi · 5 lớp học (Ca 2)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 2. KHỐI RƯỚC LỄ LẦN ĐẦU -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-emerald">Khăn Xanh Lá Có Viền</span>
+            <h3 class="home-nganh-name">Khối Rước Lễ Lần Đầu</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Trong Sạch »</strong> · Độ tuổi: 8 – 9 tuổi
+            </p>
+          </div>
+          <div class="home-nganh-avatar" title="Biểu trưng Rước Lễ Lần Đầu">
+            <img id="img-rl" src="images/sectors/sector-ruoc-le.svg" alt="Biểu trưng Rước Lễ Lần Đầu" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Chuẩn bị tâm hồn thánh thiện đón rước Mình Thánh Chúa Kitô Bánh Hằng Sống và lãnh nhận Bí tích Hòa Giải lần đầu tiên.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-rước-lễ" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Khối Rước Lễ Lần Đầu (RLLĐ 1 & 2)</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">8 – 9 tuổi · 5 lớp học (Ca 2)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 3. KHỐI THÊM SỨC -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-amber">Khăn Vàng Có Viền</span>
+            <h3 class="home-nganh-name">Khối Thêm Sức</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Quảng Đại »</strong> · Độ tuổi: 10 – 11 tuổi
+            </p>
+          </div>
+          <div class="home-nganh-avatar" title="Biểu trưng Khối Thêm Sức">
+            <img id="img-ts" src="images/sectors/sector-them-suc.svg" alt="Biểu trưng Khối Thêm Sức" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Dẫn dắt các em lãnh nhận Bảy Ơn Chúa Thánh Thần qua Bí tích Thêm Sức để trở thành chứng nhân đức tin kiên cường, hăng say phục vụ.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-thêm-sức" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Khối Thêm Sức 1 & 2</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">10 – 11 tuổi · 6 lớp học (Ca 2)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 4. KHỐI PHỤNG VỤ -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-orange">Khăn Da Cam Có Viền</span>
+            <h3 class="home-nganh-name">Khối Phụng Vụ</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Tiến »</strong> · Độ tuổi: 12 tuổi
+            </p>
+          </div>
+          <div class="home-nganh-avatar" title="Biểu trưng Khối Phụng Vụ">
+            <img id="img-pv" src="images/sectors/sector-phung-vu.svg" alt="Biểu trưng Khối Phụng Vụ" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Khám phá chiều sâu các cử hành Phụng vụ, tập sự giúp lễ, thánh ca và sống tinh thần nhiệt tâm phụng sự Bàn Thờ Chúa.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-phụng-vụ" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Khối Phụng Vụ (Lớp 7)</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">12 tuổi · 3 lớp học (Ca 1)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 5. KHỐI KINH THÁNH -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-red">Khăn Đỏ Có Viền</span>
+            <h3 class="home-nganh-name">Khối Kinh Thánh</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Thắng »</strong> · Độ tuổi: 13 – 14 tuổi
+            </p>
+          </div>
+          <div class="home-nganh-avatar" title="Biểu trưng Khối Kinh Thánh">
+            <img id="img-ktb" src="images/sectors/sector-kinh-thanh.svg" alt="Biểu trưng Khối Kinh Thánh" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Đào sâu 73 cuốn Sách Thánh Cựu Ước & Tân Ước, suy niệm Lectio Divina và xây dựng nền tảng đức tin vững vàng trên Lời Chúa.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-kinh-thánh" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Khối Kinh Thánh 1 & 2 (Lớp 8 & 9)</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">13 – 14 tuổi · 6 lớp học (Ca 1)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- 6. KHỐI VÀO ĐỜI -->
+      <article class="home-nganh-card">
+        <div class="home-nganh-top">
+          <div class="home-nganh-header-info">
+            <span class="home-nganh-badge badge-red">Khăn Đỏ Có Viền</span>
+            <h3 class="home-nganh-name">Khối Vào Đời</h3>
+            <p class="home-nganh-motto">
+              Khẩu hiệu: <strong>« Thắng »</strong> · Độ tuổi: 15 – 16 tuổi
+            </p>
+          </div>
+          <div class="home-nganh-avatar" title="Biểu trưng Khối Vào Đời">
+            <img id="img-vd" src="images/sectors/sector-vao-doi.svg" alt="Biểu trưng Khối Vào Đời" width="52" height="52">
+          </div>
+        </div>
+        <p class="home-nganh-desc">
+          Trang bị hành trang Docat & Youcat, định hướng tương lai, tôi luyện bản lĩnh Huynh Trưởng và dấn thân làm chứng nhân Tin Mừng giữa đời.
+        </p>
+        <div class="home-nganh-khoi-list">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--home-accent-text);">
+            Các khối lớp trực thuộc:
+          </span>
+          <a href="/khối-vào-đời" class="home-nganh-khoi-item">
+            <div>
+              <div style="font-weight: 600;">Khối Vào Đời 1 & 2 (Lớp 10 & 11)</div>
+              <div style="font-size: 0.75rem; color: var(--home-muted);">15 – 16 tuổi · 5 lớp học (Ca 1)</div>
+            </div>
+            <span class="arrow-icon">➔</span>
+          </a>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <script>
+    const LOGO_SETS = {
+      sector: {
+        title: '✦ PHƯƠNG ÁN 1: BIỂU TRƯNG VECTOR SQUIRCLE TỐI GIẢN (KHUYÊN DÙNG)',
+        desc: 'Được thiết kế chuẩn xác cho kích thước nhỏ 48px – 64px. Không có chữ vi mô li ti gây nhòe. Biểu tượng cốt lõi nét dày 2.5px, màu viền và màu nền khớp 100% khăn quàng Hùng Tâm Dũng Chí. Độ sắc nét hoàn hảo trên màn hình Retina di động.',
+        images: {
+          kt: 'images/sectors/sector-khai-tam.svg',
+          rl: 'images/sectors/sector-ruoc-le.svg',
+          ts: 'images/sectors/sector-them-suc.svg',
+          pv: 'images/sectors/sector-phung-vu.svg',
+          ktb: 'images/sectors/sector-kinh-thanh.svg',
+          vd: 'images/sectors/sector-vao-doi.svg'
+        }
+      },
+      crest: {
+        title: '🛡️ PHƯƠNG ÁN 2: KHIÊN THÁNH GOTHIC PHỤNG VỤ (CREST)',
+        desc: 'Thiết kế theo hình tượng khiên hiệp sĩ Công giáo cổ điển, nền giấy thánh nhạt, viền vàng đồng dát cạnh. Mang đậm chất phụng vụ truyền thống Giáo phận.',
+        images: {
+          kt: 'images/redesign/opt1/crest-khai-tam.svg',
+          rl: 'images/redesign/opt1/crest-ruoc-le.svg',
+          ts: 'images/redesign/opt1/crest-them-suc.svg',
+          pv: 'images/redesign/opt1/crest-phung-vu.svg',
+          ktb: 'images/redesign/opt1/crest-kinh-thanh.svg',
+          vd: 'images/redesign/opt1/crest-vao-doi.svg'
+        }
+      },
+      badge: {
+        title: '⚠️ PHƯƠNG ÁN HIỆN TẠI (LOGOS/BADGES CŨ)',
+        desc: 'Các huy hiệu tròn dạng huân chương kim loại cũ. Nhược điểm: có dòng chữ uốn lượn xung quanh, khi co về 48px trên điện thoại chữ bị vỡ hạt, tương phản viền vàng trên nền giấy kem chỉ đạt 1.6:1 (trượt WCAG).',
+        images: {
+          kt: 'images/badges/badge-khai-tam.webp',
+          rl: 'images/badges/badge-ruoc-le.webp',
+          ts: 'images/badges/badge-them-suc.webp',
+          pv: 'images/badges/badge-phung-vu.webp',
+          ktb: 'images/badges/badge-kinh-thanh.webp',
+          vd: 'images/badges/badge-vao-doi.webp'
+        }
+      }
+    };
+
+    function switchLogoOption(key, btn) {
+      document.querySelectorAll('.preview-bar .ctrl-btn').forEach(b => {
+        if (b.id && b.id.startsWith('btnOpt')) b.classList.remove('active');
+      });
+      btn.classList.add('active');
+
+      const data = LOGO_SETS[key];
+      document.getElementById('optTitle').innerText = data.title;
+      document.getElementById('optDesc').innerText = data.desc;
+
+      document.getElementById('img-kt').src = data.images.kt;
+      document.getElementById('img-rl').src = data.images.rl;
+      document.getElementById('img-ts').src = data.images.ts;
+      document.getElementById('img-pv').src = data.images.pv;
+      document.getElementById('img-ktb').src = data.images.ktb;
+      document.getElementById('img-vd').src = data.images.vd;
+    }
+
+    function setViewport(type, btn) {
+      const stage = document.getElementById('homeStage');
+      stage.className = 'home-shell viewport-' + type;
+      document.querySelectorAll('.preview-bar .ctrl-btn').forEach(b => {
+        if (b.innerText.includes('Desktop') || b.innerText.includes('Tablet') || b.innerText.includes('iPhone')) {
+          b.classList.remove('active');
+        }
+      });
+      btn.classList.add('active');
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+  </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ import {
 } from "../api.js";
 import { buildSundayList, getDefaultTermRanges, parseISODate, toISODate } from "../utils.js";
 import { HK_INT_MAP, GRADE_FIELDS, HOC_LUC_OPTIONS, HANH_KIEM_OPTIONS } from "../constants.js";
+import { calculateAutoHocLuc } from "../../account/utils.js";
 
 const SCORE_INPUT_FIELDS = GRADE_FIELDS.filter((f) => f.key !== "diem_tb");
 
@@ -550,71 +551,90 @@ function AcademicTab({ student, namHoc, lop, showToast }) {
             )}
 
             {/* 1. THỐNG KÊ TỔNG QUAN */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatCard label={hocKy === "CN" ? "ĐTB Cả năm" : "Điểm TB"} value={grades?.diem_tb} colorClass="text-[#314e3e] dark:text-[#d6b883]" />
-              <StatCard label="Học lực" value={formatHocLuc(term?.hoc_luc)} colorClass={RANK_COLORS.hoc_luc[term?.hoc_luc] || "text-[#314e3e] dark:text-[#d6b883]"} />
-              <StatCard label="Hạnh kiểm" value={formatHanhKiem(term?.hanh_kiem)} colorClass={RANK_COLORS.hanh_kiem[term?.hanh_kiem] || "text-[#314e3e] dark:text-[#d6b883]"} />
-              <StatCard label="Vị thứ" value={term?.vi_thu ? `#${term.vi_thu}` : null} colorClass="text-[#314e3e] dark:text-[#d6b883]" />
-            </div>
+            {(() => {
+              const tb1 = hk1Academic?.grades?.diem_tb ?? null;
+              const tb2 = hk2Academic?.grades?.diem_tb ?? null;
+              const computedYearDTB = (tb1 !== null && tb2 !== null && !isNaN(Number(tb1)) && !isNaN(Number(tb2)))
+                ? Math.round(((Number(tb1) + Number(tb2) * 2) / 3) * 10) / 10
+                : null;
+              const displayDTB = hocKy === "CN" ? (grades?.diem_tb ?? computedYearDTB) : grades?.diem_tb;
+              const displayHocLuc = hocKy === "CN" 
+                ? (term?.hoc_luc || (displayDTB !== null && displayDTB !== undefined ? calculateAutoHocLuc(displayDTB) : null))
+                : term?.hoc_luc;
+              const displayHanhKiem = hocKy === "CN"
+                ? (term?.hanh_kiem || hk2Academic?.term?.hanh_kiem || hk1Academic?.term?.hanh_kiem || null)
+                : term?.hanh_kiem;
 
-            {/* 2. BẢNG SO SÁNH ĐỐI CHIẾU 2 HỌC KỲ (Khi ở Tab Cả năm) */}
-            {hocKy === "CN" && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
-                  <span>Đối chiếu kết quả 2 Học kỳ & Cả năm</span>
-                </h4>
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <StatCard label={hocKy === "CN" ? "ĐTB Cả năm" : "Điểm TB"} value={displayDTB} colorClass="text-[#314e3e] dark:text-[#d6b883]" />
+                    <StatCard label="Học lực" value={formatHocLuc(displayHocLuc)} colorClass={RANK_COLORS.hoc_luc[displayHocLuc] || "text-[#314e3e] dark:text-[#d6b883]"} />
+                    <StatCard label="Hạnh kiểm" value={formatHanhKiem(displayHanhKiem)} colorClass={RANK_COLORS.hanh_kiem[displayHanhKiem] || "text-[#314e3e] dark:text-[#d6b883]"} />
+                    <StatCard label="Vị thứ" value={term?.vi_thu ? `#${term.vi_thu}` : null} colorClass="text-[#314e3e] dark:text-[#d6b883]" />
+                  </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xs">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="border-b border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4] uppercase font-bold text-xs">
-                        <th className="py-3 px-4">Tiêu chí</th>
-                        <th className="py-3 px-4 text-center">Học kỳ I</th>
-                        <th className="py-3 px-4 text-center">Học kỳ II</th>
-                        <th className="py-3 px-4 text-center bg-[#314e3e]/5 dark:bg-[#d6b883]/10 font-black text-[#314e3e] dark:text-[#d6b883]">
-                          Tổng kết Cả năm
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#dedfd4]/60 dark:divide-[#354237]/60">
-                      <tr>
-                        <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Điểm trung bình</td>
-                        <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk1Academic?.grades?.diem_tb ?? "—"}</td>
-                        <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk2Academic?.grades?.diem_tb ?? "—"}</td>
-                        <td className="py-3 px-4 text-center font-mono font-black text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10 text-sm">
-                          {grades?.diem_tb ?? "—"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Học lực</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHocLuc(hk1Academic?.term?.hoc_luc)}</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHocLuc(hk2Academic?.term?.hoc_luc)}</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
-                          {formatHocLuc(term?.hoc_luc)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Hạnh kiểm</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHanhKiem(hk1Academic?.term?.hanh_kiem)}</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHanhKiem(hk2Academic?.term?.hanh_kiem)}</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
-                          {formatHanhKiem(term?.hanh_kiem)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Vị thứ xếp hạng</td>
-                        <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk1Academic?.term?.vi_thu ? `#${hk1Academic.term.vi_thu}` : "—"}</td>
-                        <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk2Academic?.term?.vi_thu ? `#${hk2Academic.term.vi_thu}` : "—"}</td>
-                        <td className="py-3 px-4 text-center font-mono font-black text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
-                          {term?.vi_thu ? `#${term.vi_thu}` : "—"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+                  {/* 2. BẢNG SO SÁNH ĐỐI CHIẾU 2 HỌC KỲ (Khi ở Tab Cả năm) */}
+                  {hocKy === "CN" && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#454f46] dark:text-[#b8c2b4] flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#314e3e] dark:text-[#d6b883]" />
+                        <span>Đối chiếu kết quả 2 Học kỳ & Cả năm</span>
+                      </h4>
+
+                      <div className="overflow-x-auto rounded-2xl border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xs">
+                        <table className="w-full text-xs text-left">
+                          <thead>
+                            <tr className="border-b border-[#dedfd4] dark:border-[#354237] text-[#454f46] dark:text-[#b8c2b4] uppercase font-bold text-xs">
+                              <th className="py-3 px-4">Tiêu chí</th>
+                              <th className="py-3 px-4 text-center">Học kỳ I</th>
+                              <th className="py-3 px-4 text-center">Học kỳ II</th>
+                              <th className="py-3 px-4 text-center bg-[#314e3e]/5 dark:bg-[#d6b883]/10 font-black text-[#314e3e] dark:text-[#d6b883]">
+                                Tổng kết Cả năm
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#dedfd4]/60 dark:divide-[#354237]/60">
+                            <tr>
+                              <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Điểm trung bình</td>
+                              <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk1Academic?.grades?.diem_tb ?? "—"}</td>
+                              <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk2Academic?.grades?.diem_tb ?? "—"}</td>
+                              <td className="py-3 px-4 text-center font-mono font-black text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10 text-sm">
+                                {displayDTB ?? "—"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Học lực</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHocLuc(hk1Academic?.term?.hoc_luc)}</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHocLuc(hk2Academic?.term?.hoc_luc)}</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
+                                {formatHocLuc(displayHocLuc)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Hạnh kiểm</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHanhKiem(hk1Academic?.term?.hanh_kiem)}</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#293d32] dark:text-[#ecece0]">{formatHanhKiem(hk2Academic?.term?.hanh_kiem)}</td>
+                              <td className="py-3 px-4 text-center font-bold text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
+                                {formatHanhKiem(displayHanhKiem)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 px-4 font-medium text-[#454f46] dark:text-[#b8c2b4]">Vị thứ xếp hạng</td>
+                              <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk1Academic?.term?.vi_thu ? `#${hk1Academic.term.vi_thu}` : "—"}</td>
+                              <td className="py-3 px-4 text-center font-mono font-bold text-[#293d32] dark:text-[#ecece0]">{hk2Academic?.term?.vi_thu ? `#${hk2Academic.term.vi_thu}` : "—"}</td>
+                              <td className="py-3 px-4 text-center font-mono font-black text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/5 dark:bg-[#d6b883]/10">
+                                {term?.vi_thu ? `#${term.vi_thu}` : "—"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {hocKy !== "CN" && (
               <>

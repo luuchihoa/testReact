@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiểm Thử Hệ Thống Logo Đa Tầng — Ban Giáo Lý · Xứ Đoàn Mẹ Mân Côi</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Cinzel:wght@600;700;800&display=swap">
+  <style>
+    :root {
+      --bg: #faf8f3;
+      --surface: #ffffff;
+      --text: #293d32;
+      --muted: #575e55;
+      --border: #dedfd4;
+      --primary: #314e3e;
+      --primary-dark: #1b3b2b;
+      --accent: #927140;
+      --gold: #d4b47d;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 32px 16px 80px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 16px;
+      border-radius: 999px;
+      background: #e8ede9;
+      color: var(--primary);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border: 1px solid #ced8d1;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1a2b22;
+      margin-bottom: 12px;
+    }
+
+    p.subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      margin-bottom: 36px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-badge {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1a2b22;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    /* Case 1: Web Mockups */
+    .web-mockup {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e0dfd5;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .web-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+    }
+
+    .web-nav.light {
+      background: #faf8f3;
+      border-bottom: 1px solid #dedfd4;
+    }
+
+    .web-nav.dark {
+      background: #151c18;
+      border-bottom: 1px solid #2b392f;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .brand-text-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
+    .web-nav.light .brand-text-title { color: #293d32; }
+    .web-nav.dark .brand-text-title { color: #ecece0; }
+
+    .brand-text-sub {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .web-nav.light .brand-text-sub { color: #5e4420; }
+    .web-nav.dark .brand-text-sub { color: #dfc599; }
+
+    .nav-dummy-links {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .web-nav.light .nav-dummy-links { color: #575e55; }
+    .web-nav.dark .nav-dummy-links { color: #a5b0a3; }
+
+    /* Case 2: PWA Devices */
+    .device-box {
+      background: #f7f6f0;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid #e5e4dc;
+    }
+
+    .ios-springboard {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      border-radius: 28px;
+      padding: 30px 20px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .app-icon-ios {
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 0 auto 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .app-icon-ios img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .app-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    /* Android Adaptive Masks */
+    .mask-preview {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .mask-circle { border-radius: 50%; }
+    .mask-squircle { border-radius: 28%; }
+    .mask-rounded { border-radius: 16px; }
+    .mask-teardrop { border-radius: 50% 50% 50% 0%; transform: rotate(-45deg); }
+    .mask-teardrop img { transform: rotate(45deg); }
+
+    .mask-preview img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Case 3: Favicon Browser Tabs */
+    .browser-window {
+      background: #f1f3f4;
+      border-radius: 12px;
+      border: 1px solid #dadce0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .browser-window.dark {
+      background: #202124;
+      border-color: #3c4043;
+      color: #e8eaed;
+    }
+
+    .browser-tab-bar {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px 0;
+      gap: 6px;
+      background: #dee1e6;
+    }
+
+    .browser-window.dark .browser-tab-bar {
+      background: #17181c;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px 8px 0 0;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: #ffffff;
+      color: #202124;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      max-width: 260px;
+    }
+
+    .browser-window.dark .tab {
+      background: #202124;
+      color: #e8eaed;
+    }
+
+    .tab-favicon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .tab-favicon img, .tab-favicon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tab-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser-content {
+      padding: 16px 20px;
+      font-size: 0.85rem;
+      color: #5f6368;
+    }
+
+    .browser-window.dark .browser-content {
+      color: #9aa0a6;
+    }
+
+    /* Master Crest Showcase */
+    .crest-showcase {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+    }
+
+    .crest-img-box {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      border: 4px solid #dfb557;
+    }
+
+    .crest-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .crest-desc {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .crest-desc h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: #1a2b22;
+      margin-bottom: 8px;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #e6f4ea;
+      color: #137333;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    ul.spec-list {
+      list-style: none;
+      margin-top: 12px;
+    }
+
+    ul.spec-list li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #4a544e;
+    }
+
+    ul.spec-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">Hệ Thống Logo Đa Tầng · Chuẩn Phụng Vụ & W3C</div>
+      <h1>Ban Giáo Lý — Xứ Đoàn Mẹ Mân Côi</h1>
+      <p class="subtitle">Bản kiểm thử trực quan từng trường hợp cụ thể: Logo đặt trên Web (Header/Footer), trên ứng dụng di động PWA (Android/iOS Safe Zone), và Favicon trên thanh tab trình duyệt.</p>
+    </header>
+
+    <!-- TRƯỜNG HỢP 1: LOGO TRÊN WEB -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-badge">TRƯỜNG HỢP 1</span>
+        <h2 class="section-title">Logo Đặt Trên Web (Header Navbar & Footer)</h2>
+      </div>
+      <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.92rem;">
+        Huy hiệu tròn Chân dung Mẹ Mân Côi tinh gọn với viền vàng kim sắc nét trên nền xanh ngọc lục bảo, <strong>cắt viền ngoài trong suốt</strong>. Logo đặt cạnh chữ thương hiệu chuẩn HTML, đảm bảo không có chữ li ti bọc quanh làm nhòe và hiển thị hoàn mỹ trên cả Light mode & Dark mode.
+      </p>
+
+      <div class="grid-2">
+        <!-- Light Mode Web Header -->
+        <div class="web-mockup">
+          <div style="padding: 8px 16px; background: #eae8df; font-size: 0.75rem; font-weight: 700; color: #5a665e;">
+            GIAO DIỆN SÁNG (LIGHT MODE)
+          </div>
+          <div class="web-nav light">
+            <div class="brand-group">
+              <img src="./images/logo_htdc.png" alt="Logo Ban Giáo Lý" class="brand-logo-img" />
+              <div>
+                <div class="brand-text-title">BAN GIÁO LÝ</div>
+                <div class="brand-text-sub">XỨ ĐOÀN MẸ MÂN CÔI</div>
+              </div>
+            </div>
+            <div class="nav-dummy-links">
+              <span>Giới Thiệu</span>
+              <span style="font-weight: 700; color: #314e3e;">Khối Lớp</span>
+              <span>Tin Tức</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark Mode Web Header -->
+        <div class="web-mockup">
+          <div style="padding: 8px 16px; background: #0c120f; font-size: 0.75rem; font-weight: 700; color: #9aa89e;">
+            GIAO DIỆN TỐI (DARK MODE)
+          </div>
+          <div class="web-nav dark">
+            <div class="brand-group">
+              <img src="./images/logo_htdc.png" alt="Logo Ban Giáo Lý" class="brand-logo-img" />
+              <div>
+                <div class="brand-text-title">BAN GIÁO LÝ</div>
+                <div class="brand-text-sub">XỨ ĐOÀN MẸ MÂN CÔI</div>
+              </div>
+            </div>
+            <div class="nav-dummy-links">
+              <span>Giới Thiệu</span>
+              <span style="font-weight: 700; color: #d4b47d;">Khối Lớp</span>
+              <span>Tin Tức</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRƯỜNG HỢP 2: LOGO TRÊN PWA DI ĐỘNG -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-badge">TRƯỜNG HỢP 2</span>
+        <h2 class="section-title">Logo Đặt Trên PWA (iOS Retina & Android Adaptive Masks)</h2>
+      </div>
+      <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.92rem;">
+        Đạt 100% tiêu chuẩn <strong>W3C 80% Safe Zone</strong>. Nền xanh ngọc mở rộng tràn viền canvas chống cắt phạm. Khi Android hoặc iOS tự động áp dụng các mặt nạ khác nhau, biểu tượng Mẹ Mân Côi và vòng hoa hồng không bao giờ bị chém viền.
+      </p>
+
+      <div class="grid-4">
+        <!-- iOS Apple Touch -->
+        <div class="device-box">
+          <div class="ios-springboard">
+            <div class="app-icon-ios">
+              <img src="./images/pwa-v2/apple-touch-180.png" alt="iOS Icon" />
+            </div>
+            <div class="app-name">BGL An Ngãi</div>
+          </div>
+          <p style="margin-top: 12px; font-size: 0.8rem; font-weight: 600; color: #49544d;">Apple iOS (Retina)</p>
+        </div>
+
+        <!-- Android Circle -->
+        <div class="device-box">
+          <div class="mask-preview mask-circle">
+            <img src="./images/pwa-v2/maskable-192.png" alt="Circle Mask" />
+          </div>
+          <div class="app-name" style="color: #333;">BGL An Ngãi</div>
+          <p style="margin-top: 12px; font-size: 0.8rem; font-weight: 600; color: #49544d;">Android (Tròn - Pixel)</p>
+        </div>
+
+        <!-- Android Squircle -->
+        <div class="device-box">
+          <div class="mask-preview mask-squircle">
+            <img src="./images/pwa-v2/maskable-192.png" alt="Squircle Mask" />
+          </div>
+          <div class="app-name" style="color: #333;">BGL An Ngãi</div>
+          <p style="margin-top: 12px; font-size: 0.8rem; font-weight: 600; color: #49544d;">Android (Squircle - Samsung)</p>
+        </div>
+
+        <!-- Android Teardrop -->
+        <div class="device-box">
+          <div class="mask-preview mask-teardrop">
+            <img src="./images/pwa-v2/maskable-192.png" alt="Teardrop Mask" />
+          </div>
+          <div class="app-name" style="color: #333;">BGL An Ngãi</div>
+          <p style="margin-top: 12px; font-size: 0.8rem; font-weight: 600; color: #49544d;">Android (Giọt nước)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRƯỜNG HỢP 3: FAVICON TRÊN TAB TRÌNH DUYỆT -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-badge">TRƯỜNG HỢP 3</span>
+        <h2 class="section-title">Favicon Trên Thanh Tab Trình Duyệt (16px, 32px & Pure Vector SVG)</h2>
+      </div>
+      <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.92rem;">
+        Áp dụng <strong>Biểu trưng Thánh Mẫu Cốt Lõi (Marian Monogram Crest)</strong>: Mẫu tự M lồng Thánh Giá Kitô, đội Vương Miện Hoàng Gia và nâng Tràng Chuỗi Mân Côi vàng óng trên nền xanh lục bảo. Sắc nét từng pixel ngay cả ở kích thước $16\times 16\text{px}$.
+      </p>
+
+      <div class="grid-2">
+        <!-- Chrome Light Tab -->
+        <div class="browser-window">
+          <div class="browser-tab-bar">
+            <div class="tab">
+              <div class="tab-favicon">
+                <img src="./images/pwa-v2/favicon-32.png" alt="Favicon" />
+              </div>
+              <span class="tab-title">Ban Giáo Lý An Ngãi</span>
+              <span style="margin-left: auto; font-size: 11px; opacity: 0.6;">✕</span>
+            </div>
+          </div>
+          <div class="browser-content">
+            Tab Google Chrome (Chế độ Sáng) · Favicon vector hiển thị rực rỡ và rõ ràng.
+          </div>
+        </div>
+
+        <!-- Chrome Dark Tab -->
+        <div class="browser-window dark">
+          <div class="browser-tab-bar">
+            <div class="tab">
+              <div class="tab-favicon">
+                <img src="./images/pwa-v2/favicon-32.png" alt="Favicon" />
+              </div>
+              <span class="tab-title">Ban Giáo Lý An Ngãi</span>
+              <span style="margin-left: auto; font-size: 11px; opacity: 0.6;">✕</span>
+            </div>
+          </div>
+          <div class="browser-content">
+            Tab Google Chrome (Chế độ Tối) · Độ tương phản viền vàng kim nổi bật trên nền tab tối.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRƯỜNG HỢP 4: BẢN TRỌNG THỂ MASTER CREST -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-badge">TRƯỜNG HỢP 4</span>
+        <h2 class="section-title">Bản Trọng Thể Master Crest (Dành Cho Trang Giới Thiệu & Tài Liệu)</h2>
+      </div>
+      
+      <div class="crest-showcase">
+        <div class="crest-img-box">
+          <img src="./images/pwa-v2/crest-master.png" alt="Master Crest" />
+        </div>
+        <div class="crest-desc">
+          <div class="badge-status">● Đầy Đủ Chi Tiết & Danh Xưng Phụng Vụ</div>
+          <h3>Huy Hiệu Trọng Thể Xứ Đoàn Mẹ Mân Côi</h3>
+          <p style="color: var(--muted); font-size: 0.95rem;">
+            Dùng cho trang <code>/giới-thiệu</code>, bìa tài liệu Giáo lý, Giấy chứng nhận Rước Lễ Lần Đầu, Thêm Sức và các ấn phẩm phụng vụ của Xứ đoàn.
+          </p>
+          <ul class="spec-list">
+            <li>Độ phân giải siêu cao <strong>1024 × 1024 px</strong></li>
+            <li>Dòng chữ vòm trên: <strong>BAN GIÁO LÝ AN NGÃI</strong></li>
+            <li>Dòng chữ vòm dưới: <strong>XỨ ĐOÀN MẸ MÂN CÔI</strong></li>
+            <li>Chân dung Mẹ Maria Mân Côi với triều hoa hồng tươi thắm</li>
+          </ul>
+        </div>
+      </div>
+    <!-- TRƯỜNG HỢP 5: BỘ 6 HUY HIỆU BIỂU TRƯNG KHỐI TRANG CHỦ -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-badge" style="background: #927140;">TRƯỜNG HỢP 5</span>
+        <h2 class="section-title">Bộ 6 Huy Hiệu Biểu Trưng Khối Giáo Lý (Trang Chủ)</h2>
+      </div>
+      <p style="color: var(--muted); margin-bottom: 24px; font-size: 0.92rem;">
+        Huy hiệu tròn viền vàng kim 3D beveled, cắt tròn trong suốt, chuẩn hóa theo màu khăn ngành Hùng Tâm Dũng Chí (HTDC) và danh xưng Giáo xứ An Ngãi.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; text-align: center;">
+        <!-- Khai Tâm -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-khai-tam.webp" alt="Khai Tâm" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #16a34a;">Khối Khai Tâm</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Xanh Lá Trơn</div>
+        </div>
+
+        <!-- Rước Lễ -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-ruoc-le.webp" alt="Rước Lễ" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #15803d;">Khối Rước Lễ</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Xanh Có Viền</div>
+        </div>
+
+        <!-- Thêm Sức -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-them-suc.webp" alt="Thêm Sức" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #b45309;">Khối Thêm Sức</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Vàng Có Viền</div>
+        </div>
+
+        <!-- Phụng Vụ -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-phung-vu.webp" alt="Phụng Vụ" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #c2410c;">Khối Phụng Vụ</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Cam Có Viền</div>
+        </div>
+
+        <!-- Kinh Thánh -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-kinh-thanh.webp" alt="Kinh Thánh" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #b91c1c;">Khối Kinh Thánh</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Đỏ Có Viền</div>
+        </div>
+
+        <!-- Vào Đời -->
+        <div style="background: #f7f6f0; border-radius: 16px; padding: 20px 12px; border: 1px solid #dedfd4;">
+          <img src="./images/badges/badge-vao-doi.webp" alt="Vào Đời" style="width: 80px; height: 80px; margin: 0 auto 10px; display: block;" />
+          <div style="font-size: 0.85rem; font-weight: 700; color: #991b1b;">Khối Vào Đời</div>
+          <div style="font-size: 0.72rem; color: #575e55;">Khăn Đỏ Có Viền</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

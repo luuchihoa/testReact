@@ -1,9 +1,9 @@
 import { supabase } from "../../lib/supabase.js";
 import { normalizeStudent } from "../../components/ui/studentSharedUtils.js";
-import { buildSundayList, getCurrentNamHoc, sortStudentsByTen, getDefaultTermRanges, computeDiemTB } from "./utils.js";
+import { buildSundayList, getCurrentNamHoc, sortStudentsByTen, getDefaultTermRanges, computeDiemTB, compareStudentRank } from "./utils.js";
 import { calculateAutoHocLuc } from "../account/utils.js";
 
-export async function fetchTeacherContext(authId, requestedNamHoc) {
+export async function fetchTeacherContext(authId, requestedNamHoc, requestedLop) {
   const { data: teacherRow, error: teacherErr } = await supabase
     .from("users")
     .select("username, role")
@@ -14,31 +14,73 @@ export async function fetchTeacherContext(authId, requestedNamHoc) {
   if (!teacherRow) throw new Error("Không tìm thấy tài khoản giáo viên");
   if (teacherRow.role !== "teacher") throw new Error("Tài khoản không có quyền giáo viên");
 
-  const { data: classRows, error: classErr } = await supabase
-    .from("class_teachers")
-    .select("lop, nam_hoc")
-    .eq("teacher_username", teacherRow.username)
-    .order("nam_hoc", { ascending: false });
+  const [classRes, calRes] = await Promise.all([
+    supabase
+      .from("class_teachers")
+      .select("lop, nam_hoc")
+      .eq("teacher_username", teacherRow.username)
+      .order("nam_hoc", { ascending: false }),
+    supabase
+      .from("academic_calendars")
+      .select("nam_hoc")
+      .order("nam_hoc", { ascending: false }),
+  ]);
 
-  if (classErr) throw classErr;
+  if (classRes.error) throw classRes.error;
+  const classRows = classRes.data || [];
+  const calYears = (calRes.data || []).map((r) => r.nam_hoc).filter(Boolean);
 
   const current = getCurrentNamHoc();
-  const namHocs = [...new Set(classRows.map(r => r.nam_hoc))];
-  
-  // Nếu giáo viên chưa có lớp nào thì mặc định hiển thị năm hiện tại
-  if (!namHocs.includes(current)) {
-    namHocs.unshift(current);
+  const taughtYears = [...new Set(classRows.map((r) => r.nam_hoc).filter(Boolean))];
+
+  // Tổng hợp tất cả niên khóa khả dụng trong hệ thống
+  const allYearSet = new Set([current, ...taughtYears, ...calYears]);
+  const availableYears = Array.from(allYearSet).sort((a, b) => b.localeCompare(a));
+
+  let activeNamHoc = requestedNamHoc;
+  let isFallbackToPast = false;
+
+  if (!activeNamHoc) {
+    // 1. Nếu GLV có lớp trong năm học hiện tại -> Chọn năm hiện tại
+    if (taughtYears.includes(current)) {
+      activeNamHoc = current;
+    }
+    // 2. Nếu năm hiện tại chưa có lớp, nhưng GLV từng có lớp ở các năm trước -> Tự động chọn năm gần nhất có lớp
+    else if (taughtYears.length > 0) {
+      activeNamHoc = taughtYears[0];
+      isFallbackToPast = true;
+    }
+    // 3. GLV hoàn toàn mới, chưa từng có lớp ở bất kỳ năm nào -> Chọn năm hiện tại
+    else {
+      activeNamHoc = current;
+    }
   }
-  
-  // Chọn năm học theo ưu tiên: requestedNamHoc > năm hiện tại (nếu có lớp) > năm gần nhất có lớp > current
-  const activeNamHoc = requestedNamHoc || (namHocs.includes(current) ? current : namHocs[0]);
-  const activeClass = classRows.find(r => r.nam_hoc === activeNamHoc);
+
+  // Danh sách các lớp của GLV trong activeNamHoc
+  const classesInYear = classRows.filter((r) => r.nam_hoc === activeNamHoc);
+
+  // Xác định activeLop
+  let activeLop = null;
+  if (requestedLop && classesInYear.some((r) => r.lop === requestedLop)) {
+    activeLop = requestedLop;
+  } else if (classesInYear.length > 0) {
+    activeLop = classesInYear[0].lop;
+  }
+
+  // Lịch sử giảng dạy của GLV theo từng năm (dành cho Quick-Switch Chips)
+  const teachingHistory = taughtYears.map((nh) => ({
+    namHoc: nh,
+    classes: classRows.filter((r) => r.nam_hoc === nh).map((r) => r.lop),
+  }));
 
   return {
     teacherUsername: teacherRow.username,
     namHoc: activeNamHoc,
-    lop: activeClass?.lop ?? null,
-    availableYears: namHocs,
+    lop: activeLop,
+    classesInYear: classesInYear.map((r) => r.lop),
+    teachingHistory,
+    availableYears,
+    isFallbackToPast,
   };
 }
 
@@ -53,7 +95,13 @@ export async function fetchClassStudents(lop, namHoc) {
   if (error) throw error;
 
   const list = (data ?? [])
-    .map((row) => normalizeStudent(row.users))
+    .map((row) => {
+      const userProfile = row.users || {};
+      return normalizeStudent({
+        username: row.username, // Đảm bảo luôn giữ được mã định danh của học sinh từ enrollments
+        ...userProfile,
+      });
+    })
     .filter((s) => s.username);
 
   return sortStudentsByTen(list);
@@ -245,24 +293,31 @@ export async function fetchClassSummary(usernames, namHoc, hocKyInt) {
 
 // Tổng hợp dữ liệu cho Bảng Tổng Kết Cả Năm: điểm TB cả năm + học lực +
 // hạnh kiểm + vị thứ + ghi chú từ bảng year_summary, cộng tổng vắng cả năm.
+// TỰ ĐỘNG TÍNH TOÁN ON-THE-FLY VÀ ĐỒNG BỘ NỀN NẾU DATABASE CHƯA CÓ BẢN GHI TỔNG KẾT
 export async function fetchYearSummary(usernames, namHoc) {
   if (!usernames.length) return {};
 
-  const [yearRes, attendanceRes] = await Promise.all([
-    supabase.from("year_summary").select("username, diem_tb, hoc_luc, hanh_kiem, vi_thu, ghi_chu")
+  const [yearRes, attendanceRes, gradesRes, termRes] = await Promise.all([
+    supabase.from("year_summary").select("username, diem_tb, hoc_luc, hanh_kiem, vi_thu, ghi_chu, lop")
       .eq("nam_hoc", namHoc).in("username", usernames),
     // Tổng hợp điểm danh cả năm (không filter hoc_ky)
     supabase.from("attendance").select("username, trang_thai")
       .eq("nam_hoc", namHoc).in("username", usernames),
+    // Lấy điểm HK1 và HK2 để tự động tính nếu year_summary chưa có
+    supabase.from("grades").select("username, hoc_ky, diem_tb, diem_mieng, diem_vo, diem_15_phut, diem_1_tiet, diem_thi, lop")
+      .eq("nam_hoc", namHoc).in("username", usernames),
+    // Lấy kết quả đánh giá HK1 & HK2 để dự phòng hạnh kiểm
+    supabase.from("term_summary").select("username, hoc_ky, hoc_luc, hanh_kiem, lop")
+      .eq("nam_hoc", namHoc).in("username", usernames),
   ]);
 
-  [yearRes, attendanceRes].forEach((r, i) => {
+  [yearRes, attendanceRes, gradesRes, termRes].forEach((r, i) => {
     if (r.error) console.error(`fetchYearSummary[${i}] error:`, r.error);
   });
 
   const byUser = {};
   usernames.forEach((u) => {
-    byUser[u] = { diemTB: null, hocLuc: null, hanhKiem: null, viThu: null, ghiChu: "", vangCoPhep: 0, vangKhongPhep: 0 };
+    byUser[u] = { diemTB: null, hocLuc: null, hanhKiem: null, viThu: null, ghiChu: "", vangCoPhep: 0, vangKhongPhep: 0, lop: null };
   });
 
   (yearRes.data ?? []).forEach((y) => {
@@ -272,6 +327,7 @@ export async function fetchYearSummary(usernames, namHoc) {
       byUser[y.username].hanhKiem = y.hanh_kiem;
       byUser[y.username].viThu    = y.vi_thu;
       byUser[y.username].ghiChu   = y.ghi_chu || "";
+      byUser[y.username].lop      = y.lop || null;
     }
   });
 
@@ -281,6 +337,103 @@ export async function fetchYearSummary(usernames, namHoc) {
     if (a.trang_thai === "nghi_phep")       u.vangCoPhep    += 1;
     if (a.trang_thai === "nghi_khong_phep") u.vangKhongPhep += 1;
   });
+
+  // Bản đồ điểm HK1 & HK2
+  const gradesByUser = {};
+  (gradesRes.data ?? []).forEach((g) => {
+    if (!gradesByUser[g.username]) gradesByUser[g.username] = {};
+    gradesByUser[g.username][g.hoc_ky] = g;
+    if (g.lop && !byUser[g.username]?.lop) {
+      if (byUser[g.username]) byUser[g.username].lop = g.lop;
+    }
+  });
+
+  const termsByUser = {};
+  (termRes.data ?? []).forEach((t) => {
+    if (!termsByUser[t.username]) termsByUser[t.username] = {};
+    termsByUser[t.username][t.hoc_ky] = t;
+  });
+
+  // TỰ ĐỘNG TÍNH TOÁN CẢ NĂM CHO NHỮNG EM CHƯA CÓ HOẶC BỊ NULL
+  const needsUpsert = [];
+  usernames.forEach((u) => {
+    const userSummary = byUser[u];
+    const g1 = gradesByUser[u]?.[1];
+    const g2 = gradesByUser[u]?.[2];
+    const tb1 = g1?.diem_tb ?? (g1 ? computeDiemTB(g1) : null);
+    const tb2 = g2?.diem_tb ?? (g2 ? computeDiemTB(g2) : null);
+
+    let recalculated = false;
+
+    // 1. Tự động tính ĐTB Cả năm nếu cả 2 HK đều có điểm (ĐTB Cả năm = (HK1 + HK2*2) / 3)
+    if ((userSummary.diemTB === null || userSummary.diemTB === undefined) && tb1 !== null && tb2 !== null) {
+      const autoDTB = Math.round(((Number(tb1) + Number(tb2) * 2) / 3) * 10) / 10;
+      userSummary.diemTB = autoDTB;
+      if (!userSummary.hocLuc) {
+        userSummary.hocLuc = calculateAutoHocLuc(autoDTB);
+      }
+      recalculated = true;
+    }
+
+    // 2. Tự động tính Hạnh kiểm Cả năm từ chuyên cần cả năm
+    if (!userSummary.hanhKiem) {
+      const kPhep = userSummary.vangKhongPhep || 0;
+      const phep = userSummary.vangCoPhep || 0;
+      const tong = kPhep + phep;
+      const hk2Hk = termsByUser[u]?.[2]?.hanh_kiem;
+      const hk1Hk = termsByUser[u]?.[1]?.hanh_kiem;
+
+      if (tong > 0) {
+        if ((kPhep === 0 && phep <= 4) || (kPhep <= 1 && tong <= 2)) userSummary.hanhKiem = "Tốt";
+        else if (kPhep <= 3 && tong <= 6) userSummary.hanhKiem = "Khá";
+        else if (kPhep <= 5 && tong <= 10) userSummary.hanhKiem = "Trung Bình";
+        else userSummary.hanhKiem = "Yếu";
+      } else {
+        userSummary.hanhKiem = hk2Hk || hk1Hk || null;
+      }
+      if (userSummary.hanhKiem) recalculated = true;
+    }
+
+    if (recalculated && userSummary.diemTB !== null) {
+      needsUpsert.push({
+        username: u,
+        nam_hoc: namHoc,
+        lop: userSummary.lop,
+        diem_tb: userSummary.diemTB,
+        hoc_luc: userSummary.hocLuc,
+        hanh_kiem: userSummary.hanhKiem,
+      });
+    }
+  });
+
+  // 3. Tự động xếp hạng Vị Thứ chuẩn Học đường (RANK: 1-2-2-4) kèm Tiêu chí phụ (Hạnh kiểm & Chuyên cần)
+  const validUsers = usernames
+    .map((u) => ({ username: u, ...byUser[u] }))
+    .filter((s) => s.diemTB !== null && s.diemTB !== undefined && !isNaN(Number(s.diemTB)));
+
+  usernames.forEach((u) => {
+    const student = { username: u, ...byUser[u] };
+    if (student.diemTB !== null && student.diemTB !== undefined && !isNaN(Number(student.diemTB))) {
+      byUser[u].viThu = validUsers.filter((other) => compareStudentRank(other, student) > 0).length + 1;
+    } else {
+      byUser[u].viThu = null;
+    }
+  });
+
+  // 4. Đồng bộ nền xuống database (Background Sync) để lưu bền vững
+  if (needsUpsert.length > 0) {
+    const payload = needsUpsert.map((item) => ({
+      ...item,
+      vi_thu: byUser[item.username]?.viThu ?? null,
+    }));
+    supabase
+      .from("year_summary")
+      .upsert(payload, { onConflict: "username,nam_hoc" })
+      .then(({ error }) => {
+        if (error) console.warn("Auto-sync year_summary background notice:", error);
+      })
+      .catch((e) => console.warn("Auto-sync year_summary catch:", e));
+  }
 
   return byUser;
 }
@@ -387,12 +540,29 @@ export async function syncTermSummariesFromGrades({ allClassRows, rosterUsername
     }
   });
 
-  const uniqueScoresDesc = Array.from(new Set(validScores)).sort((a, b) => b - a);
+  // Lấy thông tin Hạnh kiểm đã có từ term_summary để phục vụ Tiêu chí phụ khi xếp hạng
+  const { data: existingTerms } = await supabase
+    .from("term_summary")
+    .select("username, hanh_kiem")
+    .in("username", rosterUsernames)
+    .eq("nam_hoc", namHoc)
+    .eq("hoc_ky", Number(hocKy) || 1);
+
+  const hanhKiemByUser = {};
+  (existingTerms || []).forEach((t) => {
+    hanhKiemByUser[t.username] = t.hanh_kiem;
+  });
+
+  const validStudents = rosterUsernames
+    .map((u) => ({ username: u, diemTB: scoresByUser[u], hanhKiem: hanhKiemByUser[u] }))
+    .filter((s) => s.diemTB !== null && s.diemTB !== undefined && !isNaN(Number(s.diemTB)));
 
   const termSummaryUpserts = rosterUsernames.map((u) => {
-    const diemTB = scoresByUser[u];
-    const viThu = (diemTB !== null && diemTB !== undefined) ? (uniqueScoresDesc.indexOf(diemTB) + 1) : null;
-    const hocLuc = calculateAutoHocLuc(diemTB);
+    const student = { username: u, diemTB: scoresByUser[u], hanhKiem: hanhKiemByUser[u] };
+    const viThu = (student.diemTB !== null && student.diemTB !== undefined && !isNaN(Number(student.diemTB)))
+      ? validStudents.filter((other) => compareStudentRank(other, student) > 0).length + 1
+      : null;
+    const hocLuc = calculateAutoHocLuc(student.diemTB);
 
     return {
       username: u,
@@ -436,6 +606,15 @@ export async function saveClassGradesBatch(changedRows, classContext = null) {
       await syncTermSummariesFromGrades(classContext);
     } catch (syncErr) {
       console.warn("syncTermSummariesFromGrades non-fatal warning:", syncErr);
+    }
+  }
+
+  // Dual-layer sync cả năm: Tự động tính toán và lưu year_summary cho các em đã đủ điểm HK1 & HK2
+  if (classContext?.rosterUsernames?.length && classContext?.namHoc) {
+    try {
+      await fetchYearSummary(classContext.rosterUsernames, classContext.namHoc);
+    } catch (yearErr) {
+      console.warn("syncYearSummariesFromGrades non-fatal notice:", yearErr);
     }
   }
 

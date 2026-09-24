@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="opt1-parchment-ts" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF5"/>
+      <stop offset="100%" stop-color="#F2EBE0"/>
+    </linearGradient>
+    <linearGradient id="opt1-gold-ts" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B76A"/>
+      <stop offset="50%" stop-color="#B88A34"/>
+      <stop offset="100%" stop-color="#8C631B"/>
+    </linearGradient>
+    <filter id="opt1-shadow-ts" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#241E1A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#opt1-shadow-ts)">
+    <path d="M128 20 C190 20 226 28 226 92 C226 172 128 236 128 236 C128 236 30 172 30 92 C30 28 66 20 128 20 Z" fill="url(#opt1-parchment-ts)" stroke="url(#opt1-gold-ts)" stroke-width="3.5"/>
+    <path d="M128 28 C182 28 214 36 214 92 C214 163 128 222 128 222 C128 222 42 163 42 92 C42 36 74 28 128 28 Z" stroke="#D8C8AF" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+  </g>
+
+  <!-- Hào Quang Lửa Thánh Linh -->
+  <circle cx="128" cy="98" r="50" stroke="#E65100" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity="0.6"/>
+
+  <!-- Bảy Ngọn Lửa Ơn Chúa Thánh Thần (7 Tongues of Fire) -->
+  <g fill="#D84315" stroke="#BF360C" stroke-width="1.2">
+    <!-- Lửa đỉnh trung tâm -->
+    <path d="M128 48 C130.5 53 133 57 128 62 C123 57 125.5 53 128 48 Z"/>
+    <!-- 2 ngọn lửa tầng 2 -->
+    <path d="M104 56 C107 61 108 64 104 69 C100 64 101 61 104 56 Z"/>
+    <path d="M152 56 C155 61 156 64 152 69 C148 64 149 61 152 56 Z"/>
+    <!-- 2 ngọn lửa tầng 3 -->
+    <path d="M84 74 C87 79 87 82 84 87 C81 82 81 79 84 74 Z"/>
+    <path d="M172 74 C175 79 175 82 172 87 C169 82 169 79 172 74 Z"/>
+    <!-- 2 ngọn lửa tầng 4 -->
+    <path d="M78 104 C81 108 80 111 76 116 C74 111 75 108 78 104 Z"/>
+    <path d="M178 104 C181 108 180 111 176 116 C174 111 175 108 178 104 Z"/>
+  </g>
+
+  <!-- Chim Bồ Câu Thánh Thần Giáng Lâm (Holy Spirit Dove) -->
+  <g stroke="#2C3437" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M128 138 C124 128 110 108 78 100 C96 110 102 124 106 134 C92 130 82 134 74 140 C88 142 100 148 106 154 C98 158 94 163 90 168 C102 163 116 158 124 154 L128 158 L132 154 C140 158 154 163 166 168 C162 163 158 158 150 154 C156 148 168 142 182 140 C174 134 164 130 150 134 C154 124 160 110 178 100 C146 108 132 128 128 138 Z" fill="#FFFFFF"/>
+    <!-- Mắt bồ câu -->
+    <circle cx="128" cy="144" r="2" fill="#2C3437"/>
+  </g>
+
+  <!-- Dải Ribbon Khẩu Hiệu QUẢNG ĐẠI -->
+  <path d="M68 198 H188" stroke="url(#opt1-gold-ts)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="64" cy="198" r="2.5" fill="#B88A34"/>
+  <circle cx="192" cy="198" r="2.5" fill="#B88A34"/>
+  <text x="128" y="193" font-family="'Cinzel', Georgia, serif" font-size="11.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="2.5">QUẢNG ĐẠI</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#C2410C" text-anchor="middle" letter-spacing="1">NGÀNH THIẾU NHI</text>
+</svg>

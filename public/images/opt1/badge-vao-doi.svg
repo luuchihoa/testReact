@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgVd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2f8"/>
+      <stop offset="100%" stop-color="#fce7f3"/>
+    </linearGradient>
+    <linearGradient id="goldVd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#f59e0b"/>
+      <stop offset="80%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="sunDawn" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="50%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="anchorShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#831843" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Khung Squircle Tông Đỏ Bầm Hoàng Gia (Khối Vào Đời - Hiệp Sĩ / Huynh Trưởng) -->
+  <rect x="20" y="20" width="472" height="472" rx="110" fill="url(#bgVd)" stroke="#f43f5e" stroke-width="4"/>
+  <rect x="32" y="32" width="448" height="448" rx="98" fill="none" stroke="#be123c" stroke-width="1.5" stroke-opacity="0.3" stroke-dasharray="6 4"/>
+
+  <!-- Vầng Ánh Dương Bình Minh Hy Vọng (Dawn of Hope) -->
+  <circle cx="256" cy="220" r="130" fill="url(#sunDawn)" opacity="0.45"/>
+  <g stroke="#fb7185" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <line x1="256" y1="220" x2="256" y2="70" stroke-width="3"/>
+    <line x1="256" y1="220" x2="370" y2="105"/>
+    <line x1="256" y1="220" x2="142" y2="105"/>
+    <line x1="256" y1="220" x2="395" y2="180"/>
+    <line x1="256" y1="220" x2="117" y2="180"/>
+  </g>
+
+  <!-- Sóng Biển Trần Gian Cuộn Trào Dưới Chân ("Hãy Ra Khơi" - Duc in altum) -->
+  <g fill="none" stroke="#be123c" stroke-width="3" opacity="0.75" stroke-linecap="round">
+    <path d="M60 415 C110 395 160 435 210 415 C260 395 310 435 360 415 C410 395 440 415 452 410"/>
+    <path d="M80 440 C130 420 180 455 230 438 C280 420 330 455 380 438 C420 422 440 435 450 432"/>
+  </g>
+
+  <!-- Cành Nguyệt Quế Khải Hoàn (Laurel of Faithful Endurance) Hai Bên -->
+  <g fill="none" stroke="#15803d" stroke-width="2.5" opacity="0.85">
+    <path d="M140 370 C120 280 150 200 195 150"/>
+    <g fill="#16a34a" stroke="#15803d" stroke-width="1.5">
+      <ellipse cx="132" cy="335" rx="7" ry="14" transform="rotate(-40 132 335)"/>
+      <ellipse cx="128" cy="295" rx="7" ry="14" transform="rotate(-30 128 295)"/>
+      <ellipse cx="135" cy="255" rx="7" ry="14" transform="rotate(-20 135 255)"/>
+      <ellipse cx="152" cy="215" rx="7" ry="14" transform="rotate(-10 152 215)"/>
+      <ellipse cx="178" cy="180" rx="7" ry="14" transform="rotate(5 178 180)"/>
+    </g>
+    <path d="M372 370 C392 280 362 200 317 150"/>
+    <g fill="#16a34a" stroke="#15803d" stroke-width="1.5">
+      <ellipse cx="380" cy="335" rx="7" ry="14" transform="rotate(40 380 335)"/>
+      <ellipse cx="384" cy="295" rx="7" ry="14" transform="rotate(30 384 295)"/>
+      <ellipse cx="377" cy="255" rx="7" ry="14" transform="rotate(20 377 255)"/>
+      <ellipse cx="360" cy="215" rx="7" ry="14" transform="rotate(10 360 215)"/>
+      <ellipse cx="334" cy="180" rx="7" ry="14" transform="rotate(-5 334 180)"/>
+    </g>
+  </g>
+
+  <!-- MỎ NEO HY VỌNG KITÔ GIÁO & THÁNH PHÙ CHI-RHO (Christian Anchor & Chi-Rho) -->
+  <g filter="url(#anchorShadow)">
+    <!-- THÁNH PHÙ CHI-RHO (☧) ĐỈNH MỎ NEO -->
+    <circle cx="280" cy="98" r="22" fill="none" stroke="url(#goldVd)" stroke-width="10"/>
+    <line x1="225" y1="105" x2="287" y2="155" stroke="url(#goldVd)" stroke-width="10" stroke-linecap="round"/>
+    <line x1="287" y1="105" x2="225" y2="155" stroke="url(#goldVd)" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="256" cy="130" r="24" fill="none" stroke="url(#goldVd)" stroke-width="9"/>
+
+    <!-- THANH NGANG THÁNH GIÁ CỦA MỎ NEO -->
+    <rect x="180" y="185" width="152" height="18" rx="6" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+    <circle cx="180" cy="194" r="14" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+    <circle cx="332" cy="194" r="14" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+
+    <!-- THÂN CHÍNH MỎ NEO THẲNG ĐỨNG -->
+    <rect x="246" y="145" width="20" height="235" rx="7" fill="url(#goldVd)" stroke="#78350f" stroke-width="2.5"/>
+
+    <!-- DÂY THỪNG HY VỌNG UỐN LƯỢN QUANH THÂN THÁNH GIÁ -->
+    <path d="M246 170 Q215 210 266 240 Q315 270 246 315 Q215 345 266 380" fill="none" stroke="#fef08a" stroke-width="6" stroke-dasharray="10 4" stroke-linecap="round"/>
+
+    <!-- BÁN NGUYỆT MỎ NEO (Anchor Arms) VƯƠN RỘNG HÙNG VĨ -->
+    <path d="M165 315 C165 425 347 425 347 315" fill="none" stroke="url(#goldVd)" stroke-width="22" stroke-linecap="round"/>
+    <polygon points="165,300 140,335 185,335" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+    <polygon points="347,300 327,335 372,335" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+    <circle cx="256" cy="405" r="12" fill="url(#goldVd)" stroke="#78350f" stroke-width="2"/>
+  </g>
+</svg>

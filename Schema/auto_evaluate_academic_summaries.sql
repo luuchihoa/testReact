@@ -97,12 +97,27 @@ BEGIN
       lop = EXCLUDED.lop,
       hoc_luc = COALESCE(EXCLUDED.hoc_luc, term_summary.hoc_luc);
 
-    -- 4. Tự động tính toán lại vị thứ (vi_thu) cho cả lớp trong học kỳ đó
+    -- 4. Tự động tính toán lại vị thứ (vi_thu) cho cả lớp trong học kỳ đó (Kèm Tiêu chí phụ Hạnh kiểm)
     WITH ranked AS (
       SELECT 
         g.username,
-        DENSE_RANK() OVER (ORDER BY g.diem_tb DESC NULLS LAST) as rank_val
+        RANK() OVER (
+          ORDER BY 
+            g.diem_tb DESC NULLS LAST,
+            CASE ts_sub.hanh_kiem 
+              WHEN 'Tốt' THEN 4 
+              WHEN 'Khá' THEN 3 
+              WHEN 'Trung Bình' THEN 2 
+              WHEN 'TB' THEN 2 
+              WHEN 'Yếu' THEN 1 
+              ELSE 0 
+            END DESC
+        ) as rank_val
       FROM public.grades g
+      LEFT JOIN public.term_summary ts_sub 
+        ON ts_sub.username = g.username 
+       AND ts_sub.nam_hoc = g.nam_hoc 
+       AND ts_sub.hoc_ky = g.hoc_ky
       WHERE g.nam_hoc = NEW.nam_hoc 
         AND g.hoc_ky = NEW.hoc_ky 
         AND g.lop = v_lop
@@ -186,14 +201,14 @@ BEGIN
 
   v_tong_nghi := v_nghi_phep + v_nghi_khong_phep;
 
-  -- 2. Tự động xét Hạnh kiểm theo tiêu chuẩn chuyên cần
+  -- 2. Tự động xét Hạnh kiểm theo tiêu chuẩn chuyên cần học kỳ (16 buổi)
   IF v_total_attended = 0 THEN
     v_hanh_kiem := NULL;
-  ELSIF v_nghi_khong_phep = 0 AND v_nghi_phep <= 1 THEN
+  ELSIF (v_nghi_khong_phep = 0 AND v_nghi_phep <= 2) OR (v_nghi_khong_phep = 1 AND v_nghi_phep = 0) THEN
     v_hanh_kiem := 'Tốt';
-  ELSIF v_nghi_khong_phep <= 1 AND v_nghi_phep <= 2 THEN
+  ELSIF v_nghi_khong_phep <= 2 AND v_tong_nghi <= 3 THEN
     v_hanh_kiem := 'Khá';
-  ELSIF v_nghi_khong_phep <= 2 AND v_tong_nghi <= 4 THEN
+  ELSIF v_nghi_khong_phep <= 3 AND v_tong_nghi <= 5 THEN
     v_hanh_kiem := 'Trung Bình';
   ELSE
     v_hanh_kiem := 'Yếu';

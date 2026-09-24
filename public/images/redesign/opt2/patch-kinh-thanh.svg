@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <pattern id="twill-weave-kt-p" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 8 L8 0 M0 0 L8 8" stroke="#000000" stroke-width="0.75" opacity="0.06"/>
+    </pattern>
+    <filter id="patch-shadow-kt-p" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#3E2723" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Đĩa vải thêu màu Đỏ có viền Vàng (Ngành Hiệp Sĩ Kinh Thánh) -->
+  <g filter="url(#patch-shadow-kt-p)">
+    <!-- Viền chỉ Vàng Kim sắc nét trên nền Đỏ Thắm -->
+    <circle cx="128" cy="128" r="118" fill="#FBC02D" stroke="#C49000" stroke-width="3"/>
+    <circle cx="128" cy="128" r="115" fill="none" stroke="#F57F17" stroke-width="4" stroke-dasharray="4 2"/>
+    <!-- Vành đai đỏ nhiệt huyết của khăn Kinh Thánh -->
+    <circle cx="128" cy="128" r="106" fill="#B71C1C"/>
+    <circle cx="128" cy="128" r="106" fill="none" stroke="#FFCDD2" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <!-- Nền vải canvas kem thêu trung tâm -->
+    <circle cx="128" cy="128" r="94" fill="#FBF9F4"/>
+    <circle cx="128" cy="128" r="94" fill="url(#twill-weave-kt-p)"/>
+    <circle cx="128" cy="128" r="88" fill="none" stroke="#B71C1C" stroke-width="2" stroke-dasharray="5 3"/>
+  </g>
+
+  <!-- Cuốn Sách Thánh & Thập Tự Thêu Nổi -->
+  <g stroke="#C5A059" stroke-width="2.5" stroke-linecap="round">
+    <line x1="128" y1="62" x2="128" y2="84"/>
+    <line x1="118" y1="70" x2="138" y2="70"/>
+    <circle cx="128" cy="70" r="2.5" fill="#C5A059"/>
+  </g>
+
+  <!-- Cuốn Kinh Thánh Mở Rộng -->
+  <g stroke="#2C3437" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M128 108 C118 100 102 98 78 102 V142 C102 138 118 140 128 146 C138 140 154 138 178 142 V102 C154 98 138 100 128 108 Z" fill="#FFFFFF"/>
+    <line x1="128" y1="108" x2="128" y2="146" stroke-width="2.5"/>
+    <path d="M128 146 C126 154 130 158 126 166 L131 160 L128 146" fill="#B71C1C" stroke="#B71C1C" stroke-width="1.2"/>
+  </g>
+
+  <!-- Dòng chữ Thánh Kinh thêu chỉ vàng -->
+  <g stroke="#C5A059" stroke-width="1.5" stroke-linecap="round">
+    <line x1="88" y1="114" x2="116" y2="112"/>
+    <line x1="88" y1="122" x2="114" y2="120"/>
+    <line x1="88" y1="130" x2="108" y2="128"/>
+    <line x1="140" y1="112" x2="168" y2="114"/>
+    <line x1="142" y1="120" x2="168" y2="122"/>
+    <line x1="148" y1="128" x2="168" y2="130"/>
+  </g>
+
+  <!-- Vòm Chữ Thêu Sắc Nét -->
+  <text x="128" y="184" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="800" fill="#B71C1C" text-anchor="middle" letter-spacing="1.5">KINH THÁNH · THẮNG</text>
+  <text x="128" y="198" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="700" fill="#B45309" text-anchor="middle" letter-spacing="1">KHĂN ĐỎ VIỀN VÀNG</text>
+</svg>

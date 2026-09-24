@@ -973,19 +973,30 @@ export default function SummaryTab() {
 
               {filteredAndSortedRows.length === 0 && (
                 <div className="text-center py-12 px-4 bg-[#fffefa] dark:bg-[#1e2821] rounded-2xl border border-[#dedfd4] dark:border-[#354237]">
-                  <p className="text-sm font-semibold text-[#293d32] dark:text-[#ecece0]">Không tìm thấy giáo lý sinh phù hợp</p>
-                  <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1">Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác.</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilterHocLuc("all");
-                      setSearchQuery("");
-                      setSortBy("default");
-                    }}
-                    className="mt-3 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] cursor-pointer"
-                  >
-                    Xem tất cả giáo lý sinh
-                  </button>
+                  {rows.length === 0 ? (
+                    <>
+                      <p className="text-sm font-semibold text-[#293d32] dark:text-[#ecece0]">Chưa có giáo lý sinh trong lớp</p>
+                      <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1">
+                        Lớp {lop} chưa có giáo lý sinh nào được ghi danh trong niên khóa {namHoc}.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-[#293d32] dark:text-[#ecece0]">Không tìm thấy giáo lý sinh phù hợp</p>
+                      <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1">Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterHocLuc("all");
+                          setSearchQuery("");
+                          setSortBy("default");
+                        }}
+                        className="mt-3 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#314e3e] text-white dark:bg-[#d6b883] dark:text-[#19251d] cursor-pointer"
+                      >
+                        Xem tất cả giáo lý sinh
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1135,7 +1146,27 @@ export default function SummaryTab() {
                   {filteredAndSortedRows.length === 0 && (
                     <tr>
                       <td colSpan={isCaNam ? 10 : 9} className="text-center text-sm text-[#575e55] dark:text-[#b0b9ac] py-12">
-                        Không tìm thấy giáo lý sinh phù hợp với bộ lọc.
+                        {rows.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center gap-1.5 py-4">
+                            <p className="font-semibold text-base text-[#293d32] dark:text-[#ecece0]">Chưa có giáo lý sinh nào được ghi danh</p>
+                            <p className="text-xs text-[#575e55] dark:text-[#b0b9ac]">Lớp {lop} hiện chưa có giáo lý sinh nào trong niên khóa {namHoc}.</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <p>Không tìm thấy giáo lý sinh phù hợp với bộ lọc.</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFilterHocLuc("all");
+                                setSearchQuery("");
+                                setSortBy("default");
+                              }}
+                              className="text-xs font-semibold text-[#314e3e] dark:text-[#d6b883] underline hover:no-underline cursor-pointer"
+                            >
+                              Bỏ lọc để xem tất cả
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}

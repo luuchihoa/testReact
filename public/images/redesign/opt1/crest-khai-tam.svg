@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="opt1-parchment" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF5"/>
+      <stop offset="100%" stop-color="#F2EBE0"/>
+    </linearGradient>
+    <linearGradient id="opt1-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B76A"/>
+      <stop offset="50%" stop-color="#B88A34"/>
+      <stop offset="100%" stop-color="#8C631B"/>
+    </linearGradient>
+    <filter id="opt1-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#241E1A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Khiên Gothic Phụng Vụ -->
+  <g filter="url(#opt1-shadow)">
+    <path d="M128 20 C190 20 226 28 226 92 C226 172 128 236 128 236 C128 236 30 172 30 92 C30 28 66 20 128 20 Z" fill="url(#opt1-parchment)" stroke="url(#opt1-gold)" stroke-width="3.5"/>
+    <path d="M128 28 C182 28 214 36 214 92 C214 163 128 222 128 222 C128 222 42 163 42 92 C42 36 74 28 128 28 Z" stroke="#D8C8AF" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+  </g>
+
+  <!-- Vòng Hào Quang Nhành Lá Xanh Chiên Con -->
+  <circle cx="128" cy="116" r="58" stroke="#2E7D32" stroke-width="1.8" stroke-dasharray="6 4" fill="none" opacity="0.6"/>
+
+  <!-- Thánh Giá Hoa Nở (Flowering Cross) -->
+  <g stroke="url(#opt1-gold)" stroke-width="2.5" stroke-linecap="round">
+    <line x1="128" y1="56" x2="128" y2="78"/>
+    <line x1="117" y1="65" x2="139" y2="65"/>
+    <circle cx="128" cy="65" r="2.5" fill="#B88A34"/>
+  </g>
+
+  <!-- Chú Chiên Con (Agnus Dei - Mầm non ngây thơ) -->
+  <g stroke="#2C3437" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Thân chiên êm ái -->
+    <path d="M100 135 C92 130 84 122 88 112 C92 103 103 102 110 107 C116 102 127 100 136 104 C144 100 155 104 158 113 C163 124 156 137 147 141 C142 150 116 152 107 145 Z" fill="#FFFFFF"/>
+    <!-- Đầu chiên cúi chào dịu dàng -->
+    <ellipse cx="96" cy="114" rx="11" ry="9" fill="#FFFFFF"/>
+    <!-- Tai chiên -->
+    <path d="M89 110 C83 109 81 113 85 116 Z" fill="#FFFFFF"/>
+    <!-- Mắt chiên ngây thơ -->
+    <circle cx="94" cy="113" r="1.8" fill="#2C3437"/>
+    <!-- Mũi miệng -->
+    <path d="M87 116 Q89 119 92 117" stroke-width="1.5" fill="none"/>
+    <!-- Chân chiên quỳ ngoan ngoãn -->
+    <path d="M105 145 L103 154 M116 146 L116 155 M138 144 L140 154" stroke-width="2"/>
+  </g>
+
+  <!-- Mầm Cây Đức Tin Vươn Cao (Sprout of Faith) -->
+  <path d="M128 174 V152 C128 145 117 138 110 144 C120 148 126 153 128 153 C130 153 136 148 146 144 C139 138 128 145 128 152" fill="#4CAF50" stroke="#2E7D32" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- Dải Ribbon Khẩu Hiệu BAY CAO -->
+  <path d="M72 198 H184" stroke="url(#opt1-gold)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="68" cy="198" r="2.5" fill="#B88A34"/>
+  <circle cx="188" cy="198" r="2.5" fill="#B88A34"/>
+  <text x="128" y="193" font-family="'Cinzel', Georgia, serif" font-size="12" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="3">BAY CAO</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#2E7D32" text-anchor="middle" letter-spacing="1">NGÀNH CHIÊN CON</text>
+</svg>

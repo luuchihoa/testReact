@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgTs" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+    <linearGradient id="fireGradTs" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#b91c1c"/>
+      <stop offset="40%" stop-color="#ea580c"/>
+      <stop offset="80%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="goldAura" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="doveBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <filter id="pentecostGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#d97706" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Khung Squircle Tông Vàng Nghệ (Khối Thêm Sức) -->
+  <rect x="20" y="20" width="472" height="472" rx="110" fill="url(#bgTs)" stroke="#f59e0b" stroke-width="4"/>
+  <rect x="32" y="32" width="448" height="448" rx="98" fill="none" stroke="#d97706" stroke-width="1.5" stroke-opacity="0.3" stroke-dasharray="6 4"/>
+
+  <!-- Vầng Hào Quang Mặt Trời Thiên Quốc Nhiều Tầng (Bernini Celestial Halo) -->
+  <g transform="translate(256, 215)">
+    <g stroke="url(#goldAura)" stroke-linecap="round" opacity="0.85">
+      <line x1="0" y1="0" x2="0" y2="-155" stroke-width="4.5"/>
+      <line x1="0" y1="0" x2="110" y2="-110" stroke-width="4"/>
+      <line x1="0" y1="0" x2="-110" y2="-110" stroke-width="4"/>
+      <line x1="0" y1="0" x2="155" y2="0" stroke-width="4.5"/>
+      <line x1="0" y1="0" x2="-155" y2="0" stroke-width="4.5"/>
+      <line x1="0" y1="0" x2="110" y2="110" stroke-width="3"/>
+      <line x1="0" y1="0" x2="-110" y2="110" stroke-width="3"/>
+      <line x1="0" y1="0" x2="45" y2="-145" stroke-width="2.5"/>
+      <line x1="0" y1="0" x2="-45" y2="-145" stroke-width="2.5"/>
+      <line x1="0" y1="0" x2="145" y2="-55" stroke-width="2.5"/>
+      <line x1="0" y1="0" x2="-145" y2="-55" stroke-width="2.5"/>
+      <line x1="0" y1="0" x2="145" y2="55" stroke-width="2"/>
+      <line x1="0" y1="0" x2="-145" y2="55" stroke-width="2"/>
+    </g>
+    <circle cx="0" cy="0" r="105" fill="#fef3c7" opacity="0.7"/>
+    <circle cx="0" cy="0" r="95" fill="none" stroke="#fcd34d" stroke-width="2" stroke-dasharray="4 4"/>
+  </g>
+
+  <!-- BẢY NGỌN LỬA HỒNG ÂN THÁNH THẦN -->
+  <g filter="url(#pentecostGlow)">
+    <path d="M256 50 C266 74 278 92 256 116 C234 92 246 74 256 50 Z" fill="url(#fireGradTs)"/>
+    <path d="M200 68 C212 90 220 108 202 128 C184 108 190 90 200 68 Z" fill="url(#fireGradTs)"/>
+    <path d="M312 68 C324 90 330 108 312 128 C296 108 302 90 312 68 Z" fill="url(#fireGradTs)"/>
+    <path d="M150 105 C164 125 168 144 150 160 C136 144 140 125 150 105 Z" fill="url(#fireGradTs)"/>
+    <path d="M362 105 C374 125 378 144 362 160 C346 144 350 125 362 105 Z" fill="url(#fireGradTs)"/>
+    <path d="M112 160 C128 178 130 196 112 210 C98 196 102 178 112 160 Z" fill="url(#fireGradTs)"/>
+    <path d="M400 160 C414 178 418 196 400 210 C384 196 388 178 400 160 Z" fill="url(#fireGradTs)"/>
+  </g>
+
+  <!-- CHÚA THÁNH THẦN HÌNH CHIM BỒ CÂU TRẮNG HẠ THẾ -->
+  <g filter="url(#pentecostGlow)">
+    <path d="M256 225 C220 145 130 135 80 160 C70 165 72 180 85 184 C115 192 160 205 185 240 C155 235 120 220 100 228 C92 232 94 244 105 247 C140 255 185 265 215 285 L256 315 Z" fill="url(#doveBody)" stroke="#ca8a04" stroke-width="2.5"/>
+    <path d="M256 225 C292 145 382 135 432 160 C442 165 440 180 427 184 C397 192 352 205 327 240 C357 235 392 220 412 228 C420 232 418 244 407 247 C372 255 327 265 297 285 L256 315 Z" fill="url(#doveBody)" stroke="#ca8a04" stroke-width="2.5"/>
+    
+    <path d="M120 180 C165 198 205 228 230 265" stroke="#f59e0b" stroke-width="2" fill="none"/>
+    <path d="M392 180 C347 198 307 228 282 265" stroke="#f59e0b" stroke-width="2" fill="none"/>
+
+    <path d="M232 180 C242 125 270 125 280 180 Z" fill="url(#doveBody)" stroke="#ca8a04" stroke-width="2"/>
+    <line x1="256" y1="130" x2="256" y2="180" stroke="#f59e0b" stroke-width="2"/>
+
+    <path d="M242 240 C238 275 238 325 256 355 C274 325 274 275 270 240 Z" fill="url(#doveBody)" stroke="#ca8a04" stroke-width="2"/>
+    <polygon points="256,375 248,354 264,354" fill="#ea580c" stroke="#ca8a04" stroke-width="1.5"/>
+    <circle cx="256" cy="342" r="34" fill="none" stroke="#eab308" stroke-width="2.5" stroke-dasharray="4 3"/>
+  </g>
+
+  <!-- BẢY LUỒNG ÂN SỦNG RỰC RỠ TỎA XUỐNG THẾ GIAN -->
+  <g stroke="url(#goldAura)" stroke-linecap="round" opacity="0.9">
+    <line x1="256" y1="388" x2="256" y2="455" stroke-width="4.5"/>
+    <line x1="245" y1="382" x2="210" y2="445" stroke-width="3.5"/>
+    <line x1="267" y1="382" x2="302" y2="445" stroke-width="3.5"/>
+    <line x1="235" y1="375" x2="170" y2="432" stroke-width="3"/>
+    <line x1="277" y1="375" x2="342" y2="432" stroke-width="3"/>
+    <line x1="225" y1="368" x2="135" y2="415" stroke-width="2.5"/>
+    <line x1="287" y1="368" x2="377" y2="415" stroke-width="2.5"/>
+  </g>
+</svg>

@@ -166,9 +166,13 @@ export function calculateAutoHanhKiem(counts) {
   const phep = counts.nghi_phep || 0;
   const tongNghi = counts.tong_nghi !== undefined ? counts.tong_nghi : (kPhep + phep);
 
-  if (kPhep === 0 && phep <= 1) return "Tốt";
-  if (kPhep <= 1 && phep <= 2) return "Khá";
-  if (kPhep <= 2 && tongNghi <= 4) return "Trung Bình";
+  // 1. TỐT: Không vắng không phép & có phép <= 2, HOẶC chỉ vắng duy nhất 1 buổi không phép (kPhep === 1 && phep === 0)
+  if ((kPhep === 0 && phep <= 2) || (kPhep === 1 && phep === 0)) return "Tốt";
+  // 2. KHÁ: kPhep <= 2 và tổng vắng <= 3 buổi
+  if (kPhep <= 2 && tongNghi <= 3) return "Khá";
+  // 3. TRUNG BÌNH: kPhep <= 3 và tổng vắng <= 5 buổi
+  if (kPhep <= 3 && tongNghi <= 5) return "Trung Bình";
+  // 4. YẾU: các trường hợp còn lại
   return "Yếu";
 }
 

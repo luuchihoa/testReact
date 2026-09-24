@@ -173,22 +173,40 @@ function useScrollPosition() {
 /* ═══ DESKTOP COMPONENTS ══════════════════════════════════════════ */
 function AccountTriggerButton({ isLogin, avatar, username, role, isOpen, onToggle, onLogin }) {
   if (!isLogin) return (
-    <button type="button" onClick={onLogin}
-      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-amber-900 dark:bg-amber-100 px-4 py-1.5 text-xs sm:text-sm font-bold text-amber-50 dark:text-amber-950 shadow-sm hover:bg-amber-950 dark:hover:bg-amber-50 transition-colors">
-      <LogIn className="w-3.5 h-3.5" />Đăng nhập
+    <button
+      type="button"
+      onClick={onLogin}
+      className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-[#314e3e] dark:bg-[#d6b883] px-4 py-2 text-xs sm:text-sm font-bold text-white dark:text-[#19251d] shadow-sm hover:bg-[#253d30] dark:hover:bg-[#c9a76d] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d]"
+    >
+      <LogIn className="w-3.5 h-3.5" />
+      <span>Đăng nhập</span>
     </button>
   );
   const roleAccent = ROLE_ACCENTS[role] || ROLE_ACCENTS.user;
   return (
-    <button type="button" onClick={onToggle} aria-expanded={isOpen}
-      className={`flex items-center gap-2 rounded-full border transition-all pl-0.5 pr-3 py-0.5 ${
-        isOpen ? "border-amber-900/30 dark:border-amber-100/30 bg-amber-900/5 dark:bg-amber-100/10 shadow-inner" : "border-amber-900/15 dark:border-amber-100/15 bg-white/50 dark:stone-800/60 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
-      }`}>
-      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: roleAccent }}>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      aria-label={`Tài khoản: ${username || "Thành viên"}`}
+      className={`flex items-center gap-2 rounded-full border transition-all pl-1 pr-3.5 py-1 min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${
+        isOpen
+          ? "border-[#314e3e] dark:border-[#d4b47d] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 shadow-inner"
+          : "border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] hover:border-[#314e3e]/40 dark:hover:border-[#d4b47d]/40 hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 shadow-xs"
+      }`}
+    >
+      <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2 shadow-2xs" style={{ borderColor: roleAccent }}>
         <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="h-full w-full object-cover" />
       </div>
-      <span className="text-xs font-bold text-stone-800 dark:text-stone-200 max-w-[90px] truncate">{username || "Tài khoản"}</span>
-      <ChevronDown className={`w-3 h-3 text-stone-500 dark:text-stone-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+      <span className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] max-w-[120px] truncate">
+        {username || "Tài khoản"}
+      </span>
+      <ChevronDown
+        className={`w-3.5 h-3.5 text-[#575e55] dark:text-[#b0b9ac] transition-transform duration-200 ${
+          isOpen ? "rotate-180 text-[#314e3e] dark:text-[#d4b47d]" : ""
+        }`}
+      />
     </button>
   );
 }
@@ -338,13 +356,13 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-2xl dark:shadow-black/40 z-50 overflow-hidden flex flex-col"
+          className="absolute right-0 top-full mt-3 w-[88vw] max-w-sm sm:w-[400px] rounded-[1.5rem] border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-2xl dark:shadow-black/50 z-50 overflow-hidden flex flex-col"
         >
-          <div className="flex items-center justify-between px-5 py-4 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5 shrink-0">
-            <p className="text-sm font-bold text-amber-950 dark:text-amber-50 font-serif">Thông báo</p>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#dedfd4] dark:border-[#354237] bg-[#314e3e]/5 dark:bg-[#d4b47d]/10 shrink-0">
+            <p className="text-sm font-bold text-[#293d32] dark:text-[#ecece0] font-serif">Thông báo</p>
             {hasUnread && (
               <button type="button" onClick={onMarkAllRead}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors">
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#314e3e]/10 dark:bg-[#d4b47d]/20 text-xs font-bold text-[#314e3e] dark:text-[#d4b47d] hover:bg-[#314e3e]/20 dark:hover:bg-[#d4b47d]/30 transition-colors">
                 <CheckCheck className="w-3.5 h-3.5" /> Đánh dấu đã đọc
               </button>
             )}
@@ -352,15 +370,15 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
 
           <div className="max-h-[50vh] overflow-y-auto" data-lenis-prevent>
             {loading && (
-              <div className="flex items-center justify-center gap-2 py-12 text-stone-400 dark:text-stone-500">
+              <div className="flex items-center justify-center gap-2 py-12 text-[#575e55] dark:text-[#b0b9ac]">
                 <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-sm font-medium">Đang tải…</span>
               </div>
             )}
 
             {!loading && notifications.length === 0 && (
-              <div className="flex flex-col items-center gap-3 py-12 text-stone-400 dark:text-stone-600">
-                <div className="w-12 h-12 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                  <BellOff className="w-6 h-6" />
+              <div className="flex flex-col items-center gap-3 py-12 text-[#575e55] dark:text-[#b0b9ac]">
+                <div className="w-12 h-12 rounded-full bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] flex items-center justify-center">
+                  <BellOff className="w-6 h-6 text-[#575e55] dark:text-[#b0b9ac]" />
                 </div>
                 <p className="text-sm font-medium text-[#465447] dark:text-[#b0b9ac]">Bạn chưa có thông báo nào</p>
               </div>
@@ -371,18 +389,18 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
               return (
                 <button
                   key={n.id} type="button" onClick={() => onItemClick(n)}
-                  className={`flex w-full items-start gap-4 px-5 py-4 text-left border-b border-amber-900/5 dark:border-amber-100/5 transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20 ${!n.read ? "bg-amber-100/20 dark:bg-amber-900/10" : ""}`}
+                  className={`flex w-full items-start gap-4 px-5 py-4 text-left border-b border-[#dedfd4]/60 dark:border-[#354237]/60 transition-colors hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 ${!n.read ? "bg-[#314e3e]/5 dark:bg-[#d4b47d]/10" : ""}`}
                 >
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${!n.read ? "bg-amber-200 dark:bg-amber-600 text-amber-900 dark:text-amber-50" : "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500"}`}>
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${!n.read ? "bg-[#314e3e] dark:bg-[#d4b47d] text-white dark:text-[#19251d]" : "bg-[#faf8f3] dark:bg-[#151c18] border border-[#dedfd4] dark:border-[#354237] text-[#575e55] dark:text-[#b0b9ac]"}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-sm leading-snug ${!n.read ? "font-bold text-amber-950 dark:text-amber-50" : "font-semibold text-stone-700 dark:text-stone-300"}`}>{n.title}</p>
+                      <p className={`text-sm leading-snug ${!n.read ? "font-bold text-[#293d32] dark:text-[#ecece0]" : "font-semibold text-[#38453d] dark:text-[#f0f2eb]"}`}>{n.title}</p>
                       {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />}
                     </div>
-                    <p className="text-xs text-[#465447] dark:text-[#b0b9ac] mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
-                    <p className="text-xs font-medium text-[#465447] dark:text-[#b0b9ac] mt-2">{timeAgoVi(n.created_at)}</p>
+                    <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] mt-1 line-clamp-2 leading-relaxed">{n.message}</p>
+                    <p className="text-xs font-medium text-[#575e55] dark:text-[#b0b9ac] mt-2">{timeAgoVi(n.created_at)}</p>
                   </div>
                 </button>
               );
@@ -390,10 +408,10 @@ function NotificationDropdown({ isOpen, onClose, notifications, loading, onItemC
           </div>
 
           {!loading && notifications.length > 0 && (
-            <div className="p-3 border-t border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shrink-0 text-center">
+            <div className="p-3 border-t border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shrink-0 text-center">
               <button 
                 onClick={() => { navigate("/tài-khoản/thông-báo"); onClose(); }} 
-                className="text-xs font-bold text-[#5e4420] dark:text-[#dfc599] hover:text-[#314e3e] dark:hover:text-[#ffffff] transition-colors"
+                className="text-xs font-bold text-[#927140] dark:text-[#d4b47d] hover:text-[#314e3e] dark:hover:text-[#ffffff] transition-colors"
               >
                 Xem tất cả thông báo
               </button>
@@ -415,26 +433,26 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-          className="absolute right-0 top-full mt-3 w-56 rounded-[1.5rem] border border-amber-900/10 dark:border-amber-100/10 bg-[#FDFBF7] dark:bg-[#161c18] shadow-lg dark:shadow-black/40 z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-3 w-60 rounded-[1.5rem] border border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] shadow-xl dark:shadow-black/50 z-50 overflow-hidden"
         >
-          <div className="px-4 py-3 border-b border-amber-900/10 dark:border-amber-100/10 bg-amber-900/5 dark:bg-amber-100/5">
+          <div className="px-4 py-3 border-b border-[#dedfd4] dark:border-[#354237] bg-[#314e3e]/5 dark:bg-[#d4b47d]/10">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 flex-shrink-0" style={{ borderColor: roleAccent }}>
                 <img src={avatar || "/images/avatarDefault.avif"} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">{username || "Thành viên"}</p>
+                <p className="text-xs font-bold text-[#293d32] dark:text-[#ecece0] truncate">{username || "Thành viên"}</p>
                 <p className={`text-xs font-semibold ${ROLE_TEXT_CLASSES[role] || ROLE_TEXT_CLASSES.user}`}>{roleLabel}</p>
               </div>
             </div>
           </div>
           <button type="button" onClick={() => { onOpenProfile(); onClose(); }}
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 border-b border-amber-900/10 dark:border-amber-100/10 transition-colors">
-            <User className="w-4 h-4 text-stone-400 dark:text-stone-500" /> Hồ sơ của tôi
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-[#38453d] dark:text-[#f0f2eb] hover:bg-[#314e3e]/10 dark:hover:bg-[#d4b47d]/15 hover:text-[#293d32] dark:hover:text-[#ffffff] border-b border-[#dedfd4]/60 dark:border-[#354237]/60 transition-colors">
+            <User className="w-4 h-4 text-[#575e55] dark:text-[#b0b9ac]" /> Hồ sơ của tôi
           </button>
 
           {extraItems.length > 0 && (
-            <div className="py-1 border-b border-amber-900/10 dark:border-amber-100/10">
+            <div className="py-1 border-b border-[#dedfd4] dark:border-[#354237]">
               <p className="px-4 pt-1 pb-1.5 text-xs font-bold uppercase tracking-wider text-[#5e4420] dark:text-[#dfc599]">
                 Công cụ {roleLabel.toLowerCase()}
               </p>
@@ -443,10 +461,9 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
                 const isActive = currentPath === item.path;
                 return (
                   <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
-                    style={isActive ? { color: roleAccent, background: `${roleAccent}0f` } : undefined}
+                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15" : "text-[#38453d] dark:text-[#f0f2eb] hover:bg-[#314e3e]/10 dark:hover:bg-[#d4b47d]/15 hover:text-[#293d32] dark:hover:text-[#ffffff]"}`}
                   >
-                    <Icon className="w-4 h-4" style={{ color: isActive ? roleAccent : "#a8a29e" }} />
+                    <Icon className="w-4 h-4" style={{ color: isActive ? roleAccent : undefined }} />
                     {item.label}
                   </button>
                 );
@@ -460,17 +477,17 @@ function AccountDropdown({ isOpen, onClose, navigate, currentPath, avatar, usern
               const isActive = currentPath === item.path;
               return (
                 <button key={item.path} type="button" onClick={() => { navigate(item.path); onClose(); }}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30" : "text-stone-700 dark:text-stone-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"}`}
+                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${isActive ? "font-semibold text-[#293d32] dark:text-[#ffffff] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15" : "text-[#38453d] dark:text-[#f0f2eb] hover:bg-[#314e3e]/10 dark:hover:bg-[#d4b47d]/15 hover:text-[#293d32] dark:hover:text-[#ffffff]"}`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-amber-700 dark:text-amber-400" : "text-stone-400 dark:text-stone-500"}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? "text-[#314e3e] dark:text-[#d4b47d]" : "text-[#575e55] dark:text-[#b0b9ac]"}`} />
                   {item.label}
                 </button>
               );
             })}
           </div>
-          <div className="border-t border-amber-900/10 dark:border-amber-100/10">
+          <div className="border-t border-[#dedfd4] dark:border-[#354237]">
             <button type="button" onClick={() => { onLogout(); onClose(); }}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
               <LogOut className="w-4 h-4" /> Đăng xuất
             </button>
           </div>
@@ -1265,15 +1282,17 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
                 <button
                   type="button"
                   onClick={handleBellClick}
-                  className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                    isScrolled ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10" : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${
+                    openMenu === "notif"
+                      ? "border-[#314e3e] dark:border-[#d4b47d] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 text-[#314e3e] dark:text-[#d4b47d] shadow-inner"
+                      : "border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] hover:border-[#314e3e]/40 dark:hover:border-[#d4b47d]/40 hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 shadow-xs"
                   } ${isRinging ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`}
                   aria-label="Thông báo"
                   aria-expanded={openMenu === "notif"}
                 >
                   <Bell className="w-[18px] h-[18px]" strokeWidth={1.8} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#FDFBF7] dark:ring-[#161c18]" />
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-[#fffefa] dark:ring-[#1e2821]" />
                   )}
                 </button>
                 <NotificationDropdown
@@ -1291,12 +1310,10 @@ export default function Header({ toggleModal, isLogin, setIsLogin, handleClose }
               <button
                 type="button"
                 onClick={() => navigate("/cài-đặt")}
-                className={`flex relative w-11 h-11 items-center justify-center rounded-full transition-colors ${
+                className={`flex relative w-10 h-10 min-w-[40px] min-h-[40px] items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#314e3e] dark:focus-visible:ring-[#d4b47d] ${
                   location.pathname === "/cài-đặt"
-                    ? "text-amber-800 dark:text-amber-300 bg-amber-900/10 dark:bg-amber-100/10"
-                    : isScrolled
-                    ? "text-stone-500 dark:text-stone-400 hover:bg-amber-900/5 dark:hover:bg-amber-100/10"
-                    : "text-stone-700 dark:text-stone-300 hover:bg-amber-900/10 dark:hover:bg-amber-100/10"
+                    ? "border-[#314e3e] dark:border-[#d4b47d] bg-[#314e3e]/10 dark:bg-[#d4b47d]/15 text-[#314e3e] dark:text-[#d4b47d] shadow-inner"
+                    : "border-[#dedfd4] dark:border-[#354237] bg-[#fffefa] dark:bg-[#1e2821] text-[#293d32] dark:text-[#ecece0] hover:border-[#314e3e]/40 dark:hover:border-[#d4b47d]/40 hover:bg-[#314e3e]/5 dark:hover:bg-[#d4b47d]/10 shadow-xs"
                 }`}
                 title="Cài đặt & Tùy chỉnh"
                 aria-label="Cài đặt"

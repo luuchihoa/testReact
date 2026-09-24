@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thẩm Định Độ Rõ Nét UI (UI Clarity) - 6 Khối Giáo Lý An Ngãi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F9F7F2;
+      --surface: #FFFFFF;
+      --surface-subtle: #F4EFEB;
+      --text: #231E19;
+      --text-muted: #5E564E;
+      --border: #E4DDD2;
+      --gold: #B88A34;
+      --card-shadow: 0 4px 20px rgba(35, 30, 25, 0.05);
+    }
+    body.dark-mode {
+      --bg: #151C18;
+      --surface: #1E2821;
+      --surface-subtle: #27342B;
+      --text: #ECECE0;
+      --text-muted: #B0B9AC;
+      --border: #354237;
+      --gold: #D4B47D;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 20px 100px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 16px;
+      background: rgba(184, 138, 52, 0.12);
+      border: 1px solid rgba(184, 138, 52, 0.3);
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2.65rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .lead {
+      font-size: 1.0625rem;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .theme-btn {
+      padding: 8px 18px;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    /* Diagnosis banner */
+    .diagnosis-box {
+      background: var(--surface);
+      border: 1.5px solid #F5C6BA;
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 40px;
+    }
+    .diagnosis-box h3 {
+      color: #9A2C18;
+      font-size: 1.125rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .diagnosis-box p {
+      color: #5C3D34;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* Section Home Cards Simulation */
+    .section-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin-bottom: 24px;
+    }
+
+    /* Simulating exact Home.jsx Card Grid */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 56px;
+    }
+    .home-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+    }
+    .home-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      border-color: var(--gold);
+    }
+
+    .home-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .home-info { flex: 1; }
+    .home-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      border-width: 1px;
+      border-style: solid;
+    }
+    .badge-kt { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
+    .badge-rl { background: #ECFDF5; color: #065F46; border-color: #FDE047; }
+    .badge-ts { background: #FEF3C7; color: #92400E; border-color: #F87171; }
+    .badge-pv { background: #FFEDD5; color: #9A3412; border-color: #FDBA74; }
+    .badge-ktb { background: #FEE2E2; color: #991B1B; border-color: #FDE047; }
+    .badge-vd { background: #FEE2E2; color: #991B1B; border-color: #CBD5E1; }
+
+    .home-name {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .home-motto {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .home-motto strong {
+      color: var(--gold);
+    }
+
+    /* THE 52px AVATAR IN HOME.JSX */
+    .home-avatar-52 {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease;
+    }
+    .home-card:hover .home-avatar-52 {
+      transform: scale(1.08);
+    }
+    .home-avatar-52 img, .home-avatar-52 svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .home-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .home-foot {
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Enlarged Zoom Gallery (96px & 160px) */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-bottom: 56px;
+    }
+    .gallery-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .gallery-item .box-img {
+      width: 110px;
+      height: 110px;
+      margin-bottom: 12px;
+    }
+    .gallery-item h4 {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .gallery-item p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Comparison Table */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .comp-table th, .comp-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.9375rem;
+    }
+    .comp-table th {
+      background: var(--surface-subtle);
+      font-weight: 700;
+    }
+    .tag-err {
+      color: #DC2626;
+      background: #FEE2E2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    .tag-pass {
+      color: #16A34A;
+      background: #DCFCE7;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="eyebrow">🎯 Tối Ưu Hóa Giao Diện (UI Clarity)</div>
+      <h1>Bộ Biểu Trưng Mới: Rõ Ràng · Tinh Gọn · Chuẩn 52px</h1>
+      <p class="lead">
+        Giải quyết dứt điểm các lỗi UI của bộ ảnh 3D cũ (chữ méo mó, viền dập nổi dày che mất chi tiết, không đọc được ở kích thước 52px của trang chủ).
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <div>
+        <strong>Chế độ hiển thị:</strong> Khảo sát thực tế kích thước Avatar 52px trong thẻ Khối học `Home.jsx`
+      </div>
+      <button class="theme-btn" onclick="document.body.classList.toggle('dark-mode')">
+        🌓 Bật/Tắt Chế Độ Tối
+      </button>
+    </div>
+
+    <!-- Diagnosis Box -->
+    <div class="diagnosis-box">
+      <h3>🔍 Vì sao bộ ảnh 3D trước đây gặp lỗi UI nghiêm trọng?</h3>
+      <p>
+        1. <strong>Lỗi kích thước thực tế:</strong> Thẻ khối ở trang chủ chỉ dành ô avatar kích thước <strong>52px × 52px</strong>. Khi ép một huân chương 3D phức tạp với 3 vòng kim loại đồng tâm và dòng chữ uốn cong vào ô 52px, toàn bộ chữ biến thành các vệt nhòe không thể đọc nổi!<br>
+        2. <strong>Lỗi nội dung hình ảnh:</strong> AI tự vẽ chữ dẫn đến sai lệch thần học ("SỨC MIỆT", "GIÁO PHẬN VINH").<br>
+        3. <strong>Giải pháp UI chuẩn mực:</strong> <em>Loại bỏ hoàn toàn chữ trong ảnh</em> (chữ đã có HTML hiển thị bên cạnh cực kỳ sắc nét), tập trung 100% diện tích cho <strong>Hình tượng Thần học nổi bật, đường nét hình học chuẩn xác, màu sắc tương phản cao</strong>.
+      </p>
+    </div>
+
+    <!-- MÔ PHỎNG THỰC TẾ TRÊN THẺ HOME.JSX -->
+    <div>
+      <h2 class="section-title">Mô Phỏng Thực Tế 6 Khối Với Biểu Trưng UI Mới</h2>
+      <p class="section-sub">Quan sát góc trên bên phải của từng thẻ: Avatar 52px hiển thị sắc sảo, rõ ràng, không bị rối mắt.</p>
+
+      <div class="home-grid">
+        <!-- 1. KHAI TÂM -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-kt">Khăn Xanh Lá Trơn</span>
+              <h3 class="home-name">Khối Khai Tâm (Vườn Trẻ & KT)</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Bay Cao »</strong> · 5 – 7 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-khai-tam.svg" alt="Khối Khai Tâm">
+            </div>
+          </div>
+          <p class="home-desc">Gieo mầm đức tin đơn sơ vào tâm hồn tuổi thơ qua lời kinh, khúc hát và hình ảnh Chiên Con hiền hòa trong vòng tay Chúa.</p>
+          <div class="home-foot">
+            <span>5 Lớp: Vườn Trẻ, KT 1 – 2</span>
+            <span>Chiên Con · 52px</span>
+          </div>
+        </div>
+
+        <!-- 2. RƯỚC LỄ -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-rl">Khăn Xanh Viền Vàng</span>
+              <h3 class="home-name">Khối Rước Lễ Lần Đầu</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Trong Sạch »</strong> · 8 – 9 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-ruoc-le.svg" alt="Khối Rước Lễ">
+            </div>
+          </div>
+          <p class="home-desc">Chuẩn bị tâm hồn thánh thiện đón nhận Mình Thánh Chúa Kitô Bánh Hằng Sống và lãnh nhận Bí tích Hòa Giải lần đầu tiên.</p>
+          <div class="home-foot">
+            <span>5 Lớp: RLLĐ 1/1 đến 2/3</span>
+            <span>Thánh Thể · 52px</span>
+          </div>
+        </div>
+
+        <!-- 3. THÊM SỨC -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-ts">Khăn Vàng Viền Đỏ</span>
+              <h3 class="home-name">Khối Thêm Sức</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Quảng Đại »</strong> · 10 – 11 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-them-suc.svg" alt="Khối Thêm Sức">
+            </div>
+          </div>
+          <p class="home-desc">Dẫn dắt các em lãnh nhận Bảy Ơn Chúa Thánh Thần qua Bí tích Thêm Sức để trở thành chứng nhân đức tin kiên cường, hăng say phục vụ.</p>
+          <div class="home-foot">
+            <span>6 Lớp: Thêm Sức 1 – 2</span>
+            <span>Thánh Linh · 52px</span>
+          </div>
+        </div>
+
+        <!-- 4. PHỤNG VỤ -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-pv">Khăn Cam Viền Trắng</span>
+              <h3 class="home-name">Khối Phụng Vụ</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Tiến »</strong> · 12 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-phung-vu.svg" alt="Khối Phụng Vụ">
+            </div>
+          </div>
+          <p class="home-desc">Khám phá chiều sâu các cử hành Phụng vụ, tập sự giúp lễ, thánh ca và sống tinh thần nhiệt tâm phụng sự Bàn Thờ Chúa.</p>
+          <div class="home-foot">
+            <span>3 Lớp: Phụng Vụ 1/1, 1/2, 1/3</span>
+            <span>Bàn Thờ · 52px</span>
+          </div>
+        </div>
+
+        <!-- 5. KINH THÁNH -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-ktb">Khăn Đỏ Viền Vàng</span>
+              <h3 class="home-name">Khối Kinh Thánh</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Thắng »</strong> · 13 – 14 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-kinh-thanh.svg" alt="Khối Kinh Thánh">
+            </div>
+          </div>
+          <p class="home-desc">Đào sâu 73 cuốn Sách Thánh Cựu Ước & Tân Ước, suy niệm Lectio Divina và xây dựng nền tảng đức tin vững vàng trên Lời Chúa.</p>
+          <div class="home-foot">
+            <span>6 Lớp: Kinh Thánh 1 – 2</span>
+            <span>Lời Chúa · 52px</span>
+          </div>
+        </div>
+
+        <!-- 6. VÀO ĐỜI -->
+        <div class="home-card">
+          <div class="home-top">
+            <div class="home-info">
+              <span class="home-badge badge-vd">Khăn Đỏ Viền Trắng</span>
+              <h3 class="home-name">Khối Vào Đời</h3>
+              <p class="home-motto">Khẩu hiệu: <strong>« Dấn Thân »</strong> · 15 – 16 tuổi</p>
+            </div>
+            <div class="home-avatar-52">
+              <img src="/images/sectors/sector-vao-doi.svg" alt="Khối Vào Đời">
+            </div>
+          </div>
+          <p class="home-desc">Trang bị hành trang Docat & Youcat, định hướng tương lai, tôi luyện bản lĩnh Huynh Trưởng và dấn thân làm chứng nhân Tin Mừng giữa đời.</p>
+          <div class="home-foot">
+            <span>5 Lớp: Vào Đời 1 – 2</span>
+            <span>Mỏ Neo · 52px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHÓNG TO CHI TIẾT ĐỒ HỌA (110px) -->
+    <div>
+      <h2 class="section-title">Xem Chi Tiết Từng Biểu Trưng Ở Cỡ Lớn (110px)</h2>
+      <p class="section-sub">Độ phân giải vector vô hạn (vector crispness), không vỡ hạt, các chi tiết được chau chuốt tỉ mỉ.</p>
+
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-khai-tam.svg" alt="Khai Tâm" style="width:100%;height:100%;">
+          </div>
+          <h4>Chiên Thiên Chúa</h4>
+          <p>Cờ Phục Sinh & Hào Quang</p>
+        </div>
+
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-ruoc-le.svg" alt="Rước Lễ" style="width:100%;height:100%;">
+          </div>
+          <h4>Chén & Bánh Thánh</h4>
+          <p>Lúa Mì & Chùm Nho</p>
+        </div>
+
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-them-suc.svg" alt="Thêm Sức" style="width:100%;height:100%;">
+          </div>
+          <h4>Bồ Câu Thánh Thần</h4>
+          <p>Bảy Lưỡi Lửa Hồng Ân</p>
+        </div>
+
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-phung-vu.svg" alt="Phụng Vụ" style="width:100%;height:100%;">
+          </div>
+          <h4>Nến & Bình Hương</h4>
+          <p>Trầm Hương Phụng Vụ</p>
+        </div>
+
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-kinh-thanh.svg" alt="Kinh Thánh" style="width:100%;height:100%;">
+          </div>
+          <h4>Sách Thánh Mở Rộng</h4>
+          <p>Ký tự Alpha & Omega</p>
+        </div>
+
+        <div class="gallery-item">
+          <div class="box-img">
+            <img src="/images/sectors/sector-vao-doi.svg" alt="Vào Đời" style="width:100%;height:100%;">
+          </div>
+          <h4>Mỏ Neo Thập Giá</h4>
+          <p>Ngọn Sóng & Sao Biển</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BẢNG ĐỐI CHIẾU LỖI UI -->
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Vấn đề UI</th>
+          <th style="width: 37%;">Bộ 3D AI Cũ</th>
+          <th style="width: 38%;">Bộ Vector Tối Ưu Mới</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Hiển thị ở cỡ 52px (Mobile / Web)</strong></td>
+          <td><span class="tag-err">Lỗi nặng</span> Chữ uốn cong biến thành vệt nhòe, viền dập nổi chiếm 50% diện tích</td>
+          <td><span class="tag-pass">Hoàn hảo</span> Không nhồi chữ vào ảnh, hình tượng to, rõ ràng, nhận diện tức thì</td>
+        </tr>
+        <tr>
+          <td><strong>Tính chuẩn xác thần học</strong></td>
+          <td><span class="tag-err">Sai sót</span> AI tự chèn sai địa danh ("Giáo phận Vinh"), lỗi chính tả ("Sức miệt")</td>
+          <td><span class="tag-pass">Chuẩn 100%</span> Đúng biểu tượng Phụng vụ, đúng màu sắc khăn ngành HTDC</td>
+        </tr>
+        <tr>
+          <td><strong>Độ tương thích giao diện</strong></td>
+          <td>Nặng nề, cảm giác như huy hiệu game, xung đột với nền kem xanh thanh lịch</td>
+          <td>Hiện đại, tinh tế, hòa hợp tuyệt đối với hệ thống thiết kế `AGENTS.md`</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</body>
+</html>

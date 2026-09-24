@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khảo Sát Thiết Kế Toàn Diện 6 Khối - Ban Giáo Lý An Ngãi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F9F7F2;
+      --surface: #FFFFFF;
+      --surface-subtle: #F3EFE6;
+      --ink: #231F1C;
+      --ink-muted: #5C554E;
+      --gold-deep: #8A6520;
+      --gold-accent: #C49A45;
+      --border-warm: #E2DCD2;
+      --radius-lg: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      padding: 40px 20px 100px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: #EFE8DC;
+      border: 1px solid #D6CABA;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--gold-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2.85rem;
+      font-weight: 700;
+      color: #26201B;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .subtitle {
+      font-size: 1.0625rem;
+      color: var(--ink-muted);
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .concept-section {
+      background: var(--surface);
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      margin-bottom: 48px;
+      box-shadow: 0 4px 24px rgba(40, 30, 20, 0.04);
+    }
+    .concept-header {
+      margin-bottom: 32px;
+      border-bottom: 1.5px solid var(--border-warm);
+      padding-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .concept-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #241E1A;
+    }
+    .concept-tag {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #8C2424;
+      background: #FDF2F2;
+      border: 1px solid #F5C6BA;
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+    .concept-philosophy {
+      font-size: 0.9375rem;
+      color: var(--ink-muted);
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    /* Grid 6 blocks */
+    .blocks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    /* Block Card */
+    .block-card {
+      background: #FFFEFC;
+      border: 1px solid var(--border-warm);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+    .block-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(40, 30, 20, 0.06);
+      border-color: var(--gold-accent);
+    }
+
+    /* Emblem Holder */
+    .emblem-wrapper {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 18px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Scarf ribbon badge */
+    .scarf-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 10px;
+    }
+
+    /* Scarf styles */
+    .scarf-khai-tam { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; }
+    .scarf-ruoc-le { background: #E8F5E9; color: #1B5E20; border: 2px solid #FBC02D; }
+    .scarf-them-suc { background: #FFF9C4; color: #827717; border: 2px solid #D32F2F; }
+    .scarf-phung-vu { background: #FFE0B2; color: #E65100; border: 2px solid #FFF; box-shadow: 0 0 0 1px #FFB74D; }
+    .scarf-kinh-thanh { background: #FFEBEE; color: #B71C1C; border: 2px solid #FBC02D; }
+    .scarf-vao-doi { background: #FFEBEE; color: #B71C1C; border: 2px solid #FFF; box-shadow: 0 0 0 1px #EF9A9A; }
+
+    .block-name {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      color: #241E1A;
+      margin-bottom: 4px;
+    }
+    .block-motto {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--gold-deep);
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .block-desc {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin-bottom: 14px;
+      flex: 1;
+    }
+    .block-meta {
+      width: 100%;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-warm);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #6E665E;
+      font-weight: 600;
+    }
+
+    /* Comparison notes */
+    .notes-box {
+      background: #F4EFEB;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-top: 28px;
+      font-size: 0.875rem;
+      color: #4A423B;
+      line-height: 1.6;
+    }
+    .notes-box strong {
+      color: #26201B;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge-top">⚜️ Ngôn Ngữ Thiết Kế Đồng Bộ Toàn Hệ Thống</div>
+      <h1>Bộ Biểu Trưng 6 Khối Giáo Lý An Ngãi</h1>
+      <p class="subtitle">
+        Khắc phục dứt điểm cảm giác « giả / AI » và sự thiếu đồng bộ. Hệ thống biểu trưng được thiết kế nhất quán 100% về tỉ lệ hình học, tinh thần thần học và nghệ thuật Công giáo truyền thống.
+      </p>
+    </header>
+
+    <!-- HƯỚNG A: HUY HIỆU PHỤNG VỤ ĐƯƠNG ĐẠI (SACRED HERALDIC CREST) -->
+    <section class="concept-section">
+      <div class="concept-header">
+        <div>
+          <h2 class="concept-title">Phương Án 1: Huy Hiệu Khiên Phụng Vụ Đồng Bộ (Sacred Heraldic Crest)</h2>
+          <p class="concept-philosophy">
+            <strong>Ngôn ngữ:</strong> Khung khiên Gothic bo tròn trang nhã mang phong cách huy hiệu Vatican và các Học viện Công giáo danh tiếng. Nét vẽ vàng kim trang trọng trên nền kem sáp tự nhiên, <strong>tuyệt đối không dùng 3D kim loại giả lập</strong>, chuẩn mực và đồng bộ 100% về visual weight.
+          </p>
+        </div>
+        <span class="concept-tag">ĐỒNG BỘ 100% · TRANG TRỌNG BẬC NHẤT</span>
+      </div>
+
+      <div class="blocks-grid">
+        <!-- 1. KHAI TÂM -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Shield Base -->
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Chiên Con & Mầm Cây Đơn Sơ -->
+              <!-- Olive branch circle -->
+              <circle cx="70" cy="64" r="32" stroke="#2E7D32" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <!-- Cross above -->
+              <path d="M70 32 V44 M64 36 H76" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <!-- Little Lamb (Chiên con) pure line art -->
+              <path d="M54 74 C50 72 46 67 48 62 C50 57 56 56 60 59 C63 56 69 55 74 57 C78 55 84 57 86 62 C89 68 85 75 80 77 C77 82 63 83 58 79 Z" fill="#FFFFFF" stroke="#37474F" stroke-width="2" stroke-linejoin="round"/>
+              <!-- Lamb head -->
+              <ellipse cx="52" cy="62" rx="6" ry="5" fill="#FFFFFF" stroke="#37474F" stroke-width="1.8"/>
+              <!-- Eye -->
+              <circle cx="50.5" cy="61" r="1.2" fill="#37474F"/>
+              <!-- Sprout (Mầm non) -->
+              <path d="M70 94 V82 C70 78 64 74 60 77 C66 79 69 82 70 82 C71 82 74 79 80 77 C76 74 70 78 70 82" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.8" stroke-linejoin="round"/>
+              <!-- Base Ribbon -->
+              <path d="M40 110 H100" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.5">BAY CAO</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-khai-tam">Khăn Xanh Lá Trơn · Chiên Con</span>
+          <h3 class="block-name">Khối Khai Tâm</h3>
+          <p class="block-motto">« Bay Cao cùng Chúa Giêsu »</p>
+          <p class="block-desc">Tâm điểm là Chú Chiên Con thanh khiết nép bên Mầm Cây Đức Tin và Thập Tự Rạng Ngời, biểu trưng tuổi thơ đơn sơ trong vòng tay Chúa.</p>
+          <div class="block-meta">
+            <span>5 – 7 tuổi</span>
+            <span>5 Lớp Học (Ca 2)</span>
+          </div>
+        </div>
+
+        <!-- 2. RƯỚC LỄ LẦN ĐẦU -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Mình Thánh Chúa & Chén Thánh Phụng Vụ -->
+              <!-- Ray of Light -->
+              <g stroke="#F1D18A" stroke-width="1.2">
+                <line x1="70" y1="28" x2="70" y2="34"/>
+                <line x1="86" y1="36" x2="82" y2="40"/>
+                <line x1="54" y1="36" x2="58" y2="40"/>
+                <line x1="92" y1="52" x2="86" y2="52"/>
+                <line x1="48" y1="52" x2="54" y2="52"/>
+              </g>
+              <!-- Holy Host (Bánh Thánh IHS) -->
+              <circle cx="70" cy="52" r="16" fill="#FFFFFF" stroke="#C5A059" stroke-width="2"/>
+              <path d="M70 42 V62 M60 48 H80" stroke="#C5A059" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="70" cy="52" r="3" fill="#FAF7F0" stroke="#C5A059" stroke-width="1"/>
+              <!-- Chalice (Chén Thánh) -->
+              <path d="M52 68 C52 82 62 86 67 87 V96 H60 C58 96 58 99 60 99 H80 C82 99 82 96 80 96 H73 V87 C78 86 88 82 88 68 H52 Z" fill="#FFFDF8" stroke="#A97E25" stroke-width="2" stroke-linejoin="round"/>
+              <!-- Wheat Ear (Bông lúa mì) & Grapes -->
+              <path d="M42 86 C46 76 52 70 52 70 M98 86 C94 76 88 70 88 70" stroke="#2E7D32" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="42" cy="88" r="2.5" fill="#C5A059"/>
+              <circle cx="98" cy="88" r="2.5" fill="#C5A059"/>
+              <!-- Base Ribbon -->
+              <path d="M36 110 H104" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7.2" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.2">TRONG SẠCH</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-ruoc-le">Khăn Xanh Viền Vàng · Ấu Nhi</span>
+          <h3 class="block-name">Khối Rước Lễ Lần Đầu</h3>
+          <p class="block-motto">« Trong Sạch kết hợp cùng Chúa »</p>
+          <p class="block-desc">Bánh Hằng Sống tỏa vinh quang ngự trên Chén Thánh cùng bông lúa miến, ghi dấu ngày đầu tiên đón nhận Bí tích Thánh Thể nhiệm mầu.</p>
+          <div class="block-meta">
+            <span>8 – 9 tuổi</span>
+            <span>5 Lớp Học (Ca 2)</span>
+          </div>
+        </div>
+
+        <!-- 3. THÊM SỨC -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Chim Bồ Câu Thánh Thần & 7 Ngọn Lửa -->
+              <!-- Nimbus halo -->
+              <circle cx="70" cy="56" r="28" stroke="#E65100" stroke-width="1" stroke-dasharray="2 3"/>
+              <!-- 7 Flames (Bảy Ơn Chúa Thánh Thần) -->
+              <g fill="#D84315" stroke="#BF360C" stroke-width="1">
+                <path d="M70 30 C71.5 33 73 35 70 38 C67 35 68.5 33 70 30 Z"/>
+                <path d="M54 35 C56 38 56.5 40 54 43 C51.5 40 52 38 54 35 Z"/>
+                <path d="M86 35 C88 38 88.5 40 86 43 C83.5 40 84 38 86 35 Z"/>
+                <path d="M42 46 C44 49 44 51 42 54 C40 51 40 49 42 46 Z"/>
+                <path d="M98 46 C100 49 100 51 98 54 C96 51 96 49 98 46 Z"/>
+                <path d="M40 64 C42 66 41.5 68 39 71 C37.5 68 38 66 40 64 Z"/>
+                <path d="M100 64 C102 66 101.5 68 101 71 C99.5 68 98 66 100 64 Z"/>
+              </g>
+              <!-- Holy Spirit Dove Descending (Bồ câu sà xuống) -->
+              <path d="M70 82 C68 76 60 64 42 60 C52 66 56 74 58 80 C50 78 44 80 40 84 C48 85 55 88 58 92 C54 94 52 97 50 100 C56 97 64 94 68 92 L70 94 L72 92 C76 94 84 97 90 100 C88 97 86 94 82 92 C85 88 92 85 100 84 C96 80 90 78 82 80 C84 74 88 66 98 60 C80 64 72 76 70 82 Z" fill="#FFFFFF" stroke="#37474F" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="70" cy="86" r="1.5" fill="#37474F"/>
+              <!-- Base Ribbon -->
+              <path d="M38 110 H102" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.2">QUẢNG ĐẠI</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-them-suc">Khăn Vàng Viền Đỏ · Thiếu Nhi</span>
+          <h3 class="block-name">Khối Thêm Sức</h3>
+          <p class="block-motto">« Quảng Đại làm chứng cho Thần Khí »</p>
+          <p class="block-desc">Chim Bồ Câu giáng lâm cùng vầng quang Bảy Ơn Chúa Thánh Thần, thôi thúc tâm hồn can đảm dấn thân và tuyên xưng niềm tin kiên vững.</p>
+          <div class="block-meta">
+            <span>10 – 11 tuổi</span>
+            <span>6 Lớp Học (Ca 2)</span>
+          </div>
+        </div>
+
+        <!-- 4. PHỤNG VỤ -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Nến Phục Sinh & Bình Hương Bàn Thờ -->
+              <!-- Incense smoke curls (Làn khói hương nghi ngút) -->
+              <path d="M70 32 C65 38 75 42 70 48 C66 52 72 56 68 62" stroke="#E65100" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="3 3"/>
+              <!-- Easter Candle (Nến Phục Sinh cháy sáng) -->
+              <path d="M70 38 C72 42 74 44 70 49 C66 44 68 42 70 38 Z" fill="#FFB74D" stroke="#E65100" stroke-width="1.5"/>
+              <rect x="66" y="49" width="8" height="34" rx="2" fill="#FFFFFF" stroke="#C5A059" stroke-width="1.8"/>
+              <path d="M66 58 H74 M70 54 V66" stroke="#C5A059" stroke-width="1.5"/>
+              <!-- Censer / Thurible (Bình Hương Phụng Vụ) -->
+              <path d="M50 78 C50 92 60 96 70 96 C80 96 90 92 90 78 H50 Z" fill="#FFFDF8" stroke="#C5A059" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M58 78 L64 68 H76 L82 78" stroke="#C5A059" stroke-width="1.8"/>
+              <!-- Chains of censer -->
+              <line x1="56" y1="68" x2="64" y2="44" stroke="#8D6E63" stroke-width="1.2" stroke-dasharray="2 2"/>
+              <line x1="84" y1="68" x2="76" y2="44" stroke="#8D6E63" stroke-width="1.2" stroke-dasharray="2 2"/>
+              <circle cx="70" cy="44" r="3" fill="#C5A059"/>
+              <!-- Base Ribbon -->
+              <path d="M48 110 H92" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.5">TIẾN</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-phung-vu">Khăn Da Cam Có Viền · Phụng Vụ</span>
+          <h3 class="block-name">Khối Phụng Vụ</h3>
+          <p class="block-motto">« Tiến bước phục vụ Bàn Thờ Chúa »</p>
+          <p class="block-desc">Ngọn Nến Phục Sinh cùng Bình Hương Thánh nghi ngút trầm hương dâng lên Tòa Chúa, biểu trưng tâm hồn sốt sắng phụng sự Thánh Lễ.</p>
+          <div class="block-meta">
+            <span>12 tuổi</span>
+            <span>3 Lớp Học (Ca 1)</span>
+          </div>
+        </div>
+
+        <!-- 5. KINH THÁNH -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Cuốn Sách Thánh Mở Ra & Ngọn Đuốc Lời Chúa -->
+              <!-- Light beams from Bible -->
+              <g stroke="#C5A059" stroke-width="1.2">
+                <line x1="70" y1="36" x2="70" y2="44"/>
+                <line x1="56" y1="40" x2="62" y2="46"/>
+                <line x1="84" y1="40" x2="78" y2="46"/>
+              </g>
+              <!-- Alpha & Omega Cross above -->
+              <path d="M70 30 V42 M65 34 H75" stroke="#B71C1C" stroke-width="2" stroke-linecap="round"/>
+              <!-- Open Holy Scriptures (Kinh Thánh rộng mở) -->
+              <path d="M70 70 C64 66 52 64 36 67 V95 C52 92 64 94 70 98 C76 94 88 92 104 95 V67 C88 64 76 66 70 70 Z" fill="#FFFFFF" stroke="#37474F" stroke-width="2" stroke-linejoin="round"/>
+              <!-- Spine fold -->
+              <line x1="70" y1="70" x2="70" y2="98" stroke="#37474F" stroke-width="1.8"/>
+              <!-- Script text lines (Trang sách Lời Chúa) -->
+              <g stroke="#C5A059" stroke-width="1.2" stroke-linecap="round">
+                <line x1="44" y1="75" x2="62" y2="74"/>
+                <line x1="44" y1="81" x2="60" y2="80"/>
+                <line x1="44" y1="87" x2="56" y2="86"/>
+                <line x1="78" y1="74" x2="96" y2="75"/>
+                <line x1="80" y1="80" x2="96" y2="81"/>
+                <line x1="84" y1="86" x2="96" y2="87"/>
+              </g>
+              <!-- Base Ribbon -->
+              <path d="M46 110 H94" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.5">THẮNG</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-kinh-thanh">Khăn Đỏ Viền Vàng · Kinh Thánh</span>
+          <h3 class="block-name">Khối Kinh Thánh</h3>
+          <p class="block-motto">« Thắng nhờ Sức Mạnh Lời Chúa »</p>
+          <p class="block-desc">73 Thư Quy Sách Thánh mở ra nguồn ánh sáng hằng sống, hun đúc đức tin vững vàng và xây dựng đời sống theo khuôn vàng Thước Ngọc Tin Mừng.</p>
+          <div class="block-meta">
+            <span>13 – 14 tuổi</span>
+            <span>6 Lớp Học (Ca 1)</span>
+          </div>
+        </div>
+
+        <!-- 6. VÀO ĐỜI -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M70 12 C104 12 124 16 124 50 C124 94 70 128 70 128 C70 128 16 94 16 50 C16 16 36 12 70 12 Z" fill="#FAF7F0" stroke="#C5A059" stroke-width="2.5"/>
+              <path d="M70 18 C100 18 118 21 118 50 C118 89 70 121 70 121 C70 121 22 89 22 50 C22 21 40 18 70 18 Z" stroke="#E5D8BE" stroke-width="1" stroke-dasharray="2 2"/>
+              
+              <!-- Mỏ Neo Hy Vọng & Con Thuyền Giáo Hội -->
+              <!-- Anchor Ring -->
+              <circle cx="70" cy="38" r="5" stroke="#C5A059" stroke-width="2"/>
+              <!-- Anchor Cross Shaft -->
+              <line x1="70" y1="43" x2="70" y2="88" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="56" y1="52" x2="84" y2="52" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- Anchor Curved Arms & Flukes -->
+              <path d="M48 72 C50 86 60 96 70 96 C80 96 90 86 92 72" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M44 74 L48 70 L52 76 M96 74 L92 70 L88 76" stroke="#37474F" stroke-width="2" stroke-linejoin="round"/>
+              <!-- Gentle Waves of Life (Làn sóng thế gian) -->
+              <path d="M38 98 C46 95 54 101 62 98 C70 95 78 101 86 98 C94 95 98 98 102 98" stroke="#1976D2" stroke-width="1.8" stroke-linecap="round"/>
+              <!-- Base Ribbon -->
+              <path d="M46 110 H94" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="107" font-family="'Cinzel', Georgia, serif" font-size="7.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="1.5">DẤN THÂN</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-vao-doi">Khăn Đỏ Viền Trắng · Vào Đời</span>
+          <h3 class="block-name">Khối Vào Đời</h3>
+          <p class="block-motto">« Dấn Thân làm Muối Men giữa Đời »</p>
+          <p class="block-desc">Mỏ Neo Hy Vọng cắm sâu nơi Thập Giá giữa sóng gió cuộc đời, tôi luyện người trẻ bản lĩnh Huynh Trưởng, sẵn sàng trở thành chứng nhân Tin Mừng.</p>
+          <div class="block-meta">
+            <span>15 – 16 tuổi</span>
+            <span>5 Lớp Học (Ca 1)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes-box">
+        <strong>Điểm ưu việt tuyệt đối của Phương Án 1:</strong>
+        <br>1. <strong>Không có bất kỳ nét nào giả/AI:</strong> Từng đường nét được định hình chính xác theo quy chuẩn đồ họa vector phụng vụ (liturgical line art), không có bóng nhựa 3D, không có chi tiết cẩu thả hay chữ viết bị biến dạng.
+        <br>2. <strong>Đồng bộ 100%:</strong> Cả 6 khối có cùng một khung khiên Gothic, cùng độ dày nét vẽ (stroke 2px/2.5px), cùng chất liệu màu mực thanh nhã, tạo nên sự thống nhất hoàn hảo khi đặt cạnh nhau trên trang chủ.
+        <br>3. <strong>Sâu sắc về thần học Công giáo:</strong> Thể hiện đúng tiến trình Sư Phạm Đức Tin từ mầm non Chiên Con &rarr; Bàn Tiệc Thánh Thể &rarr; Ơn Chúa Thánh Thần &rarr; Đời sống Phụng Vụ &rarr; Đào sâu Lời Chúa &rarr; Dấn thân Vào Đời.
+      </div>
+    </section>
+
+    <!-- HƯỚNG B: HUY HIỆU KHĂN QUÀNG VẢI THÊU DỆT THẬT (AUTHENTIC EMBROIDERED WOVEN ROUNDEL) -->
+    <section class="concept-section">
+      <div class="concept-header">
+        <div>
+          <h2 class="concept-title">Phương Án 2: Phù Hiệu Khăn Quàng Vải Dệt Thực Tế (Authentic Woven Scarf Roundel)</h2>
+          <p class="concept-philosophy">
+            <strong>Ngôn ngữ:</strong> Lấy cảm hứng trực tiếp từ chiếc <strong>Huy Hiệu Vải Thêu Khăn Quàng</strong> mà các em thiếu nhi và huynh trưởng cài trên ngực áo ngoài đời thực. Vải canvas dệt chéo, đường chỉ thêu thủ công nổi tinh xảo, màu viền vắt sổ chính xác theo màu khăn ngành của từng khối.
+          </p>
+        </div>
+        <span class="concept-tag" style="color: #2E7D32; background: #E8F5E9; border-color: #A5D6A7;">CHẤT LIỆU THỰC TẾ · GẦN GŨI VỚI THIẾU NHI</span>
+      </div>
+
+      <div class="blocks-grid">
+        <!-- 1. KHAI TÂM -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#2E7D32" stroke="#1B5E20" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#2E7D32" stroke-width="3" stroke-dasharray="4 2"/>
+              <!-- Stitched Lamb & Cross -->
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <path d="M70 38 V54 M62 44 H78" stroke="#C5A059" stroke-width="2.5" stroke-linecap="round"/>
+              <ellipse cx="64" cy="74" rx="14" ry="10" fill="#FFFFFF" stroke="#37474F" stroke-width="2"/>
+              <ellipse cx="54" cy="68" rx="6" ry="5" fill="#FFFFFF" stroke="#37474F" stroke-width="1.8"/>
+              <path d="M76 72 C80 66 86 64 90 68 C94 72 88 78 84 82" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#1B5E20" text-anchor="middle" letter-spacing="1">CHIÊN CON · BAY CAO</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-khai-tam">Khăn Xanh Lá Trơn</span>
+          <h3 class="block-name">Khối Khai Tâm</h3>
+          <p class="block-motto">« Viền thêu Xanh Lá Trơn »</p>
+          <p class="block-desc">Phù hiệu vải thêu Chú Chiên Con đơn sơ trên nền vải canvas mộc, viền chỉ dệt xanh lá cây của ngành Chiên Con.</p>
+          <div class="block-meta"><span>5 – 7 tuổi</span><span>Mầm non đức tin</span></div>
+        </div>
+
+        <!-- 2. RƯỚC LỄ -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#FBC02D" stroke="#F57F17" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#2E7D32" stroke-width="4" stroke-dasharray="4 2"/>
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <!-- Stitched Host & Chalice -->
+              <circle cx="70" cy="56" r="14" fill="#FFFFFF" stroke="#C5A059" stroke-width="2"/>
+              <path d="M70 48 V64 M62 56 H78" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <path d="M54 70 C54 82 64 85 70 85 C76 85 86 82 86 70 H54 Z" fill="#FFFDF8" stroke="#C5A059" stroke-width="2"/>
+              <path d="M70 85 V94 M60 94 H80" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#1B5E20" text-anchor="middle" letter-spacing="1">ẤU NHI · TRONG SẠCH</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-ruoc-le">Khăn Xanh Viền Vàng</span>
+          <h3 class="block-name">Khối Rước Lễ</h3>
+          <p class="block-motto">« Viền kép Xanh Lá & Vàng Kim »</p>
+          <p class="block-desc">Phù hiệu vải thêu Mình Thánh Chúa và Chén Thánh, viền chỉ vắt sổ vàng kim nổi bật trên nền xanh của ngành Ấu Nhi.</p>
+          <div class="block-meta"><span>8 – 9 tuổi</span><span>Bàn Tiệc Thánh Thể</span></div>
+        </div>
+
+        <!-- 3. THÊM SỨC -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#D32F2F" stroke="#B71C1C" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#FBC02D" stroke-width="4" stroke-dasharray="4 2"/>
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <!-- Stitched Dove & Flames -->
+              <path d="M70 40 C71.5 43 73 45 70 48 C67 45 68.5 43 70 40 Z" fill="#E65100"/>
+              <path d="M58 44 C59.5 47 61 49 58 52 C55 49 56.5 47 58 44 Z" fill="#E65100"/>
+              <path d="M82 44 C83.5 47 85 49 82 52 C79 49 80.5 47 82 44 Z" fill="#E65100"/>
+              <path d="M70 80 C68 74 60 62 44 58 C54 64 58 72 60 78 C52 76 46 78 42 82 C50 83 57 86 60 90 C66 88 74 88 80 90 C83 86 90 83 98 82 C94 78 88 76 80 78 C82 72 86 64 96 58 C80 62 72 74 70 80 Z" fill="#FFFFFF" stroke="#37474F" stroke-width="2"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#C2410C" text-anchor="middle" letter-spacing="1">THIẾU NHI · QUẢNG ĐẠI</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-them-suc">Khăn Vàng Viền Đỏ</span>
+          <h3 class="block-name">Khối Thêm Sức</h3>
+          <p class="block-motto">« Viền kép Vàng & Đỏ Rực Rỡ »</p>
+          <p class="block-desc">Phù hiệu vải thêu Chim Bồ Câu và Lửa Thánh Linh, viền chỉ đỏ thắm trên nền vàng tươi của ngành Thiếu Nhi.</p>
+          <div class="block-meta"><span>10 – 11 tuổi</span><span>Hồng Ân Thánh Thần</span></div>
+        </div>
+
+        <!-- 4. PHỤNG VỤ -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#FFFFFF" stroke="#E65100" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#FB8C00" stroke-width="4" stroke-dasharray="4 2"/>
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <!-- Stitched Candle & Incense -->
+              <rect x="66" y="52" width="8" height="32" rx="2" fill="#FFFFFF" stroke="#C5A059" stroke-width="2"/>
+              <path d="M70 42 C72 46 74 48 70 52 C66 48 68 46 70 42 Z" fill="#FF9800"/>
+              <path d="M54 76 C54 86 62 90 70 90 C78 90 86 86 86 76 H54 Z" fill="#FFFDF8" stroke="#C5A059" stroke-width="2"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#E65100" text-anchor="middle" letter-spacing="1">PHỤNG VỤ · TIẾN BƯỚC</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-phung-vu">Khăn Da Cam Viền Trắng</span>
+          <h3 class="block-name">Khối Phụng Vụ</h3>
+          <p class="block-motto">« Viền kép Cam & Trắng Tinh »</p>
+          <p class="block-desc">Phù hiệu vải thêu Ngọn Nến Sáng và Lư Hương Phụng Vụ, viền chỉ trắng trên nền da cam nhiệt thành phụng sự Bàn Thờ Chúa.</p>
+          <div class="block-meta"><span>12 tuổi</span><span>Phụng Vụ Thánh</span></div>
+        </div>
+
+        <!-- 5. KINH THÁNH -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#FBC02D" stroke="#F57F17" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#D32F2F" stroke-width="4" stroke-dasharray="4 2"/>
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <!-- Stitched Open Bible -->
+              <path d="M70 56 C64 52 54 50 40 53 V80 C54 77 64 79 70 83 C76 79 86 77 100 80 V53 C86 50 76 52 70 56 Z" fill="#FFFFFF" stroke="#37474F" stroke-width="2"/>
+              <line x1="70" y1="56" x2="70" y2="83" stroke="#37474F" stroke-width="2"/>
+              <path d="M70 40 V48 M65 44 H75" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#B71C1C" text-anchor="middle" letter-spacing="1">KINH THÁNH · THẮNG</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-kinh-thanh">Khăn Đỏ Viền Vàng</span>
+          <h3 class="block-name">Khối Kinh Thánh</h3>
+          <p class="block-motto">« Viền kép Đỏ Thắm & Vàng Kim »</p>
+          <p class="block-desc">Phù hiệu vải thêu Cuốn Sách Thánh và Thập Giá, viền chỉ vàng kim sắc nét trên nền đỏ của ngành Hiệp Sĩ Kinh Thánh.</p>
+          <div class="block-meta"><span>13 – 14 tuổi</span><span>Lời Chúa Hằng Sống</span></div>
+        </div>
+
+        <!-- 6. VÀO ĐỜI -->
+        <div class="block-card">
+          <div class="emblem-wrapper">
+            <svg viewBox="0 0 140 140" width="140" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="62" fill="#FFFFFF" stroke="#D32F2F" stroke-width="2"/>
+              <circle cx="70" cy="70" r="56" fill="#FDFBF7" stroke="#D32F2F" stroke-width="4" stroke-dasharray="4 2"/>
+              <circle cx="70" cy="70" r="46" fill="#F4EFE6"/>
+              <!-- Stitched Anchor & Waves -->
+              <circle cx="70" cy="44" r="4" stroke="#C5A059" stroke-width="2"/>
+              <line x1="70" y1="48" x2="70" y2="84" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="58" y1="56" x2="82" y2="56" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M50 72 C52 82 60 90 70 90 C80 90 88 82 90 72" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/>
+              <text x="70" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="7.5" font-weight="800" fill="#B71C1C" text-anchor="middle" letter-spacing="1">VÀO ĐỜI · DẤN THÂN</text>
+            </svg>
+          </div>
+          <span class="scarf-ribbon scarf-vao-doi">Khăn Đỏ Viền Trắng</span>
+          <h3 class="block-name">Khối Vào Đời</h3>
+          <p class="block-motto">« Viền kép Đỏ Thắm & Trắng Tinh »</p>
+          <p class="block-desc">Phù hiệu vải thêu Mỏ Neo Hy Vọng và Thánh Giá, viền chỉ trắng tinh khôi của người Huynh Trưởng dấn thân vào đời.</p>
+          <div class="block-meta"><span>15 – 16 tuổi</span><span>Muối Men Giữa Đời</span></div>
+        </div>
+      </div>
+
+      <div class="notes-box">
+        <strong>Điểm ưu việt tuyệt đối của Phương Án 2:</strong>
+        <br>1. <strong>Độ nhận diện thực tế 100%:</strong> Gắn liền với đồng phục và khăn quàng mà các em thiếu nhi mặc mỗi sáng Chúa Nhật đến Nhà thờ An Ngãi.
+        <br>2. <strong>Cảm giác hữu cơ, thủ công mộc mạc:</strong> Đường chỉ thêu đứt đoạn mô phỏng mũi kim sợi dệt, hoàn toàn triệt tiêu cảm giác bóng bẩy của 3D máy tính hoặc AI.
+        <br>3. <strong>Đồng bộ tuyệt đối:</strong> 6 khối đều là hình tròn huy hiệu chuẩn 140x140px, phân biệt rõ ràng bằng hệ màu viền khăn quàng thực tế.
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

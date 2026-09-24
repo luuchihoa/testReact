@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="opt1-parchment-vd" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF5"/>
+      <stop offset="100%" stop-color="#F2EBE0"/>
+    </linearGradient>
+    <linearGradient id="opt1-gold-vd" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9B76A"/>
+      <stop offset="50%" stop-color="#B88A34"/>
+      <stop offset="100%" stop-color="#8C631B"/>
+    </linearGradient>
+    <filter id="opt1-shadow-vd" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#241E1A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#opt1-shadow-vd)">
+    <path d="M128 20 C190 20 226 28 226 92 C226 172 128 236 128 236 C128 236 30 172 30 92 C30 28 66 20 128 20 Z" fill="url(#opt1-parchment-vd)" stroke="url(#opt1-gold-vd)" stroke-width="3.5"/>
+    <path d="M128 28 C182 28 214 36 214 92 C214 163 128 222 128 222 C128 222 42 163 42 92 C42 36 74 28 128 28 Z" stroke="#D8C8AF" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+  </g>
+
+  <!-- Mỏ Neo Hy Vọng & Thánh Giá Kiên Vững (Crux Spes Anchor) -->
+  <!-- Vòng khuyên đỉnh mỏ neo -->
+  <circle cx="128" cy="62" r="8.5" stroke="url(#opt1-gold-vd)" stroke-width="3" fill="none"/>
+  
+  <!-- Thân Thánh Giá Mỏ Neo -->
+  <g stroke="#2C3437" stroke-width="3.2" stroke-linecap="round">
+    <line x1="128" y1="71" x2="128" y2="148"/>
+    <!-- Xà ngang thập giá -->
+    <line x1="104" y1="88" x2="152" y2="88"/>
+    <circle cx="104" cy="88" r="2.5" fill="#2C3437"/>
+    <circle cx="152" cy="88" r="2.5" fill="#2C3437"/>
+  </g>
+
+  <!-- Cánh Mỏ Neo Uốn Cong Cắm Sâu Vững Vàng -->
+  <path d="M90 124 C94 148 110 162 128 162 C146 162 162 148 166 124" stroke="#2C3437" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <!-- Mũi mỏ neo (Flukes) -->
+  <path d="M84 128 L90 120 L96 130 M172 128 L166 120 L160 130" stroke="#2C3437" stroke-width="2.5" stroke-linejoin="round" fill="#FFFFFF"/>
+
+  <!-- Làn Sóng Trần Thế (Waves of Life) -->
+  <g stroke="#1976D2" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85">
+    <path d="M68 168 C80 163 94 171 106 167 C118 163 130 171 142 167 C154 163 168 171 180 167 C186 164 190 167 194 167"/>
+    <path d="M78 177 C90 173 102 181 114 177 C126 173 138 181 150 177 C162 173 174 181 184 177" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Ngôi Sao Biển Soi Đường (Stella Maris Star) -->
+  <path d="M128 42 L130 48 L136 49 L131 53 L133 59 L128 55 L123 59 L125 53 L120 49 L126 48 Z" fill="url(#opt1-gold-vd)"/>
+
+  <!-- Dải Ribbon Khẩu Hiệu DẤN THÂN -->
+  <path d="M70 198 H186" stroke="url(#opt1-gold-vd)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="66" cy="198" r="2.5" fill="#B88A34"/>
+  <circle cx="190" cy="198" r="2.5" fill="#B88A34"/>
+  <text x="128" y="193" font-family="'Cinzel', Georgia, serif" font-size="11.5" font-weight="700" fill="#7A5500" text-anchor="middle" letter-spacing="2.5">DẤN THÂN</text>
+  <text x="128" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#B71C1C" text-anchor="middle" letter-spacing="1">NGÀNH VÀO ĐỜI</text>
+</svg>

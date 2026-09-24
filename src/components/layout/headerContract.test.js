@@ -122,4 +122,44 @@ describe("Header.jsx Design Contract Tests (AGENTS.md v1.1 & Layout Safeguards)"
       assert.ok(!content.includes("TNTT"));
     });
   });
+
+  // ── TRỤ CỘT 6: TƯƠNG PHẢN WCAG AAA & TOKEN KEM - XANH CỤM USER / NOTIF ──
+  describe("Trụ cột 6: Tương phản WCAG AAA & Token Kem - Xanh cụm User & Chuông thông báo (AGENTS.md §5, §6)", () => {
+    it("AccountTriggerButton không chứa lỗi typo dark:stone-800/60 thiếu tiền tố bg-", () => {
+      assert.ok(
+        !content.includes("dark:stone-800/60"),
+        "Header.jsx không được chứa typo dark:stone-800/60 gây mất nền Dark Mode"
+      );
+    });
+
+    it("AccountTriggerButton không dùng bg-white/50 gây mờ đục và lóa chữ trắng trên dark mode", () => {
+      assert.ok(
+        !content.includes("bg-white/50"),
+        "Header.jsx không được dùng bg-white/50 cho nút User gây lỗi chữ trắng trên nền mờ trắng"
+      );
+    });
+
+    it("AccountTriggerButton tuân thủ 100% token Kem - Xanh WCAG AAA (bề mặt, chữ và viền)", () => {
+      assert.ok(
+        content.includes("bg-[#fffefa] dark:bg-[#1e2821]"),
+        "AccountTriggerButton phải dùng token bề mặt chuẩn bg-[#fffefa] dark:bg-[#1e2821]"
+      );
+      assert.ok(
+        content.includes("text-[#293d32] dark:text-[#ecece0]"),
+        "AccountTriggerButton phải dùng token chữ chuẩn text-[#293d32] dark:text-[#ecece0]"
+      );
+      assert.ok(
+        content.includes("border-[#dedfd4] dark:border-[#354237]"),
+        "AccountTriggerButton phải dùng token viền chuẩn border-[#dedfd4] dark:border-[#354237]"
+      );
+    });
+
+    it("AccountTriggerButton và nút Chuông đạt chuẩn vùng chạm tối thiểu min-h-[40px]", () => {
+      assert.ok(
+        content.includes("min-h-[40px]"),
+        "AccountTriggerButton và nút Chuông phải có min-h-[40px] đảm bảo khả năng chạm dễ dàng"
+      );
+    });
+  });
 });
+

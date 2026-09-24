@@ -401,17 +401,30 @@ function StudentListPanel({
             <div className="w-10 h-10 rounded-2xl bg-stone-500/10 flex items-center justify-center text-[#454f46] dark:text-[#b8c2b4] mx-auto">
               <AlertCircle className="w-5 h-5" />
             </div>
-            <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] max-w-xs mx-auto">
-              Không tìm thấy giáo lý sinh nào phù hợp với bộ lọc hiện tại.
-            </p>
-            {(search || filterType !== "all" || sortBy !== "ten_asc") && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] text-xs font-bold hover:bg-[#314e3e]/20 transition-colors cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" /> Xóa bộ lọc
-              </button>
+            {(allStudents || students || []).length === 0 ? (
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-[#293d32] dark:text-[#ecece0]">
+                  Lớp chưa có giáo lý sinh
+                </p>
+                <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] max-w-xs mx-auto">
+                  Lớp {lop} chưa có giáo lý sinh nào được ghi danh trong niên khóa {namHoc}.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-[#454f46] dark:text-[#b8c2b4] max-w-xs mx-auto">
+                  Không tìm thấy giáo lý sinh nào phù hợp với bộ lọc hiện tại.
+                </p>
+                {(search || filterType !== "all" || sortBy !== "ten_asc") && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#314e3e]/10 dark:bg-[#d6b883]/15 text-[#314e3e] dark:text-[#d6b883] text-xs font-bold hover:bg-[#314e3e]/20 transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" /> Xóa bộ lọc
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
