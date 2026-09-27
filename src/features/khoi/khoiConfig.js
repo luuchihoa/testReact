@@ -23,7 +23,7 @@ export const KHOI_PRESENTATION_MAP = {
       titleLine1: "Gieo Mầm Đức Tin",
       titleLine2: "Tuổi Thơ Trong Tay Chúa",
       desc: "Bước đầu làm quen với Nhà Chúa qua những khúc hát, cử điệu sinh động và bài học đức tin đơn sơ đầy ắp tình yêu thương.",
-      image: asset("/images/khoichiencon.avif"),
+      image: asset("/images/khoikhaitam-anngai.jpg"),
       imageAlt: "Thiếu nhi Khối Khai Tâm Giáo xứ An Ngãi",
       floatingBadge: {
         title: "Khăn Xanh Lá Trơn · Mầm Non Đức Tin",
@@ -98,7 +98,7 @@ export const KHOI_PRESENTATION_MAP = {
       image: asset("/images/khoikinhthanh-anngai.jpg"),
       imageAlt: "Đoàn sinh Khối Kinh Thánh Giáo xứ An Ngãi",
       floatingBadge: {
-        title: "Khăn Đỏ Có Viền · 73 Thư Quy Lời Chúa",
+        title: "Khăn Đỏ Có Viền · 73 Cuốn Sách Lời Chúa",
         sub: "Xứ đoàn Mẹ Mân Côi · Giáo xứ An Ngãi",
       },
     },

@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase.js";
 
 // Đầy đủ 7 Khối giáo lý & Giới trẻ (không kèm số tuổi theo yêu cầu)
 const CATECHISM_BLOCKS = [
-  { label: "Khối Chiên Con", path: "/khối-chiên-con" },
+  { label: "Khối Khai Tâm", path: "/khối-khai-tâm" },
   { label: "Khối Rước Lễ", path: "/khối-rước-lễ" },
   { label: "Khối Thêm Sức", path: "/khối-thêm-sức" },
   { label: "Khối Kinh Thánh", path: "/khối-kinh-thánh" },

@@ -17,7 +17,7 @@ import { normalizeNotificationLink } from "../../features/account/utils.js";
 
 /* ═══ ROUTE MAP ═══════════════════════════════════════════════════ */
 const KHOI_ITEMS = [
-  { path: "/khối-chiên-con",    label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2", icon: Baby,     accent: "#16a34a", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
+  { path: "/khối-khai-tâm",    label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2", icon: Baby,     accent: "#16a34a", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
   { path: "/khối-rước-lễ",      label: "Rước Lễ",    sub: "RLLĐ 1 & 2",         icon: Wheat,    accent: "#15803d", bg: "bg-emerald-100/80 dark:bg-emerald-500/20", ring: "ring-emerald-300 dark:ring-emerald-500/40" },
   { path: "/khối-thêm-sức",     label: "Thêm Sức",   sub: "Thêm Sức 1 & 2",     icon: Flame,    accent: "#a16207", bg: "bg-amber-100/80 dark:bg-amber-500/20",   ring: "ring-amber-300 dark:ring-amber-500/40"   },
   { path: "/khối-phụng-vụ",     label: "Phụng Vụ",   sub: "Lớp 7",              icon: Church,   accent: "#c2410c", bg: "bg-orange-100/80 dark:bg-orange-500/20", ring: "ring-orange-300 dark:ring-orange-500/40" },

@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import "./KhoiThemSuc.css";
 
 export default function KhoiThemSuc() {
@@ -282,29 +283,17 @@ export default function KhoiThemSuc() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <div className="khoi-overview-bar">
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">{config?.ageText || "10 – 11 Tuổi"}</span>
-              <span className="khoi-chip-label">Sinh năm {themSuc2BirthYear} – {themSuc1BirthYear}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">{config?.grades || "Thêm Sức 1 & 2"}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch sinh hoạt</span>
-              <span className="khoi-chip-value">Chúa Nhật ({timelineData.shiftName})</span>
-              <span className="khoi-chip-label">Lễ 08:00 · Học 09:15</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Đồng hành</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Quý Soeur &amp; Giáo Lý Viên</span>
-            </div>
-          </div>
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Thêm Sức"
+            age={config?.tuoi || config?.ageText || "10 – 11 tuổi"}
+            ageDetail={`Sinh năm ${themSuc2BirthYear}–${themSuc1BirthYear}`}
+            classCount={totalClasses}
+            classDetail={config?.grades || "Thêm Sức 1 và 2"}
+            teacherCount={totalTeachers}
+            teamDetail="Quý Soeur và Giáo lý viên"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
+          />
         </div>
       </section>
 
@@ -320,10 +309,11 @@ export default function KhoiThemSuc() {
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>DANH SÁCH LỚP THỰC TẾ NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Các Lớp Khối Thêm Sức <em>Giáo xứ An Ngãi</em>
+              <span>Khối Thêm Sức</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Phòng Giáo lý, quý Soeur và Giáo lý viên phụ trách {totalClasses} lớp học thuộc {config?.nganh || "Ngành Kim Hoan"}.
@@ -331,14 +321,15 @@ export default function KhoiThemSuc() {
           </Motion.div>
 
           {/* Bộ lọc phân tầng khối học */}
-          <div className="khoi-stage-filter-bar" role="toolbar" aria-label="Bộ lọc danh sách lớp">
+          <div className="khoi-stage-filter-bar khoi-stage-filter-bar--three" role="group" aria-label="Lọc lớp Khối Thêm Sức">
             <button
               type="button"
               className={`khoi-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
               aria-pressed={selectedGroup === "all"}
               onClick={() => setSelectedGroup("all")}
             >
-              Tất Cả {totalClasses} Lớp
+              <span className="khoi-filter-label">Tất cả</span>
+              <span className="khoi-filter-meta">{totalClasses} lớp</span>
             </button>
             <button
               type="button"
@@ -346,7 +337,8 @@ export default function KhoiThemSuc() {
               aria-pressed={selectedGroup === "ts1"}
               onClick={() => setSelectedGroup("ts1")}
             >
-              Khối Thêm Sức 1 (10 Tuổi · {ts1Classes.length} Lớp)
+              <span className="khoi-filter-label">Thêm Sức 1</span>
+              <span className="khoi-filter-meta">10 tuổi · {ts1Classes.length} lớp</span>
             </button>
             <button
               type="button"
@@ -354,7 +346,8 @@ export default function KhoiThemSuc() {
               aria-pressed={selectedGroup === "ts2"}
               onClick={() => setSelectedGroup("ts2")}
             >
-              Khối Thêm Sức 2 (11 Tuổi · Năm Bí Tích)
+              <span className="khoi-filter-label">Thêm Sức 2</span>
+              <span className="khoi-filter-meta">11 tuổi · {ts2Classes.length} lớp</span>
             </button>
           </div>
 
@@ -550,7 +543,7 @@ export default function KhoiThemSuc() {
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>SƯ PHẠM ĐỨC TIN {config?.nganh?.toUpperCase() || "NGÀNH KIM HOAN"}</span>
+              <span>SƯ PHẠM ĐỨC TIN KHỐI THÊM SỨC</span>
             </div>
             <h2 className="khoi-section-title">
               Hành Trình Khám Phá &amp; <em>Lãnh Nhận Thần Khí</em>

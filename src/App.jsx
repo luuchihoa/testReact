@@ -208,8 +208,8 @@ export default function App() {
           <Route path="lời-chúa-hàng-ngày" element={<ExternalRedirect url="https://loichuamoingay.org" />} />
           <Route path="tuyển-sinh" element={<TuyenSinh />} />
           <Route path="giới-thiệu" element={<GioiThieu />} />
-          <Route path="khối-chiên-con" element={<KhoiChienCon />} />
           <Route path="khối-khai-tâm" element={<KhoiChienCon />} />
+          <Route path="khối-chiên-con" element={<Navigate to="/khối-khai-tâm" replace />} />
           <Route path="khối-rước-lễ" element={<KhoiRuocLe />} />
           <Route path="khối-thêm-sức" element={<KhoiThemSuc />} />
           <Route path="khối-phụng-vụ" element={<KhoiPhungVu />} />

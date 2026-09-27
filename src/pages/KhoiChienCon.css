@@ -244,3 +244,38 @@
 .card-vuontre {
   border-left: 3px solid var(--khoi-accent-decorative);
 }
+
+.khoi-vuontre-featured-wrap {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.card-vuontre-featured {
+  width: 100%;
+  border-left: 4px solid var(--khoi-accent-decorative);
+}
+
+@media (min-width: 768px) {
+  .card-vuontre-featured-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+}
+
+.card-vuontre-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 8px;
+  background: var(--khoi-surface-alt);
+  border: 1px dashed var(--khoi-line);
+  font-size: 0.8125rem;
+  color: var(--khoi-muted);
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+

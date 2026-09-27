@@ -68,12 +68,14 @@ export default function ExcelImportModal({
     };
   }, [open, importing, handleClose]);
 
-  // Xử lý đọc file Excel
+  // Xử lý đọc file Excel / Numbers
   const processFile = async (f) => {
     if (!f) return;
-    const isExcel = f.name.endsWith(".xlsx") || f.name.endsWith(".xls");
-    if (!isExcel) {
-      showToast("Vui lòng chọn file định dạng Excel (.xlsx hoặc .xls)", "warning");
+    const lowerName = (f.name || "").toLowerCase();
+    const isExcel = lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls");
+    const isNumbers = lowerName.endsWith(".numbers");
+    if (!isExcel && !isNumbers) {
+      showToast("Vui lòng chọn file định dạng Excel (.xlsx, .xls) hoặc Apple Numbers (.numbers)", "warning");
       return;
     }
 
@@ -84,8 +86,8 @@ export default function ExcelImportModal({
       setParsedData(data);
       setStep("preview");
     } catch (err) {
-      console.error("Parse Excel error:", err);
-      showToast(err.message || "Không thể đọc file Excel này. Vui lòng kiểm tra lại cấu trúc.", "error");
+      console.error("Parse spreadsheet error:", err);
+      showToast(err.message || "Không thể đọc file bảng tính này. Vui lòng kiểm tra lại cấu trúc.", "error");
       setFile(null);
     } finally {
       setParsing(false);
@@ -200,7 +202,7 @@ export default function ExcelImportModal({
             </div>
             <div>
               <h3 id="excel-modal-title" className="text-base sm:text-lg font-bold text-[#293d32] dark:text-[#ecece0] font-sans leading-tight">
-                Nhập danh sách Giáo lý sinh (.xlsx)
+                Nhập danh sách Giáo lý sinh (.xlsx, .numbers)
               </h3>
               <p className="text-xs font-semibold text-[#575e55] dark:text-[#b0b9ac] mt-0.5">
                 Niên khóa: <span className="font-bold text-[#7c5c2d] dark:text-[#d4b47d]">{namHoc}</span>
@@ -263,7 +265,7 @@ export default function ExcelImportModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx, .xls"
+                  accept=".xlsx, .xls, .numbers, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.apple.numbers"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -275,10 +277,10 @@ export default function ExcelImportModal({
                   )}
                 </div>
                 <p className="text-sm sm:text-base font-bold text-[#293d32] dark:text-[#ecece0] mb-1">
-                  {parsing ? "Đang đọc dữ liệu Excel..." : "Kéo thả file .xlsx vào đây hoặc bấm để chọn file"}
+                  {parsing ? "Đang đọc dữ liệu bảng tính..." : "Kéo thả file .xlsx hoặc .numbers vào đây hoặc bấm để chọn"}
                 </p>
                 <p className="text-xs text-[#575e55] dark:text-[#b0b9ac] max-w-sm leading-relaxed">
-                  Hỗ trợ định dạng Microsoft Excel (.xlsx, .xls). Hệ thống tự động nhận diện học sinh cũ và tự sinh mã tài khoản thông minh nếu là học sinh mới.
+                  Hỗ trợ định dạng Microsoft Excel (.xlsx, .xls) và Apple Numbers (.numbers). Hệ thống tự động nhận diện học sinh cũ và tự sinh mã tài khoản thông minh nếu là học sinh mới.
                 </p>
               </div>
 

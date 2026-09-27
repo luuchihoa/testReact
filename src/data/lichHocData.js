@@ -530,7 +530,7 @@ export const SCHEDULE_CLASSES = [
     birthYear: 2019,
     ageText: "7 tuổi",
     room: "P2",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
   },
   {
     id: "kt-2-2-an",
@@ -546,7 +546,7 @@ export const SCHEDULE_CLASSES = [
     birthYear: 2019,
     ageText: "7 tuổi",
     room: "Nhà hầm",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
   },
   {
     id: "kt-1-1-an",
@@ -562,7 +562,7 @@ export const SCHEDULE_CLASSES = [
     birthYear: 2020,
     ageText: "6 tuổi",
     room: "P1",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
   },
   {
     id: "kt-1-2-an",
@@ -578,7 +578,7 @@ export const SCHEDULE_CLASSES = [
     birthYear: 2020,
     ageText: "6 tuổi",
     room: "Nhà hầm",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
   },
   {
     id: "vuon-tre",
@@ -594,6 +594,6 @@ export const SCHEDULE_CLASSES = [
     birthYear: 2021,
     ageText: "5 tuổi",
     room: "Nhà thờ bên nữ",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
   },
 ];

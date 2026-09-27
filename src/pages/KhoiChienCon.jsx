@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import "./KhoiChienCon.css";
 
 export default function KhoiChienCon() {
@@ -226,8 +227,8 @@ export default function KhoiChienCon() {
             <Motion.div variants={heroItemVariants}>
               <div className="khoi-hero-image-card">
                 <img
-                  src={config?.hero?.image || asset("/images/khoichiencon.avif")}
-                  alt={config?.hero?.imageAlt || "Thiếu nhi Khối Chiên Con Giáo xứ An Ngãi"}
+                  src={config?.hero?.image || asset("/images/khoikhaitam-anngai.jpg")}
+                  alt={config?.hero?.imageAlt || "Thiếu nhi Khối Khai Tâm Giáo xứ An Ngãi"}
                   className="khoi-hero-img"
                   loading="eager"
                   fetchPriority="high"
@@ -249,29 +250,17 @@ export default function KhoiChienCon() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <div className="khoi-overview-bar">
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">{config?.ageText || "5 – 7 Tuổi"}</span>
-              <span className="khoi-chip-label">Sinh năm {khaiTam2BirthYear} – {vuonTreBirthYear}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">{config?.grades || "Vườn Trẻ & Khai Tâm"}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch sinh hoạt</span>
-              <span className="khoi-chip-value">Chúa Nhật ({timelineData.shiftName})</span>
-              <span className="khoi-chip-label">Lễ 08:00 · Học 09:15</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Đồng hành</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Quý Soeur &amp; Giáo Lý Viên</span>
-            </div>
-          </div>
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Khai Tâm"
+            age={config?.tuoi || config?.ageText || "5 – 7 tuổi"}
+            ageDetail={`Sinh năm ${khaiTam2BirthYear}–${vuonTreBirthYear}`}
+            classCount={totalClasses}
+            classDetail={config?.grades || "Vườn Trẻ và Khai Tâm"}
+            teacherCount={totalTeachers}
+            teamDetail="Quý Soeur và Giáo lý viên"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
+          />
         </div>
       </section>
 
@@ -287,10 +276,11 @@ export default function KhoiChienCon() {
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>DANH SÁCH LỚP THỰC TẾ NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Các Lớp Khối Khai Tâm <em>Giáo xứ An Ngãi</em>
+              <span>Khối Khai Tâm</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Phòng Giáo lý, quý Soeur và Giáo lý viên phụ trách {totalClasses} lớp học thuộc Khối Khai Tâm (Khăn Xanh Lá Trơn HTDC).
@@ -298,14 +288,15 @@ export default function KhoiChienCon() {
           </Motion.div>
 
           {/* Bộ lọc phân tầng khối học */}
-          <div className="khoi-stage-filter-bar" role="toolbar" aria-label="Bộ lọc danh sách lớp">
+          <div className="khoi-stage-filter-bar khoi-stage-filter-bar--three" role="group" aria-label="Lọc lớp Khối Khai Tâm">
             <button
               type="button"
               className={`khoi-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
               aria-pressed={selectedGroup === "all"}
               onClick={() => setSelectedGroup("all")}
             >
-              Tất Cả {totalClasses} Lớp
+              <span className="khoi-filter-label">Tất cả</span>
+              <span className="khoi-filter-meta">{totalClasses} lớp</span>
             </button>
             <button
               type="button"
@@ -313,7 +304,8 @@ export default function KhoiChienCon() {
               aria-pressed={selectedGroup === "vt"}
               onClick={() => setSelectedGroup("vt")}
             >
-              Lớp Vườn Trẻ (5 Tuổi · {vuonTreClasses.length} Lớp)
+              <span className="khoi-filter-label">Vườn Trẻ</span>
+              <span className="khoi-filter-meta">5 tuổi · {vuonTreClasses.length} lớp</span>
             </button>
             <button
               type="button"
@@ -321,7 +313,8 @@ export default function KhoiChienCon() {
               aria-pressed={selectedGroup === "kt"}
               onClick={() => setSelectedGroup("kt")}
             >
-              Khối Khai Tâm (6–7 Tuổi · {khaiTam1Classes.length + khaiTam2Classes.length} Lớp)
+              <span className="khoi-filter-label">Khai Tâm</span>
+              <span className="khoi-filter-meta">6–7 tuổi · {khaiTam1Classes.length + khaiTam2Classes.length} lớp</span>
             </button>
           </div>
 
@@ -351,9 +344,9 @@ export default function KhoiChienCon() {
                 </div>
               </div>
 
-              <div className="khoi-class-grid">
+              <div className="khoi-vuontre-featured-wrap">
                 {vuonTreClasses.map((item) => (
-                  <div key={item.id} className="khoi-class-card card-vuontre">
+                  <div key={item.id} className="khoi-class-card card-vuontre card-vuontre-featured">
                     {/* TẦNG 1: Head - Badge mã lớp & Vị trí phòng */}
                     <div className="khoi-card-head">
                       <span className="khoi-class-code">
@@ -365,51 +358,63 @@ export default function KhoiChienCon() {
                       </span>
                     </div>
 
-                    {/* TẦNG 2: Tiêu đề lớp & Dải chỉ số Sĩ số / Độ tuổi */}
-                    <div>
-                      <h4 className="khoi-class-title">{item.name}</h4>
-                      <div className="khoi-stats-strip">
-                        <span className="khoi-stat-chip">
-                          <Users size={13} aria-hidden="true" />
-                          <span>Sĩ số: <strong>{item.studentsCount != null ? `${item.studentsCount} em` : "Đang tuyển sinh"}</strong></span>
-                        </span>
-                        <span className="khoi-stat-chip">
-                          <Calendar size={13} aria-hidden="true" />
-                          <span>Độ tuổi: <strong>{item.ageText} ({item.birthYear})</strong></span>
-                        </span>
-                      </div>
-                    </div>
+                    <div className="card-vuontre-featured-body">
+                      {/* Cột 1: Thông tin lớp, sĩ số, GLV */}
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="khoi-class-title">{item.name}</h4>
+                          <div className="khoi-stats-strip">
+                            <span className="khoi-stat-chip">
+                              <Users size={13} aria-hidden="true" />
+                              <span>Sĩ số: <strong>{item.studentsCount != null ? `${item.studentsCount} em` : "Đang tuyển sinh"}</strong></span>
+                            </span>
+                            <span className="khoi-stat-chip">
+                              <Calendar size={13} aria-hidden="true" />
+                              <span>Độ tuổi: <strong>{item.ageText} ({item.birthYear})</strong></span>
+                            </span>
+                          </div>
+                        </div>
 
-                    {/* TẦNG 3: Đội ngũ GLV Phụ trách */}
-                    <div className="khoi-teacher-box">
-                      <div className="khoi-teacher-label">
-                        <ShieldCheck size={13} aria-hidden="true" />
-                        <span>GLV Phụ trách ({item.teachers.length})</span>
+                        {/* Đội ngũ GLV Phụ trách */}
+                        <div className="khoi-teacher-box">
+                          <div className="khoi-teacher-label">
+                            <ShieldCheck size={13} aria-hidden="true" />
+                            <span>GLV Phụ trách ({item.teachers.length})</span>
+                          </div>
+                          <div className="khoi-teacher-pills">
+                            {item.teachers.map((t) => (
+                              <span key={`${item.id}-${t}`} className="khoi-teacher-pill">
+                                {formatTeacherName(t)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div className="khoi-teacher-pills">
-                        {item.teachers.map((t) => (
-                          <span key={`${item.id}-${t}`} className="khoi-teacher-pill">
-                            {formatTeacherName(t)}
+
+                      {/* Cột 2: Trọng tâm huấn giáo, thời gian, đồng hành phụ huynh */}
+                      <div className="space-y-3">
+                        {/* Trọng tâm huấn giáo mầm non */}
+                        <div className="khoi-focus-box">
+                          <div className="khoi-focus-badge">{item.levelBadge}</div>
+                          <p className="khoi-focus-desc">{item.focus}</p>
+                        </div>
+
+                        {/* Thời gian học & Trạng thái */}
+                        <div className="khoi-card-foot">
+                          <span className="khoi-card-time">
+                            <Clock size={13} aria-hidden="true" />
+                            <span>{item.time} ({formatShiftName(item.ca)})</span>
                           </span>
-                        ))}
+                          <span className="khoi-card-status">
+                            ● {item.status}
+                          </span>
+                        </div>
+
+                        <div className="card-vuontre-notice">
+                          <Heart size={14} className="shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" aria-hidden="true" />
+                          <span>Đặc thù mầm non: Phụ huynh có thể ngồi cùng và đồng hành cùng bé trong các giờ học đầu tiên để bé cảm thấy an tâm và vui vẻ.</span>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* TẦNG 4: Trọng tâm huấn giáo mầm non */}
-                    <div className="khoi-focus-box">
-                      <div className="khoi-focus-badge">{item.levelBadge}</div>
-                      <p className="khoi-focus-desc">{item.focus}</p>
-                    </div>
-
-                    {/* TẦNG 5: Footer - Giờ học & Trạng thái nề nếp / Tuyển sinh */}
-                    <div className="khoi-card-foot">
-                      <span className="khoi-card-time">
-                        <Clock size={13} aria-hidden="true" />
-                        <span>{item.time} ({formatShiftName(item.ca)})</span>
-                      </span>
-                      <span className="khoi-card-status">
-                        ● {item.status}
-                      </span>
                     </div>
                   </div>
                 ))}
@@ -437,7 +442,7 @@ export default function KhoiChienCon() {
                 </div>
               </div>
 
-              <div className="khoi-class-grid">
+              <div className="khoi-class-grid khoi-class-grid--two">
                 {[...khaiTam1Classes, ...khaiTam2Classes].map((item) => (
                   <div key={item.id} className="khoi-class-card">
                     {/* TẦNG 1: Head - Badge mã lớp & Vị trí phòng */}

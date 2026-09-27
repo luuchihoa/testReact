@@ -123,11 +123,21 @@ export function generateAutoUsername(hoTen, ngaySinh, existingSet = new Set()) {
 export async function parseStudentRosterExcel(file) {
   const XLSX = await getXLSX();
   const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: "array" });
+  let wb;
+  try {
+    wb = XLSX.read(buffer, { type: "array" });
+  } catch (err) {
+    if (file?.name && file.name.toLowerCase().endsWith(".numbers")) {
+      throw new Error(
+        "Không thể đọc trực tiếp tệp Apple Numbers này (có thể do phiên bản Numbers mới hoặc tệp có mật khẩu). Gợi ý: bạn hãy mở tệp trong ứng dụng Numbers, chọn Tệp (File) > Xuất ra (Export To) > Excel (.xlsx) rồi tải lên lại."
+      );
+    }
+    throw new Error(err.message || "Không thể đọc tệp bảng tính này. Vui lòng kiểm tra lại định dạng.");
+  }
 
   const firstSheetName = wb.SheetNames[0];
   if (!firstSheetName) {
-    throw new Error("File Excel không có sheet nào.");
+    throw new Error("Tệp bảng tính không có trang tính (sheet) nào.");
   }
 
   const worksheet = wb.Sheets[firstSheetName];
@@ -135,7 +145,12 @@ export async function parseStudentRosterExcel(file) {
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
   if (!rawRows || rawRows.length === 0) {
-    throw new Error("File Excel không có dữ liệu.");
+    if (file?.name && file.name.toLowerCase().endsWith(".numbers")) {
+      throw new Error(
+        "Tệp Apple Numbers không có dữ liệu học sinh hoặc định dạng chưa được hỗ trợ. Gợi ý: bạn hãy mở tệp trong Numbers, chọn Tệp > Xuất ra > Excel (.xlsx) rồi tải lên lại."
+      );
+    }
+    throw new Error("Tệp bảng tính không có dữ liệu học sinh.");
   }
 
   const normalizedStudents = [];
@@ -409,18 +424,33 @@ export async function downloadSampleUsersExcel() {
 export async function parseUsersExcel(file) {
   const XLSX = await getXLSX();
   const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: "array" });
+  let wb;
+  try {
+    wb = XLSX.read(buffer, { type: "array" });
+  } catch (err) {
+    if (file?.name && file.name.toLowerCase().endsWith(".numbers")) {
+      throw new Error(
+        "Không thể đọc trực tiếp tệp Apple Numbers này (có thể do phiên bản Numbers mới hoặc tệp có mật khẩu). Gợi ý: bạn hãy mở tệp trong ứng dụng Numbers, chọn Tệp (File) > Xuất ra (Export To) > Excel (.xlsx) rồi tải lên lại."
+      );
+    }
+    throw new Error(err.message || "Không thể đọc tệp bảng tính này. Vui lòng kiểm tra lại định dạng.");
+  }
 
   const firstSheetName = wb.SheetNames[0];
   if (!firstSheetName) {
-    throw new Error("File Excel không có sheet nào.");
+    throw new Error("Tệp bảng tính không có trang tính (sheet) nào.");
   }
 
   const worksheet = wb.Sheets[firstSheetName];
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
   if (!rawRows || rawRows.length === 0) {
-    throw new Error("File Excel không có dữ liệu.");
+    if (file?.name && file.name.toLowerCase().endsWith(".numbers")) {
+      throw new Error(
+        "Tệp Apple Numbers không có dữ liệu người dùng hoặc định dạng chưa được hỗ trợ. Gợi ý: bạn hãy mở tệp trong Numbers, chọn Tệp > Xuất ra > Excel (.xlsx) rồi tải lên lại."
+      );
+    }
+    throw new Error("Tệp bảng tính không có dữ liệu người dùng.");
   }
 
   const normalizedUsers = [];

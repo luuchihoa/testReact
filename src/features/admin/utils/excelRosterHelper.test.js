@@ -83,4 +83,52 @@ describe("excelRosterHelper: Sinh mã học sinh, người dùng & Nhận diện
       assert.equal(typeof parseUsersExcel, "function");
     });
   });
+
+  describe("5. parseStudentRosterExcel: Đọc và phân tích tệp Apple Numbers (.numbers)", () => {
+    it("Đọc thành công tệp .numbers thực tế và nhận diện chính xác dữ liệu học sinh", async () => {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const { parseStudentRosterExcel } = await import("./excelRosterHelper.js");
+
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const fixturePath = path.join(__dirname, "fixtures", "test_sample.numbers");
+
+      if (fs.existsSync(fixturePath)) {
+        const buffer = fs.readFileSync(fixturePath);
+        const mockFile = {
+          name: "test_sample.numbers",
+          arrayBuffer: async () => buffer,
+        };
+
+        const result = await parseStudentRosterExcel(mockFile);
+        assert.ok(result);
+        assert.equal(result.total, 1);
+        assert.equal(result.validCount, 1);
+        assert.equal(result.students[0].ho_va_ten, "Nguyễn Văn An");
+        assert.equal(result.students[0].ten_thanh, "Phêrô");
+        assert.equal(result.students[0].gioi_tinh, "Nam");
+        assert.equal(result.students[0].username, "annguyen15");
+        assert.equal(result.students[0].isValid, true);
+      }
+    });
+
+    it("Báo lỗi hướng dẫn người dùng xuất file Excel nếu tệp .numbers bị lỗi dữ liệu", async () => {
+      const { parseStudentRosterExcel } = await import("./excelRosterHelper.js");
+      const mockCorruptFile = {
+        name: "corrupt.numbers",
+        arrayBuffer: async () => new Uint8Array([0, 1, 2, 3]).buffer,
+      };
+
+      await assert.rejects(
+        async () => {
+          await parseStudentRosterExcel(mockCorruptFile);
+        },
+        (err) => {
+          assert.match(err.message, /Apple Numbers/);
+          return true;
+        }
+      );
+    });
+  });
 });

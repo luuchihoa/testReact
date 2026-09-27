@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import DocumentReaderModal from "../components/shared/DocumentReaderModal.jsx";
 import { DOCUMENTS_DATA } from "../data/documents/docData.js";
 import { getDocumentById } from "../lib/documentsApi.js";
@@ -328,130 +329,33 @@ export default function KhoiVaoDoi() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <Motion.div
-            className="khoi-overview-bar"
-            {...sectionRevealProps}
-          >
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">15 – 16 Tuổi</span>
-              <span className="khoi-chip-label">Lớp 10 &amp; 11 · Sinh {birthYearRange}</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">3 lớp VĐ1 · 2 lớp VĐ2</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Đội ngũ</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Huynh Trưởng &amp; Đồng hành</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch học</span>
-              <span className="khoi-chip-value">Chúa Nhật (Ca 1)</span>
-              <span className="khoi-chip-label">Học 07:00 · Lễ 08:00</span>
-            </div>
-          </Motion.div>
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Vào Đời"
+            age={config?.tuoi || "15 – 16 tuổi"}
+            ageDetail={`Lớp 10 và 11 · sinh năm ${birthYearRange}`}
+            classCount={totalClasses}
+            classDetail={`${vd1Classes.length} lớp Vào Đời 1 · ${vd2Classes.length} lớp Vào Đời 2`}
+            teacherCount={totalTeachers}
+            teamDetail="Huynh trưởng và đồng hành"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
+          />
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 2: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="vd-journey-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>SƯ PHẠM ĐỨC TIN KHỐI VÀO ĐỜI · CƠ CHIẾN CHINH</span>
-            </div>
-            <h2 className="khoi-section-title">
-              6 Bước Dấn Thân <em>Vào Đời</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Hành trình sư phạm đức tin giúp các bạn trẻ 15–16 tuổi định vị bản thân, trang bị la bàn luân lý và sẵn sàng trở thành men muối giữa giảng đường và xã hội hôm nay.
-            </p>
-          </Motion.div>
-
-          <div className="vd-journey-grid">
-            {faithJourneySteps.map((step) => {
-              const StepIcon = step.icon;
-              const PracticeIcon = step.practiceIcon;
-              return (
-                <Motion.div
-                  key={step.step}
-                  className={`vd-journey-card stage-step-${step.step}`}
-                  {...sectionRevealProps}
-                >
-                  <div>
-                    <div className="vd-journey-card-top">
-                      <div className="vd-journey-left-header">
-                        <div className="vd-journey-icon-wrap" aria-hidden="true">
-                          <StepIcon size={20} />
-                        </div>
-                        <span className="vd-journey-step-badge">CHẶNG {step.step}</span>
-                      </div>
-                      <span className="vd-journey-category-pill">{step.badge}</span>
-                    </div>
-
-                    <div className="vd-journey-sub">{step.sub}</div>
-                    <h3 className="vd-journey-title">{step.title}</h3>
-                    <p className="vd-journey-meaning">{step.meaning}</p>
-                  </div>
-
-                  <div className="vd-journey-practice-box">
-                    <div className="vd-practice-header">
-                      <PracticeIcon size={14} aria-hidden="true" />
-                      <span>{step.practiceLabel}</span>
-                    </div>
-                    <div className="vd-practice-content">{step.highlight}</div>
-                  </div>
-                </Motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 3: 4 TRỤ CỘT HÀNH TRANG VÀO ĐỜI (YOUCAT, DOCAT, CALLING, SKILLS)
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="vd-pillars-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>HÀNH TRANG TRƯỞNG THÀNH KITÔ HỮU</span>
-            </div>
-            <h2 className="khoi-section-title">
-              Bốn Trụ Cột <em>Hành Trang Vào Đời</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Chương trình chuyên biệt tích hợp Giáo lý Youcat, Học thuyết Docat, định hướng ơn gọi và kỹ năng mềm giúp người trẻ vững bước vào đời.
-            </p>
-          </Motion.div>
-
-          <KhoiVaoDoiPillars onOpenReader={handleOpenReader} />
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 4: DANH SÁCH 5 LỚP HỌC & GIÁO LÝ VIÊN
+          SECTION 2: DANH SÁCH 5 LỚP HỌC & GIÁO LÝ VIÊN
       ══════════════════════════════════════════════════════════════ */}
       <section id="danh-sach-lop" tabIndex={-1} className="khoi-section">
         <div className="khoi-shell">
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>TỔ CHỨC LỚP HỌC NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Danh Sách Lớp <em>Khối Vào Đời</em>
+              <span>Khối Vào Đời</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Cơ cấu 5 lớp học (3 lớp Vào Đời 1 và 2 lớp Vào Đời 2) với đội ngũ {totalTeachers} Giáo lý viên / Huynh trưởng tâm huyết đồng hành và định hướng tương lai.
@@ -468,14 +372,15 @@ export default function KhoiVaoDoi() {
           </div>
 
           {/* Bộ lọc phân tầng lớp học */}
-          <div className="khoi-stage-filter-bar" role="group" aria-label="Lọc lớp Khối Vào Đời">
+          <div className="khoi-stage-filter-bar khoi-stage-filter-bar--three" role="group" aria-label="Lọc lớp Khối Vào Đời">
             <button
               type="button"
               className={`khoi-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
               aria-pressed={selectedGroup === "all"}
               onClick={() => setSelectedGroup("all")}
             >
-              Tất Cả {totalClasses} Lớp
+              <span className="khoi-filter-label">Tất cả</span>
+              <span className="khoi-filter-meta">{totalClasses} lớp</span>
             </button>
             <button
               type="button"
@@ -483,7 +388,8 @@ export default function KhoiVaoDoi() {
               aria-pressed={selectedGroup === "vd1"}
               onClick={() => setSelectedGroup("vd1")}
             >
-              Vào Đời 1 ({vd1Classes.length} lớp)
+              <span className="khoi-filter-label">Vào Đời 1</span>
+              <span className="khoi-filter-meta">{vd1Classes.length} lớp</span>
             </button>
             <button
               type="button"
@@ -491,7 +397,8 @@ export default function KhoiVaoDoi() {
               aria-pressed={selectedGroup === "vd2"}
               onClick={() => setSelectedGroup("vd2")}
             >
-              Vào Đời 2 ({vd2Classes.length} lớp)
+              <span className="khoi-filter-label">Vào Đời 2</span>
+              <span className="khoi-filter-meta">{vd2Classes.length} lớp</span>
             </button>
           </div>
 
@@ -678,6 +585,86 @@ export default function KhoiVaoDoi() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 3: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="vd-journey-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>SƯ PHẠM ĐỨC TIN KHỐI VÀO ĐỜI</span>
+            </div>
+            <h2 className="khoi-section-title">
+              6 Bước Dấn Thân <em>Vào Đời</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Hành trình sư phạm đức tin giúp các bạn trẻ 15–16 tuổi định vị bản thân, trang bị la bàn luân lý và sẵn sàng trở thành men muối giữa giảng đường và xã hội hôm nay.
+            </p>
+          </Motion.div>
+
+          <div className="vd-journey-grid">
+            {faithJourneySteps.map((step) => {
+              const StepIcon = step.icon;
+              const PracticeIcon = step.practiceIcon;
+              return (
+                <Motion.div
+                  key={step.step}
+                  className={`vd-journey-card stage-step-${step.step}`}
+                  {...sectionRevealProps}
+                >
+                  <div>
+                    <div className="vd-journey-card-top">
+                      <div className="vd-journey-left-header">
+                        <div className="vd-journey-icon-wrap" aria-hidden="true">
+                          <StepIcon size={20} />
+                        </div>
+                        <span className="vd-journey-step-badge">CHẶNG {step.step}</span>
+                      </div>
+                      <span className="vd-journey-category-pill">{step.badge}</span>
+                    </div>
+
+                    <div className="vd-journey-sub">{step.sub}</div>
+                    <h3 className="vd-journey-title">{step.title}</h3>
+                    <p className="vd-journey-meaning">{step.meaning}</p>
+                  </div>
+
+                  <div className="vd-journey-practice-box">
+                    <div className="vd-practice-header">
+                      <PracticeIcon size={14} aria-hidden="true" />
+                      <span>{step.practiceLabel}</span>
+                    </div>
+                    <div className="vd-practice-content">{step.highlight}</div>
+                  </div>
+                </Motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 4: 4 TRỤ CỘT HÀNH TRANG VÀO ĐỜI (YOUCAT, DOCAT, CALLING, SKILLS)
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="vd-pillars-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>HÀNH TRANG TRƯỞNG THÀNH KITÔ HỮU</span>
+            </div>
+            <h2 className="khoi-section-title">
+              Bốn Trụ Cột <em>Hành Trang Vào Đời</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Chương trình chuyên biệt tích hợp Giáo lý Youcat, Học thuyết Docat, định hướng ơn gọi và kỹ năng mềm giúp người trẻ vững bước vào đời.
+            </p>
+          </Motion.div>
+
+          <KhoiVaoDoiPillars onOpenReader={handleOpenReader} />
         </div>
       </section>
 

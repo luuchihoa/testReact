@@ -52,9 +52,9 @@ const NGANH_SECTIONS = [
     img: asset("images/sectors/sector-khai-tam.svg"),
     desc: "Gieo mầm đức tin đơn sơ, trong trắng vào tâm hồn tuổi thơ qua lời kinh, khúc hát cử điệu và mẩu chuyện Kinh Thánh sinh động.",
     classesText: "5 lớp: Vườn Trẻ, Khai Tâm 1/1, 1/2, Khai Tâm 2/1, 2/2",
-    path: "/khối-chiên-con",
+    path: "/khối-khai-tâm",
     khoiList: [
-      { name: "Lớp Vườn Trẻ & Khai Tâm 1 – 2", detail: "5 – 7 tuổi · 5 lớp học (Ca 2)", path: "/khối-chiên-con" }
+      { name: "Lớp Vườn Trẻ & Khai Tâm 1 – 2", detail: "5 – 7 tuổi · 5 lớp học (Ca 2)", path: "/khối-khai-tâm" }
     ]
   },
   {

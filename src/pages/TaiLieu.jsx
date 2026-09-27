@@ -196,7 +196,7 @@ const KHOI_BADGE_MAP = {
 };
 
 const KHOI_LINKS = [
-  { path: "/khối-chiên-con",  label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2 (5 – 7 tuổi)", icon: Baby },
+  { path: "/khối-khai-tâm",  label: "Khai Tâm",   sub: "Vườn Trẻ, KT 1 & 2 (5 – 7 tuổi)", icon: Baby },
   { path: "/khối-rước-lễ",    label: "Rước Lễ",    sub: "RLLĐ 1 & 2 (8 – 9 tuổi)",         icon: Wheat },
   { path: "/khối-thêm-sức",   label: "Thêm Sức",   sub: "Thêm Sức 1 & 2 (10 – 11 tuổi)",   icon: Flame },
   { path: "/khối-phụng-vụ",   label: "Phụng Vụ",   sub: "Phụng Vụ (12 tuổi)",              icon: Church },

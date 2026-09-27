@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import KhoiPhungVuLiturgical from "../features/khoi/KhoiPhungVuLiturgical.jsx";
 import KhoiPhungVuSacraments from "../features/khoi/KhoiPhungVuSacraments.jsx";
 import "./KhoiPhungVu.css";
@@ -313,179 +314,33 @@ export default function KhoiPhungVu() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <Motion.div
-            className="khoi-overview-bar"
-            {...sectionRevealProps}
-          >
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">12 Tuổi</span>
-              <span className="khoi-chip-label">Lớp 7 · Sinh năm {phungVuBirthYear}</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">Phụng Vụ 1/1, 1/2, 1/3</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Đội ngũ</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Đồng hành &amp; Huấn giáo</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch học</span>
-              <span className="khoi-chip-value">Chúa Nhật (Ca 1)</span>
-              <span className="khoi-chip-label">Học 07:00 · Lễ 08:00</span>
-            </div>
-          </Motion.div>
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Phụng Vụ"
+            age={config?.tuoi || config?.ageText || "12 tuổi"}
+            ageDetail={`Lớp 7 · sinh năm ${phungVuBirthYear}`}
+            classCount={totalClasses}
+            classDetail="Phụng Vụ 1/1, 1/2 và 1/3"
+            teacherCount={totalTeachers}
+            teamDetail="Đồng hành và huấn giáo"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
+          />
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 2: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-journey-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>SƯ PHẠM ĐỨC TIN NGÀNH NHIỆT QUANG</span>
-            </div>
-            <h2 className="khoi-section-title">
-              6 Bước Trưởng Thành <em>Trong Phụng Vụ</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Hành trình sư phạm đức tin giúp các em 12 tuổi chuyển từ người tham dự thụ động thành người yêu mến và tích cực phụng sự bàn thờ thánh thiêng.
-            </p>
-          </Motion.div>
-
-          <div className="pv-journey-grid">
-            {faithJourneySteps.map((step) => {
-              const StepIcon = step.icon;
-              const PracticeIcon = step.practiceIcon;
-              return (
-                <Motion.div
-                  key={step.step}
-                  className={`pv-journey-card stage-step-${step.step}`}
-                  {...sectionRevealProps}
-                >
-                  <div>
-                    <div className="pv-journey-card-top">
-                      <div className="pv-journey-left-header">
-                        <div className="pv-journey-icon-wrap" aria-hidden="true">
-                          <StepIcon size={20} />
-                        </div>
-                        <span className="pv-journey-step-badge">CHẶNG {step.step}</span>
-                      </div>
-                      <span className="pv-journey-category-pill">{step.badge}</span>
-                    </div>
-
-                    <div className="pv-journey-sub">{step.sub}</div>
-                    <h3 className="pv-journey-title">{step.title}</h3>
-                    <p className="pv-journey-meaning">{step.meaning}</p>
-                  </div>
-
-                  <div className="pv-journey-practice-box">
-                    <div className="pv-practice-header">
-                      <PracticeIcon size={14} aria-hidden="true" />
-                      <span>{step.practiceLabel}</span>
-                    </div>
-                    <div className="pv-practice-content">{step.highlight}</div>
-                  </div>
-                </Motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 3: KHO TÀNG HỘI THÁNH (TABS PHỤNG VỤ & BÍ TÍCH)
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="pv-liturgical-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>KHO TÀNG ĐỨC TIN HỘI THÁNH</span>
-            </div>
-            <h2 className="khoi-section-title">
-              Năm Phụng Vụ &amp; <em>Bảy Bí Tích Cứu Độ</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Khám phá nhịp sống thiêng liêng của Giáo Hội qua các mùa phụng vụ sống động và 7 suối nguồn ân sủng nuôi dưỡng linh hồn Kitô hữu.
-            </p>
-          </Motion.div>
-
-          {/* Accessible Tabs */}
-          <div className="pv-liturgical-tabs-wrapper">
-            <div
-              className="pv-liturgical-tabs"
-              role="tablist"
-              aria-label="Kho tàng Hội Thánh"
-              onKeyDown={handleTabKeyDown}
-            >
-              {tabList.map((tab) => {
-                const TabIcon = tab.icon;
-                const isSelected = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    id={`pv-tab-${tab.id}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    aria-controls={`pv-panel-${tab.id}`}
-                    tabIndex={isSelected ? 0 : -1}
-                    className={`pv-tab-btn ${isSelected ? "active" : ""}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    <TabIcon size={16} aria-hidden="true" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Tabpanel 1: Chu Kỳ Năm Phụng Vụ */}
-          <div
-            id="pv-panel-seasons"
-            role="tabpanel"
-            aria-labelledby="pv-tab-seasons"
-            hidden={activeTab !== "seasons"}
-          >
-            {activeTab === "seasons" && <KhoiPhungVuLiturgical />}
-          </div>
-
-          {/* Tabpanel 2: Bảy Bí Tích Cứu Độ */}
-          <div
-            id="pv-panel-sacraments"
-            role="tabpanel"
-            aria-labelledby="pv-tab-sacraments"
-            hidden={activeTab !== "sacraments"}
-          >
-            {activeTab === "sacraments" && <KhoiPhungVuSacraments />}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 4: DANH SÁCH 3 LỚP HỌC & GIÁO LÝ VIÊN
+          SECTION 2: DANH SÁCH 3 LỚP HỌC & GIÁO LÝ VIÊN
       ══════════════════════════════════════════════════════════════ */}
       <section id="danh-sach-lop" tabIndex={-1} className="khoi-section">
         <div className="khoi-shell">
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>TỔ CHỨC LỚP HỌC NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Danh Sách Lớp <em>Khối Phụng Vụ</em>
+              <span>Khối Phụng Vụ</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Cơ cấu {totalClasses} lớp học với đội ngũ {totalTeachers} Giáo lý viên tâm huyết đồng hành cùng các em trong giờ học giáo lý và phụng sự bàn thờ.
@@ -580,6 +435,135 @@ export default function KhoiPhungVu() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 3: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="pv-journey-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>SƯ PHẠM ĐỨC TIN KHỐI PHỤNG VỤ</span>
+            </div>
+            <h2 className="khoi-section-title">
+              6 Bước Trưởng Thành <em>Trong Phụng Vụ</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Hành trình sư phạm đức tin giúp các em 12 tuổi chuyển từ người tham dự thụ động thành người yêu mến và tích cực phụng sự bàn thờ thánh thiêng.
+            </p>
+          </Motion.div>
+
+          <div className="pv-journey-grid">
+            {faithJourneySteps.map((step) => {
+              const StepIcon = step.icon;
+              const PracticeIcon = step.practiceIcon;
+              return (
+                <Motion.div
+                  key={step.step}
+                  className={`pv-journey-card stage-step-${step.step}`}
+                  {...sectionRevealProps}
+                >
+                  <div>
+                    <div className="pv-journey-card-top">
+                      <div className="pv-journey-left-header">
+                        <div className="pv-journey-icon-wrap" aria-hidden="true">
+                          <StepIcon size={20} />
+                        </div>
+                        <span className="pv-journey-step-badge">CHẶNG {step.step}</span>
+                      </div>
+                      <span className="pv-journey-category-pill">{step.badge}</span>
+                    </div>
+
+                    <div className="pv-journey-sub">{step.sub}</div>
+                    <h3 className="pv-journey-title">{step.title}</h3>
+                    <p className="pv-journey-meaning">{step.meaning}</p>
+                  </div>
+
+                  <div className="pv-journey-practice-box">
+                    <div className="pv-practice-header">
+                      <PracticeIcon size={14} aria-hidden="true" />
+                      <span>{step.practiceLabel}</span>
+                    </div>
+                    <div className="pv-practice-content">{step.highlight}</div>
+                  </div>
+                </Motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 4: KHO TÀNG HỘI THÁNH (TABS PHỤNG VỤ & BÍ TÍCH)
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="pv-liturgical-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>KHO TÀNG ĐỨC TIN HỘI THÁNH</span>
+            </div>
+            <h2 className="khoi-section-title">
+              Năm Phụng Vụ &amp; <em>Bảy Bí Tích Cứu Độ</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Khám phá nhịp sống thiêng liêng của Giáo Hội qua các mùa phụng vụ sống động và 7 suối nguồn ân sủng nuôi dưỡng linh hồn Kitô hữu.
+            </p>
+          </Motion.div>
+
+          {/* Accessible Tabs */}
+          <div className="pv-liturgical-tabs-wrapper">
+            <div
+              className="pv-liturgical-tabs"
+              role="tablist"
+              aria-label="Kho tàng Hội Thánh"
+              onKeyDown={handleTabKeyDown}
+            >
+              {tabList.map((tab) => {
+                const TabIcon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    id={`pv-tab-${tab.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`pv-panel-${tab.id}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    className={`pv-tab-btn ${isSelected ? "active" : ""}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <TabIcon size={16} aria-hidden="true" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tabpanel 1: Chu Kỳ Năm Phụng Vụ */}
+          <div
+            id="pv-panel-seasons"
+            role="tabpanel"
+            aria-labelledby="pv-tab-seasons"
+            hidden={activeTab !== "seasons"}
+          >
+            {activeTab === "seasons" && <KhoiPhungVuLiturgical />}
+          </div>
+
+          {/* Tabpanel 2: Bảy Bí Tích Cứu Độ */}
+          <div
+            id="pv-panel-sacraments"
+            role="tabpanel"
+            aria-labelledby="pv-tab-sacraments"
+            hidden={activeTab !== "sacraments"}
+          >
+            {activeTab === "sacraments" && <KhoiPhungVuSacraments />}
           </div>
         </div>
       </section>

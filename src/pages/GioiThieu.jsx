@@ -35,7 +35,7 @@ const nganhList = [
     id: "khai-tam",
     nganh: "Khối Khai Tâm (Vườn Trẻ & Khai Tâm)",
     khoi: [
-      { ten: "Khối Khai Tâm", tuoi: "5 – 7 tuổi · Khăn Xanh Lá Trơn", moTa: "Làm quen với Chúa qua lời kinh, bài hát, cử điệu và câu chuyện Kinh Thánh đơn sơ.", icon: Baby, to: "/khối-chiên-con" }
+      { ten: "Khối Khai Tâm", tuoi: "5 – 7 tuổi · Khăn Xanh Lá Trơn", moTa: "Làm quen với Chúa qua lời kinh, bài hát, cử điệu và câu chuyện Kinh Thánh đơn sơ.", icon: Baby, to: "/khối-khai-tâm" }
     ]
   },
   {

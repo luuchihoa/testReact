@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import "./KhoiRuocLe.css";
 
 export default function KhoiRuocLe() {
@@ -282,32 +283,17 @@ export default function KhoiRuocLe() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <Motion.div
-            className="khoi-overview-bar"
-            {...sectionRevealProps}
-          >
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">{config?.ageText || "8 – 9 Tuổi"}</span>
-              <span className="khoi-chip-label">Sinh năm {ruocLe2BirthYear}–{ruocLe1BirthYear}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">Khối {config?.grades || "RLLĐ 1 & 2"}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch học</span>
-              <span className="khoi-chip-value">Chúa Nhật</span>
-              <span className="khoi-chip-label">Lễ {timelineData.massTime ? timelineData.massTime.split(" – ")[0] : "08:00"} · Học {classes[0]?.time ? classes[0].time.split(" – ")[0] : "09:15"}</span>
-            </div>
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Nhân sự</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Quý Soeur &amp; Huynh Trưởng</span>
-            </div>
-          </Motion.div>
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Rước Lễ"
+            age={config?.tuoi || config?.ageText || "8 – 9 tuổi"}
+            ageDetail={`Sinh năm ${ruocLe2BirthYear}–${ruocLe1BirthYear}`}
+            classCount={totalClasses}
+            classDetail={config?.grades || "RLLĐ 1 và 2"}
+            teacherCount={totalTeachers}
+            teamDetail="Quý Soeur và Giáo lý viên"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
+          />
         </div>
       </section>
 
@@ -319,10 +305,11 @@ export default function KhoiRuocLe() {
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" />
-              <span>DANH SÁCH LỚP THỰC TẾ NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Các Lớp Khối Rước Lễ <em>Giáo xứ An Ngãi</em>
+              <span>Khối Rước Lễ</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Phòng Giáo lý, quý Soeur và Huynh trưởng phụ trách {totalClasses} lớp học thuộc {config?.nganh || "Ngành Ấu"}.
@@ -339,14 +326,15 @@ export default function KhoiRuocLe() {
           </div>
 
           {/* Bộ lọc phân tầng khối học */}
-          <div className="khoi-stage-filter-bar" role="group" aria-label="Bộ lọc khối lớp">
+          <div className="khoi-stage-filter-bar khoi-stage-filter-bar--three" role="group" aria-label="Lọc lớp Khối Rước Lễ">
             <button
               type="button"
               className={`khoi-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
               onClick={() => setSelectedGroup("all")}
               aria-pressed={selectedGroup === "all"}
             >
-              Tất Cả {totalClasses} Lớp
+              <span className="khoi-filter-label">Tất cả</span>
+              <span className="khoi-filter-meta">{totalClasses} lớp</span>
             </button>
             <button
               type="button"
@@ -354,7 +342,8 @@ export default function KhoiRuocLe() {
               onClick={() => setSelectedGroup("rl1")}
               aria-pressed={selectedGroup === "rl1"}
             >
-              Khối ${rld1Classes[0]?.group || "RLLĐ 1"} (${rld1Classes[0]?.ageText || "8 Tuổi"} · ${rld1Classes.length} Lớp)
+              <span className="khoi-filter-label">{rld1Classes[0]?.group || "Rước Lễ 1"}</span>
+              <span className="khoi-filter-meta">{rld1Classes[0]?.ageText || "8 tuổi"} · {rld1Classes.length} lớp</span>
             </button>
             <button
               type="button"
@@ -362,7 +351,8 @@ export default function KhoiRuocLe() {
               onClick={() => setSelectedGroup("rl2")}
               aria-pressed={selectedGroup === "rl2"}
             >
-              Khối ${rld2Classes[0]?.group || "RLLĐ 2"} (${rld2Classes[0]?.ageText || "9 Tuổi"} · Năm Bí Tích)
+              <span className="khoi-filter-label">{rld2Classes[0]?.group || "Rước Lễ 2"}</span>
+              <span className="khoi-filter-meta">{rld2Classes[0]?.ageText || "9 tuổi"} · {rld2Classes.length} lớp</span>
             </button>
           </div>
 
@@ -552,7 +542,7 @@ export default function KhoiRuocLe() {
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" />
-              <span>SƯ PHẠM ĐỨC TIN {config?.nganh?.toUpperCase() || "NGÀNH ẤU"}</span>
+              <span>SƯ PHẠM ĐỨC TIN KHỐI RƯỚC LỄ</span>
             </div>
             <h2 className="khoi-section-title">
               Hành Trình Khám Phá &amp; <em>Đón Chúa Vào Lòng</em>

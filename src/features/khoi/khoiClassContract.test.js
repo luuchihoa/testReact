@@ -140,7 +140,10 @@ describe("Scoped CSS Contract and Required Class Presence Tests across 6 Sectors
   for (const sector of sectorConfigs) {
     it(`${sector.name} (${sector.id}): 100% domain classes in JSX must exist in imported CSS contract`, () => {
       const definedCssClasses = getSectorCssClasses(sector.cssFile);
-      const usedJsxClasses = getSectorJsxClasses(sector.jsxFiles);
+      const usedJsxClasses = getSectorJsxClasses([
+        ...sector.jsxFiles,
+        "src/features/khoi/KhoiOverviewBar.jsx"
+      ]);
 
       const missingClasses = [];
       for (const cls of usedJsxClasses) {
@@ -252,5 +255,32 @@ describe("Scoped CSS Contract and Required Class Presence Tests across 6 Sectors
       0,
       `Phát hiện class legacy còn sót lại trong JSX:\n${foundLegacy.join("\n")}`
     );
+  });
+
+  it("Danh sách lớp đứng trước phần Sư phạm Đức tin và eyebrow chỉ gọi tên Khối", () => {
+    const pedagogyLabels = new Map([
+      ["src/pages/KhoiRuocLe.jsx", "SƯ PHẠM ĐỨC TIN KHỐI RƯỚC LỄ"],
+      ["src/pages/KhoiThemSuc.jsx", "SƯ PHẠM ĐỨC TIN KHỐI THÊM SỨC"],
+      ["src/pages/KhoiPhungVu.jsx", "SƯ PHẠM ĐỨC TIN KHỐI PHỤNG VỤ"],
+      ["src/pages/KhoiKinhThanh.jsx", "SƯ PHẠM ĐỨC TIN KHỐI KINH THÁNH"],
+      ["src/pages/KhoiVaoDoi.jsx", "SƯ PHẠM ĐỨC TIN KHỐI VÀO ĐỜI"]
+    ]);
+
+    for (const [file, expectedLabel] of pedagogyLabels) {
+      const content = fs.readFileSync(path.resolve(rootDir, file), "utf-8");
+      const classListIndex = content.indexOf('id="danh-sach-lop"');
+      const pedagogyIndex = content.indexOf(expectedLabel);
+
+      assert.ok(classListIndex >= 0, `[${file}] Thiếu section danh sách lớp`);
+      assert.ok(pedagogyIndex >= 0, `[${file}] Thiếu eyebrow '${expectedLabel}'`);
+      assert.ok(
+        classListIndex < pedagogyIndex,
+        `[${file}] Danh sách lớp phải đứng trước phần Sư phạm Đức tin`
+      );
+      assert.ok(
+        !content.includes("SƯ PHẠM ĐỨC TIN NGÀNH"),
+        `[${file}] Eyebrow Sư phạm Đức tin không được dùng tên Ngành`
+      );
+    }
   });
 });

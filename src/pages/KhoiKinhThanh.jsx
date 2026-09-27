@@ -19,6 +19,7 @@ import {
 } from "../features/khoi/khoiConfig.js";
 import { getEnrollmentStatus, getSectorEnrollmentCTA } from "../features/enrollment/enrollmentConfig.js";
 import { useKhoiMotion } from "../features/khoi/useKhoiMotion.js";
+import KhoiOverviewBar from "../features/khoi/KhoiOverviewBar.jsx";
 import BibleQuickNavigatorModal from "../components/bible/BibleQuickNavigatorModal.jsx";
 import KhoiKinhThanhTestament from "../features/khoi/KhoiKinhThanhTestament.jsx";
 import "./KhoiKinhThanh.css";
@@ -323,7 +324,7 @@ export default function KhoiKinhThanh() {
                   </div>
                   <div>
                     <div className="khoi-floating-badge-title">
-                      {config?.hero?.floatingBadge?.title || "73 Thư Quy · Lời Chúa Là Ngọn Đèn Soi"}
+                      {config?.hero?.floatingBadge?.title || "73 Cuốn Sách · Lời Chúa Là Ngọn Đèn Soi"}
                     </div>
                     <div className="khoi-floating-badge-sub">
                       {config?.hero?.floatingBadge?.sub || "Xứ đoàn Mẹ Mân Côi · Giáo xứ An Ngãi"}
@@ -334,164 +335,33 @@ export default function KhoiKinhThanh() {
             </Motion.div>
           </Motion.div>
 
-          {/* Dải tổng quan 4 chỉ số (Overview Bar) */}
-          <Motion.div
-            className="khoi-overview-bar"
-            {...sectionRevealProps}
-          >
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Độ tuổi</span>
-              <span className="khoi-chip-value">13 – 14 Tuổi</span>
-              <span className="khoi-chip-label">Lớp 8 &amp; 9 · Sinh {birthYearRange}</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Quy mô</span>
-              <span className="khoi-chip-value">{totalClasses} Lớp Học</span>
-              <span className="khoi-chip-label">3 lớp KT1 · 3 lớp KT2</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Đội ngũ</span>
-              <span className="khoi-chip-value">{totalTeachers} GLV</span>
-              <span className="khoi-chip-label">Đồng hành &amp; Huấn giáo</span>
-            </div>
-
-            <div className="khoi-overview-chip">
-              <span className="khoi-chip-cat">Lịch học</span>
-              <span className="khoi-chip-value">Chúa Nhật (Ca 1)</span>
-              <span className="khoi-chip-label">Học 07:00 · Lễ 08:00</span>
-            </div>
-          </Motion.div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 2: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="kt-journey-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>SƯ PHẠM ĐỨC TIN KHỐI KINH THÁNH</span>
-            </div>
-            <h2 className="khoi-section-title">
-              6 Bước Đào Sâu <em>Lời Chúa</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Hành trình sư phạm đức tin giúp các em 13–14 tuổi xây dựng nền tảng vững chắc trên Lời Chúa từ công trình Tạo Dựng đến đỉnh cao Phục Sinh và sứ vụ làm chứng giữa đời.
-            </p>
-          </Motion.div>
-
-          <div className="kt-journey-grid">
-            {faithJourneySteps.map((step) => {
-              const StepIcon = step.icon;
-              const PracticeIcon = step.practiceIcon;
-              return (
-                <Motion.div
-                  key={step.step}
-                  className={`kt-journey-card stage-step-${step.step}`}
-                  {...sectionRevealProps}
-                >
-                  <div>
-                    <div className="kt-journey-card-top">
-                      <div className="kt-journey-left-header">
-                        <div className="kt-journey-icon-wrap" aria-hidden="true">
-                          <StepIcon size={20} />
-                        </div>
-                        <span className="kt-journey-step-badge">CHẶNG {step.step}</span>
-                      </div>
-                      <span className="kt-journey-category-pill">{step.badge}</span>
-                    </div>
-
-                    <div className="kt-journey-sub">{step.sub}</div>
-                    <h3 className="kt-journey-title">{step.title}</h3>
-                    <p className="kt-journey-meaning">{step.meaning}</p>
-                  </div>
-
-                  <div className="kt-journey-practice-box">
-                    <div className="kt-practice-header">
-                      <PracticeIcon size={14} aria-hidden="true" />
-                      <span>{step.practiceLabel}</span>
-                    </div>
-                    <div className="kt-practice-content">{step.highlight}</div>
-                  </div>
-                </Motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          SECTION 3: KHO TÀNG 73 SÁCH & LECTIO DIVINA TABS
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="kt-testament-section">
-        <div className="khoi-shell">
-          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
-            <div className="khoi-eyebrow">
-              <span className="khoi-dot" aria-hidden="true" />
-              <span>KHO TÀNG LỜI CHÚA &amp; PHƯƠNG PHÁP CẦU NGUYỆN</span>
-            </div>
-            <h2 className="khoi-section-title">
-              73 Cuốn Sách Thánh &amp; <em>Lectio Divina</em>
-            </h2>
-            <p className="khoi-section-desc">
-              Khám phá toàn bộ 73 cuốn Kinh Thánh Cựu Ước &amp; Tân Ước cùng 4 bước cầu nguyện Lời Chúa truyền thống giúp thanh thiếu niên kết hiệp mật thiết với Thầy Giêsu.
-            </p>
-          </Motion.div>
-
-          {/* Accessible Tabs */}
-          <div className="kt-tab-nav-wrapper">
-            <div
-              className="kt-tab-nav"
-              role="tablist"
-              aria-label="Kho Tàng &amp; Phương Pháp Cầu Nguyện"
-              onKeyDown={handleTabKeyDown}
-            >
-              {tabList.map((tab) => {
-                const TabIcon = tab.icon;
-                const isSelected = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    id={`kt-tab-${tab.id}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    aria-controls={`panel-${tab.id}`}
-                    tabIndex={isSelected ? 0 : -1}
-                    className={`kt-tab-btn ${isSelected ? "active" : ""}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    <TabIcon size={17} aria-hidden="true" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <KhoiKinhThanhTestament
-            activeTab={activeTab}
-            onOpenBookModal={handleOpenBookModal}
+          <KhoiOverviewBar
+            ariaLabel="Tổng quan Khối Kinh Thánh"
+            age={config?.tuoi || config?.ageText || "13 – 14 tuổi"}
+            ageDetail={`Lớp 8 và 9 · sinh năm ${birthYearRange}`}
+            classCount={totalClasses}
+            classDetail={`${kt1Classes.length} lớp Kinh Thánh 1 · ${kt2Classes.length} lớp Kinh Thánh 2`}
+            teacherCount={totalTeachers}
+            teamDetail="Đồng hành và huấn giáo"
+            timeline={timelineData}
+            motionProps={sectionRevealProps}
           />
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          SECTION 4: DANH SÁCH 6 LỚP HỌC & GIÁO LÝ VIÊN
+          SECTION 2: DANH SÁCH 6 LỚP HỌC & GIÁO LÝ VIÊN
       ══════════════════════════════════════════════════════════════ */}
       <section id="danh-sach-lop" tabIndex={-1} className="khoi-section">
         <div className="khoi-shell">
           <Motion.div className="khoi-section-header" {...sectionRevealProps}>
             <div className="khoi-eyebrow">
               <span className="khoi-dot" aria-hidden="true" />
-              <span>TỔ CHỨC LỚP HỌC NIÊN KHÓA {academicYear}</span>
+              <span>DANH SÁCH LỚP NIÊN KHÓA {academicYear}</span>
             </div>
             <h2 className="khoi-section-title">
-              Danh Sách Lớp <em>Khối Kinh Thánh</em>
+              <span>Khối Kinh Thánh</span>{" "}
+              <em className="block sm:inline whitespace-nowrap">Giáo xứ An Ngãi</em>
             </h2>
             <p className="khoi-section-desc">
               Cơ cấu {totalClasses} lớp học (3 lớp Kinh Thánh 1 và 3 lớp Kinh Thánh 2) với đội ngũ {totalTeachers} Giáo lý viên tâm huyết đồng hành và hướng dẫn suy niệm Lời Chúa.
@@ -508,14 +378,15 @@ export default function KhoiKinhThanh() {
           </div>
 
           {/* Bộ lọc phân tầng lớp học */}
-          <div className="khoi-stage-filter-bar" role="group" aria-label="Lọc lớp Khối Kinh Thánh">
+          <div className="khoi-stage-filter-bar khoi-stage-filter-bar--three" role="group" aria-label="Lọc lớp Khối Kinh Thánh">
             <button
               type="button"
               className={`khoi-filter-pill ${selectedGroup === "all" ? "active" : ""}`}
               aria-pressed={selectedGroup === "all"}
               onClick={() => setSelectedGroup("all")}
             >
-              Tất Cả {totalClasses} Lớp
+              <span className="khoi-filter-label">Tất cả</span>
+              <span className="khoi-filter-meta">{totalClasses} lớp</span>
             </button>
             <button
               type="button"
@@ -523,7 +394,8 @@ export default function KhoiKinhThanh() {
               aria-pressed={selectedGroup === "kt1"}
               onClick={() => setSelectedGroup("kt1")}
             >
-              Kinh Thánh 1 ({kt1Classes.length} lớp)
+              <span className="khoi-filter-label">Kinh Thánh 1</span>
+              <span className="khoi-filter-meta">{kt1Classes.length} lớp</span>
             </button>
             <button
               type="button"
@@ -531,7 +403,8 @@ export default function KhoiKinhThanh() {
               aria-pressed={selectedGroup === "kt2"}
               onClick={() => setSelectedGroup("kt2")}
             >
-              Kinh Thánh 2 ({kt2Classes.length} lớp)
+              <span className="khoi-filter-label">Kinh Thánh 2</span>
+              <span className="khoi-filter-meta">{kt2Classes.length} lớp</span>
             </button>
           </div>
 
@@ -718,6 +591,120 @@ export default function KhoiKinhThanh() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 3: LỘ TRÌNH 6 CHẶNG GIÁO LÝ ĐỨC TIN
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="kt-journey-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>SƯ PHẠM ĐỨC TIN KHỐI KINH THÁNH</span>
+            </div>
+            <h2 className="khoi-section-title">
+              6 Bước Đào Sâu <em>Lời Chúa</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Hành trình sư phạm đức tin giúp các em 13–14 tuổi xây dựng nền tảng vững chắc trên Lời Chúa từ công trình Tạo Dựng đến đỉnh cao Phục Sinh và sứ vụ làm chứng giữa đời.
+            </p>
+          </Motion.div>
+
+          <div className="kt-journey-grid">
+            {faithJourneySteps.map((step) => {
+              const StepIcon = step.icon;
+              const PracticeIcon = step.practiceIcon;
+              return (
+                <Motion.div
+                  key={step.step}
+                  className={`kt-journey-card stage-step-${step.step}`}
+                  {...sectionRevealProps}
+                >
+                  <div>
+                    <div className="kt-journey-card-top">
+                      <div className="kt-journey-left-header">
+                        <div className="kt-journey-icon-wrap" aria-hidden="true">
+                          <StepIcon size={20} />
+                        </div>
+                        <span className="kt-journey-step-badge">CHẶNG {step.step}</span>
+                      </div>
+                      <span className="kt-journey-category-pill">{step.badge}</span>
+                    </div>
+
+                    <div className="kt-journey-sub">{step.sub}</div>
+                    <h3 className="kt-journey-title">{step.title}</h3>
+                    <p className="kt-journey-meaning">{step.meaning}</p>
+                  </div>
+
+                  <div className="kt-journey-practice-box">
+                    <div className="kt-practice-header">
+                      <PracticeIcon size={14} aria-hidden="true" />
+                      <span>{step.practiceLabel}</span>
+                    </div>
+                    <div className="kt-practice-content">{step.highlight}</div>
+                  </div>
+                </Motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 4: KHO TÀNG 73 SÁCH & LECTIO DIVINA TABS
+      ══════════════════════════════════════════════════════════════ */}
+      <section className="kt-testament-section">
+        <div className="khoi-shell">
+          <Motion.div className="khoi-section-header" {...sectionRevealProps}>
+            <div className="khoi-eyebrow">
+              <span className="khoi-dot" aria-hidden="true" />
+              <span>KHO TÀNG LỜI CHÚA &amp; PHƯƠNG PHÁP CẦU NGUYỆN</span>
+            </div>
+            <h2 className="khoi-section-title">
+              73 Cuốn Sách Thánh &amp; <em>Lectio Divina</em>
+            </h2>
+            <p className="khoi-section-desc">
+              Khám phá toàn bộ 73 cuốn Kinh Thánh Cựu Ước &amp; Tân Ước cùng 4 bước cầu nguyện Lời Chúa truyền thống giúp thanh thiếu niên kết hiệp mật thiết với Thầy Giêsu.
+            </p>
+          </Motion.div>
+
+          {/* Accessible Tabs */}
+          <div className="kt-tab-nav-wrapper">
+            <div
+              className="kt-tab-nav"
+              role="tablist"
+              aria-label="Kho Tàng &amp; Phương Pháp Cầu Nguyện"
+              onKeyDown={handleTabKeyDown}
+            >
+              {tabList.map((tab) => {
+                const TabIcon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    id={`kt-tab-${tab.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`panel-${tab.id}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    className={`kt-tab-btn ${isSelected ? "active" : ""}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <TabIcon size={17} aria-hidden="true" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <KhoiKinhThanhTestament
+            activeTab={activeTab}
+            onOpenBookModal={handleOpenBookModal}
+          />
         </div>
       </section>
 

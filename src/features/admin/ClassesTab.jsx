@@ -713,7 +713,7 @@ const MobileActionsSheet = React.memo(({
             >
               <div className="flex items-center gap-2.5">
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Nhập danh sách học sinh từ file Excel</span>
+                <span>Nhập danh sách học sinh từ file Excel / Numbers</span>
               </div>
               <span className="text-xs text-stone-400 font-mono">→</span>
             </button>
@@ -974,9 +974,9 @@ function ClassRosterPanel({ lop, namHoc, availableClasses = [], onBack, onRoster
               type="button"
               onClick={() => setExcelModalOpen(true)}
               className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm active:scale-[0.98] transition-all flex-shrink-0 cursor-pointer"
-              title="Nhập danh sách Giáo lý sinh từ file Excel (.xlsx)"
+              title="Nhập danh sách Giáo lý sinh từ file Excel (.xlsx) hoặc Apple Numbers (.numbers)"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Nhập Excel</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Nhập Excel / Numbers</span>
             </button>
 
             <span className="min-h-[40px] inline-flex items-center text-xs font-bold text-[#314e3e] dark:text-[#d6b883] bg-[#314e3e]/10 dark:bg-[#d6b883]/15 border border-[#314e3e]/20 dark:border-[#d6b883]/30 px-2.5 py-1 rounded-xl flex-shrink-0">
@@ -2395,9 +2395,9 @@ export default function ClassesTab() {
               type="button"
               onClick={() => setMainExcelModalOpen(true)}
               className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold shadow-sm active:scale-[0.98] transition-all flex-shrink-0 cursor-pointer"
-              title="Nhập danh sách Giáo lý sinh từ file Excel"
+              title="Nhập danh sách Giáo lý sinh từ file Excel hoặc Apple Numbers (.numbers)"
             >
-              <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" /> Nhập Excel
+              <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" /> Nhập Excel / Numbers
             </button>
           </div>
 
